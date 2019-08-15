@@ -1,0 +1,234 @@
+%%                      
+Screen
+        Name = "AGTMT010c";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="AGQGENERAL" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+
+        global string g_company_id[10] ;
+
+        rwdate l_sfqname_eff_date;
+        wdate  l_rich_date;
+
+        Local Unsigned Ascii Number L_SUB_CODE[4] ,
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_county[3],
+                                    l_app_no[11],
+                                    l_rating_territory[3],
+                                    l_loop[4],
+                                    l_exclude_terrorism[1]=0,
+                                    l_prem_no[4]=0,
+                                    l_build_no[4]=0,
+                                    l_off_premises_limit[8]=0,
+                                    l_mcp140_limit[8],
+                                    l_mm[2],
+                                    l_yyyy[4],
+                                    l_dd[2],
+                                    l_territory[3],
+                                    l_minimum_limit[8],
+                                    l_maximum_limit[8],
+                                    l_zipcode[9],
+                                    l_building_minimum_limit[8],
+                                    l_contents_minimum_limit[8],
+                                    l_combined_minimum_limit[8],
+                                    l_building_maximum_limit[8],
+                                    l_contents_maximum_limit[8],
+                                    l_combined_maximum_limit[8],
+                                    l_building_binding_limit[8],
+                                    l_contents_binding_limit[8],
+                                    l_combined_binding_limit[8],
+                                    l_min_error[1],
+                                    l_max_error[1],
+                                    l_binding_error[1],
+                                    l_combined_limit[8]=0,
+                                    l_rating_territory_group_1[1],
+                                    l_rating_territory_group_2[1],
+                                    l_rating_territory_group_3[1],
+                                    l_group_1[5]=0/dec=3,
+                                    l_group_2[5]=0/dec=3,
+                                    L_CLASS_CODE[5],
+                                    l_restaurant[1],
+                                    l_year[4],
+                                    l_end_sequence[4],
+                                    L_PROPERTY_LIMIT[8]=0,
+                                    l_property_limit_1[8]=0,
+                                    L_LINE_OF_BUSINESS[2] ,
+                                    L_AR_LIMIT[8],
+                                    L_COMPUTER_LIMIT[8],
+                                    l_csexec_number[12],
+                                    i_csexec_number[12],
+                                    l_abort_program[1],
+                                    L_UTILITY_LIMIT[8],
+                                    L_MECHANICAL_LIMIT[8],
+                                    L_EXTERIOR_SIGNS_LIMIT[8],
+                                    L_EMPLOYEE_LIMIT[8],
+                                    L_GLASS_LIMIT[8],
+                                    L_SEWER_LIMIT[8],
+                                    L_VALUABLE_LIMIT[8],
+                                    L_FORM[1] ,
+                                    l_Form_1[1] ;
+
+        Local String L_DESC[50] ,
+                     L_REINSURANCE[1] ,
+                     i_csexec_application[25] ,
+                     l_printers_credit_wording[23]="Printers Credit:",
+                     l_total_printers_wording[23]="Total Printers:",
+                     l_first[1],
+                     l_str_zipcode[9]="",
+                     l_buyback_option_wording[23]="Buyback Option Charge:",
+                     l_fungi_mold_wording[23]="Fungi/Mold Limitations:",
+                     l_irpm_wording[12]="IRPM:",
+                     l_enter[1],
+                     l_minimum_message[200],
+                     l_combined_minimum_message[200],
+                     l_maximum_message[200],
+                     l_combined_maximum_message[200],
+                     l_binding_message[200],
+                     l_combined_binding_message[200],
+                     l_contact_message[200],
+                     l_mp_wording[4]="M.P.",
+                     l_continue_1[3]="",
+                     l_continue_2[3]="",
+                     l_continue_3[3]="",
+                     l_dec[15]="",
+                     l_app[3]="agq",
+                     L_CODE[7],
+                     L_CODE_1[7],
+                     L_CODE_2[7],
+                     L_CODE_3[7],
+                     L_CODE_4[7],
+                     L_CODE_5[7],
+                     L_CODE_6[7],
+                     L_CODE_7[7],
+                     L_CODE_8[7],
+                     l_code_9[7],
+                     l_code_10[7],
+                     l_code_11[7],
+                     l_csexec_application[25],
+                     l_processing_system[30],
+                     l_rating_system[40],
+                     l_territory_wording[10]="Territory:",
+                     l_system_id[15],
+                     L_SCREEN[15] ,
+                     l_screen_1[8],
+                     L_FORM_EDITION[18],
+                     L_DESCRIPTION[55],
+                     L_COMPUTER_DESC[50] ,
+                     L_DELETE_NONOWNED_HIRED[1]="N",
+                     L_ADD_ENDORSEMENT[1]="Y",
+                     L_PROPERTY_LIMIT_CHANGE[1]="N",
+                     l_sfqname_str[10],
+                     L_COMPANY_ID[10] ;
+
+        local wdate l_eff_date ;
+
+        include "print.var"
+
+        include "virtualdecs.var"
+
+        Access agqGENERAL,
+           Set agqGENERAL:app_no = G_app_no, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+
+Functions
+
+        "redisplay" display/noreturn "agtmt010" ;
+
+        "add" sequence "new"      tagged add_fn ;
+        "new" add/hidden ;
+
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+
+        "func1" display "agtmt020" tagged calc_fn ;
+
+        reaccess ;
+
+        include "stdfunc7b.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {g_line_of_business = val(event.value) }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+g_app_no = 0
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+
+Access Validation
+If agqGENERAL:app_no <> G_app_no Then
+    begin
+    Error 1000
+    end
+
+screen at 1,1 to 30,90
+Properties
+        {
+        Layouttype = column
+        }
+{
+
+panel/hidden
+        {
+        fields
+                function at 1,1 ;
+        }
+
+panel at 1,1 to 1,90
+Properties
+        {
+        layouttype = screen
+        }
+{
+Panel at 1,1 to 1,1
+Properties
+        {
+        layouttype = row
+        }
+{
+components
+        guidetext at 1,1
+                Properties {
+                        text = "Businessowners - Chatham Square"
+                        fontsize = 16
+                        fontstyle = bold
+                        fontname = "TIME-Roman"
+                        }
+
+}
+
+}
+
+}
+
+End

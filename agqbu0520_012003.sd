@@ -1,0 +1,235 @@
+%%
+/*
+Date Written: February 06, 2006
+
+Name: agqbu0520_012003.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+02/06/2006             DWR     New program name for new MSO Edition
+===========================
+*/
+
+Program
+  Name = "agqbu0520_012003";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[19] = "agqbu0520_012003.cq";
+ String L_COPY_NAME[20] ;
+ String L_COMPANY_ID[10] ;
+ String L_agqLOCATION_ZIP;
+ String L_agqENDORSE_ZIP;
+ unsigned ascii number l_app_no[11] ;
+ Unsigned ascii number l_max_lines;
+ Unsigned Ascii Number L_YEAR[4];
+ Unsigned Ascii number L_LINE_OF_BUSINESS[4];
+ Unsigned ascii number l_found[1];
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_STATE[2]=0;
+ Unsigned Ascii Number L_LOOP;
+ wdate L_EFF_DATE;
+ Unsigned Ascii Number L_LINE_COUNTER;
+ Unsigned Ascii Number L_PAGE_NUMBER;
+
+
+   Include "swsut100.var"
+   Include "swsut200.var"
+   Include "csfonts.inc"
+
+Initialization
+  l_app_no = val(commandline[1,11])
+  Deletefile (L_FILE_NAME);
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no    = l_app_no , generic
+
+Access agqNAME,
+   Set agqNAME:app_no    = l_app_no , generic
+
+Access agqEND_ALIAS,
+   Set agqEND_ALIAS:app_no    = l_app_no , generic
+
+Access agqendorse,
+   Set agqendorse:app_no    = l_app_no , generic
+
+Access agqgeneral,
+   Set agqgeneral:app_no    = l_app_no , generic
+
+Include "swsut100.inc"
+I_CODE = "BU0520"
+Include "swsut200.inc"
+
+Access agqENDORSE,
+   Set agqENDORSE:app_no    = l_app_no, generic
+
+While agqENDORSE:app_no    = l_app_no
+{
+  If agqENDORSE:CODE = I_CODE Then
+    {
+      L_STATE            = agqGENERAL:STATE
+      L_COMPANY_ID       = agqgeneral:COMPANY_ID
+      L_LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS
+
+      Access SFSOPTEND,
+         Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+             SFSOPTEND:STATE            = L_STATE,
+             SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+             SFSOPTEND:CODE             = I_CODE, generic
+
+       While SFSOPTEND:COMPANY_ID       = L_COMPANY_ID and
+             SFSOPTEND:STATE            = L_STATE and
+             SFSOPTEND:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS and
+             SFSOPTEND:CODE             = I_CODE
+
+        {  --start of sfsoptend check
+          If (agqgeneral:eff_date >= sfsoptend:eff_date and
+             (agqgeneral:eff_date <= sfsoptend:exp_date or
+              sfsoptend:exp_date = 0)) then
+            {
+              l_eff_date = sfsoptend:eff_date
+            }
+          next sfsoptend
+        }
+
+      Access SFSOPTEND,
+         Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+             SFSOPTEND:STATE            = L_STATE,
+             SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+             SFSOPTEND:CODE             = I_CODE,
+             SFSOPTEND:EFF_DATE         = L_EFF_DATE, exact
+
+      L_agqENDORSE_ZIP = If (Val(agqENDORSE:STR_ZIPCODE[6,9]) = 0) Then
+                                 agqENDORSE:STR_ZIPCODE[1,5]
+                         Else
+                                 agqENDORSE:STR_ZIPCODE[1,5] + "-" +
+                                 agqENDORSE:STR_ZIPCODE[6,9]
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a420h7200V")
+      Writefile(L_FILE_NAME,"%s",l_copyright_6)
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s",SFSOPTEND:COPYRIGHT)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h120V")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+      Writefile(L_FILE_NAME,"%s","<033>&a4300h120V")
+      Writefile(L_FILE_NAME,"%s",Trun(SFSOPTEND:FORM_PRINT))
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s",SFSOPTEND:EDITION_PRINT)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+      Writefile(L_FILE_NAME,"%s","PROPERTY NOT COVERED")
+      Writefile(L_FILE_NAME,"%s","<033>&a+30h+20V")
+      Writefile(L_FILE_NAME,"%s",L_BULLET_6)
+      Writefile(L_FILE_NAME,"%s","<033>&a+30h-20V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1380h+0V")
+      Writefile(L_FILE_NAME,"%s"," PART I")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_italic_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+      Writefile(L_FILE_NAME,"%s","This endorsement excludes coverage for the designated property. ")
+      Writefile(L_FILE_NAME,"%s","The required information may be shown below or elsewhere in")
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","this policy.")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+20V")
+      Writefile(L_FILE_NAME,"%s","The provisions of this endorsement apply only when ")
+      Writefile(L_FILE_NAME,"%s","the endorsement number is listed in the Declarations. ")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+      Writefile(L_FILE_NAME,"%s","Except as provided below, all other provisions ")
+      Writefile(L_FILE_NAME,"%s","in this policy are unchanged. ")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h-75V<033>*c5300h8v0P")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+      Writefile(L_FILE_NAME,"%s","<NL>")           --Horizontal line
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+      Writefile(L_FILE_NAME,"%s","Application # ")
+      Writefile(L_FILE_NAME,"%n",l_app_no)
+      Writefile(L_FILE_NAME,"%s","<NL>")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+      Writefile(L_FILE_NAME,"%s","SCHEDULE ")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+      Writefile(L_FILE_NAME,"%s","Designated Property: ")
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      If agqENDORSE:ADDRESS[1] <> "" Then
+        {
+          Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+          Writefile(L_FILE_NAME,"%s",agqENDORSE:ADDRESS)
+          Writefile(L_FILE_NAME,"%s","<NL>")
+        }
+
+      If agqENDORSE:description[1] <> "" Then
+        {
+          Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+          Writefile(L_FILE_NAME,"%s",agqENDORSE:description[1])
+          Writefile(L_FILE_NAME,"%s","<NL>")
+        }
+
+      If agqENDORSE:description[2] <> "" Then
+        {
+          Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+          Writefile(L_FILE_NAME,"%s",agqENDORSE:description[2])
+          Writefile(L_FILE_NAME,"%s","<NL>")
+        }
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+      Writefile(L_FILE_NAME,"%s",Trun(agqENDORSE:CITY))
+      Writefile(L_FILE_NAME,"%s",", ")
+      Writefile(L_FILE_NAME,"%s",agqENDORSE:STR_STATE)
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_agqENDORSE_ZIP)
+
+      Writefile(L_FILE_NAME,"%s","<NL>")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h3710V")
+      Writefile(L_FILE_NAME,"%s","PROPERTY NOT COVERED")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1050h+0V")
+      Writefile(L_FILE_NAME,"%s","We ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","do not cover the property ")
+      Writefile(L_FILE_NAME,"%s","designated in the Schedule. ")
+      Writefile(L_FILE_NAME,"%s","<NL>")
+      Writefile(L_FILE_NAME,"%s","<FF>")
+    }--IF agqENDORSE
+  Next agqENDORSE
+}
+
+Update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+End

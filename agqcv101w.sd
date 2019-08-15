@@ -1,0 +1,134 @@
+%%
+Program
+        Name = "agqcv101w" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+         Global Unsigned Ascii Number G_OLD_QUOTE[8] ,
+                                      g_new_app_no[11] ,
+                                      g_app_no[11];
+
+         String L_PROCEDURE[20] ,
+                L_QUOTE_NO[8] ,
+                l_app_no[11],
+                L_NEW_QUOTE_NO[8] ;
+
+Initialisation
+g_app_no     = val(commandline[1,11])
+g_new_app_no = val(COMMANDLINE[12,22])
+
+Access agqname, set agqname:app_no = g_app_no, generic
+
+Access agqworkerscomp1_alias, Set agqworkerscomp1_alias:APP_NO = G_APP_NO, Approximate
+
+Repeat Begin
+    Exit If agqworkerscomp1_alias:APP_NO <> G_APP_NO
+
+    Add agqworkerscomp1
+        Begin
+        agqworkerscomp1:app_no                 = g_new_app_no
+        agqworkerscomp1:prem_no                = agqworkerscomp1_alias:prem_no
+        agqworkerscomp1:build_no               = agqworkerscomp1_alias:build_no
+        agqworkerscomp1:RECORD_RDF             = agqworkerscomp1_alias:RECORD_RDF/raw
+        agqworkerscomp1:entry_date             = agqworkerscomp1_alias:entry_date
+        agqworkerscomp1:business_name[1]       = agqworkerscomp1_alias:business_name[1]/raw
+        agqworkerscomp1:business_name[2]       = agqworkerscomp1_alias:business_name[2]/raw
+        agqworkerscomp1:business_name[3]       = agqworkerscomp1_alias:business_name[3]/raw
+        agqworkerscomp1:eff_date               = agqworkerscomp1_alias:eff_date
+        agqworkerscomp1:exp_date               = agqworkerscomp1_alias:exp_date
+        agqworkerscomp1:agent_no               = agqworkerscomp1_alias:agent_no
+        End
+
+    Next agqworkerscomp1_alias
+    End
+
+L_PROCEDURE = "agqclass FILE UPDATE"
+
+Access agqclass_alias, Set agqclass_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqclass_alias:app_no <> g_app_no
+
+    Add agqclass
+        Begin
+        agqclass:app_no                 = G_new_app_no
+        agqclass:prem_no                = agqclass_alias:prem_no
+        agqclass:build_no               = agqclass_alias:build_no
+        agqclass:class_code             = agqclass_alias:class_code
+        agqclass:sub_class              = agqclass_alias:sub_class
+        agqclass:sub_code               = agqclass_alias:sub_code
+        agqclass:RECORD_RDF             = agqclass_alias:RECORD_RDF/raw
+        End
+
+    Next agqclass_alias
+    End
+
+L_PROCEDURE = "agqworkplaces FILE UPDATE"
+
+Access agqworkplaces_alias, Set agqworkplaces_alias:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqworkplaces_alias:app_no <> G_app_no
+
+    Add agqworkplaces
+        Begin
+        agqworkplaces:app_no                 = G_new_app_no
+        agqworkplaces:prem_no                = agqworkplaces_alias:prem_no
+        agqworkplaces:build_no               = agqworkplaces_alias:build_no
+        agqworkplaces:sub_code               = agqworkplaces_alias:sub_code
+        agqworkplaces:RECORD_RDF             = agqworkplaces_alias:RECORD_RDF/raw
+        End
+
+    Next agqworkplaces_alias
+    End
+
+L_PROCEDURE = "agqendorse4 FILE UPDATE"
+
+Access agqendorse4_alias, Set agqendorse4_alias:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqendorse4_alias:app_no <> G_app_no
+
+    Add agqendorse4
+        Begin
+        agqendorse4:app_no                 = G_new_app_no
+        agqendorse4:prem_no                = agqendorse4_alias:prem_no
+        agqendorse4:build_no               = agqendorse4_alias:build_no
+        agqendorse4:code                   = agqendorse4_alias:code/raw
+        agqendorse4:sub_code               = agqendorse4_alias:sub_code
+        agqendorse4:RECORD_RDF             = agqendorse4_alias:RECORD_RDF/raw
+        End
+
+    Next agqendorse4_alias
+    End
+
+L_PROCEDURE = "agqcontact FILE UPDATE"
+
+Access agqcontact_alias, Set agqcontact_alias:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqcontact_alias:app_no <> G_app_no
+
+    Add agqcontact
+        Begin
+        agqcontact:app_no                 = G_new_app_no
+        agqcontact:prem_no                = agqcontact_alias:prem_no
+        agqcontact:build_no               = agqcontact_alias:build_no
+        agqcontact:RECORD_RDF             = agqcontact_alias:RECORD_RDF/raw
+        End
+
+    Next agqcontact_alias
+    End
+
+Update
+
+Errors
+Writefile("agqcv101w.err","<NL>")
+Writefile("agqcv101w.err","%S",L_PROCEDURE)
+Writefile("agqcv101w.err","<NL>")
+Writefile("agqcv101w.err","%N%S agqcv101 errors ",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv101w.err","<NL>")
+Writefile("agqcv101w.err","<NL>")
+
+End

@@ -1,0 +1,530 @@
+%%                 
+Screen
+        Name = "agtmt354";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqepl" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_line_of_business[4],
+                                    l_epl_premium[8],
+                                    l_form[2],
+                                    l_override_epl[1],
+                                    l_remove_form[1],
+                                    l_limit[8],
+                                    l_form_1[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_limit_1[8],
+                                    l_limit_2[8],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_attorney[1],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_description_1[20],
+                     l_continue_1[2],
+                     l_description_2[20],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ;
+
+        Access agqepl,
+           Set agqepl:app_NO   = G_app_NO , generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        add/autoupdate   tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "scp"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+if agqepl:epl_limit < 500000 then
+    hide(premium_fn)
+
+if agqepl:app_no   <> g_app_no then
+    function = "ADD"
+
+Access Validation
+If agqepl:app_NO   <> G_app_NO then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent         = false
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,60     tagged display_information_box
+                properties
+                  {
+                    text = "Employment Practices Liability Coverage"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt354.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 9,30 to 13,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+EPL Limit:        ________
+EPL Deductible:   _____
+Third Party Violations Coverage Option:~~_
+Retroactive Date: __________
+
+%%
+
+components
+
+fields
+101     begin
+        access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+        l_company_id       = agqgeneral:company_id
+        l_state            = agqgeneral:state
+        l_line_of_business = agqgeneral:line_of_business
+
+        l_override_epl     = agqmaster:override_epl
+
+        do read_agqgeneral
+        if l_attorney = "Y" then
+            begin
+            l_continue_1 = dialog("EPL Coverage","warning.bmp","EPL Coverage is not available on this class","OK")
+            function = "BACK"
+            end
+
+        access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+        access bpsepl_alias, set bpsepl_alias:company_id       = l_company_id,
+                                 bpsepl_alias:state            = l_state,
+                                 bpsepl_alias:line_of_business = l_line_of_business, generic
+        end
+        agqepl:epl_limit/default
+        if agqgeneral:class_code one of 51 and
+           agqgeneral:sub_code = 60 then
+            error "EPL Coverage is not available on this class"
+
+        access bpsepl, set bpsepl:company_id       = l_company_id,
+                           bpsepl:state            = l_state,
+                           bpsepl:line_of_business = l_line_of_business,
+                           bpsepl:limit            = agqepl:epl_limit, generic
+
+        if agqepl:epl_limit <> bpsepl:limit then
+            error "Invalid Limit Entered"
+
+        if bpsepl:allow_premium = 0 then
+            begin
+            access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+            if agqmaster:app_no = g_app_no then
+                begin
+                change agqmaster
+                    begin
+                    agqmaster:override_epl = 0
+                    agqmaster:total[9]     = 0
+                    end
+                end
+            end
+
+        activehelp if bpsepl_alias:hide_from_agent = 0 and
+                      bpsepl_alias:hide_activehelp = 0 then
+                       bpsepl_alias:limit
+                   else
+                       null ;
+201     begin
+        access bpsepl_alias1, set bpsepl_alias1:company_id       = l_company_id,
+                                  bpsepl_alias1:state            = l_state,
+                                  bpsepl_alias1:line_of_business = l_line_of_business,
+                                  bpsepl_alias1:limit            = agqepl:epl_limit, generic
+
+        if agqepl:epl_deductible = 0 and
+           agqepl:epl_limit <> 0 then
+            agqepl:epl_deductible = bpsdefault1:epl_deductible
+        end
+        agqepl:epl_deductible/default
+        hide if agqepl:epl_limit = 0
+        access bpsepl_alt1, set bpsepl_alt1:company_id       = l_company_id,
+                                bpsepl_alt1:state            = l_state,
+                                bpsepl_alt1:line_of_business = l_line_of_business,
+                                bpsepl_alt1:limit            = agqepl:epl_limit,
+                                bpsepl_alt1:deductible       = agqepl:epl_deductible, generic
+
+        if agqepl:epl_deductible <> bpsepl_alt1:deductible then
+            error "Invalid Limit Entered"
+
+        activehelp bpsepl_alias1:deductible ;
+201     begin
+        if agqepl:epl_limit = 0 then
+            begin
+            agqepl:epl_deductible   = 0
+            agqepl:epl_premium      = 0
+            end
+
+        if agqgeneral:class_code one of 51 and
+           agqgeneral:sub_code = 60 then
+            begin
+            agqepl:epl_limit        = 0
+            agqepl:epl_deductible   = 0
+            end
+
+        if agqepl:epl_limit < 500000 then
+            hide(premium_fn)
+        else
+            show(premium_fn)
+        end
+        agqepl:epl_deductible/displayonly ;
+301     agqepl:third_party/checkbox/values="0,1"
+        hide if agqepl:epl_limit = 0 ;
+401     agqepl:retro_date ;
+
+}
+
+Panel at 13,30 to 13,100 Tagged premium_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+EPL Premium:    __________
+
+%%
+
+components
+
+fields
+101     begin
+        l_company_id       = agqgeneral:company_id
+        l_state            = agqgeneral:state
+        l_line_of_business = agqgeneral:line_of_business
+
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        access bpsepl, set bpsepl:company_id       = l_company_id,
+                           bpsepl:state            = l_state,
+                           bpsepl:line_of_business = l_line_of_business,
+                           bpsepl:limit            = agqepl:epl_limit, generic
+
+
+        l_epl_premium = agqmaster:total[9]
+        end
+        l_epl_premium/default/mask="ZZ,ZZZ,ZZZ.99" mandatory
+        if l_epl_premium = 0 then
+            error "You must enter a premium"
+
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        if agqmaster:app_no = g_app_no then
+            begin
+            change agqmaster
+                begin
+                agqmaster:total[9]     = l_epl_premium
+                agqmaster:override_epl = 1
+                end
+            end ;
+101     agqmaster:total[9]/displayonly ;
+
+}
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,35 to 23,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+update
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    if function one of "CHANGE" and
+       bpsepl:allow_premium = 1 then
+        begin
+        if l_override_epl = 0 then
+            begin
+            access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+            if agqmaster:app_no = g_app_no then
+                begin
+                change agqmaster
+                    begin
+                    agqmaster:total[9] = 0
+                    end
+                end
+            end
+
+        end
+
+    end
+
+procedure definition
+
+procedure read_agqgeneral
+begin
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+l_attorney = "N"
+while agqgeneral:app_no = g_app_no
+    begin
+    if agqgeneral:class_code one of 51 and
+       agqgeneral:sub_code = 60 then
+        l_attorney = "Y"
+
+    next agqgeneral
+    end
+
+end
+
+End

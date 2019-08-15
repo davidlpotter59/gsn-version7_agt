@@ -1,0 +1,1244 @@
+%%
+Screen
+        Name = "agtmt750d";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--        Windowtitle="%a     %s Optional Coverages - Ver. 7.00     %m";
+        Domain="agqclasscode" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_no[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number G_FORM[1] ;
+        global unsigned ascii number g_line_of_business[4] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_dont_allow_waive_deductible[1] ;
+
+        global string g_inquiry[1] ;
+
+        local date l_eff_date[8] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_code_8[7],
+                     l_code_9[7],
+                     l_code_10[7],
+                     l_code_11[7],
+                     l_code_12[7],
+                     l_code_13[7],
+                     l_code_14[7],
+                     l_code_15[7],
+                     l_code_16[7],
+                     l_code_17[7],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_lawn_care[1],
+                     l_ok_to_add[1],
+                     l_company_id[10],
+                     l_first_str_location[13],
+                     l_desc[75],
+                     l_last_str_location[13],
+                     l_str_location[13],
+                     l_first_location[1]="Y",
+                     l_user_id[15]="",
+                     l_continue_1[3]="",
+                     l_prior_sprinklered[1]="",
+                     l_add_endorsement[1],
+                     l_form_edition[18],
+                     l_description[55] ,
+                     l_location_wording[9]="Location:",
+                     l_burglary_string[20]="",
+                     l_continue_2[3],
+                     l_money_string[30]="",
+                     l_building_wording[9]="Building:" ;
+
+        local unsigned ascii number l_sub_code[4]=0 ,
+                                    l_state[2]=0 ,
+                                    l_no_locations[2]=0,
+                                    l_fire_limit[8],
+                                    l_class_code[5],
+                                    l_money_limit_on[8]=0,
+                                    l_default_ar_limit[8]=0,
+                                    l_default_customer_prop_limit[8]=0,
+                                    l_default_utility_limit[8]=0,
+                                    l_default_signs_limit[8]=0,
+                                    l_default_valuable_papers_limit[8]=0,
+                                    l_first_prem_no[4]=0,
+                                    l_first_build_no[4]=0,
+                                    l_last_prem_no[4]=0,
+                                    l_last_build_no[4]=0,
+                                    l_form[1]=0,
+                                    l_money_limit_off[8]=0,
+                                    l_deductible[5]=0;
+        Include "virtualdecs.var"
+
+        Access agqclasscode, Set agqclasscode:app_no = G_app_no , generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "change" sequence "chg" tagged change_fn ;
+        "chg" change/hidden ;
+
+        "redisplay" display/noreturn "agtmt750d" ;
+        "back" display/noreturn "agtmt001" tagged back_fn ;
+        "nextscreen"     display/noreturn "agtmt750e"  tagged nextscreen_fn ;
+        "previousscreen" display/noreturn "agtmt750c"  tagged previousscreen_fn ;
+
+        include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+access agqclasscode_alias, set agqclasscode_alias:app_no   = g_app_no,
+                               agqclasscode_alias:prem_no  = g_prem_no,
+                               agqclasscode_alias:build_no = g_build_no, generic
+
+if agqclasscode_alias:app_no   <> g_app_no or
+   agqclasscode_alias:prem_no  <> g_prem_no or
+   agqclasscode_alias:build_no <> g_build_no then
+    function = "ADD"
+
+disable(accept_fn)
+Access agsdefault_bop, Set agsdefault_bop:COMPANY_ID       = agqcontractor:company_id,
+                           agsdefault_bop:state            = agqcontractor:state,
+                           agsdefault_bop:agent_no         = agqcontractor:agent_no,
+                           agsdefault_bop:LINE_OF_BUSINESS = agqcontractor:line_of_business,
+                           agsdefault_bop:FORM             = agqcontractor:FORM, Generic
+
+l_user_id = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_supple_coverages.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+access agqcontractor, set agqcontractor:app_no   = g_app_no,
+                          agqcontractor:prem_no  = g_prem_no,
+                          agqcontractor:build_no = g_build_no, generic
+
+access sfsemail, set sfsemail:company_id = agqcontractor:company_id,
+                     sfsemail:user_id = l_user_id, generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                    SFSLINE:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access sfscompany, set sfscompany:company_id = agqcontractor:company_id, generic
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(accept_fn)
+    disable(delete_fn)
+    end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+if sfsdefault:company_id = "FLEMINGTON" then
+    begin
+    hide(nj_farmers_fn)
+    end
+else
+    begin
+    if agqcontractor:state = 19 then
+        hide(nj_farmers_fn)
+    else
+        hide(md_farmers_flemington_fn)
+    end
+
+Access Validation
+If agqclasscode:app_no <> G_app_no then
+    Error 1000 ;
+
+/*access agqclasscode_alias, set agqclasscode_alias:app_no = g_app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqclasscode_alias:app_no = g_app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqclasscode_alias:prem_no) +
+                               str(agqclasscode_alias:build_no) +
+                               str(agqclasscode_alias:class_code)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqclasscode_alias:prem_no) +
+                           str(agqclasscode_alias:build_no) +
+                           str(agqclasscode_alias:class_code)
+    l_no_locations  = l_no_locations + 1
+
+    next agqclasscode_alias
+    end
+
+l_str_location = str(agqclasscode:prem_no) +
+                 str(agqclasscode:build_no) +
+                 str(agqclasscode:class_code)
+
+if l_no_locations = 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end*/
+
+screen at 1,1 to 30, 100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "Class Code"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     begin
+        if function one of "ADD" then
+            begin
+            agqclasscode:app_no   = g_app_no
+            agqclasscode:prem_no  = g_prem_no
+            agqclasscode:build_no = g_build_no
+            end
+        end
+        agqclasscode:app_no/displayonly ;
+
+}
+
+Panel at 5,5 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+
+
+        Button at 1.5,10   tagged change_fn
+        Properties {
+                Iconname = "btn_edit_entries.bmp"
+                }
+        Events  {
+                Action = change_fn
+                }
+
+        Button at 1.5,60 tagged accept_fn
+        Properties {
+                Iconname = "btn_accept_edits.bmp"
+                }
+          Events  {
+                    mouseclicked = accept
+                  }
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt750d.sd"
+                      fontsize = 9
+                    }
+      }
+
+panel at 7,1 to 7,100 tagged line_panel_1
+     {
+     Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 8,100 Tagged location
+        Properties {
+                LayoutType = screen
+--                transparent = False
+--                backgroundcolor = "White"
+        }
+        {
+         Components
+           guidetext at 1,24 to 1,36
+             properties
+               {
+                 text = "Location No:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 1,44 to 1,56
+             properties
+               {
+                 text = "Building No:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,33 to 8,60 Tagged rating_pl
+Properties
+        {
+--          transparent = False
+--          backgroundcolor = "White"
+        }
+{
+%%
+____                ____
+%%
+
+components
+
+fields
+101   agqclasscode:prem_no/displayonly ;
+102   agqclasscode:build_no/displayonly ;
+
+}
+
+Panel at 10,1 to 17,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,21
+             properties
+               {
+                 text = "Class Code Description:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,1 to 2,21
+             properties
+               {
+                 text = "Class Code:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 4,1 to 4,21 tagged md_farmers_flemington_fn
+             properties
+               {
+                 text = "Owner(s):"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 5,1 to 5,21 tagged md_farmers_flemington_fn
+             properties
+               {
+                 text = "Full Time Employed Workers:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+           guidetext at 6,1 to 6,21 tagged md_farmers_flemington_fn
+             properties
+               {
+                 text = "Part Time Employed Workers:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 4,1 to 4,21 tagged nj_farmers_fn
+             properties
+               {
+                 text = "Full Time Employed Workers:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 5,1 to 5,21 tagged nj_farmers_fn
+             properties
+               {
+                 text = "Part Time Employed Workers:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+        }
+
+Panel at 10,23 to 17, 100 Tagged md_farmers_flemington_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+___________________________________________________________________________
+_____
+
+__
+__
+__
+%%
+
+components
+
+Fields
+101     begin
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            enable(accept_fn)
+            disable(nextscreen_fn)
+            disable(previousscreen_fn)
+            disable(back_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            enable(nextscreen_fn)
+            enable(previousscreen_fn)
+            enable(back_fn)
+            end
+        l_class_code = agqclasscode:class_code
+
+        Access agqcontractor, Set agqcontractor:app_no = G_app_no, Generic
+
+        Access SCSCLASSCODE, Set SCSCLASSCODE:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                                 SCSCLASSCODE:STATE            = agqcontractor:STATE,
+                                 SCSCLASSCODE:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                                 SCSCLASSCODE:CLASS_CODE       = agqCLASSCODE:CLASS_CODE, approximate
+
+        while SCSCLASSCODE:COMPANY_ID       = agqcontractor:COMPANY_ID and
+              SCSCLASSCODE:STATE            = agqcontractor:STATE and
+              SCSCLASSCODE:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS and
+              SCSCLASSCODE:CLASS_CODE       = agqCLASSCODE:CLASS_CODE
+            begin
+            If agqcontractor:EFF_DATE >= SCSCLASSCODE:EFF_DATE Then
+                L_DESC = SCSCLASSCODE:DESCRIPTION
+
+            Next SCSCLASSCODE
+            End
+        End
+        L_DESC/displayonly ;
+101     Begin
+        Access agqcontractor, Set agqcontractor:app_no = G_app_no, Generic
+
+        l_eff_date = agqcontractor:eff_date
+        Access SCSCLASSCODE_ALIAS, Set SCSCLASSCODE_ALIAS:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                                       SCSCLASSCODE_ALIAS:STATE            = agqcontractor:STATE,
+                                       SCSCLASSCODE_ALIAS:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                                       SCSCLASSCODE_ALIAS:DESCRIPTION      = L_DESC, approximate
+
+        End
+        L_DESC/default/uppercase/tabstop   Mandatory
+        Access SCSCLASSCODE_ALIAS, Set SCSCLASSCODE_ALIAS:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                                       SCSCLASSCODE_ALIAS:STATE            = agqcontractor:STATE,
+                                       SCSCLASSCODE_ALIAS:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                                       SCSCLASSCODE_ALIAS:DESCRIPTION      = L_DESC, approximate
+
+        if scsclasscode_alias:hide_from_agent = 1 then
+            error "Invalid Class Code Entered"
+
+        agqclasscode:class_code = scsclasscode_alias:class_code
+        g_dont_allow_waive_deductible = scsclasscode_alias:dont_allow_waive_deductible
+
+        if scsclasscode_alias:refer_to_underwriting = 1 and
+           agqclasscode:class_code <> l_class_code then
+            warning("Refer to Underwiting")
+
+        if agqclasscode:class_code one of 2981, 6982 and
+           agqcontractor:state = 29 and
+           agqcontractor:company_id = "FARMERS" then
+            error "Refer to Underwiting"
+
+        if agqclasscode:class_code one of 6982 and
+           agqcontractor:state = 19 then
+            error "Refer to Underwiting"
+
+        Activehelp if (scsclasscode_alias:hide_from_agent = 0 and
+                      scsclasscode_alias:state = agqcontractor:state and
+                      (l_eff_date >= scsclasscode_alias:eff_date and
+                      (l_eff_date <= scsclasscode_alias:exp_date or
+                      scsclasscode_alias:exp_date = 0))) then
+                       SCSCLASSCODE_ALIAS:DESCRIPTION
+                   else
+                       null/width=60 ,
+                   if (scsclasscode_alias:hide_from_agent = 0 and
+                      scsclasscode_alias:state = agqcontractor:state and
+                      (agqcontractor:eff_date >= scsclasscode_alias:eff_date and
+                      (agqcontractor:eff_date <= scsclasscode_alias:exp_date or
+                      scsclasscode_alias:exp_date = 0))) then
+                       SCSCLASSCODE_ALIAS:CLASS_CODE
+                   else
+                       null/width=12 ;
+201     agqCLASSCODE:CLASS_CODE/displayonly ;
+
+401     begin
+        if function = "ADD" Then
+            agqclasscode:no_owners = 1
+        end
+        agqCLASSCODE:no_owners/tabstop/default
+        if agqclasscode:no_owners + agqclasscode:no_workers > 11 and
+           sfscompany:boiler_rating = 1 and
+           agqcontractor:eff_date >= 08.01.2009 then
+            error "The maximum number of owners and workers is 11"
+        if agqclasscode:no_owners + agqclasscode:no_workers > 9 and
+           sfscompany:boiler_rating = 1 and
+           agqcontractor:eff_date < 08.01.2009 then
+            error "The maximum number of owners and workers is 9"
+        if agqclasscode:no_owners = 0 then
+            error "You must enter at least one owner" ;
+501     agqCLASSCODE:NO_workers/tabstop
+        if agqclasscode:no_workers + agqclasscode:no_owners > 11 and
+           sfscompany:boiler_rating = 1 and
+           agqcontractor:eff_date >= 08.01.2009 then
+            error "The maximum full time workers and owners is 11"
+        if agqclasscode:no_workers + agqclasscode:no_owners > 9 and
+           sfscompany:boiler_rating = 1 and
+           agqcontractor:eff_date < 08.01.2009 then
+            error "The maximum full time workers and owners is 9" ;
+601     agqclasscode:no_helpers/tabstop;
+
+}
+
+Panel at 10,23 to 17, 100 Tagged nj_farmers_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+___________________________________________________________________________
+_____
+
+__
+__
+
+%%
+
+components
+
+Fields
+101     begin
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            enable(accept_fn)
+            disable(nextscreen_fn)
+            disable(previousscreen_fn)
+            disable(back_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            enable(nextscreen_fn)
+            enable(previousscreen_fn)
+            enable(back_fn)
+            end
+        l_class_code = agqclasscode:class_code
+        Access agqcontractor, Set agqcontractor:app_no = G_app_no, Generic
+
+        Access SCSCLASSCODE, Set SCSCLASSCODE:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                                 SCSCLASSCODE:STATE            = agqcontractor:STATE,
+                                 SCSCLASSCODE:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                                 SCSCLASSCODE:CLASS_CODE       = agqCLASSCODE:CLASS_CODE, approximate
+
+        while SCSCLASSCODE:COMPANY_ID       = agqcontractor:COMPANY_ID and
+              SCSCLASSCODE:STATE            = agqcontractor:STATE and
+              SCSCLASSCODE:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS and
+              SCSCLASSCODE:CLASS_CODE       = agqCLASSCODE:CLASS_CODE
+            begin
+            If agqcontractor:EFF_DATE >= SCSCLASSCODE:EFF_DATE Then
+                L_DESC = SCSCLASSCODE:DESCRIPTION
+
+            Next SCSCLASSCODE
+            End
+        End
+        L_DESC/displayonly ;
+101     Begin
+        Access agqcontractor, Set agqcontractor:app_no = G_app_no, Generic
+
+        l_eff_date = agqcontractor:eff_date
+        Access SCSCLASSCODE_ALIAS, Set SCSCLASSCODE_ALIAS:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                                       SCSCLASSCODE_ALIAS:STATE            = agqcontractor:STATE,
+                                       SCSCLASSCODE_ALIAS:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                                       SCSCLASSCODE_ALIAS:DESCRIPTION      = L_DESC, approximate
+
+        End
+        L_DESC/default/uppercase/tabstop   Mandatory
+        Access SCSCLASSCODE_ALIAS, Set SCSCLASSCODE_ALIAS:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                                       SCSCLASSCODE_ALIAS:STATE            = agqcontractor:STATE,
+                                       SCSCLASSCODE_ALIAS:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                                       SCSCLASSCODE_ALIAS:DESCRIPTION      = L_DESC, approximate
+
+        if scsclasscode_alias:hide_from_agent = 1 then
+            error "Invalid Class Code Entered"
+
+        agqclasscode:class_code = scsclasscode_alias:class_code
+        g_dont_allow_waive_deductible = scsclasscode_alias:dont_allow_waive_deductible
+
+        if scsclasscode_alias:refer_to_underwriting = 1 and
+           agqclasscode:class_code <> l_class_code then
+            warning("Refer to Underwiting")
+
+        if agqclasscode:class_code one of 2981, 6982 and
+           agqcontractor:state = 29 then
+            error "Refer to Underwiting"
+
+        if agqclasscode:class_code one of 6982 and
+           agqcontractor:state = 19 then
+            error "Refer to Underwiting"
+
+        Activehelp if (scsclasscode_alias:hide_from_agent = 0 and
+                      scsclasscode_alias:state = agqcontractor:state and
+                      (l_eff_date >= scsclasscode_alias:eff_date and
+                      (l_eff_date <= scsclasscode_alias:exp_date or
+                      scsclasscode_alias:exp_date = 0))) then
+                       SCSCLASSCODE_ALIAS:DESCRIPTION
+                   else
+                       null/width=50 ,
+                   if (scsclasscode_alias:hide_from_agent = 0 and
+                      scsclasscode_alias:state = agqcontractor:state and
+                      (l_eff_date >= scsclasscode_alias:eff_date and
+                      (l_eff_date <= scsclasscode_alias:exp_date or
+                      scsclasscode_alias:exp_date = 0))) then
+                       SCSCLASSCODE_ALIAS:CLASS_CODE
+                   else
+                       null/width=12 ;
+201     agqCLASSCODE:CLASS_CODE/displayonly ;
+
+401     begin
+        if function one of "ADD" then
+            agqclasscode:no_workers = 1
+        end
+        agqCLASSCODE:NO_WORKERS/tabstop/default
+        if agqclasscode:no_workers = 0 then
+            error "You must enter number of full time employed workers"
+        if agqcontractor:eff_date < 08.01.2009 and
+           agqclasscode:no_workers > 9 and
+           sfscompany:boiler_rating = 1 then
+            error "9 workers is the maximum allowed"
+
+        if agqclasscode:no_workers > 11 and
+           sfscompany:boiler_rating = 1 and
+           agqcontractor:eff_date >= 08.01.2009 then
+            error "11 workers is the maximum allowed" ;
+501     agqCLASSCODE:NO_HELPERS/tabstop;
+
+}
+
+Panel at 19,2 to 19, 100 tagged farmers_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+Remove SCP100 Special Contractors Plus Endorsement:~~_
+
+%%
+
+components
+
+Fields
+101     agqclasscode:remove_scp100/checkbox/values="0,1" ;
+
+}
+
+-- draw a line
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5  tagged previousscreen_fn
+        Properties {
+                Iconname = "previous_screen.bmp"
+                }
+        Events  {
+                Action {
+                       function = "previousscreen"
+                       abort()
+                       }
+                }
+
+        Button at 1,37   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+
+        Button at 1,75   tagged nextscreen_fn
+            Properties
+                {
+                Iconname = "next_screen.bmp"
+                }
+            Events
+                {
+                Action
+                    {
+                    function = "nextscreen"
+                    abort()
+                    }
+                }
+}
+
+-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+}
+
+panel at 24,1 to 30,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+
+update
+if updateok = "NO" then
+    begin
+    disable(accept_fn)
+    enable(nextscreen_fn)
+    enable(previousscreen_fn)
+    enable(back_fn)
+    end
+
+if abort = "YES" then
+    begin
+    access agqclasscode_alias, set agqclasscode_alias:app_no = g_app_no, generic
+
+    if agqclasscode_alias:app_no <> g_app_no then
+        begin
+        function = "redisplay"
+        error "You must enter a class code"
+        end
+
+    disable(accept_fn)
+    enable(nextscreen_fn)
+    enable(previousscreen_fn)
+    enable(back_fn)
+    end
+
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    disable(accept_fn)
+    enable(nextscreen_fn)
+    enable(previousscreen_fn)
+    enable(back_fn)
+    if agqclasscode:remove_scp100 = 1 then
+        begin
+        access agqcontractor, set agqcontractor:app_no   = agqclasscode:app_no,
+                                  agqcontractor:prem_no  = agqclasscode:prem_no,
+                                  agqcontractor:build_no = agqclasscode:build_no, generic
+
+        if agqcontractor:app_no   = agqclasscode:app_no and
+           agqcontractor:prem_no  = agqclasscode:prem_no and
+           agqcontractor:build_no = agqclasscode:build_no then
+            begin
+            change agqcontractor
+                begin
+                agqcontractor:exclude_scp100 = 1
+                end
+            end
+
+        access agqend, set agqend:app_no   = g_app_no,
+                           agqend:prem_no  = 0,
+                           agqend:build_no = 0, generic
+
+        while agqend:app_no   = g_app_no and
+              agqend:prem_no  = 0 and
+              agqend:build_no = 0
+            begin
+            if agqend:code = "SCP100" then
+                delete agqend
+
+            next agqend
+            end
+
+        end
+
+    if agqclasscode:remove_scp100 = 0 then
+        begin
+        access agqcontractor, set agqcontractor:app_no   = agqclasscode:app_no,
+                                  agqcontractor:prem_no  = agqclasscode:prem_no,
+                                  agqcontractor:build_no = agqclasscode:build_no, generic
+
+        if agqcontractor:app_no   = agqclasscode:app_no and
+           agqcontractor:prem_no  = agqclasscode:prem_no and
+           agqcontractor:build_no = agqclasscode:build_no then
+            begin
+            change agqcontractor
+                begin
+                agqcontractor:exclude_scp100 = 0
+                end
+            end
+
+        access agqend, set agqend:app_no   = g_app_no,
+                           agqend:prem_no  = 0,
+                           agqend:build_no = 0, generic
+
+        l_ok_to_add = "Y"
+        while agqend:app_no   = g_app_no and
+              agqend:prem_no  = 0 and
+              agqend:build_no = 0
+            begin
+            l_sub_code = agqend:sub_code
+            if agqend:code = "SCP100" then
+                l_ok_to_add = "N"
+
+            next agqend
+            end
+
+        if l_ok_to_add = "Y" then
+            begin
+            l_code = "SCP100"
+            do add_agqend
+            end
+
+        end
+
+    access agqcontractor, set agqcontractor:app_no = g_app_no,
+                              agqcontractor:prem_no = g_prem_no,
+                              agqcontractor:build_no = g_build_no, generic
+
+    Access agsdefault_scp, Set agsdefault_scp:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                               agsdefault_scp:STATE            = agqcontractor:STATE,
+                               agsdefault_scp:agent_no         = agqcontractor:agent_no,
+                               agsdefault_scp:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                               agsdefault_scp:form             = agqcontractor:form, Generic
+
+    access agqliablimits, set agqliablimits:app_no = g_app_no, generic
+
+    if agqliablimits:app_no <> g_app_no then
+        begin
+        add agqliablimits
+            begin
+            agqliablimits:app_no = g_app_no
+            if agsdefault_scp:rating_code one of 4 then
+                agqLIABLIMITS:INCREASED_AGGREGATE = 1
+            if agqLIABLIMITS:Special_program_AGGREGATE one of 1 then
+                agqLIABLIMITS:INCREASED_AGGREGATE = 0
+            agqLIABLIMITS:OCCURRENCE = agsdefault_scp:OCCURRENCE
+            agqliablimits:liab_deductible = agsdefault_scp:deductible[2]
+            agqLIABLIMITS:PERSONAL_INJURY = agqLIABLIMITS:OCCURRENCE
+            if agsdefault_scp:rating_code = 2 then
+                begin
+                agqliablimits:General_aggregate = agqliablimits:occurrence *
+                                                  agsdefault_scp:aggregate_increase
+                agqliablimits:aggregate = agqliablimits:occurrence
+                end
+            else
+                begin
+                If agqLIABLIMITS:INCREASED_AGGREGATE = 0 Then
+                    Begin
+                    agqLIABLIMITS:GENERAL_AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                    agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                    End
+                Else
+                    Begin
+                    agqLIABLIMITS:GENERAL_AGGREGATE = agqLIABLIMITS:OCCURRENCE *
+                                                      agsdefault_scp:AGGREGATE_INCREASE
+                    if agsdefault_scp:rating_code one of 4 then
+                        begin
+                        if agqliablimits:Special_program_AGGREGATE one of 1 then
+                            begin
+                            agqLIABLIMITS:General_AGGREGATE = agqLIABLIMITS:OCCURRENCE * (agsdefault_scp:AGGREGATE_INCREASE + 1)
+                            agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                            end
+                        else
+                            begin
+                            agqLIABLIMITS:General_AGGREGATE = agqLIABLIMITS:OCCURRENCE * agsdefault_scp:AGGREGATE_INCREASE
+                            agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                            end
+                        end
+                    End
+                if agqliablimits:Special_program_AGGREGATE one of 1 and
+                   agsdefault_scp:rating_code = 4 then
+                    begin
+                    agqLIABLIMITS:General_AGGREGATE = agqLIABLIMITS:OCCURRENCE *
+                                                      (agsdefault_scp:AGGREGATE_INCREASE + 1)
+                    agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                    end
+                End
+
+            agqLIABLIMITS:MEDICAL_PAYMENTS = agsdefault_scp:MEDICAL_PAYMENTS
+            agqLIABLIMITS:FIRE_LEGAL = agsdefault_scp:FIRE_LEGAL
+            end
+        end
+/*    else
+        begin
+        change agqliablimits
+            begin
+            if agsdefault_scp:rating_code one of 4 then
+                agqLIABLIMITS:INCREASED_AGGREGATE = 1
+            if agqLIABLIMITS:Special_program_AGGREGATE one of 1 then
+                agqLIABLIMITS:INCREASED_AGGREGATE = 0
+            agqLIABLIMITS:OCCURRENCE = agsdefault_scp:OCCURRENCE
+            end
+        end*/
+
+/*    Access agsdefault_scp, Set agsdefault_scp:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                               agsdefault_scp:STATE            = agqcontractor:STATE,
+                               agsdefault_scp:agent_no         = agqcontractor:agent_no,
+                               agsdefault_scp:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                               agsdefault_scp:form             = agqcontractor:form, Generic
+
+    while agsdefault_scp:COMPANY_ID = agqcontractor:COMPANY_ID and
+          agsdefault_scp:STATE = agqcontractor:STATE and
+          agsdefault_scp:agent_no = agqcontractor:agent_no and
+          agsdefault_scp:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS and
+          agsdefault_scp:form = agqcontractor:form
+        begin
+        If agqcontractor:EFF_DATE >= agsdefault_scp:EFF_DATE Then
+            Begin
+            access agqliablimits, set agqliablimits:app_no = g_app_no, generic
+
+            change agqliablimits
+                begin
+                agqLIABLIMITS:PERSONAL_INJURY = agqLIABLIMITS:OCCURRENCE
+                if agsdefault_scp:rating_code = 2 then
+                    begin
+                    agqliablimits:General_aggregate = agqliablimits:occurrence *
+                                                      agsdefault_scp:aggregate_increase
+                    agqliablimits:aggregate = agqliablimits:occurrence
+                    end
+                else
+                    begin
+                    If agqLIABLIMITS:INCREASED_AGGREGATE = 0 Then
+                        Begin
+                        agqLIABLIMITS:GENERAL_AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                        agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                        End
+                    Else
+                        Begin
+                        agqLIABLIMITS:GENERAL_AGGREGATE = agqLIABLIMITS:OCCURRENCE *
+                                                          agsdefault_scp:AGGREGATE_INCREASE
+                        if agsdefault_scp:rating_code one of 4 then
+                            begin
+                            if agqliablimits:Special_program_AGGREGATE one of 1 then
+                                begin
+                                agqLIABLIMITS:General_AGGREGATE = agqLIABLIMITS:OCCURRENCE * (agsdefault_scp:AGGREGATE_INCREASE + 1)
+                                agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                                end
+                            else
+                                begin
+                                agqLIABLIMITS:General_AGGREGATE = agqLIABLIMITS:OCCURRENCE * agsdefault_scp:AGGREGATE_INCREASE
+                                agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                                end
+                            end
+                        End
+                    if agqliablimits:Special_program_AGGREGATE one of 1 and
+                       agsdefault_scp:rating_code = 4 then
+                        begin
+                        agqLIABLIMITS:General_AGGREGATE = agqLIABLIMITS:OCCURRENCE *
+                                                          (agsdefault_scp:AGGREGATE_INCREASE + 1)
+                        agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                        end
+                    End
+
+                agqLIABLIMITS:MEDICAL_PAYMENTS = agsdefault_scp:MEDICAL_PAYMENTS
+                agqLIABLIMITS:FIRE_LEGAL = agsdefault_scp:FIRE_LEGAL
+                End
+            end
+
+        Next agsdefault_scp
+        End*/
+
+    access agqclasscode_alias, set agqclasscode_alias:app_no   = agqclasscode:app_no,
+                                   agqclasscode_alias:prem_no  = agqclasscode:prem_no,
+                                   agqclasscode_alias:build_no = agqclasscode:build_no, generic
+
+    l_lawn_care = "N"
+    while agqclasscode_alias:app_no   = agqclasscode:app_no and
+          agqclasscode_alias:prem_no  = agqclasscode:prem_no and
+          agqclasscode_alias:build_no = agqclasscode:build_no
+        begin
+        if agqclasscode_alias:class_code one of 3985 then
+            l_lawn_care = "Y"
+
+        next agqclasscode_alias
+        end
+
+    if l_lawn_care = "N" then
+        begin
+        access agqend, set agqend:app_no   = agqclasscode:app_no,
+                           agqend:prem_no  = agqclasscode:prem_no,
+                           agqend:build_no = agqclasscode:build_no, generic
+
+        while agqend:app_no   = agqclasscode:app_no and
+              agqend:prem_no  = agqclasscode:prem_no and
+              agqend:build_no = agqclasscode:build_no
+            begin
+            if agqend:code one of "SCP102", "SCP103" then
+                begin
+                delete agqend
+                end
+
+            next agqend
+            end
+        end
+    end
+
+screen exit
+if function one of "EXIT", "BACK" and
+   g_inquiry not one of "Y" then
+    function = "update_totals"
+
+procedure definition
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = g_app_no ,
+                   agqEND:PREM_NO  = 0,
+                   agqEND:BUILD_NO = 0, Generic
+
+L_SUB_CODE = 0
+while agqEND:app_no   = g_app_no and
+      agqEND:PREM_NO  = 0 and
+      agqEND:BUILD_NO = 0
+    begin
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqCONTRACTOR:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqCONTRACTOR:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqCONTRACTOR:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqCONTRACTOR:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqCONTRACTOR:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqCONTRACTOR:LINE_OF_BUSINESS Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqcontractor:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqcontractor:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_form_edition <> "" then
+    begin
+    Add agqEND
+        Begin
+        agqEND:app_no               =       g_app_no
+        agqEND:PREM_NO              =       0
+        agqEND:BUILD_NO             =       0
+        agqEND:SUB_CODE             =       L_SUB_CODE
+        agqEND:CODE                 =       L_CODE
+        agqEND:FORM_EDITION         =       L_FORM_EDITION
+        agqEND:DESCRIPTION          =       L_DESCRIPTION
+        agqEND:PREMIUM              =       0
+        End
+    end
+
+End
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+End

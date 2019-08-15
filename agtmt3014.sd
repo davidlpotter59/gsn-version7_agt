@@ -1,0 +1,715 @@
+%%                 
+Screen
+        Name = "agtmt3014";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqstructures" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_form[1];
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_article[20],
+                      g_answer[1],
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    l_rate[6]=0/dec=3,
+                                    l_per[5]=0,
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ,
+                                    l_prior_additional_locations[1],
+                                    l_limit[8],
+                                    l_option_1,
+                                    l_option_2,
+                                    l_option_3,
+                                    l_option_4,
+                                    l_option_5,
+                                    l_option_6,
+                                    l_option_7,
+                                    l_option_8,
+                                    l_option_9,
+                                    l_option_10,
+                                    l_agqend_sub_code[4] ;
+
+        local array[2] of tag l_the_tag[15] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_mpl49[1],
+                     l_system_id[15],
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_screen[10],
+                     l_valid[1]="N",
+                     l_description[55] ;
+
+        Access agqstructures,
+           Set agqstructures:app_NO   = G_app_NO ,
+               agqstructures:prem_no  = g_prem_no,
+               agqstructures:build_no = g_build_no,
+               agqstructures:code     = g_code ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt3014" ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access plsdefault, set plsdefault:company_id = agqpersonal:company_id,
+                       plsdefault:line_of_business = agqpersonal:line_of_business, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : if agqpersonal:company_id = "FARMERS" and
+                   agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+                   plsdefault:rating_algorithm_date <> 0 then
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3_new,iconname,"title_mho3.bmp")
+                      case 4  : setproperty(t_mho4_new,iconname,"title_mho4.bmp")
+                      case 6  : setproperty(t_mho6_new,iconname,"title_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3_new,iconname,"")
+                                setproperty(t_mho4_new,iconname,"")
+                                setproperty(t_mho6_new,iconname,"")
+                                end
+                      end
+                    end
+                else
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                      case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                      case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3,iconname,"")
+                                setproperty(t_mho4,iconname,"")
+                                setproperty(t_mho6,iconname,"")
+                                end
+                      end
+                   end
+
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if agqstructures:app_no <> g_app_no or
+   agqstructures:prem_no <> g_prem_no or
+   agqstructures:build_no <> g_build_no or
+   agqstructures:code <> g_code then
+    function = "ADD"
+
+Access Validation
+If agqstructures:app_NO <> G_app_NO or
+   agqstructures:prem_no <> g_prem_no or
+   agqstructures:build_no <> g_build_no or
+   agqstructures:code <> g_code Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+    fontstyle = BOLD
+
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho3_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,20 tagged t_mho4_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho6_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "MPL 52 - Incidental Business Coverage"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt3014.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 8,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,50
+             properties
+                 {
+                 text = "A. Incidental Business Activity - Residence Premises   Limit:"
+                 fontsize = 12
+                 fontname = "arial"
+--                 contentalignment = right
+                 }
+        }
+
+Panel at 8,45 to 8, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+__________
+%%
+
+components
+
+Fields
+101     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqSTRUCTURES:app_no   = G_app_no
+            agqSTRUCTURES:PREM_NO  = G_PREM_NO
+            agqSTRUCTURES:BUILD_NO = G_BUILD_NO
+            agqSTRUCTURES:CODE     = G_CODE
+            End
+        l_form = agqpersonal:form
+        access agsdefault_plp, set agsdefault_plp:company_id       = agqpersonal:company_id,
+                                   agsdefault_plp:state            = agqpersonal:state,
+                                   agsdefault_plp:agent_no         = agqpersonal:agent_no,
+                                   agsdefault_plp:line_of_business = agqpersonal:line_of_business,
+                                   agsdefault_plp:form             = l_form, generic
+
+        End
+        agqSTRUCTURES:LIMIT[1]/tabstop ;
+
+}
+
+Panel at 9,1 to 17, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+   Related Structure: ___________________________________________________________________________
+   Business Activity: ___________________________________________________________________________
+B. Incidental Business Activity at Another Insured Premises
+   Business Activity: ___________________________________________________________________________
+   Insured Premises:  ___________________________________________________________________________
+C. Business Activity of an Insured as an Employee of Others
+   Business Activity: ___________________________________________________________________________
+   Insured Name:      __________________________________________________
+D. Corp Punishment:   __________________________________________________
+%%
+
+components
+
+Fields
+101     agqSTRUCTURES:DESCRIPTION[1]/tabstop;
+201     agqSTRUCTURES:DESCRIPTION[2]/tabstop ;
+
+401     agqSTRUCTURES:DESCRIPTION[3]/tabstop;
+501     agqSTRUCTURES:LOCATION[1]/tabstop;
+
+701     agqSTRUCTURES:DESCRIPTION[4]/tabstop ;
+801     agqSTRUCTURES:NAME[1]/tabstop ;
+
+901     agqSTRUCTURES:NAME[2]/tabstop ;
+
+}
+
+Panel at 18,1 to 18,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,50 tagged add_insured
+             properties
+                 {
+                 text = "E. Additional Insured Premises Rented to Others:"
+                 fontsize = 12
+                 fontname = "arial"
+--                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              do display_view("agtmt3014a")
+                              }
+                 }
+        }
+
+Panel at 19,1 to 19,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,50
+             properties
+                 {
+                 text = "F. Related Structures Used For Business by Others      Limit:"
+                 fontsize = 12
+                 fontname = "arial"
+--                 contentalignment = right
+                 }
+        }
+
+Panel at 20,4 to 20,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,50
+             properties
+                 {
+                 text = "Description:"
+                 fontsize = 12
+                 fontname = "arial"
+--                 contentalignment = right
+                 }
+        }
+
+Panel at 18,35 to 18, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~~_
+
+%%
+
+components
+
+Fields
+101     begin
+        if agqstructures:additional_locations = 1 then
+            begin
+            l_the_tag[1] = tag("add_insured")
+            l_screen = "agtmt3012a"
+            do display_blue(l_the_tag[1],"blue",l_screen)
+            end
+        l_prior_additional_locations = agqstructures:additional_locations
+        End
+        agqstructures:additional_locations/checkbox/values="0,1"/tabstop
+        if agsdefault_plp:mpl52_renters_liability = 1 and
+           agqpersonal:eff_date >= agsdefault_plp:mpl52_renters_eff_date and
+           agqstructures:additional_locations = 1 then
+            error "Coverage is not longer valid"
+        if agqstructures:additional_locations = 1 and
+           l_prior_additional_locations = 0 then
+            begin
+            display modal screen "agtmt3014a"
+            function = "redisplay"
+            end ;
+
+}
+
+Panel at 19,45 to 19, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+__________
+
+%%
+
+components
+
+Fields
+101     agqSTRUCTURES:LIMIT[2]/tabstop ;
+
+}
+
+Panel at 20,23 to 20, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+___________________________________________________________________________
+
+%%
+
+components
+
+Fields
+101     agqSTRUCTURES:DESCRIPTION[5]/tabstop ;
+
+}
+
+-- draw a line
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 28,35 to 28,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+Update
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    if function one of "ADD", "CHANGE" then
+        begin
+        if agqstructures:additional_locations = 0 then
+            begin
+            access agqstructloc, set agqstructloc:app_no      = agqstructures:app_no,
+                                     agqstructloc:prem_no     = agqstructures:prem_no,
+                                     agqstructloc:build_no    = agqstructures:build_no, generic
+
+            if agqstructloc:app_no       = agqstructures:app_no and
+               agqstructloc:prem_no      = agqstructures:prem_no and
+               agqstructloc:build_no     = agqstructures:build_no then
+                begin
+                delete agqstructloc
+                end
+
+            function = "redisplay"
+            end
+
+        End
+    End
+
+procedure definition
+
+procedure display_blue(tag l_tag, string l_color, string l_display_screen)
+begin
+    setproperty(l_tag,foregroundcolor,l_color)
+end
+
+procedure display_view (string l_screen_name)
+begin
+l_screen = l_screen_name
+display modal screen l_screen
+function = "redisplay"
+abort()
+
+end
+
+End

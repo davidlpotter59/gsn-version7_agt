@@ -1,0 +1,481 @@
+%%
+Program
+        Name = "agqcv101" ;
+        Type = "file" ;
+        Padcharacter = Space ;
+        Domain = "flat" ;
+
+        Global Unsigned Ascii Number G_POLICY_NO[9] ,
+                                     G_YEAR[4],
+                                     G_END_SEQUENCE[4],
+                                     G_QUOTE_NO[8] ,
+                                     G_PREM_NO[4],
+                                     G_BUILD_NO[4],
+                                     G_APP_NO[11],
+                                     g_new_app_no[11],
+                                     G_LINE_OF_BUSINESS[4] ;
+
+        Local String L_QUOTE_STRING[22] ,
+                     L_CLOSE_QUOTE[1]="N",
+                     l_company_id[10]="",
+                     l_notes[100],
+                     l_enter[1],
+                     L_CODE[7] ;
+
+        local unsigned ascii number l_line_of_business[4],
+                                    l_agent_no[4] ;
+
+        local date l_eff_date[8],
+                   l_exp_date[8] ;
+
+initialisation
+g_app_no     = val(commandline[1,11])
+g_new_app_no = val(commandline[12,22])
+
+do update_files
+
+update
+
+Procedure Definition
+
+Procedure UPDATE_FILES
+Begin
+access agqname, set agqname:app_no = g_app_no, generic
+
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+if agqname:line_of_business <> 99 then
+    begin
+    if agqgeneral:app_no = g_app_no then
+        begin
+        l_company_id = agqgeneral:company_id
+        l_line_of_business = agqgeneral:line_of_business
+        end
+
+    access agqworkerscomp1, set agqworkerscomp1:app_no = g_app_no, generic
+
+    if agqworkerscomp1:app_no = g_app_no then
+        begin
+        l_company_id = agqworkerscomp1:company_id
+        l_line_of_business = agqworkerscomp1:line_of_business
+        end
+
+    access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+    if agqpersonal:app_no = g_app_no then
+        begin
+        l_company_id = agqpersonal:company_id
+        l_line_of_business = agqpersonal:line_of_business
+        end
+
+    access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+    if agqvehicle:app_no = g_app_no then
+        begin
+        l_company_id = agqvehicle:company_id
+        l_line_of_business = agqvehicle:line_of_business
+        end
+
+    access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+    if agqcontractor:app_no = g_app_no then
+        begin
+        l_company_id = agqcontractor:company_id
+        l_line_of_business = agqcontractor:line_of_business
+        end
+
+    access sfscompany, set sfscompany:company_id = l_company_id, generic
+
+    if l_company_id = "" then
+        l_company_id = agqname:company_id
+    if l_line_of_business = 0 then
+        l_line_of_business = agqname:line_of_business
+    access sfsline, set sfsline:company_id       = l_company_id,
+                        sfsline:line_of_business = l_line_of_business,
+                        sfsline:lob_subline      = "00", generic
+
+    Switch(SFSLINE:LOB_CODE)
+      Case "BOP"              : Do UPDATE_BOP
+      Case "AUTO"             : Do UPDATE_CAS
+      Case "SCP"              : Do UPDATE_SCS
+      Case "HOME", "DWELLING" : Do UPDATE_PLP
+      case "WORK"             : do update_wcp
+--      case "CPORTFOLIO"       : do update_portfolio
+      default                 : do update_smp
+      end
+    End
+else
+    begin
+    access agqamt, set agqamt:app_no = g_app_no, generic
+
+    if agqamt:lob_totals[1] <> 0 then
+        do update_cas
+    if agqamt:lob_totals[2] <> 0 then
+        do update_smp
+    if agqamt:lob_totals[3] <> 0 then
+        do update_wcp
+    if agqamt:lob_totals[5] <> 0 then
+        do update_bop
+    end
+
+L_CLOSE_QUOTE = "N"
+do update_agqname
+do update_agqmaster
+do update_agqamt
+if agqname:line_of_business = 99 then
+    do update_agqmastsupp
+do update_agqlocation
+do update_agqsupp
+do update_agqsupp1
+do update_agqend
+do update_agqend1
+do update_agqtotals
+--do update_agqnotes
+do update_agqapplication
+
+End
+
+Procedure UPDATE_BOP
+Begin
+
+L_QUOTE_STRING = str(g_app_no,11) + Str(g_new_app_no,11)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv101b %s",L_QUOTE_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv101b %s",L_QUOTE_STRING)
+
+End
+
+Procedure UPDATE_SMP
+Begin
+
+L_QUOTE_STRING = str(g_app_no,11) + Str(g_new_app_no,11)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    begin
+    Proc ("cli csbatch agqcv200smp %s",L_QUOTE_STRING)/noconsole
+    Proc ("cli csbatch agqcv201smp %s",L_QUOTE_STRING)/noconsole
+    end
+Else
+    begin
+    Proc ("cli csbatch agqcv200smp %s",L_QUOTE_STRING)
+    Proc ("cli csbatch agqcv201smp %s",L_QUOTE_STRING)
+    end
+
+End
+
+Procedure UPDATE_SCS
+Begin
+L_QUOTE_STRING = str(g_app_no,11) + Str(g_new_app_no,11)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv101sc %s",L_QUOTE_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv101sc %s",L_QUOTE_STRING)
+
+End
+
+Procedure UPDATE_CAS
+Begin
+L_QUOTE_STRING = str(g_app_no,11) + Str(g_new_app_no,11)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv101a %s",L_QUOTE_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv101a %s",L_QUOTE_STRING)
+
+End
+
+Procedure UPDATE_PLP
+Begin
+L_QUOTE_STRING = str(g_app_no,11) + Str(g_new_app_no,11)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv101p %s",L_QUOTE_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv101p %s",L_QUOTE_STRING)
+
+End
+
+Procedure UPDATE_WCP
+Begin
+L_QUOTE_STRING = str(g_app_no,11) + Str(g_new_app_no,11)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv101w %s",L_QUOTE_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv101w %s",L_QUOTE_STRING)
+
+End
+
+procedure update_agqname
+begin
+switch(sfsline:lob_code)
+  case "BOP"              : begin
+                            l_eff_date = agqgeneral:eff_date
+                            l_exp_date = agqgeneral:exp_date
+                            l_line_of_business = agqgeneral:line_of_business
+                            l_agent_no = agqgeneral:agent_no
+                            end
+  case "WORK"             : begin
+                            l_eff_date = agqworkerscomp1:eff_date
+                            l_exp_date = agqworkerscomp1:exp_date
+                            l_line_of_business = agqworkerscomp1:line_of_business
+                            l_agent_no = agqworkerscomp1:agent_no
+                            end
+  case "HOME", "DWELLING" : begin
+                            l_eff_date = agqpersonal:eff_date
+                            l_exp_date = agqpersonal:exp_date
+                            l_line_of_business = agqpersonal:line_of_business
+                            l_agent_no = agqpersonal:agent_no
+                            end
+  case "AUTO"             : begin
+                            l_eff_date = agqvehicle:eff_date
+                            l_exp_date = agqvehicle:exp_date
+                            l_line_of_business = agqvehicle:line_of_business
+                            l_agent_no = agqvehicle:agent_no
+                            end
+  case "SCP"              : begin
+                            l_eff_date = agqcontractor:eff_date
+                            l_exp_date = agqcontractor:exp_date
+                            l_line_of_business = agqcontractor:line_of_business
+                            l_agent_no = agqcontractor:agent_no
+                            end
+  case "DEFAULT"          : begin
+                            l_eff_date = agqname:eff_date
+                            l_exp_date = agqname:exp_date
+                            l_line_of_business = agqname:line_of_business
+                            l_agent_no = agqname:agent_no
+                            end
+  end
+
+access agqname_alt, set agqname_alt:app_no = g_app_no, generic
+
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+access agqworkerscomp1, set agqworkerscomp1:app_no = g_app_no, generic
+
+if agqname_alt:app_no = g_app_no then
+    begin
+    Add agqname
+        Begin
+        agqname:app_no            =       g_new_app_no
+        agqname:record_rdf        =       agqname_alt:record_rdf/raw
+        agqname:quote_no          =       0
+        end
+    End
+
+end
+
+procedure update_agqmaster
+begin
+access agqmaster_alias, set agqmaster_alias:app_no = g_app_no, generic
+
+if agqmaster_alias:app_no = g_app_no then
+    begin
+    Add agqmaster
+        Begin
+        agqmaster:app_no                =       g_new_app_no
+        agqmaster:record_rdf            =       agqmaster_alias:record_rdf/raw
+        end
+    End
+
+end
+
+procedure update_agqamt
+begin
+access agqamt_alias, set agqamt_alias:app_no = g_app_no, generic
+
+if agqamt_alias:app_no = g_app_no then
+    begin
+    Add agqamt
+        Begin
+        agqamt:app_no                =       g_new_app_no
+        agqamt:record_rdf            =       agqamt_alias:record_rdf/raw
+        end
+    End
+
+end
+
+procedure update_agqtotals
+begin
+access agqtotals_alias, set agqtotals_alias:app_no = g_app_no, generic
+
+if agqtotals_alias:app_no = g_app_no then
+    begin
+    Add agqtotals
+        Begin
+        agqtotals:app_no                =       g_new_app_no
+        agqtotals:prem_no               =       agqtotals_alias:prem_no
+        agqtotals:build_no              =       agqtotals_alias:build_no
+        agqtotals:deductible            =       agqtotals_alias:deductible
+        agqtotals:record_rdf            =       agqtotals_alias:record_rdf/raw
+        end
+    End
+
+access agqtotals1_alias, set agqtotals1_alias:app_no = g_app_no, generic
+
+if agqtotals1_alias:app_no = g_app_no then
+    begin
+    Add agqtotals1
+        Begin
+        agqtotals1:app_no                =       g_new_app_no
+        agqtotals1:prem_no               =       agqtotals1_alias:prem_no
+        agqtotals1:build_no              =       agqtotals1_alias:build_no
+        agqtotals1:record_rdf            =       agqtotals1_alias:record_rdf/raw
+        end
+    End
+
+end
+
+procedure update_agqmastsupp
+begin
+Access agqmastsupp_alias, Set agqmastsupp_alias:app_no = g_app_no, generic
+
+while agqmastsupp_alias:app_no = g_app_no
+    begin
+    Add agqmastsupp
+        Begin
+        agqmastsupp:app_no           =      g_new_app_no
+        agqmastsupp:line_of_business =      agqmastsupp_alias:line_of_business
+        agqmastsupp:RECORD_RDF       =      agqmastsupp_alias:RECORD_RDF/raw
+        End
+
+    Next agqmastsupp_alias
+    End
+
+end
+
+procedure update_agqlocation
+begin
+Access agqlocation_alias, Set agqlocation_alias:app_no = g_app_no, generic
+
+while agqlocation_alias:app_no = g_app_no
+    begin
+    Add agqlocation
+        Begin
+        agqlocation:app_no          =       g_new_app_no
+        agqlocation:PREM_NO         =       agqlocation_alias:PREM_NO
+        agqlocation:BUILD_NO        =       agqlocation_alias:BUILD_NO
+        agqlocation:SUB_CODE        =       agqlocation_alias:SUB_CODE
+        agqlocation:RECORD_RDF      =       agqlocation_alias:RECORD_RDF/raw
+        End
+
+    Next agqlocation_alias
+    End
+
+end
+
+procedure update_agqsupp
+begin
+Access agqsupp_alias, Set agqsupp_alias:app_no = g_app_no, generic
+
+while agqsupp_alias:app_no = g_app_no
+    begin
+    Add agqsupp
+        Begin
+        agqsupp:app_no                  =       g_new_app_no
+        agqsupp:PREM_NO                 =       agqsupp_alias:PREM_NO
+        agqsupp:BUILD_NO                =       agqsupp_alias:BUILD_NO
+        agqsupp:SUB_CODE                =       agqsupp_alias:SUB_CODE
+        agqsupp:RECORD_RDF              =       agqsupp_alias:RECORD_RDF/raw
+        End
+
+    Next agqsupp_alias
+    End
+
+end
+
+procedure update_agqsupp1
+begin
+Access agqsupp1_alias, Set agqsupp1_alias:app_no = g_app_no, generic
+
+while agqsupp1_alias:app_no = g_app_no
+    begin
+    Add agqsupp1
+        Begin
+        agqsupp1:app_no          =       g_new_app_no
+        agqsupp1:VEHICLE_NO      =       agqsupp1_alias:VEHICLE_NO
+        agqsupp1:SUB_CODE        =       agqsupp1_alias:SUB_CODE
+        agqsupp1:RECORD_RDF      =       agqsupp1_alias:RECORD_RDF/raw
+        End
+
+    Next agqsupp1_alias
+    End
+
+end
+
+procedure update_agqend
+begin
+Access agqend_alias, Set agqend_alias:app_no = g_app_no, generic
+
+while agqend_alias:app_no = g_app_no
+    begin
+    Add agqend
+        Begin
+        agqend:app_no          =       g_new_app_no
+        agqend:PREM_NO         =       agqend_alias:PREM_NO
+        agqend:BUILD_NO        =       agqend_alias:BUILD_NO
+        agqend:SUB_CODE        =       agqend_alias:SUB_CODE
+        agqend:RECORD_RDF      =       agqend_alias:RECORD_RDF/raw
+        End
+
+    Next agqend_alias
+    End
+
+end
+
+procedure update_agqend1
+begin
+Access agqend1_alias, Set agqend1_alias:app_no = g_app_no, generic
+
+while agqend1_alias:app_no = g_app_no
+    begin
+    Add agqend1
+        Begin
+        agqend1:app_no          =       g_new_app_no
+        agqend1:VEHICLE_NO      =       agqend1_alias:VEHICLE_NO
+        agqend1:SUB_CODE        =       agqend1_alias:SUB_CODE
+        agqend1:RECORD_RDF      =       agqend1_alias:RECORD_RDF/raw
+        End
+
+    Next agqend1_alias
+    End
+
+end
+
+/*procedure update_agqnotes
+begin
+l_notes = "Converted app to app using app no " + trun(str(g_app_no))
+Add agqnotes
+    Begin
+    agqnotes:app_no          =       g_new_app_no
+    agqnotes:PREM_NO         =       0
+    agqnotes:BUILD_NO        =       0
+    agqnotes:TRANS_DATE      =       todaysdate
+    agqnotes:SUB_CODE        =       10
+    agqnotes:notes           =       l_notes/raw
+    End
+
+end*/
+
+procedure update_agqapplication
+begin
+access agqapplication_alias, set agqapplication_alias:app_no = g_app_no, generic
+
+while agqapplication_alias:app_no = g_app_no
+    begin
+    Add agqapplication
+        Begin
+        agqapplication:app_no      =    g_new_app_no
+        agqapplication:sub_code    =    agqapplication_alias:sub_code
+        agqapplication:record_rdf  =    agqapplication_alias:record_rdf/raw
+        End
+
+    next agqapplication_alias
+    end
+
+end
+
+End

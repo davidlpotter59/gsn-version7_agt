@@ -1,0 +1,743 @@
+%%                 
+Screen
+        Name = "agtmt341";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqaddin3" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_sub_code_1[2],
+                                     g_sub_code_2[2],
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_sub_code_1[4],
+                                    l_sub_code_2[4],
+                                    l_line_of_business[4],
+                                    l_limit[8],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_premium[6],
+                                    l_class_code[5],
+                                    l_no_locations[2]=0,
+                                    l_first_prem_no[4]=0,
+                                    l_first_build_no[4]=0,
+                                    l_last_prem_no[4]=0,
+                                    l_last_build_no[4]=0,
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_text[55],
+                     l_screen[9],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     l_heading[60],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ,
+                     l_first_location[1]="Y" ,
+                     l_first_str_location[12]="",
+                     l_last_str_location[12]="",
+                     l_str_location[12]="";
+
+
+        Access agqaddin3,
+           Set agqaddin3:app_NO   = G_app_NO ,
+               agqaddin3:prem_no  = g_prem_no,
+               agqaddin3:build_no = g_build_no,
+               agqaddin3:code     = g_code, generic;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        add/autoupdate tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+        "redisplay" display/noreturn "agtmt341" ;
+        "func1" sequence "JOB" tagged jobsite_fn ;
+        "JOB" continue begin
+                       g_sub_code_1 = agqaddin3:sub_code[1,2]
+                       g_sub_code_2 = agqaddin3:sub_code[3,4]
+                       l_screen     = "agtmt341a"
+                       function     = "popup"
+                       end ;
+        "popup" display l_screen ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+
+screen entry
+disable(accept_fn)
+access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+l_sub_code = 30
+access sfsemail, set sfsemail:company_id = agqcontractor:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "scp"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqcontractor:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+else
+    begin
+    hide(farmers_fn)
+    hide(ficof_fn)
+    end
+
+if agqaddin3:app_no <> g_app_no or
+   agqaddin3:prem_no <> g_prem_no or
+   agqaddin3:build_no <> g_build_no or
+   agqaddin3:code <> g_code then
+    function = "ADD"
+
+switch(g_code)
+  case "MCL309" : l_text = "MCL309 - Add'l Insured - Permits"
+  case "MCL311" : l_text = "MCL311 - Add'l Insured - Controlling Interest"
+  case "MCL312" : l_text = "MCL312 - Add'l Insured - Co-Owners Premises"
+  case "MCL313" : l_text = "MCL313 - Add'l Insured - Managers or Lessors"
+  case "MCL317" : l_text = "MCL317 - Add'l Insured - Grantor Franchise"
+  case "MCL320" : l_text = "MCL320 - Additional Insured"
+  case "MCL322" : l_text = "MCL322 - Add'l Insured - Assignee/Mortgage/Receiver"
+  case "MCL324" : l_text = "MCL324 - Add'l Insured - Lessor of Equipment"
+  case "MCL325" : l_text = "MCL325 - Add'l Insured - Contractors/Lessor/Owner"
+  case "MCL326" : l_text = "MCL326 - Add'l Insured - Contractors/Lessor/Owner"
+  end
+
+setproperty(display_information_box,text,l_text)
+
+if g_code <> "MCL326" then
+    hide(jobsite_fn)
+
+Access Validation
+If agqaddin3:app_NO   <> G_app_NO or
+   agqaddin3:prem_no  <> g_prem_no or
+   agqaddin3:build_no <> g_build_no or
+   agqaddin3:code     <> g_code Then
+    Error 1000 ;
+
+access agqaddin3_alias, set agqaddin3_alias:app_no   = agqaddin3:app_no,
+                           agqaddin3_alias:prem_no  = agqaddin3:prem_no,
+                           agqaddin3_alias:build_no = agqaddin3:build_no,
+                           agqaddin3_alias:code     = agqaddin3:code, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqaddin3_alias:app_no   = agqaddin3:app_no and
+      agqaddin3_alias:prem_no  = agqaddin3:prem_no and
+      agqaddin3_alias:build_no = agqaddin3:build_no and
+      agqaddin3_alias:code     = agqaddin3:code
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqaddin3_alias:prem_no) +
+                               str(agqaddin3_alias:build_no) +
+                               str(agqaddin3_alias:sub_code)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqaddin3_alias:prem_no) +
+                           str(agqaddin3_alias:build_no) +
+                           str(agqaddin3_alias:sub_code)
+    l_no_locations  = l_no_locations + 1
+
+    next agqaddin3_alias
+    end
+
+l_str_location = str(agqaddin3:prem_no) +
+                 str(agqaddin3:build_no) +
+                 str(agqaddin3:sub_code)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent         = false
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,60     tagged display_information_box
+                properties
+                  {
+                    text = ""
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35  tagged accept_fn
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt341.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,10 to 17, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+          Name: __________________________________________________
+                __________________________________________________
+                __________________________________________________
+        Street: __________________________________________________
+                __________________________________________________
+                __________________________________________________
+City/State/Zip: ______________________________  ___  __________
+
+%%
+
+Components
+
+Fields
+101     begin
+         if function one of "ADD","NEW","CHG","CHANGE" then
+           {
+             enable(accept_fn)
+             disable(close_fn)
+           }
+         else
+           {
+             disable(accept_fn)
+             enable(close_fn)
+           }
+
+        if function one of "ADD" then
+            begin
+            agqaddin3:app_no     = g_app_no
+            agqaddin3:prem_no    = g_prem_no
+            agqaddin3:build_no   = g_build_no
+            agqaddin3:code       = g_code
+            do subcode
+            agqaddin3:sub_code   = l_sub_code
+            end
+        end
+        agqaddin3:NAME[1]/tabstop ;
+201     agqaddin3:NAME[2]/tabstop ;
+301     agqaddin3:NAME[3]/tabstop;
+401     agqaddin3:ADDRESS[1]/tabstop ;
+501     agqaddin3:ADDRESS[2]/tabstop;
+601     agqaddin3:ADDRESS[3]/tabstop;
+701     agqaddin3:CITY/tabstop ;
+702     agqaddin3:STR_STATE/tabstop;
+703     agqaddin3:STR_ZIPCODE/tabstop
+        access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+        if agqcontractor:company_id = "FLEMINGTON" then
+            begin
+            do access_sfsoptend
+            agqaddin3:total_premium = l_premium
+            end ;
+703     Begin
+        If agqaddin3:STR_ZIPCODE[6,9] = "" Then
+            agqaddin3:STR_ZIPCODE[6,9] = "0000"
+        End
+        agqaddin3:STR_ZIPCODE/displayonly ;
+
+}
+
+
+Panel at 20,40 to 20,55 tagged jobsite_fn
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+              Iconname = "btn_jobsite.bmp"
+            }
+          Events  {
+                    Action = jobsite_fn
+                  }
+
+    }
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,1 to 23,100 Tagged farmers_fn
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5   tagged addinsured_fn
+        Properties {
+                Iconname = "btn_add_addl_insured.bmp"
+                }
+        Events  {
+                Action = add_fn
+                }
+        Button at 1,35   tagged previous_fn
+        Properties {
+                Iconname = "btn_previous.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+        Button at 1,55   tagged next_fn
+        Properties {
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+        Button at 1,80   tagged close_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+Panel at 23,1 to 23,100
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5   tagged add_fn
+        Properties {
+                Iconname = "btn_add_addl_insured.bmp"
+                }
+        Events  {
+                Action = add_fn
+                }
+        Button at 1,30   tagged previous_fn
+        Properties {
+                Iconname = "btn_small_previous.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+        Button at 1,45   tagged next_fn
+        Properties {
+                Iconname = "btn_small_next.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+        Button at 1,60  tagged delete_fn
+        Properties {
+                Iconname = "btn_delete_addl_insured.bmp"
+                }
+        Events  {
+                Action = delete_fn
+                }
+        Button at 1,80   tagged close_fn
+        Properties {
+                Iconname = "btn_small_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+update
+if UPDATEOK = "NO" then
+  {
+    enable (close_fn)
+    disable(accept_fn)
+  }
+
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    if g_code = "MCL326" then
+        begin
+        if function = "ADD" then
+            begin
+            g_sub_code_1 = agqaddin3:sub_code[1,2]
+            g_sub_code_2 = agqaddin3:sub_code[3,4]
+            display modal screen "agtmt341a"
+            with initial function "ADD"
+            end
+        end
+
+    if g_code = "MCL325" then
+        begin
+        do access_scsclasscode
+        l_sub_code_1 = l_sub_code[1,2]
+        l_sub_code_2 = l_sub_code[3,4]
+        access agqendorse3, set agqendorse3:app_no     = g_app_no,
+                                agqendorse3:prem_no    = g_prem_no,
+                                agqendorse3:build_no   = g_build_no,
+                                agqendorse3:code       = g_code,
+                                agqendorse3:sub_code_1 = l_sub_code_1,
+                                agqendorse3:sub_code_2 = l_sub_code_2, generic
+
+        if agqendorse3:app_no     = g_app_no and
+           agqendorse3:prem_no    = g_prem_no and
+           agqendorse3:build_no   = g_build_no and
+           agqendorse3:code       = g_code and
+           agqendorse3:sub_code_1 = l_sub_code_1 and
+           agqendorse3:sub_code_2 = l_sub_code_2 then
+            begin
+            change agqendorse3
+                begin
+                agqendorse3:description[1] = l_description
+                end
+
+            end
+        else
+            begin
+            add agqendorse3
+                begin
+                agqendorse3:app_no         = g_app_no
+                agqendorse3:prem_no        = g_prem_no
+                agqendorse3:build_no       = g_build_no
+                agqendorse3:code           = g_code
+                agqendorse3:sub_code       = l_sub_code
+                agqendorse3:description[1] = l_description
+                end
+            end
+        end
+    function = "redisplay"
+    end
+
+Procedure Definition
+
+procedure access_sfsoptend
+begin
+access agqcontractor, set agqcontractor:app_no   = g_app_no,
+                          agqcontractor:prem_no  = g_prem_no,
+                          agqcontractor:build_no = g_build_no, generic
+
+access sfsoptend, set sfsoptend:company_id       = agqcontractor:company_id,
+                      sfsoptend:state            = agqcontractor:state,
+                      sfsoptend:line_of_business = agqcontractor:line_of_business,
+                      sfsoptend:code             = g_code, generic
+
+while sfsoptend:company_id       = agqcontractor:company_id and
+      sfsoptend:state            = agqcontractor:state and
+      sfsoptend:line_of_business = agqcontractor:line_of_business and
+      sfsoptend:code             = g_code
+        begin
+        if agqcontractor:eff_date >= sfsoptend:eff_date then
+            begin
+            l_premium = sfsoptend:premium_1[1]
+            end
+
+        next sfsoptend
+        end
+
+end
+
+
+procedure access_scsclasscode
+begin
+access agqclasscode, set agqclasscode:app_no   = g_app_no,
+                         agqclasscode:prem_no  = g_prem_no,
+                         agqclasscode:build_no = g_build_no, generic
+
+l_class_code = agqclasscode:class_code
+access scsclasscode, set scsclasscode:company_id       = agqcontractor:company_id,
+                         scsclasscode:state            = agqcontractor:state,
+                         scsclasscode:line_of_business = agqcontractor:line_of_business,
+                         scsclasscode:class_code       = l_class_code, generic
+
+while scsclasscode:company_id       = agqcontractor:company_id and
+      scsclasscode:state            = agqcontractor:state and
+      scsclasscode:line_of_business = agqcontractor:line_of_business and
+      scsclasscode:class_code       = l_class_code
+        begin
+        if (agqcontractor:eff_date >= scsclasscode:eff_date or
+           (agqcontractor:exp_date <= scsclasscode:exp_date or
+           scsclasscode:exp_date = 0)) then
+            begin
+            l_description = scsclasscode:description
+            end
+
+        next scsclasscode
+        end
+
+end
+
+Procedure SUBCODE
+Begin
+Access agqaddin3_ALIAS, Set agqaddin3_ALIAS:app_no   = G_app_no,
+                            agqaddin3_ALIAS:PREM_NO  = G_PREM_NO,
+                            agqaddin3_ALIAS:BUILD_NO = G_BUILD_NO,
+                            agqaddin3_ALIAS:CODE     = G_CODE, Generic
+
+L_SUB_CODE = 0
+While agqaddin3_ALIAS:app_no   = G_app_no And
+      agqaddin3_ALIAS:PREM_NO  = G_PREM_NO And
+      agqaddin3_ALIAS:BUILD_NO = G_BUILD_NO And
+      agqaddin3_ALIAS:CODE     = G_CODE
+        Begin
+        L_SUB_CODE = agqaddin3_ALIAS:SUB_CODE
+
+        Next agqaddin3_ALIAS
+        End
+
+L_SUB_CODE = L_SUB_CODE + 10
+End
+
+
+End

@@ -1,0 +1,399 @@
+%%                 
+Screen
+        Name = "agtmt353";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqendorse3" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_line_of_business[4],
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    l_limit[8],
+                                    l_form_1[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_limit_1[8],
+                                    l_limit_2[8],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_description_1[20],
+                     l_description_2[20],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ;
+
+        Access agqendorse3,
+           Set agqendorse3:app_NO   = G_app_NO ,
+               agqendorse3:prem_no  = g_prem_no,
+               agqendorse3:build_no = g_build_no ,
+               agqendorse3:code     = g_code ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        add/autoupdate   tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+access sfsemail, set sfsemail:company_id = agqcontractor:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "scp"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqcontractor:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+if agqendorse3:app_no   <> g_app_no or
+   agqendorse3:prem_no  <> g_prem_no or
+   agqendorse3:build_no <> g_build_no or
+   agqendorse3:code     <> g_code then
+    function = "ADD"
+
+Access Validation
+If agqendorse3:app_NO   <> G_app_NO or
+   agqendorse3:prem_no  <> g_prem_no or
+   agqendorse3:build_no <> g_build_no or
+   agqendorse3:code     <> g_code Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent         = false
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,60     tagged display_information_box
+                properties
+                  {
+                    text = "Fungi/Mold Limitations - Liability"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt353.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 9,40 to 11,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+Limit: ___________
+
+
+%%
+
+components
+
+Fields
+101     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqendorse3:app_no   = G_app_no
+            agqendorse3:PREM_NO  = G_PREM_NO
+            agqendorse3:BUILD_NO = G_BUILD_NO
+            agqendorse3:CODE     = G_CODE
+            Do SUBCODE
+            agqendorse3:SUB_CODE = L_SUB_CODE
+            End
+
+        access agqcontractor, set agqcontractor:app_no   = g_app_no,
+                                  agqcontractor:prem_no  = g_prem_no,
+                                  agqcontractor:build_no = g_build_no, generic
+
+        access scsmold_alias, set scsmold_alias:company_Id       = agqcontractor:company_id,
+                                  scsmold_alias:state            = agqcontractor:state,
+                                  scsmold_alias:line_of_business = agqcontractor:line_of_business,
+                                  scsmold_alias:prop_liab        = "L", generic
+
+        End
+        agqendorse3:limit[1]
+        l_limit = agqendorse3:limit[1]
+        access scsmold, set scsmold:company_Id       = agqcontractor:company_id,
+                            scsmold:state            = agqcontractor:state,
+                            scsmold:line_of_business = agqcontractor:line_of_business,
+                            scsmold:prop_liab        = "L",
+                            scsmold:limit            = l_limit, generic
+
+        if l_limit <> scsmold:limit then
+            error 1238
+
+        activehelp scsmold_alias:limit ;
+
+}
+
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,35 to 23,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+procedure definition
+
+Procedure SUBCODE
+Begin
+Access agqendorse3_ALIAS, Set agqendorse3_ALIAS:app_no   = G_app_no,
+                              agqendorse3_ALIAS:PREM_NO  = G_PREM_NO,
+                              agqendorse3_ALIAS:BUILD_NO = G_BUILD_NO,
+                              agqendorse3_ALIAS:CODE     = G_CODE, Generic
+
+L_SUB_CODE = 0
+While agqendorse3_ALIAS:app_no   = G_app_no And
+      agqendorse3_ALIAS:PREM_NO  = G_PREM_NO And
+      agqendorse3_ALIAS:BUILD_NO = G_BUILD_NO And
+      agqendorse3_ALIAS:CODE     = G_CODE
+        Begin
+        L_SUB_CODE = agqendorse3_ALIAS:SUB_CODE
+
+        Next agqendorse3_ALIAS
+        End
+
+L_SUB_CODE = L_SUB_CODE + 10
+End
+
+End

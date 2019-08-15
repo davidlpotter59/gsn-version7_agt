@@ -1,0 +1,529 @@
+%%
+Screen
+        Name         = "agtmt001"
+        Type         = "Detail"
+        domain       = "Dummy"
+        ScreenSize   = "70x31"
+        padcharacter = space
+        Statusbar    = False
+        iconline     = 0
+        Resizable    = True
+        windowtitle ="%s"
+
+        global unsigned ascii number g_enhancement[1] ;
+
+        global string g_company_id[10] ;
+
+        global unsigned ascii number g_state[2],
+                                     g_app_no[11],
+                                     g_agent_no[4] ;
+
+        local string l_company_id[10],
+                     l_username[15],
+                     l_screen_to_call[20],
+                     l_search_screen_to_call[20],
+                     l_copyright[100],
+                     l_user_id[15] ;
+
+        local unsigned ascii number l_line_of_business[4],
+                                    l_state[2],
+                                    l_agent_no[4];
+
+style definition
+  style {
+    fontsize = 16
+    fontstyle = bold
+    contentalignment = middle
+    fontname = "arial"
+  } tagged T_heading_style
+
+Functions
+
+        "redisplay" display/noreturn "agtmt001" ;
+        "func1" display l_screen_to_call ;
+        "func2" display "agtmt105" ;
+        stop ;
+
+        include "stdfunc7.inc"
+
+Event Definition
+    Default EventHandler
+        {
+        "REMOVE_SCREEN"
+            {
+            function = "exit" abort ()
+            }
+        "display_message"
+            {
+            warning "" + event.value
+            }
+        }
+
+
+
+menu definition
+
+  Menu
+    {
+         Menuitem Properties {
+                                            Shortcut = "Ctrl+P"
+                             }
+                  Events     {
+                                            Action   = Print_fn
+                             }
+    }
+
+toolbar definition
+
+screen entry
+  g_app_no = 0
+
+l_copyright = "Copyright SCIPS.com, Inc - 1999 - " + str(year(todaysdate)) + " - Powered by Cyberscience Corporation"
+setproperty(copyright,text,l_copyright)
+
+access sfsdefault, set sfsdefault:SFS_CODE = "SFS", generic
+
+l_state      = sfsdefault:state
+l_company_id = sfsdefault:company_id
+l_username   = username
+access sfsdefault,
+    set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+  {
+    setproperty(welcome_text,text,"Welcome to Farmers Insurance Company of Flemington")
+  }
+else
+  if sfsdefault:company_id one of "FARMERS" then
+    {
+      setproperty(welcome_text,text,"Welcome to Farmers Insurance Company of Salem")
+    }
+
+if sfsdefault:company_id = "LEBINS" then
+    begin
+    setproperty(welcome_text,text,"STAR System")
+    hide(personal_lines)
+    end
+else
+if sfsdefault:company_id = "GGUND" then
+    begin
+    setproperty(welcome_text,text,"Agent Quote Processing Application")
+    hide(personal_lines)
+    end
+else
+    begin
+    setproperty(welcome_text,text,"Agent Quote Processing Application")
+    hide(close_fn)
+    end
+
+if sfsdefault:company_id = "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    hide(ggund_fn)
+    hide(others_fn)
+    end
+else
+if sfsdefault:company_id = "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    hide(ggund_fn)
+    end
+else
+if sfsdefault:company_id = "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    hide(ggund_fn)
+    end
+else
+if sfsdefault:company_id = "GGUND" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if l_company_id = "FARMERS" then
+    begin
+    if sfsemail:agent_no <> 0 then
+        hide(underwriter)
+    else
+        hide(agent)
+    end
+else
+    begin
+    hide(underwriter)
+    hide(agent)
+    end
+
+if sfsemail:agent_no = 0 then
+    {
+    l_agent_no = 9999
+    }
+else
+    {
+    l_agent_no = sfsemail:agent_no
+    }
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = l_agent_no, exact
+
+if sfsemail:agent_no <> 0 and
+   sfsagent:state <> 0 then
+    l_state = sfsagent:state
+
+screen
+    Properties {
+                 layouttype = column
+                 Transparent = False
+                 backgroundimagename = "gg_loginbanner.jpg"
+                 scrollbarpolicy=always
+--                 bordercolor = "black"
+--                 borderwidth = 2
+               }
+
+    {
+    Panel/hidden
+        {
+        Fields
+            Function at 1,1 ;
+        }
+
+    Panel
+        Properties
+          {
+            layouttype = row
+            borderpadding = 5
+--            layoutalignment = top
+          }
+        {
+          components
+            guidetext at 1,1
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,1
+                properties
+                  {
+                    layoutconstraints = stretch
+                  }
+            guidetext at 1,1   tagged farmers_fn
+              properties
+                {
+                  iconname = "salem_logo.gif"
+                }
+            guidetext at 1,1   tagged ficof_fn
+              properties
+                {
+                  iconname = "ficof_logo.gif"
+                }
+            guidetext at 1,1   tagged lebins_fn
+              properties
+                {
+                  iconname = ""
+                }
+            guidetext at 1,1   tagged ggund_fn
+              properties
+                {
+                  iconname = "gg_loginbanner.jpg"
+                }
+        }
+
+    Panel
+        Properties
+            {
+              LayoutType = column
+              layoutgap = 10
+--              borderpadding = "50,0,0,0"
+            }
+        {
+        Components
+          guidetext/style=t_heading_style at 1,1
+          guidetext/style=t_heading_style at 1,1 tagged welcome_text
+             properties
+               {
+--                 text = "Agent Quote Processing Application"
+                 text = ""
+                 underlined = true
+                 foregroundcolor="grey"
+               }
+          guidetext at 1,1
+            properties
+                {
+                  contentalignment = Middle
+                text = "To begin, select an option below..."
+                }
+        }
+   Panel
+     properties
+         {
+           layouttype        = Column
+           layoutgap         = 50
+           layoutconstraints = stretch
+           scrollbarpolicy   = asneeded
+           borderstyle = plain
+           bordercolor = "black"
+           borderwidth = "2,0,2,0"
+           borderpadding   = 50
+         }
+       {
+
+         Panel tagged others_fn
+                Properties {
+                layouttype = row
+                layoutalignment = middle
+                }
+        {
+        components
+            button at 1,1
+              Properties
+                {
+                  Iconname = "find_a_proposal.bmp"
+                }
+            events
+                    {
+                    action
+                        {
+                        l_line_of_business = 9997
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        if agqsetupmainscreen:screen_to_call_2 <> "" and
+                           l_company_id = "FARMERS" and
+                           l_state = 29 then
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call_2
+                        else
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+
+
+        }
+
+         Panel tagged farmers_fn
+                Properties {
+                layouttype = row
+                layoutalignment = middle
+                }
+        {
+        components
+            button at 1,1
+              Properties
+                {
+                  Iconname = "btn_find_application.bmp"
+                }
+            events
+                    {
+                    action
+                        {
+                        l_line_of_business = 9997
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        if agqsetupmainscreen:screen_to_call_2 <> "" and
+                           l_company_id = "FARMERS" and
+                           l_state = 29 then
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call_2
+                        else
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+
+
+        }
+         Panel tagged personal_lines
+                Properties {
+                layouttype = row
+                layoutalignment = middle
+                }
+        {
+        components
+            button at 1,1
+              properties
+                {
+                  Iconname = "create_pl_quote.bmp"
+                }
+            events
+                    {
+                    action
+                        {
+                        l_line_of_business = 9999
+                        access agqsetupmainscreen,
+                                set agqsetupmainscreen:company_id       = l_company_id,
+                                    agqsetupmainscreen:state            = l_state,
+                                    agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        if agqsetupmainscreen:screen_to_call_2 <> "" and
+                           l_company_id = "FARMERS" and
+                           l_state = 29 then
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call_2
+                        else
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+
+                        function = "func1"
+                        abort()
+                        }
+                    }
+
+
+        }
+
+         Panel
+                Properties {
+                layouttype = row
+                layoutalignment = middle
+                }
+        {
+        components
+            Button at 1,1
+              properties
+                {
+                  Iconname = "create_cl_quote.bmp"
+                }
+            events
+                    {
+                    action
+                        {
+                        l_line_of_business = 9998
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+
+
+        }
+
+         Panel tagged close_fn
+                Properties {
+                layouttype = row
+                layoutalignment = middle
+                }
+        {
+        components
+            Button at 1,1
+              properties
+                {
+                  Iconname = "btn_close.bmp"
+                }
+            events
+                    {
+                    action
+                        {
+                        function = "stop"
+                        abort()
+                        }
+                    }
+
+
+        }
+
+         Panel            tagged agent
+                Properties {
+                layouttype = row
+                layoutalignment = middle
+                }
+        {
+        components
+            Button at 1,1
+              properties
+                {
+                  Iconname = "btn_agent_quote_status.bmp"
+                }
+            events
+                    {
+                    action
+                        {
+                        l_screen_to_call = "agtmt9997"
+                        function = "func1"
+                        abort()
+                        }
+                    }
+
+
+        }
+
+         Panel            tagged underwriter
+                Properties {
+                layouttype = row
+                layoutalignment = middle
+                }
+        {
+        components
+            Button at 1,1
+              properties
+                {
+                  Iconname = "btn_underwriter_quote_status.bmp"
+                }
+            events
+                    {
+                    action
+                        {
+                        l_screen_to_call = "agtmt9998"
+                        function = "func1"
+                        abort()
+                        }
+                    }
+
+
+        }
+
+         Panel            tagged farmers_fn
+                Properties {
+                layouttype = row
+                layoutalignment = middle
+                }
+        {
+        components
+            Button at 1,1
+              properties
+                {
+                  Iconname = "btn_reports.bmp"
+                }
+            events
+                    {
+                    action
+                        {
+                        l_screen_to_call = "agtmt001g"
+                        function = "func1"
+                        abort()
+                        }
+                    }
+
+
+        }
+
+       }
+
+    panel
+          properties {
+             layouttype = row
+        }
+      {
+        Components
+           guidetext at 1,1 tagged copyright
+      }
+
+
+}
+
+End

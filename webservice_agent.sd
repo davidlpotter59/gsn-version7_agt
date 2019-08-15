@@ -1,0 +1,516 @@
+%%                    
+Program
+       Name="webservice_agent"
+       Type="file"
+       Domain="dummy"
+--  do not add padcharacter equals space it will cresh this program
+
+       string l_filename1[20] = "request.xml";
+       string l_filename[20] = "request_response.xml";
+       string l_filename2[20] = "orginalrequest.xml";
+       string l_filename3[20] = "get_response.xml";
+       string l_responsefile[20] = "response.xml";
+       string l_credit_score_file[12] = "credit_score";
+       string l_credit_error_file[18] = "error_credit_score"
+       string l_which_web_service_function[500];
+       String l_request[1500];
+       String l_response[25500];
+       string l_scoring_segment[7];
+       string l_error_segment[19];
+       string l_credit_score[5];
+       string l_accept_id[9];
+       string l_error_message[300];
+       string l_which_protocol[40];
+       string l_web_service_error[2048];
+       string function parse_get_response(string, string, string);
+       string function parse_add_on_status_header(string);
+       string l_enter[1];
+       string l_service_status[2];                            --used what a credit report is blocked or supended
+       unsigned ascii number l_app_no[11];
+       unsigned ascii number l_tries[2];
+       unsigned ascii number l_quit_program[1];
+       unsigned ascii number l_no_accept_id_came[1];
+       array [4] of string  l_risk_scoring_factor[3];
+
+Initialisation
+
+{
+   l_app_no= Val(commandline[1,11])
+   L_which_protocol = uppercase(COMMANDLINE [12,51])
+   l_error_segment   = '"xsd:string">Error:'
+   deletefile(l_credit_score_file)
+   deletefile(l_credit_error_file)
+   deletefile(l_filename2)
+   deletefile(l_filename1)
+   deletefile(l_filename3)
+   deletefile(l_filename)
+   do get_tus_credit_request    --setup the trans union request format and it will create the request.xml file
+   l_accept_id = ""
+   l_tries = 0
+   while l_tries < 10 and trun(l_accept_id) = ""
+     {
+       l_which_web_service_function="SOAPMethodName: https://expressnet.iix.com/web-services/Auth:sendRequest<NL>"
+       do connect_with_webservice(l_which_web_service_function)      --sendRequest returns an 9 digit accept_id
+       do get_accept_message_from_request(l_response)  --this will provide the accept_id if is does I need to request it again up to 10 times if response not yet available it give
+       if trun(l_accept_id) = "" then --means an error message was sent back one would be Response not yet avaiable is returned.  If it is Response Not yet available I have to i have to try again I have a loop 10 all other errors should stop the program
+         {
+           l_error_message = parse_get_response("",l_error_segment, l_response)
+           if uppercase(l_error_message) = uppercase("Response Not Yet Available") then
+             {
+               Pause (2000)  --pause for 2 seconds
+             }
+           else
+             {
+               l_quit_program = 1
+               l_tries = 11
+             }
+         }
+       l_tries = l_tries + 1
+       write("<014>%s%s<NL>", "accept_id ", l_accept_id)
+       write("%s%x<NL>", "l_tries ", l_tries)
+       read(10,1,"press enter to continue",l_enter,1)
+     }
+   if l_tries = 10 then  --tried 10 times for a total of 50 seconds and did not get a response for the accept ID.
+     {
+       do update_agqcreditscore("I tried 10 times and no accept ID was given.  Please contact IIX 1-800-683-8553 option 7.",val("999"))
+     }
+   else
+     if l_quit_program one of 1 then
+       {
+         do update_agqcreditscore("l_error_message",val("999"))
+         write("%s%s<NL>","ERROR MESSAGE returned trying to get accept ID. -->",l_error_message)
+       }
+   deletefile(l_filename1)                   --erase the send_request.xml file so I can reuse it for the getResponse
+   l_tries = 0
+   if l_quit_program not one of 1 then    --the request came back bad why asked for a get response to a bad formatted sting  STOP
+     {
+       while l_tries <= 10
+         {
+           l_error_message = ""
+           do fillin_get_response(l_accept_id)
+           l_which_web_service_function="SOAPMethodName: https://expressnet.iix.com/web-services/Auth:getResponse<NL>"
+           do connect_with_webservice(l_which_web_service_function)      --get_response to the original request with accept id.
+           l_scoring_segment = iix_transunion_score:FFR_segment_id + iix_transunion_score:FFR_segment_length     --this is what I am searching for first 7 char of SC01034
+--           write("%csetting up scoring header%s",05001,l_scoring_segment)
+--           read(10,1,"press enter to continue",l_entqer,1)
+           l_credit_score = parse_get_response(l_scoring_segment,l_error_segment, l_response)
+           if l_credit_score[1] = "+" then
+             {
+               if Val(l_credit_score) > 0 then   --means a number value was assigned to l_credit_score
+                 {
+--                   write("%c%s",05001,l_credit_score)
+
+                   do update_agqcreditscore("",val(l_credit_score))
+--                   write("%s%s<NL>", "I have the credit score", l_credit_score)
+--                   read(10,1,"press enter to continue",l_enter,1)
+                 }
+               else   --string was found in the credit score
+                 {
+                   l_error_message = "ERROR--> string value found in credit score position which should be numeric check function parse_get_response"
+                   do update_agqcreditscore(l_error_message,999)
+                 }
+               l_tries = 11   --either condition above I need to break out of the loop (while).  I have an error which should not happen because the parse_get_repsonse will work properly
+             }
+           else
+             {
+               l_error_message = parse_get_response("",l_error_segment, l_response)
+               if uppercase(l_error_message) = uppercase("Response Not Yet Available") then
+                 {
+                   write("%x%x%x<NL>", "I am pausing for 2 seconds giving the web service time for the following error",l_error_message,l_tries)
+                   pause (5000)   --2 full second pause for next attempt
+                 }
+               else           --account related error
+                 if uppercase(l_error_message) = uppercase("Your WebServices Password has Expired. Please call WebServices Customer Support at 1-800-683-8553, option 7.") or
+                    uppercase(l_error_message) = uppercase("Your WebServices Password has been revoked. Please call WebServices Customer Support at 1-800-683-8553, option 7") or
+                    uppercase(l_error_message) = uppercase("The WebServices Password you entered is not valid. Your password will be revoked after 3 failed login attempts.") or
+                    uppercase(l_error_message) = uppercase("The WebServices Password you entered is not valid. Your password will be revoked after 2 failed login attempts.") or
+                    uppercase(l_error_message) = uppercase("The WebServices Password you entered is not valid. Your password will be revoked after 1 failed login attempts.") or
+                    uppercase(l_error_message) = uppercase("Invalid account/bill code for this request ID") or
+                    uppercase(l_error_message) = uppercase("This Account is not registered for online application access. Please Register before trying to Sign In.") or
+                    uppercase(l_error_message) = uppercase("No requests can be processed for this Account. The Account has unknown status. Please contact iiX Sales at 1-800-683-8553, option 1.") or
+                    uppercase(l_error_message) = uppercase("The Account you entered is not an iiX account. Please check with your system administrator and try again.") then
+                  {
+                    writefile(l_credit_error_file,"%s<NL>",l_error_message)  --just so it can be attached to an email
+                    closefile(l_credit_error_file)
+                    do update_agqcreditscore(l_error_message,val("999"))
+                    Proc("cli mail -s Web Service Account Error %s < l_credit_error_file","support@scips.com")/noconsole
+                    Proc("cli mail -s Web Service Account Error %s < l_credit_error_file","support@fosnj.com")/noconsole
+                    l_tries = 11
+                  }
+                else  --this section is to formatting errors  I need to look for AO01017
+                  {
+                    l_service_status = parse_add_on_status_header(l_response)
+                    if trun(l_service_status) <> "" then   --I found a surpressed credit report need pin to access
+                      {
+                        switch (l_service_status)
+                          case "01" : l_error_message = "Requested service delivered"
+                          case "02" : l_error_message = "Requested service not available"
+                          case "03" : l_error_message = "Subscriber code not authorized for requested service"
+                          case "04" : l_error_message = "Default service delivered"
+                          case "05" : l_error_message = "Invalid score request"
+                          case "06" : l_error_message = "Requested information cannot be scored or returned because data is suppressed or cannot be evaluated."
+                          default : l_error_message = "Please check the TU 4.0 users guide on page 3-12"
+                        end
+                        write( "%x%x<NL>", "AO17017 has the error message",l_error_message)
+                        do update_agqcreditscore(l_error_message,val("999"))
+                        l_tries = 11
+                      }
+                    else  --I need to check of Subject segment now SH01027
+                      {
+                        do parse_subject_header(l_response)
+                        write( "%x%x<NL>", "Subject seqment SH01027",l_error_message)
+                        do update_agqcreditscore(l_error_message,val("999"))
+                        writefile(l_credit_error_file,"%s<NL>",l_error_message)  --just so it can be attached to an email
+                        closefile(l_credit_error_file)
+                        Proc("cli mail -s Web Service Formatting Error %s < l_credit_error_file","support@scips.com")/noconsole
+                        Proc("cli mail -s Web Service Formatting Error %s < l_credit_error_file","support@fosnj.com")/noconsole
+                        l_tries = 11
+                      }
+                  }
+             }   --error message has been returned
+           l_tries = l_tries + 1
+         }
+        if l_tries = 10 then  --means there is no creditscore and the "Response Not Yet Available" CAME BACK 10 TIMES.
+          {
+            do update_agqcreditscore("Response Not Yet Available came back 10 times in a row.  Please contact IIX 1-800-683-8553 option 7.",val("999"))
+          }
+     } --if
+}   --intialization
+
+Update
+
+procedure definition
+
+Procedure update_agqcreditscore(string p_error_message, number p_credit_score)
+
+BEGIN
+  access agqcreditscore,
+     set agqcreditscore:app_no = l_app_no, generic
+  if agqcreditscore:app_no = l_app_no then
+    {
+      change agqcreditscore
+        {
+          agqcreditscore:ERROR_MESSAGE_RETURNED      = p_error_message
+          agqcreditscore:credit_score                = p_credit_score
+          agqcreditscore:DATE_CREDIT_SCORED_RECEIVED = todaysdate
+          agqcreditscore:risk_scoring_code[1]        = l_risk_scoring_factor[1]
+          agqcreditscore:risk_scoring_code[2]        = l_risk_scoring_factor[2]
+          agqcreditscore:risk_scoring_code[3]        = l_risk_scoring_factor[3]
+          agqcreditscore:risk_scoring_code[4]        = l_risk_scoring_factor[4]
+        }
+    }
+  else
+    {
+      add agqcreditscore
+        {
+          agqcreditscore:app_no                      = l_app_no
+          agqcreditscore:ERROR_MESSAGE_RETURNED      = p_error_message
+          agqcreditscore:credit_score                = p_credit_score
+          agqcreditscore:DATE_CREDIT_SCORED_RECEIVED = todaysdate
+          agqcreditscore:risk_scoring_code[1]        = l_risk_scoring_factor[1]
+          agqcreditscore:risk_scoring_code[2]        = l_risk_scoring_factor[2]
+          agqcreditscore:risk_scoring_code[3]        = l_risk_scoring_factor[3]
+          agqcreditscore:risk_scoring_code[4]        = l_risk_scoring_factor[4]
+        }
+    }
+END
+
+procedure connect_with_webservice(string p_which_web_service_function)
+
+BEGIN
+  Handle conn;
+  Handle req;
+
+  l_response = ""
+  l_request = ""
+
+ -- Read in the Soap request from request.xml
+  req = openfile(l_filename1)                    --request.xml
+  repeat
+    {
+      String l_line[1024];
+      readfile( req, l_line, 1024, "<NL>" )
+      if errornumber = 0 then
+        {
+          l_request = l_request + l_line + "<NL>"
+        }
+    } until errornumber <> 0
+
+   closefile( req )
+
+  -- Open a secure https connection to web service
+  conn = opensocket( "expressnet.iix.com", "https", true )
+
+  -- Send the HTTP request headers
+  writefile( conn, "POST https://expressnet.iix.com/web-services/Auth<NL>" )
+  writefile( conn, "Content-Type: text/xml<NL>" )
+  writefile( conn, "%s",p_which_web_service_function )
+  writefile( conn, "Content-Length: %X<NL>", Len( l_request ) )
+  writefile( conn, "<NL>" )
+
+  -- Now sent the body of the request
+  writefile( conn, "%X", l_request )
+-- read (10,1,"press enter to continue",l_enter,1)
+  -- Flush the output to the server
+  flushfile( conn )
+
+-- Read back the response from the server
+  write("%c<014>%s",10001,"I am in the get_tus_credit_request")
+  repeat
+    {
+      String l_line[1024];
+      readfile( conn, l_line, 1024, "<NL>" )
+      if errornumber = 0 then
+        {
+          l_response = l_response + l_line + "<NL>"
+        }
+    } until errornumber <> 0
+  closefile( conn )    -- Close the connection
+
+       -- Display what we got
+  write( "%X<NL>",l_response )
+--  read(20,1,"press enter to continue",l_enter,1)
+  writefile(l_filename,"%s",l_response)
+END
+
+string function parse_add_on_status_header (string p_response)
+
+BEGIN
+  string l_add_on_status_segment[7];
+  unsigned ascii number l_position[4];
+  string l_service_status[2] = "";
+  l_add_on_status_segment = iix_transunion_score:ADD_ON_STATUS_SEGEMENT + iix_transunion_score:add_on_status_length     --this will look for AO01017 page 3-12 in transunion manual
+  l_position = pos(l_add_on_status_segment,p_response)
+  l_service_status = ""
+  if l_position <> 0 then
+    {
+      l_service_status = p_response[l_position+12,l_position+13]
+    }
+  return l_service_status
+END
+
+procedure parse_subject_header(string p_response)
+
+BEGIN
+  string l_subject_header_segment[7];
+  unsigned ascii number l_position[4];
+  unsigned ascii number l_position1[4];
+  string l_file_hit[1],
+         l_ssn_match_indicator[2];
+
+  l_subject_header_segment = iix_transunion_score:subject_header_segment + iix_transunion_score:subject_header_length --this will look for SH01027 page 3-74 in transunion manual
+  l_position = pos(l_subject_header_segment,p_response)
+  if l_position <> 0 then    --found the header SH01027
+    {  --check if there is a no hit by checking the 11 position from the start of SH01027
+      l_file_hit = p_response[l_position + 10]   --at the file hit
+    --  write("<014>%x%x<NL>", "The p_response",p_response)
+      write("<014>%x%x<NL>", "The file hit",l_file_hit)
+      switch (l_file_hit)
+        case "Y" : l_error_Message = "Regular hit on file"
+        case "C" : l_error_Message = "Hit on file but failure to PASS California subject selection criteria."
+        case "N" : l_error_Message = "Regular no hit"
+        case "X" : l_error_Message = "No Hit file but does not PASS California subject selection criteria"
+        case "H" : l_error_Message = "Subject hit (fraud Detect only)"
+        case "P" : l_error_Message = "Clear for all Search performed (Fraud Detect only)"
+        default  : l_error_Message = "No Hit"
+      end
+      l_ssn_match_indicator = p_response[l_position + 11,l_position + 13]
+      switch (l_ssn_match_indicator)
+        case "00" : l_error_message = trun(l_error_Message) + " SSN SECTION " + "No-hit returned -- no matching processing performed"
+        Case "01" : l_error_message = trun(l_error_Message) + " SSN SECTION " + "No match on SSN"
+        case "02" : l_error_message = trun(l_error_Message) + " SSN SECTION " + "No SSN of file but SSN appears on input"
+        case "03" : l_error_message = trun(l_error_Message) + " SSN SECTION " + "No SSN on input but SSN on file"
+        case "04" : l_error_message = trun(l_error_Message) + " SSN SECTION " + "NO SSN on unput and no SSN on File"
+        case "05" : l_error_message = trun(l_error_Message) + " SSN SECTION " + "Exact match between SSN on input and ssn on file"
+        case "06" : l_error_message = trun(l_error_Message) + " SSN SECTION " + "Difference of 1 digit between SSN on input and SSn on file"
+        case "07" : l_error_message = trun(l_error_Message) + " SSN SECTION " + "Difference of 2 digit between SSN on input and SSn on file"
+      end
+    }
+END
+
+string function parse_get_response(string p_search_str, string p_error_str, string p_response)
+
+--p_search_str will be the credit score
+--p_error_str will be the error message string that I need to find if the credit score was not found
+--p_response if the responce from the web service
+
+BEGIN
+  unsigned ascii number l_position[6];
+  unsigned ascii number l_position1[6];
+  string l_credit_score[5];
+
+  write("%c<014>%S",01001,"I am in the parse_get_response")
+--  write("%c%S",03001,p_search_str)
+--  write("%c%S",03041,p_error_str)
+--  write("%c%s",05001,p_response)
+
+  l_position = pos(p_search_str,p_response)   --found location of the start of the p_search_string
+--  write( "%x%x<NL>", "l_position",l_position)
+
+  if l_position <> 0 then
+    {
+      l_credit_score = p_response[l_position+12,l_position+17]  --was 19
+      l_risk_scoring_factor[1] = p_response[l_position+20,l_position+22]
+      l_risk_scoring_factor[2] = p_response[l_position+23,l_position+25]
+      l_risk_scoring_factor[3] = p_response[l_position+26,l_position+28]
+      l_risk_scoring_factor[4] = p_response[l_position+29,l_position+31]
+      return l_credit_score     --found the creditscore
+    }
+  else
+    if pos("TOO MANY TOTAL OR DUPLICATE INQUIRIES EXIST ON THE FILE",p_response) > 0 then  --found this string in the return message
+      {
+        l_error_message = "TOO MANY TOTAL OR DUPLICATE INQUIRIES EXIST ON THE FILE"
+        return l_error_message
+      }
+    else
+      {
+        l_position = pos(p_error_str,p_response)   --found location of the start of the error string
+        l_position1 = pos("</return>",p_response)   --find the ending of the error message
+        if l_position <> 0 then
+          {
+            l_error_message = p_response[l_position+len(p_error_str),l_position1 - 1]
+            write("%c<014>%S",05001,l_error_Message)
+            read(10,1,"press enter to continue",l_enter,1)
+          }
+        return l_error_message  --Means there was an error processing the request.  I will have to write out the error message to a file.
+      }
+END
+
+Procedure get_accept_message_from_request(string p_response)
+
+BEGIN
+  unsigned ascii number l_position[4];
+  string l_search_str[20] = "Accept:";
+  l_accept_id = ""
+  l_position = pos(l_search_str,p_response)  --found location of the start of the Accept:
+  if p_response[l_position,l_position+6] = "Accept:" then
+    {
+      l_accept_id = p_response[l_position+7,l_position+16]
+    }
+  else   --accept_id did not return one the get request.  This could be because of login information is wrong.
+    {
+      l_accept_id = ""
+    }
+  write("%c-->%s<--<nl>",11002,L_accept_id)
+End
+
+procedure fillin_get_response(string p_accept_id)             --this uses the get response which need to have the accept_id
+
+BEGIN
+  string l_request_format[34];
+  access iix_transunion_score,
+     set iix_transunion_score:which_protocol = l_which_protocol, approximate   --WAS IIX
+  deletefile(l_filename1)
+  l_request_format= iix_transunion_score:user_name +
+                    iix_transunion_score:user_password +
+                    str(iix_transunion_score:account_number,"999999") +
+                    iix_transunion_score:bill_code +
+                    iix_transunion_score:product +
+                    p_accept_id
+
+  writefile(l_filename1,"%s",trun(iix_transunion_score:XML_BEFORE_GET_RESPONSE_FORMAT))
+  writefile(l_filename1,"%s",trun(l_request_format))
+  writefile(l_filename1,"%s",trun(iix_transunion_score:XML_AFTER_GET_RESPONSE_FORMAT))
+  closefile(l_filename1)
+  writefile(l_filename3,"%s",trun(iix_transunion_score:XML_BEFORE_GET_RESPONSE_FORMAT))
+  writefile(l_filename3,"%s",trun(l_request_format))
+  writefile(l_filename3,"%s",trun(iix_transunion_score:XML_AFTER_GET_RESPONSE_FORMAT))
+  closefile(l_filename3)
+END
+
+procedure get_tus_credit_request        --fills in for the orginal request.
+
+BEGIN
+  string l_request_format[345];
+  access iix_transunion_score,
+     set iix_transunion_score:which_protocol = l_which_protocol, approximate
+
+  if trun(iix_transunion_score:prior_street_name) = "" then
+    {
+      l_request_format=
+                      iix_transunion_score:user_name +
+                      iix_transunion_score:user_password +
+                      str(iix_transunion_score:account_number,"999999") +
+                      iix_transunion_score:bill_code +
+                      iix_transunion_score:product +
+                      iix_transunion_score:nametype +
+                      uppercase(iix_transunion_score:last_name) +
+                      uppercase(iix_transunion_score:first_name) +
+                      uppercase(iix_transunion_score:middle_name) +
+                      uppercase(iix_transunion_score:prefix) +
+                      uppercase(iix_transunion_score:suffix) +
+                      iix_transunion_score:ssn +
+                      str(iix_transunion_score:DOB,"yyyymmdd") +
+                      str(iix_transunion_score:age,"999") +
+                      uppercase(iix_transunion_score:gender) +
+                      iix_transunion_score:house_number +
+                      iix_transunion_score:street_direction +
+                      iix_transunion_score:street_name +
+                      iix_transunion_score:street_type +
+                      iix_transunion_score:apt_number +
+                      iix_transunion_score:city_name +
+                      iix_transunion_score:str_state +
+                      iix_transunion_score:zip_code +
+                      iix_transunion_score:length_of_residence +
+                      iix_transunion_score:residential_status +
+                      iix_transunion_score:phone_type +
+                      iix_transunion_score:phone_area_code +
+                      iix_transunion_score:phone_number +
+                      iix_transunion_score:phone_extension +
+                      iix_transunion_score:quoteback
+    }
+  else     --dont include the prior address because it is blank
+    {
+      l_request_format =  iix_transunion_score:user_name +
+                        iix_transunion_score:user_password +
+                        str(iix_transunion_score:account_number,"999999") +
+                        iix_transunion_score:bill_code +
+                        iix_transunion_score:product +
+                        iix_transunion_score:nametype +
+                        uppercase(iix_transunion_score:last_name) +
+                        uppercase(iix_transunion_score:first_name) +
+                        uppercase(iix_transunion_score:middle_name) +
+                        uppercase(iix_transunion_score:prefix) +
+                        uppercase(iix_transunion_score:suffix) +
+                        iix_transunion_score:ssn +
+                        str(iix_transunion_score:DOB,"yyyymmdd") +
+                        str(iix_transunion_score:age,"999") +
+                        uppercase(iix_transunion_score:gender) +
+                        iix_transunion_score:house_number +
+                        iix_transunion_score:street_direction +
+                        iix_transunion_score:street_name +
+                        iix_transunion_score:street_type +
+                        iix_transunion_score:apt_number +
+                        iix_transunion_score:city_name +
+                        iix_transunion_score:str_state +
+                        iix_transunion_score:zip_code +
+                        iix_transunion_score:length_of_residence +
+                        iix_transunion_score:residential_status +
+                        iix_transunion_score:phone_type +
+                        iix_transunion_score:phone_area_code +
+                        iix_transunion_score:phone_number +
+                        iix_transunion_score:phone_extension +
+                        iix_transunion_score:quoteback +
+                        iix_transunion_score:prior_house_number +
+                        iix_transunion_score:prior_street_direction +
+                        iix_transunion_score:prior_street_name +
+                        iix_transunion_score:prior_street_type +
+                        iix_transunion_score:prior_apt_number +
+                        iix_transunion_score:prior_city +
+                        iix_transunion_score:prior_state +
+                        iix_transunion_score:prior_zip +
+                        iix_transunion_score:prior_length_of_residence +
+                        iix_transunion_score:prior_residential_status
+    }
+  writefile(l_filename1,"%s",trun(iix_transunion_score:XML_BEFORE_REQUEST_FORMAT))
+  writefile(l_filename1,"%s",l_request_format)
+  writefile(l_filename1,"%s",trun(iix_transunion_score:XML_after_REQUEST_FORMAT))
+  writefile(l_filename2,"%s",trun(iix_transunion_score:XML_BEFORE_REQUEST_FORMAT))
+  writefile(l_filename2,"%s",l_request_format)
+  writefile(l_filename2,"%s",trun(iix_transunion_score:XML_after_REQUEST_FORMAT))
+  closefile(l_filename1)
+  closefile(l_filename2)
+END
+
+-- end of program
+End

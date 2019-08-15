@@ -1,0 +1,517 @@
+%%                      
+Screen
+        Name = "agtmt750";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s      %m";
+        Domain="agqname" ;
+        resizeable = true ;
+        iconline = 0 ;
+        autoaccept = true ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4] ,
+                                     g_sub_code[4] ,
+                                     g_form[1] ;
+
+        global string g_inquiry[1] ;
+
+        local unsigned ascii number l_agree[1],
+                                    l_disagree[1] ,
+                                    l_agent_no[4] ;
+
+        local string l_username[15],
+                     l_company_id[10] ,
+                     l_continue_2[3];
+
+        access agqname, set agqname:app_no = g_app_no, generic
+
+        include "sfscsexec.var"
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "redisplay" display/noreturn "agtmt750" ;
+
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden/autoupdate ;
+
+        add/autoupdate tagged add_fn ;
+
+        "back" display/noreturn "agtmt001" tagged back_fn ;
+         reaccess ;
+
+         "nextscreen"     display/noreturn "agtmt750a" tagged nextscreen_fn ;
+
+        include "stdfunc7b.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+l_agent_no = sfsemail:agent_no
+if l_agent_no = 0 then
+    l_agent_no = 9999
+access sfsline, set sfsline:company_id       = l_company_id,
+                    sfsline:line_of_business = g_line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+/*switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end*/
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+disable(accept_fn)
+if agqname:applicant_approved_credit_score = "" then
+    begin
+    disable(nextscreen_fn)
+    function = "ADD"
+    end
+else
+    enable(nextscreen_fn)
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(delete_fn)
+    end
+
+access validation
+if agqname:app_no <> g_app_no then
+    error 1000 ;
+
+screen at 1,1 to 30,100
+Properties {
+           Layouttype = screen
+           transparent = False
+           backgroundcolor = "#ADD8E6"
+           scrollbarpolicy = always
+           }
+{
+
+Panel at 1,1 to 2,100
+Properties {
+           layouttype = screen
+           }
+{
+components
+    guidetext at 1,1 to 2,40
+        properties {
+                   iconname = "qp_logo.gif"
+                   }
+    guidetext at 1,83 to 2,100 tagged ficof_fn
+        properties {
+                   iconname = "ficof_logo.gif"
+                   }
+    guidetext at 1,80 to 2,100 tagged farmers_fn
+        properties {
+                   iconname = "salem_logo.gif"
+                   }
+}
+
+panel at 3,1 to 4,100
+Properties {
+           LayoutType = screen
+           backgroundcolor = "Grey"
+           transparent = False
+           }
+{
+components
+    guidetext at 1.45,1 to 1.45,60     tagged display_information_box
+        properties {
+                   text = "Consumer Credit Report Disclaimer and Notification"
+                   fontsize = 18
+                   fontstyle = BOLD
+                   fontname = "arial"
+                   transparent = False
+                   backgroundcolor = "Grey"
+                   }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+Properties {
+           LayoutType = screen
+           }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     begin
+        if agqname:app_no = 0 then
+            begin
+            do access_sfscsexec
+            g_app_no                 = i_csexec_number
+            agqname:app_no           = g_app_no
+            agqname:company_id       = l_company_id
+            agqname:line_of_business = g_line_of_business
+            agqname:trans_date       = todaysdate
+            end
+        end
+        agqname:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties {
+           LayoutType = screen
+           }
+{
+Components
+    Button at 1.5,10    tagged change_fn
+        Properties {
+                   Iconname = "btn_edit_entries.bmp"
+                   }
+            Events {
+                   Action = change_fn
+                   }
+
+    Button at 1.5,60 tagged accept_fn
+        properties {
+                   Iconname = "btn_accept_edits.bmp"
+                   }
+            Events {
+                   mouseclicked = accept
+                   }
+}
+
+Panel at 7,27 to 8,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,10   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+}
+
+Panel at 5,94 to 6,96 tagged button_panel
+Properties {
+           layouttype = column
+           }
+{
+Components
+    Button to 1,1
+        properties {
+                   Iconname = "btn_print_screen.bmp"
+                   }
+            events {
+                   action {
+                          function = "print"
+                          abort()
+                          }
+                   }
+}
+
+Panel at 6.45,91
+Properties {
+           layouttype = column
+           }
+{
+Components
+    guidetext to 1,1
+        properties {
+                   text = "agtmt750.sd"
+                   fontsize = 9
+                   }
+}
+
+panel at 8,1 to 8,100 tagged line_panel_1
+{
+Components
+    line at 1,1 to 1,100
+        Properties {
+                   Linestyle = embossed
+                   Linewidth = 5
+                   foregroundcolor = "black"
+                   }
+}
+
+panel at 9,10 to 15,100
+Properties {
+           LayoutType = screen
+           fontsize = 14
+           fontstyle = BOLD
+           fontname = "arial"
+           }
+{
+%%
+Farmers of Salem like most insurance companies use information from you and other
+sources, such as driving and credit history, to calculate your insurance premium.
+New or updated information may be used to calculate your renewal premium. Our
+privacy policy explains how Farmers of Salem discloses and protects your personal
+information. A copy of our privacy policy can be provided at your request.
+
+%%
+
+components
+
+}
+
+panel at 17,5 to 20,100
+Properties {
+           LayoutType = screen
+           fontsize = 14
+           fontstyle = BOLD
+           fontname = "arial"
+           }
+{
+%%
+_~~The information has been reviewed with the Applicant and agreed upon
+
+_~~The information has been reviewed with the Applicant and Applicant refuses insurance score
+
+%%
+
+components
+
+fields
+101     begin
+        if function one of "CHANGE", "CHG", "ADD", "NEW" then
+            begin
+            disable(nextscreen_fn)
+            disable(change_fn)
+            disable(back_fn)
+            enable(accept_fn)
+            end
+        else
+            begin
+            if agqname:quote_no = 0 then
+                begin
+                if agqname:applicant_approved_credit_score <> "" then
+                    enable(nextscreen_fn)
+                else
+                    disable(nextscreen_fn)
+                enable(change_fn)
+                enable(back_fn)
+                disable(accept_fn)
+                end
+            end
+        if agqname:applicant_approved_credit_score = "Y" then
+            begin
+            l_agree    = 1
+            l_disagree = 0
+            end
+        else
+        if agqname:applicant_approved_credit_score = "N" then
+            begin
+            l_disagree = 1
+            l_agree    = 0
+            end
+        end
+        l_agree/checkbox/values="0,1"/default/tabstop
+        hide if l_disagree = 1
+        if l_agree = 1 then
+            agqname:applicant_approved_credit_score = "Y"
+        else
+        if l_disagree = 1 then
+            agqname:applicant_approved_credit_score = "N"
+        else
+            agqname:applicant_approved_credit_score = ""
+        if l_agree = 1 then
+            l_disagree = 0 ;
+301     l_disagree/checkbox/values="0,1"/default/tabstop
+        hide if l_agree = 1
+        if l_disagree = 0 and
+           l_agree = 0 then
+            error "You must select an option"
+
+        if l_disagree = 1 then
+            agqname:applicant_approved_credit_score = "N"
+        else
+        if l_agree = 1 then
+            agqname:applicant_approved_credit_score = "Y"
+        else
+            agqname:applicant_approved_credit_score = ""
+        if l_disagree = 1 then
+            l_agree = 0 ;
+101     begin
+        if l_disagree = 1 then
+            begin
+            access agqcreditscore, set agqcreditscore:app_no = g_app_no, generic
+
+            if agqcreditscore:app_no = g_app_no then
+                begin
+                change agqcreditscore
+                    begin
+                    agqcreditscore:refused_credit_score = 1
+                    agqcreditscore:credit_score         = 111
+                    end
+                end
+            else
+                begin
+                add agqcreditscore
+                    begin
+                    agqcreditscore:app_no               = g_app_no
+                    agqcreditscore:refused_credit_score = 1
+                    agqcreditscore:credit_score         = 111
+                    end
+                end
+            end
+        else
+        if l_disagree = 0 then
+            begin
+            access agqcreditscore, set agqcreditscore:app_no = g_app_no, generic
+
+            if agqcreditscore:app_no = g_app_no then
+                begin
+                change agqcreditscore
+                    begin
+                    agqcreditscore:refused_credit_score = 0
+                    if agqcreditscore:credit_score = 111 then
+                        agqcreditscore:credit_score = 0
+                    end
+                end
+            else
+                begin
+                add agqcreditscore
+                    begin
+                    agqcreditscore:app_no               = g_app_no
+                    agqcreditscore:refused_credit_score = 0
+                    if agqcreditscore:credit_score = 111 then
+                        agqcreditscore:credit_score = 0
+                    end
+                end
+            end
+        end
+        l_agree/checkbox/values="0,1"/displayonly ;
+301     l_disagree/checkbox/values="0,1"/displayonly ;
+
+}
+
+panel at 27,1 to 27,100 tagged line_panel_1
+{
+Components
+    line at 1,1 to 1,100
+        Properties {
+                   Linestyle = embossed
+                   Linewidth = 5
+                   foregroundcolor = "black"
+                   }
+}
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+Properties {
+           LayoutType = screen
+           }
+{
+Components
+/*    Button at 1,5   tagged previousscreen_fn
+    Properties {
+               Iconname = "previous_screen.bmp"
+               }
+        Events {
+               Action {
+                      function = "previousscreen"
+                      abort()
+                      }
+               }*/
+
+    Button at 1,75   tagged nextscreen_fn
+    Properties {
+               Iconname = "next_screen.bmp"
+               }
+        Events {
+               Action {
+                      function = "nextscreen"
+                      abort()
+                      }
+               }
+
+}
+
+panel at 29,1 to 29,100 tagged line_panel_1
+{
+Components
+    line at 1,1 to 1,100
+        Properties {
+                   Linestyle = embossed
+                   Linewidth = 5
+                   foregroundcolor = "black"
+                   }
+}
+
+}
+
+update
+if agqname:quote_no = 0 then
+begin
+enable(change_fn)
+enable(back_fn)
+disable(accept_fn)
+end
+
+if agqname:applicant_approved_credit_score <> "" then
+    begin
+    enable(nextscreen_fn)
+--    function = "nextscreen"
+    end
+else
+    disable(nextscreen_fn)
+
+Screen Exit
+
+Procedure Definition
+
+procedure access_sfscsexec
+begin
+i_csexec_application = "APQQUOTE                 "
+
+access sfscsexec, set sfscsexec:application = i_csexec_application, generic
+
+change sfscsexec
+    begin
+    i_csexec_number = sfscsexec:application_number + 1
+    sfscsexec:application_number = i_csexec_number
+    end
+
+end
+
+End

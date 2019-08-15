@@ -1,0 +1,676 @@
+%%
+Screen
+        Name = "agtmt9999a" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Windowtitle = "%a    %s Underwriting Submission - Ver. 7.00     %m" ;
+        Domain = "Agqname" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+        Global Unsigned Ascii Number g_enhancement[1] ;
+
+        local unsigned ascii number l_email_address[1] ;
+
+        string l_business_desc[30],
+               l_business_desc1[30],
+               l_form_of_business[1],
+               l_screen[10],
+               l_fob_description[50],
+               l_enter[1],
+               l_server_name[100],
+               l_current_web_page[50],
+               l_web_site_address[150],
+               l_company_id[10],
+               l_user_id[15]="",
+               l_username[15]="",
+               l_fob_description1[75];
+
+        Access agqname,
+           Set agqname:app_NO = G_app_NO, generic ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+        include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+        "displayit" sequence "show" tagged nextscreen_fn ;
+        "show" continue begin
+                        if agqamt:lob_totals[2] <> 0 or
+                           agqamt:lob_totals[5] <> 0 then
+                            l_screen = "agtmt9999b"
+                        else
+                        if agqamt:lob_totals[1] <> 0 then
+                            l_screen = "agtmt9999e"
+                        else
+                        if agqamt:lob_totals[3] <> 0 then
+                            l_screen = "agtmt9999h"
+                        function = "popup"
+                        end ;
+        "popup" display/noreturn l_screen ;
+        "displayit1"  display "agtmt9999" tagged back_fn;
+
+        add/autoupdate tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+        "back" sequence "goback"  tagged back_fn;
+        "goback" continue begin
+                            do back_a_screen
+                          end ;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+l_user_id = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+access sfsline, set sfsline:company_id = l_company_id,
+                    sfsline:line_of_business = g_line_of_business,
+                    sfsline:lob_subline = "00", generic
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_mail_address.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+access sfsdefault,
+   set sfsdefault:sfs_code = "SFS", generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+  do add_blank_agqname  --puts a blank record to start and then edit entries button will work
+  do populate_local_varible     --used to display different varible from different domains
+
+Access Validation
+If agqname:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        scrollbarpolicy = asneeded
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Underwriting Submission: Mailing Address..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101  agqname:app_NO/displayonly ;
+
+}
+
+Panel at 6,25 to 6,40 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_edit_entries.bmp"
+              }
+          Events
+              {
+              Action = change_fn
+              }
+
+    }
+
+Panel at 6,60 to 6,75 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt9999a.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 8,1 to 23,19
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+            guidetext at 4,1 to 4,18
+             properties
+               {
+                 text = "Name:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+              }
+           guidetext at 7,1 to 7,18
+             properties
+               {
+                 text = "Address:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 10,1 to 10,18
+             properties
+               {
+                 text = "City State Zip:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 11,1 to 11,18
+             properties
+               {
+                 text = "Phone:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+         }
+
+Panel at 9,35 to 10,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1.5,1 to 1.5,18
+             properties
+               {
+                 text = "Mailing Address"
+                 fontsize = 14
+                 fontstyle = BOLD
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+        }
+
+
+Panel at 8,20 to 23, 95 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+
+
+
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+______________________________    __    __________
+_________________
+
+%%
+
+components
+
+Fields
+401     BEGIN
+        access agqtotals, set agqtotals:app_no = g_app_no, generic
+
+        if function one of "CHANGE" and
+           agqtotals:app_no = g_app_no and
+           agqname:name[1] = "" then
+            agqname:name[1] = agqtotals:name
+        END
+        agqname:name[1]/default/tabstop
+        if agqtotals:app_no = g_app_no then
+            do update_agqtotals ;
+501     agqname:name[2]/tabstop;
+601     agqname:name[3]/tabstop;
+701     agqname:address[1]/tabstop;
+801     agqname:address[2]/tabstop;
+901     agqname:address[3]/tabstop;
+1001    agqname:city/tabstop;
+1002    agqname:str_state/tabstop;
+1003    agqname:str_zipcode/tabstop ;
+1003    Begin
+        if val(agqname:str_zipcode) <> 0 then
+            begin
+            If agqNAME:STR_ZIPCODE[6,9] = "" Then
+                agqNAME:STR_ZIPCODE[6,9] = "0000"
+            end
+        End
+        agqNAME:STR_ZIPCODE/displayonly ;
+1101    agqname:telephone/tabstop;
+
+}
+
+Panel at 22,10 to 23,55  tagged ficof_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,45
+             properties
+               {
+                 text = "Does the insured have an email address?:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 2,1 to 2,45
+             properties
+               {
+                 text = "Email Address:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "Arial"
+               }
+        }
+
+Panel at 22,47 to 23,95 Tagged ficof_fn
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_
+__________________________________________________
+
+%%
+
+components
+
+Fields
+101     begin
+        if agqname:email_address <> "" then
+            l_email_address = 1
+        end
+        l_email_address/checkbox/values="0,1"/default/tabstop
+        if l_email_address = 0 then
+            agqname:email_address = "" ;
+201     agqname:email_address/tabstop
+        hide if l_email_address = 0 ;
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+    Components
+        line at 1.25,1 to 1.25,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,1 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,10   tagged back_screen
+        Properties {
+--                Text = "Create A New Quote "
+                Iconname = "btn_back.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+        Button at 1,70   tagged next_screen
+        Properties {
+
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                Action = nextscreen_fn
+                }
+        }
+
+/*panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.25,1 to 1.25,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }*/
+
+panel at 26,1 to 30,100  tagged ficof_fn
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+}
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+procedure update_agqtotals
+begin
+access agqtotals, set agqtotals:app_no = g_app_no, generic
+
+while agqtotals:app_no = g_app_no
+    begin
+    change agqtotals
+        begin
+        agqtotals:name = agqname:name[1]
+        end
+
+    next agqtotals
+    end
+
+access agqamt, set agqamt:app_no = g_app_no, generic
+
+while agqamt:app_no = g_app_no
+    begin
+    change agqamt
+        begin
+        agqamt:name = agqname:name[1]
+        end
+
+    next agqamt
+    end
+
+end
+
+procedure update_agqvehicle
+begin
+access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+while agqvehicle:app_no = g_app_no
+    begin
+    change agqvehicle
+        begin
+        agqvehicle:business_name[1] = agqname:name[1]
+        end
+
+    next agqvehicle
+    end
+
+end
+
+procedure get_heading(string l_display_heading)
+
+begin
+  postevent("agtmt010b","set_info_box",l_display_heading)
+end
+
+
+procedure back_a_screen
+
+begin
+  postevent("menutree","REMOVE_SCREEN","Display_Main")
+end
+
+procedure add_blank_agqname
+
+BEGIN
+local file agqname_a = alias for agqname;
+
+access agqname_a,
+     set agqname_a:app_no = g_app_no, exact
+
+if agqname_a:app_no <> g_app_no then
+    {
+    add agqname_a
+        {
+        agqname_a:app_no  = g_app_no
+        agqname_a:company_id = sfsdefault:company_id
+        }
+    function = "reaccess"
+    abort()
+    }
+END
+
+procedure update_agqmaster
+
+BEGIN
+access agqmaster,
+     set agqmaster:app_no = g_app_no, exact
+
+if agqmaster:app_no = g_app_no then
+    {
+    change agqmaster
+        {
+        agqmaster:form_of_business  = l_form_of_business
+        agqmaster:FOB_DESCRIPTION   = l_fob_description1
+        }
+    }
+END
+
+procedure populate_local_varible
+BEGIN
+  local file sfsfob_a = alias for sfsfob;
+  access agqmaster,
+     set agqmaster:app_no = g_app_no, exact
+
+  if agqmaster:app_no = g_app_no then
+    {
+      l_form_of_business = agqmaster:form_of_business
+
+      access sfsfob_a,
+         set sfsfob_a:company_id       = agqname:company_id,
+             sfsfob_a:FORM_OF_BUSINESS = l_form_of_business, exact
+
+--      warning agqname:company_id + sfsfob_a:form_of_business + "-->" + l_form_of_business
+--      warning sfsfob:description
+      l_fob_description   = sfsfob_a:description
+      l_fob_description1  = agqmaster:fob_description
+      function = "reaccess"
+      abort()
+    }
+END
+
+end

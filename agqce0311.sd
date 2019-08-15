@@ -1,0 +1,299 @@
+%%
+/*
+Date Written: January 20, 2011
+
+Name: agqce0311.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+01/20/2011            JLB            Adverse Action Notification Claim Experience Notice
+===========================
+*/
+
+Program
+  Name = "agqce0311";
+  Type = "File";
+  Domain = "SFPPRINT1";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[12] = "agqce0311.cq";
+
+ Unsigned Ascii Number  l_page_counter;
+ string l_agqce0311_exists[1]="N";
+ String L_COMPANY_ID[10];
+ Number L_BREAK = 40;     --number of characters printed before break
+ Number L_BREAK_POINT;    --where the break occurs and newline is inserted
+ Number L_LOOP;
+ Number L_PAGE_NUMBER = 1;
+ Number L_ITEM_NO = 1,
+        l_app_no;
+ String L_SFPLOCATION_ZIP;
+ Unsigned Ascii Number l_form[2],
+                       l_max_lines = 60,
+                       l_sub_1[2],
+                       l_claim_year[4],
+                       l_total_paid[10];
+
+ date l_loss_date[8];
+
+ Unsigned Ascii Number L_YEAR[4];
+ Unsigned Ascii number L_LINE_OF_BUSINESS[4];
+ Unsigned ascii number l_found[1];
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_LINE_COUNTER=0;
+ Unsigned Ascii Number L_STATE[2]=0,
+                       l_no_claims[2];
+ wdate L_EFF_DATE;
+
+   Include "csfonts.inc"
+   Include "swsut100.var"
+   Include "swsut200.var"
+ --Include "swsut300.var"
+   Include "center2.var"
+
+Initialization
+  Deletefile (L_FILE_NAME);
+
+L_app_no = val(COMMANDLINE[1,11])
+
+Access agqclaim,
+   Set agqclaim:app_NO     = l_app_no, Generic
+
+access agqlosses_alias,
+   set agqlosses_alias:app_no = l_app_no, generic
+
+Access agqname,
+   Set agqname:app_NO     = l_app_no, Generic
+
+Access agqend,
+   Set agqend:app_no    = l_app_no, generic
+
+Access plqpersonal,
+   Set plqpersonal:quote_no    = l_app_no, generic
+
+   l_agqce0311_exists = "N"
+    while agqend:app_no    = l_app_no
+         begin
+           if agqend:code = "agqce0311" then
+              l_agqce0311_exists = "Y"
+           next agqend
+         end
+
+   Include "swsut100.inc"
+--   I_CODE = "CE0311"
+   Include "swsut200.inc"
+
+              L_STATE            = plqpersonal:STATE
+              L_COMPANY_ID       = sfqname:COMPANY_ID
+              L_LINE_OF_BUSINESS = sfqname:line_of_business
+
+              L_STRING = "FARMERS MUTUAL FIRE INSURANCE COMPANY OF SALEM COUNTY "
+              L_FONT = L_ARIAL_bold_12
+              L_PITCH_HALF = 6
+              L_PITCH_FULL = 12
+              L_VERTICAL_POS = "+640"
+              L_HORIZONTAL_POS = "2800"
+              Include "center3.pro"
+              l_line_counter = l_line_counter + 5.3
+
+              Writefile(L_FILE_NAME,"%s","<033>&a1100h+130V")
+              Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+              Writefile(L_FILE_NAME,"%s","DISCLOSURE NOTICE")
+              l_line_counter = l_line_counter + 1.08
+              Writefile(L_FILE_NAME,"%s","<033>&a+30h-30V")
+              Writefile(L_FILE_NAME,"%s","<033>*c75h8v0P")
+              Writefile(L_FILE_NAME,"%s","<033>&a+105h+30V")
+              Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+              Writefile(L_FILE_NAME,"%s","ADVERSE ACTION NOTIFICATION ")
+
+              L_STRING = "CLAIM EXPERIENCE"
+              L_FONT = L_ARIAL_bold_12
+              L_PITCH_HALF = 6
+              L_PITCH_FULL = 12
+              L_VERTICAL_POS = "+130"
+              L_HORIZONTAL_POS = "2800"
+              Include "center3.pro"
+              l_line_counter = l_line_counter + 1.08
+
+
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+              Writefile(L_FILE_NAME,"%s",l_arial_12)
+              Writefile(L_FILE_NAME,"%s","An adverse rating decision has been made based in part on information  ")
+              l_line_counter = l_line_counter + 2.3
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","contained in a consumer report obtained from A-PLUS.  The decision to take this  ")
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","action was made by Farmers Mutual Fire Insurance Company of Salem County.    ")
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","A-PLUS is unable to provide you with specific reasons on how consumer report  ")
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","affected your homeowner rate. ")
+              l_line_counter = l_line_counter + 4.3
+
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+              Writefile(L_FILE_NAME,"%s","You may not have received the most favorable outcome due to information  ")
+              l_line_counter = l_line_counter + 2.3
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","obtained from your consumer report.  The following claim experience in A-PLUS  ")
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","database matched your name and property address and had an impact in  ")
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","preventing you from receiving a better homeowner rate: ")
+              l_line_counter = l_line_counter + 3.25
+
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+              Writefile(L_FILE_NAME,"%s",l_underline_start)
+              Writefile(L_FILE_NAME,"%s","Loss Type")
+              l_line_counter = l_line_counter + 2.3
+              Writefile(L_FILE_NAME,"%s",l_underline_end)
+              Writefile(L_FILE_NAME,"%s","<033>&a2450h+0V")
+              Writefile(L_FILE_NAME,"%s",l_underline_start)
+              Writefile(L_FILE_NAME,"%s","Date of Loss")
+              Writefile(L_FILE_NAME,"%s",l_underline_end)
+
+              If l_line_counter >= 60 then
+                {
+                  do top_of_form
+                }
+
+--l_sub_1 = 1
+--While l_sub_1 <= 5
+--begin
+While agqclaim:app_no = l_app_no and
+      agqclaim:name <> "INSURED NAME DIFFERENT"
+
+Begin
+  l_loss_date = agqclaim:loss_date
+--  l_loss_date = agqlosses_alias:date_of_loss[l_sub_1]
+  l_claim_year = year(agqname:eff_date) - year(l_loss_date) ---year(agqclaim:loss_date)
+  if l_loss_date <> 0 then ----agqclaim:loss_date <> 0 then
+    begin
+      if ((l_claim_year < 3 or
+         (l_claim_year = 3 and
+         month(l_loss_date) >= month(agqname:eff_date)))) then
+--          month(agqclaim:loss_date) >= month(agqname:eff_date)))) then
+        begin
+          if ((day(l_loss_date) >= day(agqname:eff_date) and
+--           if ((day(agqclaim:loss_date) >= day(agqname:eff_date) and
+               l_claim_year = 3) or
+               l_claim_year < 3) then
+            begin
+              l_no_claims = l_no_claims + 1
+              if l_no_claims >= 1 then
+                {
+                  Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+                  Writefile(L_FILE_NAME,"%s",agqclaim:claim_type)
+                  l_line_counter = l_line_counter + 1
+                  Writefile(L_FILE_NAME,"%s","<033>&a2450h+0V")
+--                  Writefile(L_FILE_NAME,"%s",str(agqclaim:loss_date,"MM/DD/YYYY"))
+                  Writefile(L_FILE_NAME,"%s",str(l_loss_date,"MM/DD/YYYY"))
+                }
+            end
+        end
+    end---end of if l_loss_date <> 0
+  next agqclaim
+end
+
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+360V")
+              Writefile(L_FILE_NAME,"%s","If you have been adversely affected by information contained in a consumer  ")
+              l_line_counter = l_line_counter + 3
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","report provided by A-PLUS, you have the right under the Fair Credit Reporting  ")
+              l_line_counter = l_line_counter + 1.08
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","Act to obtain a copy of such reports from A-PLUS.   ")
+              l_line_counter = l_line_counter + 1.08
+
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+              Writefile(L_FILE_NAME,"%s","To request a copy of your claim experience please contact A-PLUS at 800-709- ")
+              l_line_counter = l_line_counter + 2.3
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","8842.  When A-PLUS receives a call requesting a copy of report a Request for  ")
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","Disclosure form will be sent by mail or fax.  A-PLUS will provide claim experience  ")
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","within 10 days of receipt of the Request for Disclosure form. ")
+              l_line_counter = l_line_counter + 3.25
+
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+              Writefile(L_FILE_NAME,"%s","After receiving your consumer report(s), if you disagree with the accuracy or  ")
+              l_line_counter = l_line_counter + 2.3
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","completeness of any information contained therein, you should send written")
+              l_line_counter = l_line_counter + 1.08
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","inquiry to: ")
+              l_line_counter = l_line_counter + 1.08
+
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+240V")
+              Writefile(L_FILE_NAME,"%s","A-PLUS Consumer Inquiry Center ")
+              l_line_counter = l_line_counter + 2
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","545 Washington Blvd 22-6 ")
+              l_line_counter = l_line_counter + 1.08
+              Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+              Writefile(L_FILE_NAME,"%s","Jersey City, NJ. 07310 ")
+              l_line_counter = l_line_counter + 1.08
+
+              Writefile(L_FILE_NAME,"%s","<033>&a700h6960V")
+              Writefile(L_FILE_NAME,"%s",l_arial)
+              Writefile(L_FILE_NAME,"%s","AdverseActionClaim Exp032011 ")
+              Writefile(L_FILE_NAME,"%s","<033>&a700h7080V")
+              Writefile(L_FILE_NAME,"%s",l_arial)
+              Writefile(L_FILE_NAME,"%s",str(l_app_no))
+              l_line_counter = l_line_counter + 2
+
+              Writefile(L_FILE_NAME,"%s","  ")
+              Writefile(L_FILE_NAME,"%s",l_arial)
+              Writefile(L_FILE_NAME,"%s",str(agqname:agent_no))
+
+              Writefile(L_FILE_NAME,"%s","<FF>")
+
+update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+
+Procedure definition
+
+Procedure top_of_form
+begin
+    Writefile(L_FILE_NAME,"%s","<FF>")
+
+    l_line_counter = 0
+
+    L_STRING = "FARMERS MUTUAL FIRE INSURANCE COMPANY OF SALEM COUNTY "
+    L_FONT = L_ARIAL_bold_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+640"
+    L_HORIZONTAL_POS = "2800"
+    Include "center3.pro"
+    l_line_counter = l_line_counter + 5.3
+
+    Writefile(L_FILE_NAME,"%s","<033>&a1100h+130V")
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    Writefile(L_FILE_NAME,"%s","DISCLOSURE NOTICE")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","<033>&a+30h-30V")
+    Writefile(L_FILE_NAME,"%s","<033>*c75h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+105h+30V")
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    Writefile(L_FILE_NAME,"%s","ADVERSE ACTION NOTIFICATION ")
+
+    L_STRING = "CLAIM EXPERIENCE"
+    L_FONT = L_ARIAL_bold_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+130"
+    L_HORIZONTAL_POS = "2800"
+    Include "center3.pro"
+    l_line_counter = l_line_counter + 1.08
+end
+
+
+End

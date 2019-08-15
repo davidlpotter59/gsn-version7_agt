@@ -1,0 +1,566 @@
+%%                 
+Screen
+        Name = "agtmt985";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqendorse6" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4],
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_rmf[6]=0/dec=4,
+                                    l_rate[8]=0/dec=4,
+                                    l_per[8],
+                                    l_premium[8],
+                                    l_limit[8],
+                                    l_line_of_business[4],
+                                    l_deductible[5],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ;
+
+        Access agqendorse6,
+           Set agqendorse6:app_NO   = G_app_NO ,
+               agqendorse6:prem_no  = g_prem_no,
+               agqendorse6:build_no = g_build_no,
+               agqendorse6:code     = g_code ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqvehicle:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(farmers_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if agqendorse6:app_no <> g_app_no or
+   agqendorse6:prem_no <> g_prem_no or
+   agqendorse6:build_no <> g_build_no or
+   agqendorse6:code <> g_code then
+    function = "ADD"
+
+access agqend, set agqend:app_no   = g_app_no,
+                   agqend:prem_no  = g_prem_no,
+                   agqend:build_no = g_build_no,
+                   agqend:sub_code = g_sub_code, generic
+
+Access Validation
+If agqendorse6:app_NO <> G_app_NO or
+   agqendorse6:prem_no <> g_prem_no or
+   agqendorse6:build_no <> g_build_no or
+   agqendorse6:code <> g_code Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,55     tagged display_information_box
+                properties
+                  {
+                    text = "Exclusion of Named Customers"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     begin
+        if function one of "ADD" then
+            begin
+            agqendorse6:app_no = g_app_no
+            agqendorse6:prem_no = g_prem_no
+            agqendorse6:build_no = g_build_no
+            agqendorse6:code = g_code
+            do subcode
+            agqendorse6:sub_code = l_sub_code
+            end
+        end
+        agqendorse6:app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt985.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,15 to 24,100
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+  Customer: __________________________________________________
+   Address: __________________________________________________
+      City: ________________________________  ___   __________
+
+     Limit: __________
+Deductible: _____
+      Rate: _______
+   Premium: ___________
+
+%%
+
+components
+
+fields
+101     agqendorse6:name/tabstop/uppercase ;
+201     agqendorse6:address/tabstop/uppercase ;
+301     agqendorse6:city/tabstop/uppercase ;
+302     agqendorse6:str_state/tabstop/uppercase ;
+303     agqendorse6:str_zipcode/tabstop/uppercase ;
+303     Begin
+        If agqendorse6:str_zipcode[6,9] = "" Then
+            agqendorse6:str_zipcode[6,9] = "0000"
+        End
+        agqendorse6:str_zipcode/displayonly ;
+
+501     begin
+        access agqinland, set agqinland:app_no   = g_app_no,
+                              agqinland:prem_no  = g_prem_no,
+                              agqinland:build_no = g_build_no, generic
+
+        access agqend, set agqend:app_no   = g_app_no,
+                           agqend:prem_no  = g_prem_no,
+                           agqend:build_no = g_build_no, generic
+
+        while agqend:app_no   = g_app_no and
+              agqend:prem_no  = g_prem_no and
+              agqend:build_no = g_build_no
+            begin
+            if agqend:code = g_code then
+                begin
+                l_limit      = agqend:limit
+                l_rate       = agqend:rate
+                l_premium    = agqend:premium
+                l_deductible = agqend:deductible
+                end
+
+            next agqend
+            end
+        end
+        l_limit/default/tabstop ;
+601     begin
+        l_company_id       = agqinland:company_id
+        l_state            = agqinland:state
+        l_line_of_business = agqinland:rating_line_of_business
+        access cpsimdeductible_alias, set cpsimdeductible_alias:company_id       = l_company_id,
+                                          cpsimdeductible_alias:state            = l_state,
+                                          cpsimdeductible_alias:line_of_business = l_line_of_business, generic
+        end
+        l_deductible/default/tabstop
+        access cpsimdeductible, set cpsimdeductible:company_id       = l_company_id,
+                                    cpsimdeductible:state            = l_state,
+                                    cpsimdeductible:line_of_business = l_line_of_business,
+                                    cpsimdeductible:deductible       = l_deductible, generic
+
+        if l_deductible <> cpsimdeductible:deductible then
+            error "Invalid Deductible"
+
+        activehelp if cpsimdeductible_alias:display_activehelp = 1 then
+                       cpsimdeductible_alias:deductible
+                   else
+                       null/width=10 ;
+701     begin
+        if function one of "ADD" then
+            Do ACCESS_ENDORSEMENT
+        end
+        l_rate/default/tabstop  ;
+801     begin
+        if function one of "ADD", "CHANGE" then
+            begin
+            l_rmf = agqinland:package_mod * agqinland:company_deviation
+            if l_per = 0 then
+                l_per = 100
+            l_premium = ((l_limit divide l_per) *
+                        (l_rate * l_rmf))
+            end
+        end
+        l_premium/displayonly ;
+
+
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 27,35 to 27,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 28,1 to 28,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+update
+if abort = "NO" then
+    begin
+    access agqend, set agqend:app_no   = g_app_no,
+                       agqend:prem_no  = g_prem_no,
+                       agqend:build_no = g_build_no, generic
+
+    while agqend:app_no   = g_app_no and
+          agqend:prem_no  = g_prem_no and
+          agqend:build_no = g_build_no
+        begin
+        if agqend:code = g_code then
+            begin
+            change agqend
+                begin
+                agqend:limit      = l_limit
+                agqend:rate       = l_rate
+                agqend:premium    = l_premium
+                agqend:deductible = l_deductible
+                end
+            end
+        next agqend
+        end
+    end
+
+procedure definition
+
+procedure subcode
+begin
+access agqendorse6_alias, set agqendorse6_alias:app_NO   = G_app_NO ,
+                              agqendorse6_alias:prem_no  = g_prem_no,
+                              agqendorse6_alias:build_no = g_build_no,
+                              agqendorse6_alias:code     = g_code, generic
+
+l_sub_code = 0
+while agqendorse6_alias:app_NO   = G_app_NO and
+      agqendorse6_alias:prem_no  = g_prem_no and
+      agqendorse6_alias:build_no = g_build_no and
+      agqendorse6_alias:code     = g_code
+    begin
+    l_sub_code = agqendorse6_alias:sub_code
+
+    next agqendorse6_alias
+    end
+
+l_sub_code = l_sub_code + 10
+end
+
+Procedure ACCESS_ENDORSEMENT
+Begin
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = l_company_id,
+                      SFSOPTEND:STATE = l_state,
+                      SFSOPTEND:LINE_OF_BUSINESS = l_line_of_business,
+                      SFSOPTEND:CODE = agqend:CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> l_company_id Or
+            SFSOPTEND:STATE <> l_state Or
+            SFSOPTEND:LINE_OF_BUSINESS <> l_line_of_business Or
+            SFSOPTEND:CODE <> agqend:CODE
+
+    If (agqNAME:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqname:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        l_per = sfsoptend:limit[1]
+        l_rate = sfsoptend:premium_1[1]
+        End
+
+    Next SFSOPTEND
+    End
+
+End
+
+End

@@ -1,0 +1,339 @@
+%%                 
+Screen
+        Name = "agtmt8001m";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqbusiness" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     g_sub_code[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_literal[100] ,
+                      g_inquiry[1] ,
+                      g_coverage[2],
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    l_package_mod[5]=0/dec=3,
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ;
+
+        Access agqbusiness,
+           Set agqbusiness:app_NO    = G_app_NO ,
+               agqbusiness:prem_no   = g_prem_no,
+               agqbusiness:build_no  = g_build_no,
+               agqbusiness:coverage  = g_coverage, generic ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        add/autoupdate tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+disable(accept_fn)
+l_username  = username
+access sfsemail, set sfsemail:company_id = agqbusiness:company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+Access Validation
+If agqbusiness:app_NO    <> G_app_NO or
+   agqbusiness:prem_no   <> g_prem_no or
+   agqbusiness:build_no  <> g_build_no or
+   agqbusiness:coverage <> g_coverage Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    fontstyle = BOLD
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+        }
+
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,75     tagged display_information_box
+                properties
+                  {
+                    text = "Property Information - Business Income - Deviations..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     agqbusiness:app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35        tagged accept_fn
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt8001m.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,5 to 25, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+                                       IRPM
+
+                                     ________
+
+%%
+
+components
+
+Fields
+301     begin
+        if function one of "CHANGE", "CHG" then
+            enable(accept_fn)
+        else
+            disable(accept_fn)
+        end
+        agqbusiness:company_deviation[1]
+        hide if sfsemail:agent_no <> 0 ;
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 27,40 to 27,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 28,1 to 28,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+update
+if updateok = "YES" and
+   abort    = "NO" then
+    begin
+    access agqbusiness_alias, set agqbusiness_alias:app_no    = agqbusiness:app_no,
+                                  agqbusiness_alias:prem_no   = agqbusiness:prem_no,
+                                  agqbusiness_alias:build_no  = agqbusiness:build_no,
+                                  agqbusiness_alias:coverage  = agqbusiness:coverage, generic
+
+    change agqbusiness_alias
+        begin
+        if agqbusiness_alias:package_mod[1] = 0 then
+            agqbusiness_alias:package_mod[1] = 1.00
+        if agqbusiness_alias:company_deviation[1] = 0 then
+            agqbusiness_alias:company_deviation[1] = 1.00
+        end
+    end
+
+End

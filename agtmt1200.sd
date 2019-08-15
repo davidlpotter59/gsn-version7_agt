@@ -1,0 +1,2318 @@
+%%
+Screen
+        Name = "agtmt1200" ;
+        Type = "Multiline" ;
+        Repeat LINE_ITEMS, 40 times down ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+--        Windowtitle = "%a    %s Location Totals - Ver. 7.00     %m" ;
+        Domain = "agqpersonal" ;
+        showunusedrecords=false
+        autoscroll=true
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+        Global Unsigned Ascii Number g_form[1] ;
+
+        global string g_zipcode_change[1] ;
+
+        local unsigned ascii number l_sub[2],
+                                    L_CSEXEC_NUMBER[12] ,
+                                    l_deductible_checkbox[1],
+                                    l_allow_agent_to_view[1],
+                                    l_state[2],
+                                    l_exclude_terrorism[1],
+                                    l_line_of_business[4],
+                                    l_limit[8],
+                                    l_no_families[1],
+                                    l_table[1],
+                                    l_nonowned_factor[5]=0/dec=3,
+                                    l_deductible[5]=0,
+                                    i_csexec_number[12];
+
+        array[5] of tag l_the_tag[15] ;
+
+        array[5] of string l_ded_wording[3],
+                           l_premium_wording[7] ;
+
+        array[5] of unsigned ascii number l_deductible_1[5],
+                                          l_total_ded[8],
+                                          l_location_deduct[8] ;
+
+        local string L_CSEXEC_APPLICATION[25]="" ,
+                     l_app[3]="",
+                     l_current_web_page[50],
+                     l_continue_2[3],
+                     l_web_site_address[150],
+                     l_server_name[100],
+                     l_user_id[15]="",
+                     l_record_key[2]="",
+                     l_company_id[10]="",
+                     l_dec[15]="",
+                     l_owner_occupied[1]="",
+                     l_screen_1[10]="",
+                     l_screen[9]="",
+                     l_lob_code[10];
+
+        local date l_eff_date[8] ;
+
+        Include "print.var"
+
+        Include "virtualdecs.var"
+
+        Access agqpersonal, Set agqpersonal:app_NO = G_app_NO, approximate ;
+
+        scrollmessage = "" ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+
+                include "styles.inc"
+                Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+                repeated displayonly field style {backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt1200" ;
+        "displayit" sequence "rate" tagged rating_info_fn ;
+        "rate" continue begin
+                        if sfsline:lob_code one of "DWELLING" then
+                            l_screen = "agtmt1100"
+                        else
+                            l_screen = "agtmt1000"
+                        function = "disscreen"
+                        end ;
+
+        "func5" sequence "opt" tagged optional_info_fn ;
+        "opt" continue begin
+                       if sfsline:lob_code one of "HOME" then
+                           begin
+                           if agqpersonal:state = 19 then
+                               l_screen_1 = "agtmt1000c"
+                           else
+                               l_screen_1 = "agtmt1000b"
+                           end
+                       else
+                           begin
+                           l_screen_1 = "agtmt1000d"
+                           end
+                       function = "popup"
+                       end ;
+        "popup" display l_screen_1 ;
+        "disscreen" display l_screen ;
+
+        "func6" sequence "mast" tagged policy_info_fn ;
+        "mast" continue begin
+                        if sfsline:lob_code one of "HOME" then
+                            begin
+                            l_screen_1 = "agtmt1000a"
+                            end
+                        else
+                            begin
+                            l_screen_1 = "agtmt1000e"
+                            end
+                        function = "popup"
+                        end ;
+
+        "func7" display "agtmt1201" tagged submit_fn ;
+        "func8" display "agtmt1200a" tagged irpm_fn ;
+
+        "func1" sequence "worksheet"  tagged worksheet_fn ;
+        "worksheet" continue begin
+                             do create_macro
+                             end  ;
+
+        "func2" sequence "quoteletter"  tagged quote_letter_fn ;
+        "quoteletter" continue begin
+                               do print_quote_letter
+                               end ;
+
+        "back" display/noreturn "agtmt001" tagged back_fn ;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+--                                "set_info_box" { setproperty(display_information_box, text, event.value) }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+disable(accept_fn)
+do check_agqtotals
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+l_user_id = username
+access sfsemail, set sfsemail:company_id = agqpersonal:company_id,
+                     sfsemail:user_id    = l_user_id, generic
+
+if agqname:quote_no <> 0 and
+   agqpersonal:company_id <> "FARMERS" then
+    disable(submit_fn)
+
+if agqname:quote_no <> 0 and
+   sfsemail:agent_no <> 0 and
+   agqpersonal:company_id = "FARMERS" then
+    disable(submit_fn)
+
+if sfsemail:agent_no <> 0 then
+    hide(irpm)
+
+if agqpersonal:company_id <> "FLEMINGTON" then
+    hide(irpm)
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID = agqpersonal:company_id,
+                    SFSLINE:LINE_OF_BUSINESS = agqpersonal:line_of_business,
+                    SFSLINE:LOB_SUBLINE = "00",Generic
+
+if sfsline:lob_code <> "DWELLING" then
+    hide(df_only)
+
+if sfsline:lob_code one of "DWELLING" then
+    begin
+    if agqpersonal:owner_occupied = "Y" and
+       agqpersonal:no_families < 2 then
+        hide(df_only)
+    end
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : switch(g_form)
+                  case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                  case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                  case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                  default : begin
+                            setproperty(t_mho3,iconname,"")
+                            setproperty(t_mho4,iconname,"")
+                            setproperty(t_mho6,iconname,"")
+                            end
+                  end
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_username = username
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER                            --"http://192.168.1.197/"
+
+if agqpersonal:company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "12webhelp_agtmt1200_scr_prop_summary.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_ha_deductible_fn)
+    hide(ficof_cd_deductible_fn)
+    if agqpersonal:line_of_business one of 1, 31 then
+        begin
+        hide(farmers_deductible_fn)
+        end
+    else
+        begin
+        hide(farmers_cd_deductible_fn)
+        end
+    end
+else
+    begin
+    hide(farmers_cd_deductible_fn)
+    hide(farmers_deductible_fn)
+    if agqpersonal:line_of_business one of 1, 31 then
+        begin
+        hide(ficof_ha_deductible_fn)
+        end
+    else
+        begin
+        hide(ficof_cd_deductible_fn)
+        end
+    end
+
+Access Validation
+If agqpersonal:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        scrollbarpolicy=asneeded
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged farmers_fn
+                properties
+                  {
+                    text = "Quote Summary..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+          guidetext at 1.45,1 to 1.45,40     tagged ficof_fn
+                properties
+                  {
+                    text = "Proposal Summary..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+        event
+                {
+                mouseclicked = ""
+                }
+
+}
+
+Panel at 3.45,75 to 4.45, 100 Tagged quote_no
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101    agqpersonal:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+
+        Button at 1.5,2  tagged add_fn
+        Properties {
+                Iconname = "btn_view_print_worksheet.bmp"
+                }
+        Events  {
+                Action = worksheet_fn
+                }
+
+        Button at 1.5,35   tagged accept_fn
+        Properties {
+                Iconname = "btn_accept_edits.bmp"
+                }
+        Events  {
+                mouseclicked = accept
+                }
+
+        Button at 1.5, 60 tagged delete_fn
+        Properties {
+                Iconname = "btn_view_print_proposal.bmp"
+                }
+        Events  {
+                Action = quote_letter_fn
+                }
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt1200.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+
+Panel at 8,2 to 8,10
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,15
+             properties
+               {
+                 text = "Form:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,8 to 8,11 Tagged rating_pl
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+__
+%%
+
+components
+
+fields
+101     agqpersonal:form/displayonly ;
+
+}
+
+Panel at 8,13 to 8,28
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,15
+             properties
+               {
+                 text = "Liability Limit:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,24 to 8,33 Tagged rating_pl
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+__________
+%%
+
+components
+
+fields
+101     Begin
+          if function one of "ADD","NEW","CHG","CHANGE" then
+            {
+              enable(accept_fn)
+              disable(rating_info)
+            }
+          else
+            {
+              disable(accept_fn)
+            }
+
+            l_allow_agent_to_view = sfsliability1:allow_agent_to_view
+        End
+        agqPERSONAL:LIABILITY_LIMIT/default/tabstop/mask="Z,ZZZ,ZZZ"
+        Hide If agqPERSONAL:SEASONAL = "Y"
+        If agqPERSONAL:LIABILITY_LIMIT <> SFSLIABILITY1:LIMIT Then
+            Error 1238
+
+        if agqpersonal:liability_limit = 0 and
+           sfsline:lob_code one of "HOME" then
+            error 1238
+
+        If agqPERSONAL:LIABILITY_LIMIT = 0 And
+           agqPERSONAL:SEASONAL = "N" And
+           agqPERSONAL:FORM <> 6 And
+           SFSLINE:LOB_CODE <> "DWELLING" Then
+            error 1238
+
+        Activehelp if sfsliability1_alias:allow_agent_to_view = 0 then
+                       SFSLIABILITY1_ALIAS:LIMIT
+                   else
+                       null ;
+101     Begin
+          if function one of "ADD","NEW","CHG","CHANGE" then
+            {
+              enable(accept_fn)
+              disable(rating_info)
+            }
+          else
+            {
+              disable(accept_fn)
+            }
+
+            l_allow_agent_to_view = sfsliability1:allow_agent_to_view
+        End
+        agqPERSONAL:LIABILITY_LIMIT/default/tabstop/mask="Z,ZZZ,ZZZ"
+        Hide If agqPERSONAL:SEASONAL = "N"
+        If (agqPERSONAL:LIABILITY_LIMIT <> SFSLIABILITY1:LIMIT or
+           (agqpersonal:liability_limit = 0 and
+           sfsline:lob_code one of "HOME")) Then
+            Error 1238
+
+        Activehelp if sfsliability1_alias:allow_agent_to_view = 0 then
+                       SFSLIABILITY1_ALIAS:LIMIT
+                   else
+                       null ;
+101     Begin
+        If agqPERSONAL:LIABILITY_LIMIT = 0 Then
+            agqPERSONAL:MEDICAL_LIMIT = 0
+        End
+        agqPERSONAL:LIABILITY_LIMIT/displayonly/mask="Z,ZZZ,ZZZ"
+        Hide If SFSLINE:LOB_CODE = "DWELLING" ;
+101     Begin
+        If agqPERSONAL:LIABILITY_LIMIT <> 0 And
+           SFSLINE:LOB_CODE = "DWELLING" and
+           agqpersonal:company_id = "FLEMINGTON" Then
+            agqPERSONAL:LIABILITY_FORM = 1
+        End
+        agqPERSONAL:LIABILITY_LIMIT/displayonly/mask="Z,ZZZ,ZZZ"
+        Hide If SFSLINE:LOB_CODE <> "DWELLING" ;
+
+}
+
+Panel at 8,35 to 8,50
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,15
+             properties
+               {
+                 text = "Medical Payments:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,50 to 8,55 Tagged rating_pl
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_____
+%%
+
+components
+
+fields
+101     agqPERSONAL:MEDICAL_LIMIT/default/tabstop/mask="Z,ZZZ"
+        Hide If agqPERSONAL:LIABILITY_LIMIT = 0
+        If agqPERSONAL:MEDICAL_LIMIT <> SFSMEDICAL:LIMIT Or
+           agqPERSONAL:MEDICAL_LIMIT = 0 Then
+            Error 1238
+
+        Activehelp SFSMEDICAL_ALIAS:LIMIT  ;
+101     Begin
+        If agqPERSONAL:LIABILITY_LIMIT = 0 Then
+            agqPERSONAL:MEDICAL_LIMIT = 0
+        End
+        agqPERSONAL:MEDICAL_LIMIT/displayonly/mask="Z,ZZZ" ;
+
+}
+
+Panel at 8,57 to 8,70
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,18
+             properties
+               {
+                 text = "Policy Deductible:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,72 to 8,78 Tagged rating_pl
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_____
+%%
+
+components
+
+fields
+101     agqpersonal:deductible/displayonly ;
+
+}
+
+Panel at 8,78 to 8,92   tagged df_only
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,18
+             properties
+               {
+                 text = "Exclude Terrorism:"
+                 fontsize = 12
+                 fontstyle = BOLD
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,92 to 8,100 Tagged df_only
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_
+%%
+
+components
+
+fields
+101     begin
+            access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+            l_exclude_terrorism = agqmaster:exclude_terrorism
+        end
+        l_exclude_terrorism/checkbox/values="0,1"/default/tabstop;
+101     begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        if agqmaster:app_no = g_app_no then
+            begin
+            change agqmaster
+                begin
+                agqmaster:exclude_terrorism = l_exclude_terrorism
+                end
+            end
+
+        Access agqpersonal_ALIAS, Set agqpersonal_ALIAS:app_NO = G_app_NO, generic
+
+        while agqpersonal_alias:app_no = g_app_no
+            begin
+            change agqpersonal_alias
+                begin
+                agqpersonal_alias:remove_terror_form = l_exclude_terrorism
+                end
+
+            next agqpersonal_alias
+            end
+        end
+        l_exclude_terrorism/displayonly/checkbox/values="0,1" ;
+
+}
+
+scrollPanel at 10,1 to 15,100 tagged farmers_deductible_fn
+properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+
+Panel
+Properties
+        {
+        layoutconstraints = "north"
+        }
+{
+%%
+                       [R _              _              _              _              _ R]
+                      _____ ___      _____ ___      _____ ___      _____ ___      _____ ___
+         Limit           _______        _______        _______        ______         ______
+
+%%
+
+components
+
+fields
+0201    begin
+            do read_sfsdeductible
+            l_the_tag[1]         = tag("deductible_1")
+            l_ded_wording[1]     = "Ded"
+            l_premium_wording[1] = "Premium"
+            if l_deductible_checkbox = 1 then
+                begin
+                do display_blue(l_the_tag[1],"blue")
+                end
+        end
+        l_deductible_1[1]/displayonly/showasguidetext tagged deductible_1;
+0202    l_ded_wording[1]/showasguidetext/displayonly tagged deductible_1 ;
+0301    l_premium_wording[1]/showasguidetext/displayonly tagged deductible_1 ;
+0203    begin
+            l_the_tag[2]         = tag("deductible_2")
+            l_ded_wording[2]     = "Ded"
+            l_premium_wording[2] = "Premium"
+            if l_deductible_checkbox = 2 then
+                begin
+                do display_blue(l_the_tag[2],"blue")
+                end
+        end
+        l_deductible_1[2]/displayonly/showasguidetext tagged deductible_2;
+0204    l_ded_wording[2]/showasguidetext/displayonly tagged deductible_2 ;
+0302    l_premium_wording[2]/showasguidetext/displayonly tagged deductible_2 ;
+0205    begin
+            l_the_tag[3]         = tag("deductible_3")
+            l_ded_wording[3]     = "Ded"
+            l_premium_wording[3] = "Premium"
+            if l_deductible_checkbox = 3 then
+                begin
+                do display_blue(l_the_tag[3],"blue")
+                end
+        end
+        l_deductible_1[3]/displayonly/showasguidetext tagged deductible_3;
+0206    l_ded_wording[3]/showasguidetext/displayonly tagged deductible_3 ;
+0303    l_premium_wording[3]/showasguidetext/displayonly tagged deductible_3 ;
+
+0207    begin
+            l_the_tag[4]         = tag("deductible_4")
+            l_ded_wording[4]     = "Ded"
+            l_premium_wording[4] = "Premium"
+            if l_deductible_checkbox = 4 then
+                begin
+                do display_blue(l_the_tag[4],"blue")
+                end
+        end
+        l_deductible_1[4]/displayonly/showasguidetext tagged deductible_4;
+0208    l_ded_wording[4]/showasguidetext/displayonly tagged deductible_4 ;
+0304    l_premium_wording[4]/showasguidetext/displayonly tagged deductible_4 ;
+
+0209    begin
+            l_the_tag[5]         = tag("deductible_5")
+            l_ded_wording[5]     = "Ded"
+            l_premium_wording[5] = "Premium"
+            if l_deductible_checkbox = 5 then
+                begin
+                do display_blue(l_the_tag[5],"blue")
+                end
+        end
+        l_deductible_1[5]/displayonly/showasguidetext tagged deductible_5;
+0210    l_ded_wording[5]/showasguidetext/displayonly tagged deductible_5 ;
+0305    l_premium_wording[5]/showasguidetext/displayonly tagged deductible_5 ;
+0101    l_deductible_checkbox/values="1,2,3,4,5"/default/tabstop
+        do update_agqpersonal;
+
+}
+
+panel at 3,1 to 7,90 --tagged LINE_ITEMS
+Properties
+        {
+        }
+{
+%%
+     __________         __________     __________     __________     _________     ___________
+%%
+
+components
+
+fields
+0101    begin
+        access agqtotals, set agqtotals:app_no   = g_app_no,
+                              agqtotals:prem_no  = agqpersonal:prem_no,
+                              agqtotals:build_no = agqpersonal:build_no, generic
+
+        while agqtotals:app_no   = g_app_no and
+              agqtotals:prem_no  = agqpersonal:prem_no and
+              agqtotals:build_no = agqpersonal:build_no
+                begin
+                switch(agqtotals:deductible)
+                  case 500  : l_sub = 1
+                  case 1000 : l_sub = 2
+                  case 2000 : l_sub = 3
+                  case 3000 : l_sub = 4
+                  case 5000 : l_Sub = 5
+                  end
+                l_location_deduct[l_sub] = agqtotals:deductible_premium +
+                                           agqtotals:boiler_premium +
+                                           agqtotals:terrorism_premium +
+                                           agqtotals:pliga +
+                                           agqtotals:printers_premium +
+                                           agqtotals:adjustment_to_meet_minimum +
+                                           agqtotals:identity_theft +
+                                           agqtotals:fungi_total +
+                                           agqtotals:territory_total +
+                                           agqtotals:irpm_total
+
+--                l_total_ded[l_sub]       = l_total_ded[l_sub] +
+--                                           l_location_deduct[l_sub]
+                next agqtotals
+                end
+        end
+        agqpersonal:limit/displayonly    tagged LINE_ITEMS;
+0102    l_location_deduct[1]/displayonly   tagged LINE_ITEMS;
+0103    l_location_deduct[2]/displayonly   tagged LINE_ITEMS;
+0104    l_location_deduct[3]/displayonly   tagged LINE_ITEMS;
+0105    l_location_deduct[4]/displayonly   tagged LINE_ITEMS;
+0106    l_location_deduct[5]/displayonly   tagged LINE_ITEMS;
+
+}
+
+}
+
+scrollPanel at 10,1 to 15,95 tagged farmers_cd_deductible_fn
+properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+
+Panel
+Properties
+        {
+        layoutconstraints = "north"
+        }
+{
+%%
+                          [R _              _              _  R]
+                         _____ ___      _____ ___      _____ ___
+            Limit           _______        _______        _______
+
+%%
+
+components
+
+fields
+0201    begin
+            do read_sfsdeductible
+            l_the_tag[1]         = tag("deductible_1")
+            l_ded_wording[1]     = "Ded"
+            l_premium_wording[1] = "Premium"
+            if l_deductible_checkbox = 1 then
+                begin
+                do display_blue(l_the_tag[1],"blue")
+                end
+        end
+        l_deductible_1[1]/displayonly/showasguidetext tagged deductible_1;
+0202    l_ded_wording[1]/showasguidetext/displayonly tagged deductible_1 ;
+0301    l_premium_wording[1]/showasguidetext/displayonly tagged deductible_1 ;
+0203    begin
+            l_the_tag[2]         = tag("deductible_2")
+            l_ded_wording[2]     = "Ded"
+            l_premium_wording[2] = "Premium"
+            if l_deductible_checkbox = 2 then
+                begin
+                do display_blue(l_the_tag[2],"blue")
+                end
+        end
+        l_deductible_1[2]/displayonly/showasguidetext tagged deductible_2;
+0204    l_ded_wording[2]/showasguidetext/displayonly tagged deductible_2 ;
+0302    l_premium_wording[2]/showasguidetext/displayonly tagged deductible_2 ;
+0205    begin
+            l_the_tag[3]         = tag("deductible_3")
+            l_ded_wording[3]     = "Ded"
+            l_premium_wording[3] = "Premium"
+            if l_deductible_checkbox = 3 then
+                begin
+                do display_blue(l_the_tag[3],"blue")
+                end
+        end
+        l_deductible_1[3]/displayonly/showasguidetext tagged deductible_3;
+0206    l_ded_wording[3]/showasguidetext/displayonly tagged deductible_3 ;
+0303    l_premium_wording[3]/showasguidetext/displayonly tagged deductible_3 ;
+0101    l_deductible_checkbox/values="1,2,3"/default/tabstop
+        do update_agqpersonal;
+
+}
+
+panel at 3,1 to 7,80 --tagged LINE_ITEMS
+Properties
+        {
+        }
+{
+%%
+        __________         __________     __________     __________
+%%
+
+components
+
+fields
+0101    begin
+        access agqtotals, set agqtotals:app_no   = g_app_no,
+                              agqtotals:prem_no  = agqpersonal:prem_no,
+                              agqtotals:build_no = agqpersonal:build_no, generic
+
+        while agqtotals:app_no   = g_app_no and
+              agqtotals:prem_no  = agqpersonal:prem_no and
+              agqtotals:build_no = agqpersonal:build_no
+                begin
+                switch(agqtotals:deductible)
+                  case 1000 : l_sub = 1
+                  case 2000 : l_sub = 2
+                  case 3000 : l_sub = 3
+                  end
+                l_location_deduct[l_sub] = agqtotals:deductible_premium +
+                                           agqtotals:boiler_premium +
+                                           agqtotals:terrorism_premium +
+                                           agqtotals:pliga +
+                                           agqtotals:printers_premium +
+                                           agqtotals:adjustment_to_meet_minimum +
+                                           agqtotals:identity_theft +
+                                           agqtotals:fungi_total +
+                                           agqtotals:territory_total +
+                                           agqtotals:irpm_total
+
+--                l_total_ded[l_sub]       = l_total_ded[l_sub] +
+--                                           l_location_deduct[l_sub]
+                next agqtotals
+                end
+        end
+        agqpersonal:limit/displayonly    tagged LINE_ITEMS;
+0102    l_location_deduct[1]/displayonly   tagged LINE_ITEMS;
+0103    l_location_deduct[2]/displayonly   tagged LINE_ITEMS;
+0104    l_location_deduct[3]/displayonly   tagged LINE_ITEMS;
+
+}
+
+}
+
+scrollPanel at 10,1 to 15,95 tagged ficof_cd_deductible_fn
+properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+
+Panel
+Properties
+        {
+        layoutconstraints = "north"
+        }
+{
+%%
+                          [R _              _              _             _  R]
+                         _____ ___      _____ ___      _____ ___     _____ ___
+            Limit           _______        _______        _______       _______
+
+%%
+
+components
+
+fields
+0201    begin
+            do read_sfsdeductible
+            l_the_tag[1]         = tag("deductible_1")
+            l_ded_wording[1]     = "Ded"
+            l_premium_wording[1] = "Premium"
+            if l_deductible_checkbox = 1 then
+                begin
+                do display_blue(l_the_tag[1],"blue")
+                end
+        end
+        l_deductible_1[1]/displayonly/showasguidetext tagged deductible_1;
+0202    l_ded_wording[1]/showasguidetext/displayonly tagged deductible_1 ;
+0301    l_premium_wording[1]/showasguidetext/displayonly tagged deductible_1 ;
+0203    begin
+            l_the_tag[2]         = tag("deductible_2")
+            l_ded_wording[2]     = "Ded"
+            l_premium_wording[2] = "Premium"
+            if l_deductible_checkbox = 2 then
+                begin
+                do display_blue(l_the_tag[2],"blue")
+                end
+        end
+        l_deductible_1[2]/displayonly/showasguidetext tagged deductible_2;
+0204    l_ded_wording[2]/showasguidetext/displayonly tagged deductible_2 ;
+0302    l_premium_wording[2]/showasguidetext/displayonly tagged deductible_2 ;
+0205    begin
+            l_the_tag[3]         = tag("deductible_3")
+            l_ded_wording[3]     = "Ded"
+            l_premium_wording[3] = "Premium"
+            if l_deductible_checkbox = 3 then
+                begin
+                do display_blue(l_the_tag[3],"blue")
+                end
+        end
+        l_deductible_1[3]/displayonly/showasguidetext tagged deductible_3;
+0206    l_ded_wording[3]/showasguidetext/displayonly tagged deductible_3 ;
+0303    l_premium_wording[3]/showasguidetext/displayonly tagged deductible_3 ;
+
+0207    begin
+            l_the_tag[4]         = tag("deductible_4")
+            l_ded_wording[4]     = "Ded"
+            l_premium_wording[4] = "Premium"
+            if l_deductible_checkbox = 4 then
+                begin
+                do display_blue(l_the_tag[4],"blue")
+                end
+        end
+        l_deductible_1[4]/displayonly/showasguidetext tagged deductible_4;
+0208    l_ded_wording[4]/showasguidetext/displayonly tagged deductible_4 ;
+0304    l_premium_wording[4]/showasguidetext/displayonly tagged deductible_4 ;
+0101    l_deductible_checkbox/values="1,2,3,4"/default/tabstop
+        do update_agqpersonal;
+
+}
+
+panel at 3,1 to 7,80 --tagged LINE_ITEMS
+Properties
+        {
+        }
+{
+%%
+        __________         __________     __________     __________     __________
+%%
+
+components
+
+fields
+0101    begin
+        access agqtotals, set agqtotals:app_no   = g_app_no,
+                              agqtotals:prem_no  = agqpersonal:prem_no,
+                              agqtotals:build_no = agqpersonal:build_no, generic
+
+        while agqtotals:app_no   = g_app_no and
+              agqtotals:prem_no  = agqpersonal:prem_no and
+              agqtotals:build_no = agqpersonal:build_no
+                begin
+                switch(agqtotals:deductible)
+                  case  500 : l_sub = 1
+                  case 1000 : l_sub = 2
+                  case 2000 : l_sub = 3
+                  case 3000 : l_sub = 4
+                  end
+                if agqtotals:deductible_premium <> 0 then
+                    begin
+                    l_location_deduct[l_sub] = agqtotals:deductible_premium +
+                                               agqtotals:boiler_premium +
+                                               agqtotals:terrorism_premium +
+                                               agqtotals:pliga +
+                                               agqtotals:printers_premium +
+                                               agqtotals:adjustment_to_meet_minimum +
+                                               agqtotals:identity_theft +
+                                               agqtotals:fungi_total +
+                                               agqtotals:territory_total +
+                                               agqtotals:irpm_total
+                    end
+                else
+                    begin
+                    l_location_deduct[l_sub] = 0
+                    end
+
+                next agqtotals
+                end
+        end
+        agqpersonal:limit/displayonly    tagged LINE_ITEMS;
+0102    l_location_deduct[1]/displayonly   tagged LINE_ITEMS;
+0103    l_location_deduct[2]/displayonly   tagged LINE_ITEMS;
+0104    l_location_deduct[3]/displayonly   tagged LINE_ITEMS;
+0105    l_location_deduct[4]/displayonly   tagged LINE_ITEMS;
+
+}
+
+}
+
+scrollPanel at 10,1 to 15,95 tagged ficof_ha_deductible_fn
+properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+
+Panel
+Properties
+        {
+        layoutconstraints = "north"
+        }
+{
+%%
+                   [R _              _              _              _             _ R]
+                  _____ ___      _____ ___      _____ ___      _____ ___     _____ ___
+     Limit           _______        _______        _______        _______       _______
+
+%%
+
+components
+
+fields
+0201    begin
+            do read_sfsdeductible
+            l_the_tag[1]         = tag("deductible_1")
+            l_ded_wording[1]     = "Ded"
+            l_premium_wording[1] = "Premium"
+            if l_deductible_checkbox = 1 then
+                begin
+                do display_blue(l_the_tag[1],"blue")
+                end
+        end
+        l_deductible_1[1]/displayonly/showasguidetext tagged deductible_1;
+0202    l_ded_wording[1]/showasguidetext/displayonly tagged deductible_1 ;
+0301    l_premium_wording[1]/showasguidetext/displayonly tagged deductible_1 ;
+
+0203    begin
+            l_the_tag[2]         = tag("deductible_2")
+            l_ded_wording[2]     = "Ded"
+            l_premium_wording[2] = "Premium"
+            if l_deductible_checkbox = 2 then
+                begin
+                do display_blue(l_the_tag[2],"blue")
+                end
+        end
+        l_deductible_1[2]/displayonly/showasguidetext tagged deductible_2;
+0204    l_ded_wording[2]/showasguidetext/displayonly tagged deductible_2 ;
+0302    l_premium_wording[2]/showasguidetext/displayonly tagged deductible_2 ;
+
+0205    begin
+            l_the_tag[3]         = tag("deductible_3")
+            l_ded_wording[3]     = "Ded"
+            l_premium_wording[3] = "Premium"
+            if l_deductible_checkbox = 3 then
+                begin
+                do display_blue(l_the_tag[3],"blue")
+                end
+        end
+        l_deductible_1[3]/displayonly/showasguidetext tagged deductible_3;
+0206    l_ded_wording[3]/showasguidetext/displayonly tagged deductible_3 ;
+0303    l_premium_wording[3]/showasguidetext/displayonly tagged deductible_3 ;
+
+0207    begin
+            l_the_tag[4]         = tag("deductible_4")
+            l_ded_wording[4]     = "Ded"
+            l_premium_wording[4] = "Premium"
+            if l_deductible_checkbox = 4 then
+                begin
+                do display_blue(l_the_tag[4],"blue")
+                end
+        end
+        l_deductible_1[4]/displayonly/showasguidetext tagged deductible_4;
+0208    l_ded_wording[4]/showasguidetext/displayonly tagged deductible_4 ;
+0304    l_premium_wording[4]/showasguidetext/displayonly tagged deductible_4 ;
+
+0209    begin
+            l_the_tag[5]         = tag("deductible_5")
+            l_ded_wording[5]     = "Ded"
+            l_premium_wording[5] = "Premium"
+            if l_deductible_checkbox = 5 then
+                begin
+                do display_blue(l_the_tag[5],"blue")
+                end
+        end
+        l_deductible_1[5]/displayonly/showasguidetext tagged deductible_5;
+0210    l_ded_wording[5]/showasguidetext/displayonly tagged deductible_5 ;
+0305    l_premium_wording[5]/showasguidetext/displayonly tagged deductible_5 ;
+
+0101    l_deductible_checkbox/values="1,2,3,4,5"/default
+        if l_deductible_checkbox = 1 and
+           l_location_deduct[1] = 0 then
+            error "You need to change the wind deductible to continue"
+        if l_deductible_checkbox = 2 and
+           l_location_deduct[2] = 0 then
+            error "You need to change the wind deductible to continue"
+        if l_deductible_checkbox = 3 and
+           l_location_deduct[3] = 0 then
+            error "You need to change the wind deductible to continue"
+        if l_deductible_checkbox = 4 and
+           l_location_deduct[4] = 0 then
+            error "You need to change the wind deductible to continue"
+        if l_deductible_checkbox = 5 and
+           l_location_deduct[5] = 0 then
+            error "You need to change the wind deductible to continue"
+        do update_agqpersonal;
+
+}
+
+panel at 3,1 to 7,80 --tagged LINE_ITEMS
+Properties
+        {
+        }
+{
+%%
+ __________         __________     __________     __________     _________     ___________
+%%
+
+components
+
+fields
+0101    begin
+        access agqtotals, set agqtotals:app_no   = g_app_no,
+                              agqtotals:prem_no  = agqpersonal:prem_no,
+                              agqtotals:build_no = agqpersonal:build_no, generic
+
+        l_sub = 0
+        while agqtotals:app_no   = g_app_no and
+              agqtotals:prem_no  = agqpersonal:prem_no and
+              agqtotals:build_no = agqpersonal:build_no
+                begin
+                if sfsline:lob_code one of "HOME" then
+                    begin
+                    switch(agqtotals:deductible)
+                      case 500  : l_sub = 1
+                      case 750  : l_sub = 2
+                      case 1000 : l_sub = 3
+                      case 2000 : l_sub = 4
+                      case 3000 : l_sub = 5
+                      end
+                    end
+                else
+                    begin
+                    switch(agqtotals:deductible)
+                      case 200  : l_sub = 1
+                      case 500  : l_sub = 2
+                      case 1000 : l_sub = 3
+                      case 2000 : l_sub = 4
+                      case 3000 : l_sub = 5
+                      end
+                    end
+                l_location_deduct[l_sub] = 0
+                if agqtotals:deductible_premium <> 0 then
+                    begin
+                    l_location_deduct[l_sub] = agqtotals:deductible_premium +
+                                               agqtotals:boiler_premium +
+                                               agqtotals:terrorism_premium +
+                                               agqtotals:pliga +
+                                               agqtotals:printers_premium +
+                                               agqtotals:adjustment_to_meet_minimum +
+                                               agqtotals:identity_theft +
+                                               agqtotals:fungi_total +
+                                               agqtotals:territory_total +
+                                               agqtotals:irpm_total
+                    end
+                else
+                    begin
+                    l_location_deduct[l_sub] = 0
+                    end
+
+                next agqtotals
+                end
+        end
+        agqpersonal:limit/displayonly    tagged LINE_ITEMS;
+0102    l_location_deduct[1]/displayonly   tagged LINE_ITEMS;
+0103    l_location_deduct[2]/displayonly   tagged LINE_ITEMS;
+0104    l_location_deduct[3]/displayonly   tagged LINE_ITEMS;
+0105    l_location_deduct[4]/displayonly   tagged LINE_ITEMS;
+0106    l_location_deduct[5]/displayonly   tagged LINE_ITEMS;
+
+}
+
+}
+
+-- draw a line
+panel at 16,1 to 16,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 17,1 to 18, 95 tagged farmers_deductible_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        foregroundcolor    = "blue"
+        }
+event
+        {
+        mouseclicked = ""
+        }
+{
+%%
+     Policy Premium:    __________     __________     __________     __________     __________
+%%
+
+components
+
+fields
+101     begin
+        access agqtotals, set agqtotals:app_no   = g_app_no,
+                              agqtotals:prem_no  = 0,
+                              agqtotals:build_no = 0, generic
+
+        l_total_ded[1] = 0
+        l_total_ded[2] = 0
+        l_total_ded[3] = 0
+        l_total_ded[4] = 0
+        l_total_ded[5] = 0
+        while agqtotals:app_no   = g_app_no and
+              agqtotals:prem_no  = 0 and
+              agqtotals:build_no = 0
+                begin
+                switch(agqtotals:deductible)
+                  case 500  : l_sub = 1
+                  case 1000 : l_sub = 2
+                  case 2000 : l_sub = 3
+                  case 3000 : l_sub = 4
+                  case 5000 : l_sub = 5
+                  end
+                l_total_ded[l_sub]       = agqtotals:deductible_premium +
+                                           agqtotals:boiler_premium +
+                                           agqtotals:terrorism_premium +
+                                           agqtotals:pliga +
+                                           agqtotals:printers_premium +
+                                           agqtotals:adjustment_to_meet_minimum +
+                                           agqtotals:identity_theft +
+                                           agqtotals:fungi_total +
+                                           agqtotals:territory_total +
+                                           agqtotals:irpm_total
+                next agqtotals
+                end
+        end
+        l_total_ded[1]/displayonly
+        event
+        {
+        mouseclicked = ""
+        }    ;
+102     l_total_ded[2]/displayonly ;
+103     l_total_ded[3]/displayonly ;
+104     l_total_ded[4]/displayonly ;
+105     l_total_ded[5]/displayonly ;
+
+}
+
+Panel at 17,1 to 18, 95 tagged farmers_cd_deductible_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        foregroundcolor    = "blue"
+        }
+event
+        {
+        mouseclicked = ""
+        }
+{
+%%
+        Policy Premium:    __________     __________     __________
+%%
+
+components
+
+fields
+101     begin
+        access agqtotals, set agqtotals:app_no   = g_app_no,
+                              agqtotals:prem_no  = 0,
+                              agqtotals:build_no = 0, generic
+
+        l_total_ded[1] = 0
+        l_total_ded[2] = 0
+        l_total_ded[3] = 0
+        while agqtotals:app_no   = g_app_no and
+              agqtotals:prem_no  = 0 and
+              agqtotals:build_no = 0
+                begin
+                switch(agqtotals:deductible)
+                  case 1000 : l_sub = 1
+                  case 2000 : l_sub = 2
+                  case 3000 : l_sub = 3
+                  end
+                l_total_ded[l_sub]       = agqtotals:deductible_premium +
+                                           agqtotals:boiler_premium +
+                                           agqtotals:terrorism_premium +
+                                           agqtotals:pliga +
+                                           agqtotals:printers_premium +
+                                           agqtotals:adjustment_to_meet_minimum +
+                                           agqtotals:identity_theft +
+                                           agqtotals:fungi_total +
+                                           agqtotals:territory_total +
+                                           agqtotals:irpm_total
+                next agqtotals
+                end
+        end
+        l_total_ded[1]/displayonly
+        event
+        {
+        mouseclicked = ""
+        }    ;
+102     l_total_ded[2]/displayonly ;
+103     l_total_ded[3]/displayonly ;
+
+}
+
+Panel at 17,1 to 17, 95 tagged ficof_cd_deductible_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        foregroundcolor    = "blue"
+        }
+event
+        {
+        mouseclicked = ""
+        }
+{
+%%
+        Policy Premium:    __________     __________     __________     __________
+%%
+
+components
+
+fields
+101     begin
+        access agqtotals, set agqtotals:app_no   = g_app_no,
+                              agqtotals:prem_no  = 0,
+                              agqtotals:build_no = 0, generic
+
+        l_total_ded[1] = 0
+        l_total_ded[2] = 0
+        l_total_ded[3] = 0
+        l_total_ded[4] = 0
+        while agqtotals:app_no   = g_app_no and
+              agqtotals:prem_no  = 0 and
+              agqtotals:build_no = 0
+                begin
+                switch(agqtotals:deductible)
+                  case  500 : l_sub = 1
+                  case 1000 : l_sub = 2
+                  case 2000 : l_sub = 3
+                  case 3000 : l_sub = 4
+                  end
+                if agqtotals:deductible_premium <> 0 then
+                    begin
+                    l_total_ded[l_sub]       = agqtotals:deductible_premium +
+                                               agqtotals:boiler_premium +
+                                               agqtotals:terrorism_premium +
+                                               agqtotals:pliga +
+                                               agqtotals:printers_premium +
+                                               agqtotals:adjustment_to_meet_minimum +
+                                               agqtotals:identity_theft +
+                                               agqtotals:fungi_total +
+                                               agqtotals:territory_total +
+                                               agqtotals:irpm_total
+                    end
+                else
+                    begin
+                    l_total_ded[l_sub]       = 0
+                    end
+
+                next agqtotals
+                end
+        end
+        l_total_ded[1]/displayonly
+        event
+        {
+        mouseclicked = ""
+        }    ;
+102     l_total_ded[2]/displayonly ;
+103     l_total_ded[3]/displayonly ;
+104     l_total_ded[4]/displayonly ;
+
+}
+
+Panel at 19,1 to 19,100   tagged ficof_cd_deductible_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,37
+             properties
+               {
+                 text = "Enter Wind Deductible, if applicable:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 19,27 to 19,100 tagged ficof_cd_deductible_fn
+{
+%%
+~_____
+%%
+
+components
+
+fields
+101     agqPERSONAL:WIND_DEDUCTIBLE/default/tabstop
+        If agqPERSONAL:WIND_DEDUCTIBLE <> SFSWINDDEDUCT:WIND_DEDUCTIBLE Then
+            Error 1207
+
+        Activehelp SFSWINDDEDUCT_ALIAS:WIND_DEDUCTIBLE ;
+
+}
+
+Panel at 17,1 to 17, 95 Tagged ficof_ha_deductible_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        foregroundcolor    = "blue"
+        }
+event
+        {
+        mouseclicked = ""
+        }
+{
+%%
+ Policy Premium:    __________     __________     __________     __________     __________
+%%
+
+components
+
+fields
+101     begin
+        access agqtotals, set agqtotals:app_no   = g_app_no,
+                              agqtotals:prem_no  = 0,
+                              agqtotals:build_no = 0, generic
+
+        l_total_ded[1] = 0
+        l_total_ded[2] = 0
+        l_total_ded[3] = 0
+        l_total_ded[4] = 0
+        l_total_ded[5] = 0
+        l_sub          = 0
+        while agqtotals:app_no   = g_app_no and
+              agqtotals:prem_no  = 0 and
+              agqtotals:build_no = 0
+                begin
+                if sfsline:lob_code one of "HOME" then
+                    begin
+                    switch(agqtotals:deductible)
+                      case 500  : l_sub = 1
+                      case 750  : l_sub = 2
+                      case 1000 : l_sub = 3
+                      case 2000 : l_sub = 4
+                      case 3000 : l_sub = 5
+                      end
+                    end
+                else
+                    begin
+                    switch(agqtotals:deductible)
+                      case 200  : l_sub = 1
+                      case 500  : l_sub = 2
+                      case 1000 : l_sub = 3
+                      case 2000 : l_sub = 4
+                      case 3000 : l_sub = 5
+                      end
+                    end
+                if agqtotals:deductible_premium <> 0 then
+                    begin
+                    l_total_ded[l_sub]       = agqtotals:deductible_premium +
+                                               agqtotals:boiler_premium +
+                                               agqtotals:terrorism_premium +
+                                               agqtotals:pliga +
+                                               agqtotals:printers_premium +
+                                               agqtotals:adjustment_to_meet_minimum +
+                                               agqtotals:identity_theft +
+                                               agqtotals:fungi_total +
+                                               agqtotals:territory_total +
+                                               agqtotals:irpm_total
+                    end
+                else
+                    begin
+                    l_total_ded[l_sub]       = 0
+                    end
+
+                next agqtotals
+                end
+        end
+        l_total_ded[1]/displayonly
+        event
+        {
+        mouseclicked = ""
+        }    ;
+102     l_total_ded[2]/displayonly ;
+103     l_total_ded[3]/displayonly ;
+104     l_total_ded[4]/displayonly ;
+105     l_total_ded[5]/displayonly ;
+
+}
+
+Panel at 19,1 to 19,100   tagged ficof_ha_deductible_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,37
+             properties
+               {
+                 text = "Enter Wind Deductible, if applicable:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 19,27 to 19, 95 tagged ficof_ha_deductible_fn
+{
+%%
+~_____
+%%
+
+components
+
+fields
+101     agqPERSONAL:WIND_DEDUCTIBLE/default/tabstop
+        If agqPERSONAL:WIND_DEDUCTIBLE <> SFSWINDDEDUCT:WIND_DEDUCTIBLE Then
+            Error 1207
+
+        Activehelp SFSWINDDEDUCT_ALIAS:WIND_DEDUCTIBLE ;
+
+}
+
+
+-- draw a line
+panel at 20,1 to 20,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 21,5 to 21,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1  tagged rating_info
+        Properties {
+                Iconname = "btn_rating_infomation.bmp"
+                }
+        Events  {
+                Action
+                        {
+--                           do get_heading("Rating Information . . .")
+                           function = "displayit"
+                           abort()
+                        }
+
+                }
+        }
+
+Panel at 21,50 to 21,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1    tagged policy_info
+        Properties {
+                Iconname = "btn_supp_coverages.bmp"
+                }
+        Events  {
+                Action = policy_info_fn
+                }
+
+}
+
+Panel at 22.5,5 to 23,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1    tagged optional_info
+        Properties {
+                Iconname = "btn_opt_endt.bmp"
+                }
+        Events  {
+                Action = optional_info_fn
+                }
+
+        }
+
+Panel at 22,89 to 23,90 tagged irpm
+    Properties
+        {
+        layouttype = column
+        }
+    {
+    Components
+        Button at 1,1
+            Properties {
+                Iconname = "btn_irpm.bmp"
+                }
+            Events  {
+                Action = irpm_fn
+                }
+    }
+
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,1 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+
+        }
+
+Panel at 25,70 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged submit_info
+        Properties {
+                Iconname = "btn_app_entry.bmp"
+                }
+        Events  {
+                Action = submit_fn
+                }
+
+}
+
+panel at 26,1 to 32,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+}
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END
+
+procedure update_agqpersonal
+begin
+access agqpersonal_alias, set agqpersonal_alias:app_no = g_app_no, generic
+
+change agqpersonal_alias
+    begin
+    if l_deductible_checkbox = 1 and
+       agqpersonal_alias:deductible <> l_deductible_1[1] then
+        begin
+        agqpersonal_alias:deductible = l_deductible_1[1]
+        end
+    else
+    if l_deductible_checkbox = 2 and
+       agqpersonal_alias:deductible <> l_deductible_1[2] then
+        begin
+        agqpersonal_alias:deductible = l_deductible_1[2]
+        end
+    else
+    if l_deductible_checkbox = 3 and
+       agqpersonal_alias:deductible <> l_deductible_1[3] then
+        begin
+        agqpersonal_alias:deductible = l_deductible_1[3]
+        end
+    else
+    if l_deductible_checkbox = 4 and
+       agqpersonal_alias:deductible <> l_deductible_1[4] then
+        begin
+        agqpersonal_alias:deductible = l_deductible_1[4]
+        end
+    else
+    if l_deductible_checkbox = 5 and
+       agqpersonal_alias:deductible <> l_deductible_1[5] then
+        begin
+        agqpersonal_alias:deductible = l_deductible_1[5]
+        end
+    end
+
+function = "redisplay"
+end
+
+procedure display_blue(tag l_tag, string l_color)
+begin
+    setproperty(l_tag,foregroundcolor,l_color)
+end
+
+procedure check_agqtotals
+begin
+access agqtotals, set agqtotals:app_no = g_app_no, generic
+
+while agqtotals:app_no = g_app_no
+    begin
+    access agqpersonal_alias, set agqpersonal_alias:app_no   = agqtotals:app_no,
+                                 agqpersonal_alias:prem_no  = agqtotals:prem_no,
+                                 agqpersonal_alias:build_no = agqtotals:build_no, generic
+
+    if agqtotals:prem_no <> agqpersonal_alias:prem_no or
+       agqtotals:build_no <> agqpersonal_alias:build_no then
+        delete agqtotals
+
+    next agqtotals
+    end
+
+end
+
+procedure get_heading(string l_display_heading)
+
+begin
+  postevent("agtmt010b","set_info_box",l_display_heading)
+end
+
+
+procedure back_a_screen
+begin
+  postevent("agtmt010","REMOVE_SCREEN")
+end
+
+procedure read_sfsdeductible
+begin
+access sfsdeductible, set sfsdeductible:company_id       = agqpersonal:company_id,
+                          sfsdeductible:state            = agqpersonal:state,
+                          sfsdeductible:line_of_business = agqpersonal:line_of_business, generic
+
+l_sub = 0
+while sfsdeductible:company_id       = agqpersonal:company_id and
+      sfsdeductible:state            = agqpersonal:state and
+      sfsdeductible:line_of_business = agqpersonal:line_of_business
+        begin
+        if agqpersonal:eff_date >= sfsdeductible:eff_date then
+            begin
+            if sfsdeductible:show_in_activehelp = 1 then
+                begin
+                l_sub = l_sub + 1
+                l_deductible_1[l_sub] = sfsdeductible:deductible
+                if agqpersonal:deductible = l_deductible_1[l_sub] then
+                    l_deductible_checkbox = l_sub
+                if sfsline:lob_code one of "HOME" then
+                    begin
+                    if function <> "CHANGE" then
+                        begin
+                        if sfscompany:debug_mode = 0 then
+                            proc("cli csbatch agtup1200 %s %s %s",str(g_app_no,11),str(l_deductible_1[l_sub]),g_zipcode_change)/noconsole
+                        else
+                            proc("cli csbatch agtup1200 %s %s %s",str(g_app_no,11),str(l_deductible_1[l_sub]),g_zipcode_change)
+                        end
+                    end
+                else
+                    begin
+                    if function <> "CHANGE" then
+                        begin
+                        do get_territory
+                        if sfscompany:debug_mode = 0 then
+                            proc("cli csbatch agtup1100 %s %s %s",str(g_app_no,11),str(l_deductible_1[l_sub]),g_zipcode_change)/noconsole
+                        else
+                            proc("cli csbatch agtup1100 %s %s %s",str(g_app_no,11),str(l_deductible_1[l_sub]),g_zipcode_change)
+                        end
+                    end
+                end
+            end
+
+        next sfsdeductible
+        end
+
+if function <> "CHANGE" then
+    begin
+    l_deductible = agqpersonal:deductible
+    if sfsline:lob_code one of "HOME" then
+        begin
+        if sfscompany:debug_mode = 0 then
+            proc("cli csbatch agtup1200 %s %s",str(g_app_no,11),str(l_deductible))/noconsole
+        else
+            proc("cli csbatch agtup1200 %s %s",str(g_app_no,11),str(l_deductible))
+        end
+    else
+        begin
+        if sfscompany:debug_mode = 0 then
+            proc("cli csbatch agtup1100 %s %s",str(g_app_no,11),str(l_deductible))/noconsole
+        else
+            proc("cli csbatch agtup1100 %s %s",str(g_app_no,11),str(l_deductible))
+        end
+    end
+end
+
+procedure get_territory
+begin
+access sfsterritory, set sfsterritory:company_id       = agqpersonal:company_id,
+                         sfsterritory:state            = agqpersonal:state,
+                         sfsterritory:line_of_business = agqpersonal:line_of_business,
+                         sfsterritory:county           = agqpersonal:county, generic
+
+while sfsterritory:company_id       = agqpersonal:company_id and
+      sfsterritory:state            = agqpersonal:state and
+      sfsterritory:line_of_business = agqpersonal:line_of_business and
+      sfsterritory:county           = agqpersonal:county
+    begin
+    if (agqpersonal:eff_date >= sfsterritory:eff_date and
+       (agqpersonal:eff_date <= sfsterritory:exp_date or
+       sfsterritory:exp_date = 0)) then
+        begin
+        Switch(agqPERSONAL:STATE)
+          Case 19 : begin
+                    l_table                 = sfsterritory:territory_group[1]
+                    end
+          Default : Do GET_DWELLING_TABLE
+          end
+        end
+
+    next sfsterritory
+    end
+
+Access agqPERSONAL_ALIAS, Set agqpersonal_alias:app_no = agqpersonal:app_no,
+                              agqPERSONAL_ALIAS:PREM_NO = agqPERSONAL:PREM_NO,
+                              agqPERSONAL_ALIAS:BUILD_NO = agqPERSONAL:BUILD_NO, Generic
+
+If agqpersonal_alias:app_no = agqpersonal:app_no And
+   agqPERSONAL_ALIAS:PREM_NO = agqPERSONAL:PREM_NO And
+   agqPERSONAL_ALIAS:BUILD_NO = agqPERSONAL:BUILD_NO Then
+    begin
+    Change agqPERSONAL_ALIAS
+        Begin
+        agqPERSONAL_alias:TABLE   = L_TABLE
+        agqpersonal_alias:table_1 = l_table
+        end
+    end
+
+end
+
+Procedure GET_DWELLING_TABLE
+Begin
+L_RECORD_KEY = "TB"
+L_COMPANY_ID = agqpersonal:COMPANY_ID
+L_LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+L_STATE = agqPERSONAL:STATE
+L_OWNER_OCCUPIED = agqPERSONAL:OWNER_OCCUPIED
+L_NO_FAMILIES = agqPERSONAL:NO_FAMILIES
+L_EFF_DATE = agqpersonal:EFF_DATE
+
+Include "plsdftable.pro"
+
+Access agqPERSONAL_ALIAS, Set agqpersonal_alias:app_no = agqpersonal:app_no,
+                              agqPERSONAL_ALIAS:PREM_NO = agqPERSONAL:PREM_NO,
+                              agqPERSONAL_ALIAS:BUILD_NO = agqPERSONAL:BUILD_NO, Generic
+
+If agqpersonal_alias:app_no = agqpersonal:app_no And
+   agqPERSONAL_ALIAS:PREM_NO = agqPERSONAL:PREM_NO And
+   agqPERSONAL_ALIAS:BUILD_NO = agqPERSONAL:BUILD_NO Then
+    begin
+    Change agqPERSONAL_ALIAS
+        Begin
+        agqPERSONAL_alias:TABLE   = L_TABLE
+        agqpersonal_alias:table_1 = l_table
+        end
+    end
+
+End
+
+procedure print_quote_letter
+begin
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+proc("cli csbatch agqmso1000 %s",str(g_app_no,11))/noconsole
+Proc("cli joinit agqmso1000.cq %s<nl>",l_dec)/noconsole
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+if agqapplication:app_no = g_app_no then
+    begin
+    proc("cli csbatch agqmso1001 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso1001.cq %s<nl>",l_dec)/noconsole
+    end
+
+If agqname:company_id = "FARMERS" and
+   agqname:line_of_business one of 34, 44 then
+  {
+    proc("cli csbatch agqmdcxnr_102012 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit  agqmdcxnr_102012.cq %s<nl>",l_dec)/noconsole
+  }
+
+
+access sfsline, set sfsline:company_id       = agqpersonal:company_id,
+                    sfsline:line_of_business = agqpersonal:line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+L_LOB_CODE = SFSLINE:LOB_CODE
+Access SCIPSCONTROL, Set SCIPSCONTROL:COMPANY_ID = agqpersonal:COMPANY_ID,
+                         SCIPSCONTROL:STATE      = agqpersonal:STATE,
+                         SCIPSCONTROL:LOB_CODE   = L_LOB_CODE,Exact
+
+if scipscontrol:dont_print_tpd4_new_business = 0 and
+   agqmaster:terrorism_premium <> 0 and
+   sfsline:lob_code not one of "DWELLING" and
+   agqpersonal:company_id = "FARMERS" then
+    begin
+    proc("cli csbatch tpd7q %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit tpd7q.cq %s<nl>",l_dec)/noconsole
+    end
+else
+if scipscontrol:dont_print_tpd4_new_business = 0 and
+   sfsline:lob_code one of "DWELLING" and
+   agqmaster:terrorism_premium <> 0 and
+   agqpersonal:company_id = "FARMERS" then
+    begin
+    proc("cli csbatch tpd7q %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit tpd7q.cq %s<nl>",l_dec)/noconsole
+    end
+else
+if agqmaster:tpd6_terrorism_premium <> 0 and
+   scipscontrol:dont_print_tpd4_new_business = 0 and
+   agqpersonal:company_id = "FARMERS" then
+    begin
+    proc("cli csbatch tpd7q %s",str(g_app_no,8))/noconsole
+    Proc("cli joinit tpd7q.cq %s<nl>",l_dec)/noconsole
+    end
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+    Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+    Proc("chmod 777 %s ",L_DEC_PDF)
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+end
+
+Procedure CREATE_MACRO
+Begin
+Do REFRESH_WORK_FILES
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+L_USERNAME = USERNAME
+I_REPORTA = "agqpr1000"
+I_REPORT = "agqpr1000.cq"
+I_REPORT_CQE = "agqpr1000.cqe"
+I_APP = "agq"
+l_app = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF = L_APP+Str(I_CSEXEC_NUMBER)+".txt"
+I_PARAMETER = I_APP+Str(I_CSEXEC_NUMBER)+".par"
+I_MACROA = I_APP+Str(I_CSEXEC_NUMBER)
+I_MACRO = I_APP+Str(I_CSEXEC_NUMBER)+".mf"
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+if agqprint1:app_no <> g_app_no then
+    begin
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+else
+    begin
+    delete agqprint1
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+
+Deletefile(I_MACRO)
+Writefile(I_MACRO,"clear list<nl>")
+Writefile(I_MACRO,"clear find<nl>")
+Writefile(I_MACRO,"clear sum<nl>")
+Writefile(I_MACRO,"run agqpr1000<nl>")
+Writefile(I_MACRO,"cli rm agqpr1000.cq<nl>")
+Writefile(I_MACRO,"rsave agqpr1000<nl>")
+Writefile(I_MACRO,"cli joinit agqpr1000.cq %s<nl>",L_DEC)
+Closefile(I_MACRO)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc("cli cq %s",I_MACRO)/noconsole
+Else
+    Proc("cli cq %s",I_MACRO)
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)/noconsole
+    Proc("cli chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("cli rm %s",L_DEC)/noconsole
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)
+    Proc("cli chmod 777 %s ",L_DEC_PDF)
+    Proc("cli rm %s",L_DEC)
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client/noconsole
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+delete agqprint1
+
+Do REFRESH_WORK_FILES
+End
+
+Procedure REFRESH_WORK_FILES
+Begin
+Proc ("cli agqprint1.mk")/noconsole
+End
+
+
+end

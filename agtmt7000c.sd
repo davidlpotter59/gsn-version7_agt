@@ -1,0 +1,474 @@
+%%                      
+Screen
+        Name = "agtmt7000c";
+        Type = "Multiline" ;
+        repeat LINE_ITEMS, 10 times down ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="agqumunderlying" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_state[2] ;
+
+        global string g_company_id[10] ,
+                      g_initial_screen[50] ,
+                      g_zipcode_change[1] ,
+                      g_portfolio[1] ;
+
+        Local Unsigned Ascii Number L_TYPE[1]=0 ,
+                                    L_FACTOR[6]=0/dec=3,
+                                    l_line_of_business[4],
+                                    L_sub_code[4]=0,
+                                    L_LIMIT_1[8]=0,
+                                    L_LIMIT_2[8]=0 ;
+
+        Local String L_TABLE[1]="" ,
+                     l_coverage[1]="P" ;
+
+        Access agqumunderlying,
+           Set agqumunderlying:app_no = G_app_no, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt7000c" ;
+
+        "add" sequence "new"  tagged add_fn ;
+         "new" continue begin
+                        if agqumunderlying:app_no   <> g_app_no or
+                           agqumunderlying:coverage <> l_coverage then
+                            function = "addnew|append"
+                        else
+                            function = "append"
+                        end;
+        "addnew" add/autoupdate ;
+        append    tagged append_fn;
+
+        "func1" display "agtmt7002" tagged calc_fn ;
+
+        include "stdfunc7.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+if g_line_of_business = 99 then
+    l_line_of_business = 7
+else
+    l_line_of_business = g_line_of_business
+disable(accept_fn)
+access agqname, set agqname:app_no = g_app_no,generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(delete_fn)
+    disable(accept_fn)
+    end
+
+access validation
+if agqumunderlying:app_no <> g_app_no then
+    error 1000
+
+skip if agqumunderlying:coverage <> "P"
+
+screen at 1,1 to 27,100
+Properties
+        {
+          Layouttype = screen
+          transparent = False
+          backgroundcolor = "#ADD8E6"
+          scrollbarpolicy = asneeded
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100
+                properties
+                    {
+                    iconname = ""
+                    }
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Products Information..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_APP_NO/displayonly ;
+
+}
+-- top button bar
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+
+        Button at 1.5,1   tagged add_fn
+        Properties {
+                Iconname = "btn_add_location.bmp"
+                }
+        Events  {
+                Action = add_fn
+                }
+
+        Button at 1.5,38    tagged change_fn
+        Properties {
+                Iconname = "btn_edit_location.bmp"
+                }
+        Events  {
+                Action = change_fn
+                }
+
+        Button at 1.5, 70 tagged delete_fn
+        Properties {
+                Iconname = "btn_delete_location.bmp"
+                }
+        Events  {
+                Action = delete_fn
+                }
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt7000c.sd"
+                      fontsize = 9
+                    }
+      }
+
+Panel at 8,70 to 8,100
+      Properties
+         {
+           layouttype = row
+         }
+    {
+      Components
+        Button at 1,55 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+
+    }
+
+panel at 10,5 to 24,100
+Properties
+        {
+        LayoutType = screen
+        }
+{
+%%
+   Premium            Limits          Table    Factor       Premium
+
+  __________   __________/__________    _       _____      __________
+
+
+
+
+
+
+
+
+
+
+%%
+
+components
+
+Fields
+301     Begin
+        access agqumbrella1, set agqumbrella1:app_no = g_app_no, generic
+
+        access agqname, set agqname:app_no = g_app_no, generic
+
+        access cpsumdefault, set cpsumdefault:company_id = agqumbrella1:company_id, generic
+
+        access sfscompany, set sfscompany:company_id = agqumbrella1:company_id, generic
+
+        If FUNCTION one of "ADD", "NEW", "APPEND", "ADDNEW" Then
+            Begin
+            agqumunderlying:app_no           = G_app_no
+            agqumunderlying:coverage         = "P"
+            agqumunderlying:line_of_business = agqumbrella1:line_of_business
+            do subcode
+            agqumunderlying:sub_code         = l_sub_code
+            agqumunderlying:state            = agqumbrella1:state
+            agqumunderlying:company_id       = agqumbrella1:company_id
+            End
+        End
+        agqumunderlying:PREMIUM                   tagged LINE_ITEMS
+        If agqumunderlying:PREMIUM = 0 Then
+            Begin
+            agqumunderlying:LIMIT_1       = 0
+            agqumunderlying:LIMIT_2       = 0
+            agqumunderlying:TABLE         = 0
+            agqumunderlying:PERCENT       = 0
+            agqumunderlying:Total_PREMIUM = 0
+            End ;
+302     begin
+        if agqumunderlying:premium = 0 then
+            abort()
+        end
+        agqumunderlying:limit_1                   tagged LINE_ITEMS
+        If agqumunderlying:LIMIT_1 <> CPSUMLIMITS2:LIMIT1 Then
+            Error 1238
+
+        Activehelp if cpsumlimits2_alias:display = 1 then
+                       CPSUMLIMITS2_ALIAS:LIMIT1
+                   else
+                       null ;
+303     agqumunderlying:LIMIT_2                   tagged LINE_ITEMS
+        if agqumunderlying:limit_2 <> cpsumlimits2_alt:limit2 then
+            error 1238
+
+        activehelp cpsumlimits2_alt2:limit2 ;
+304     agqumunderlying:TABLE_string/uppercase    tagged LINE_ITEMS
+        if agqumunderlying:table_string <> cpsumtable_alt1:table then
+            error "Invalid table entered"
+
+        activehelp cpsumtable_alias1:table,
+                   cpsumtable_alias1:description ;
+305     Begin
+        If FUNCTION One Of "ADD", "CHANGE", "NEW", "APPEND", "ADDNEW" Then
+            Begin
+            L_TABLE   = agqumunderlying:TABLE_string
+            L_LIMIT_1 = agqumunderlying:limit_1
+            L_LIMIT_2 = agqumunderlying:limit_2
+            Do GET_FACTORS
+            if cpsumdefault:factor = 1 then
+                l_factor = l_factor * 100
+            agqumunderlying:PERCENT = L_FACTOR
+            End
+        End
+        agqumunderlying:PERCENT/default           tagged LINE_ITEMS
+        hide if sfscompany:boiler_rating = 4 ;
+305     Begin
+        If FUNCTION One Of "ADD", "CHANGE", "NEW", "APPEND", "ADDNEW" Then
+            Begin
+            L_TABLE = agqumunderlying:TABLE_string
+            L_LIMIT_1 = agqumunderlying:limit_1
+            L_LIMIT_2 = agqumunderlying:limit_2
+            Do GET_FACTORS
+            if cpsumdefault:factor = 1 then
+                l_factor = l_factor * 100
+            agqumunderlying:PERCENT1 = L_FACTOR
+            End
+        End
+        agqumunderlying:PERCENT1/default           tagged LINE_ITEMS
+        hide if sfscompany:boiler_rating <> 4 ;
+306     begin
+        if function one of "ADD", "CHANGE", "NEW", "APPEND", "ADDNEW" then
+            begin
+            if sfscompany:boiler_rating one of 4 then
+                agqumunderlying:TOTAL_PREMIUM = (agqumunderlying:PREMIUM *
+                                                (agqumunderlying:percent1 Divide 100))
+            else
+                agqumunderlying:TOTAL_PREMIUM = (agqumunderlying:PREMIUM *
+                                                (agqumunderlying:percent Divide 100))
+            end
+        end
+        agqumunderlying:TOTAL_PREMIUM/displayonly tagged LINE_ITEMS ;
+
+
+}
+
+Panel at 25,1 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,75   tagged calc_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+--                backgroundcolor = "#ADD8E6"
+              }
+    }
+
+}
+
+Update
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    enable(calc_fn)
+    disable(accept_fn)
+    End
+
+Procedure Definition
+
+procedure subcode
+begin
+access agqumunderlying_alias, set agqumunderlying_alias:app_no   = agqumunderlying:app_no,
+                                  agqumunderlying_alias:coverage = agqumunderlying:coverage, generic
+
+l_sub_code = 0
+while agqumunderlying_alias:app_no   = agqumunderlying:app_no and
+      agqumunderlying_alias:coverage = agqumunderlying:coverage
+        begin
+        l_sub_code = agqumunderlying_alias:sub_code
+
+        next agqumunderlying_alias
+        end
+
+l_sub_code = l_sub_code + 10
+end
+
+procedure get_factors
+begin
+l_type = 2
+access cpsumfactors, set cpsumfactors:company_id       = agqumbrella1:company_id,
+                         cpsumfactors:state            = agqumbrella1:state,
+                         cpsumfactors:line_of_business = agqumbrella1:line_of_business,
+                         cpsumfactors:type             = l_type,
+                         cpsumfactors:limit_1          = l_limit_1,
+                         cpsumfactors:limit_2          = l_limit_2,
+                         cpsumfactors:table            = l_table, generic
+
+l_factor = 0
+while cpsumfactors:company_id       = agqumbrella1:company_id and
+      cpsumfactors:state            = agqumbrella1:state and
+      cpsumfactors:line_of_business = agqumbrella1:line_of_business and
+      cpsumfactors:type             = l_type and
+      cpsumfactors:limit_1          = l_limit_1 and
+      cpsumfactors:limit_2          = l_limit_2 and
+      cpsumfactors:table            = l_table
+        begin
+        if agqname:eff_date >= cpsumfactors:eff_date then
+            begin
+            l_factor = cpsumfactors:factor
+            end
+
+        next cpsumfactors
+        end
+
+end
+
+End

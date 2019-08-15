@@ -1,0 +1,448 @@
+%%
+Program
+        Name = "agqcv102p" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+         Global Unsigned Ascii Number G_QUOTE_NO[8] ,
+                                      g_policy_no[9],
+                                      g_year[4],
+                                      g_end_sequence[4] ;
+
+         global string g_company[10] ;
+
+         local unsigned ascii number l_county_have_city[1] ;
+
+         String L_PROCEDURE[20] ,
+                L_QUOTE_NO[8] ,
+                l_enter[1],
+                L_NEW_QUOTE_NO[8] ;
+
+Initialisation
+G_QUOTE_NO     = Val(commandline[1,8])
+g_policy_no    = val(commandline[9,17])
+g_year         = val(commandline[18,21])
+g_end_sequence = val(commandline[22,25])
+
+-- plppersonal FILE UPDATE LOGIC
+
+L_PROCEDURE = "plppersonal FILE UPDATE"
+
+Access plqpersonal_alias, Set plqpersonal_alias:quote_no = g_quote_no, generic
+
+Repeat Begin
+    Exit If plqpersonal_alias:quote_no <> g_quote_no
+
+    Add plpPERSONAL
+        Begin
+        plpPERSONAL:policy_no                 = G_policy_no
+        plppersonal:pol_year                  = g_year
+        plppersonal:end_sequence              = g_end_sequence
+        plpPERSONAL:PREM_NO                   = plqpersonal_alias:PREM_NO
+        plpPERSONAL:BUILD_NO                  = plqpersonal_alias:BUILD_NO
+        plppersonal:record_rdf                = plqpersonal_alias:record_rdf/raw
+        plppersonal:windstorm_loss_mitigation = plqpersonal_alias:windstorm_loss_mitigation
+        plppersonal:remove_mpl12              = plqpersonal_alias:remove_mpl12
+        plppersonal:ifa_companion_discount    = plqpersonal_alias:ifa_companion_discount
+        plppersonal:ifa_policy_no             = plqpersonal_alias:ifa_policy_no
+        plppersonal:ifa_eff_date              = plqpersonal_alias:ifa_eff_date
+        plppersonal:ifa_credit                = plqpersonal_alias:ifa_credit
+        plppersonal:alarm_option_8            = plqpersonal_alias:alarm_option_8
+        plppersonal:alarm_factor_8            = plqpersonal_alias:alarm_factor_8
+        plppersonal:book_roll                 = plqpersonal_alias:book_roll
+        plppersonal:none_apply                = plqpersonal_alias:none_apply
+        end
+
+    Next plqpersonal_alias
+    End
+
+-- plppersonal FILE UPDATE LOGIC
+
+L_PROCEDURE = "plppersonal1 FILE UPDATE"
+
+Access plqpersonal1_alias, Set plqpersonal1_alias:quote_no = g_quote_no, generic
+
+Repeat Begin
+    Exit If plqpersonal1_alias:quote_no <> g_quote_no
+
+    Add plpPERSONAL1
+        Begin
+        plpPERSONAL1:policy_no                 = G_policy_no
+        plppersonal1:pol_year                  = g_year
+        plppersonal1:end_sequence              = g_end_sequence
+        plpPERSONAL1:PREM_NO                   = plqpersonal1_alias:PREM_NO
+        plpPERSONAL1:BUILD_NO                  = plqpersonal1_alias:BUILD_NO
+        plppersonal1:record_rdf                = plqpersonal1_alias:record_rdf/raw
+        end
+
+    Next plqpersonal1_alias
+    End
+
+-- plppersonal2 FILE UPDATE LOGIC
+
+L_PROCEDURE = "plppersonal2 FILE UPDATE"
+
+Access plqpersonal2_alias, Set plqpersonal2_alias:quote_no = g_quote_no, generic
+
+If plqpersonal2_alias:quote_no = g_quote_no then
+    begin
+    Add plppersonal2
+        Begin
+        plppersonal2:policy_no              = G_policy_no
+        plppersonal2:pol_year               = g_year
+        plppersonal2:end_sequence           = g_end_sequence
+        plppersonal2:PREM_NO                = plqpersonal2_alias:PREM_NO
+        plppersonal2:BUILD_NO               = plqpersonal2_alias:BUILD_NO
+        plppersonal2:RECORD_RDF             = plqpersonal2_alias:RECORD_RDF/raw
+        plppersonal2:county_have_city       = plqpersonal2_alias:county_have_city
+        end
+    End
+
+-- plpaddin FILE UPDATE LOGIC
+
+L_PROCEDURE = "plpaddin FILE UPDATE"
+
+Access plqaddin_alias, Set plqaddin_alias:quote_no = g_quote_no, generic
+
+Repeat Begin
+    Exit If plqaddin_alias:quote_no <> g_quote_no
+
+    Add plpADDIN
+        Begin
+        plpADDIN:policy_no              = G_policy_no
+        plpaddin:pol_year               = g_year
+        plpaddin:end_sequence           = g_end_sequence
+        plpADDIN:PREM_NO                = plqaddin_alias:PREM_NO
+        plpADDIN:BUILD_NO               = plqaddin_alias:BUILD_NO
+        plpADDIN:SUB_CODE               = plqaddin_alias:SUB_CODE
+        plpADDIN:RECORD_RDF             = plqaddin_alias:RECORD_RDF/raw
+        End
+
+    Next plqaddin_alias
+    End
+
+L_PROCEDURE = "plpaddprem FILE UPDATE"
+
+Access plqaddprem_alias, Set plqaddprem_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqaddprem_alias:quote_no <> g_quote_no
+
+    Add plpADDPREM
+        Begin
+        plpADDPREM:policy_no              = G_policy_no
+        plpaddprem:pol_year               = g_year
+        plpaddprem:end_sequence           = g_end_sequence
+        plpADDPREM:PREM_NO                = plqaddprem_alias:PREM_NO
+        plpADDPREM:BUILD_NO               = plqaddprem_alias:BUILD_NO
+        plpADDPREM:SUB_CODE               = plqaddprem_alias:SUB_CODE
+        plpADDPREM:RECORD_RDF             = plqaddprem_alias:RECORD_RDF/raw
+        End
+
+    Next plqaddprem_alias
+    End
+
+L_PROCEDURE = "plpdaycare FILE UPDATE"
+
+Access plqdaycare_alias, Set plqdaycare_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqdaycare_alias:quote_no <> g_quote_no
+
+    Add plpdaycare
+        Begin
+        plpdaycare:policy_no              = G_policy_no
+        plpdaycare:pol_year               = g_year
+        plpdaycare:end_sequence           = g_end_sequence
+        plpdaycare:PREM_NO                = plqdaycare_alias:PREM_NO
+        plpdaycare:BUILD_NO               = plqdaycare_alias:BUILD_NO
+        plpdaycare:SUB_CODE               = plqdaycare_alias:SUB_CODE
+        plpdaycare:RECORD_RDF             = plqdaycare_alias:RECORD_RDF/raw
+        End
+
+    Next plqdaycare_alias
+    End
+
+Access plqdesc_alias, Set plqdesc_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqdesc_alias:quote_no <> g_quote_no
+
+    Add plpDESC
+        Begin
+        plpDESC:policy_no              = G_policy_no
+        plpdesc:pol_year               = g_year
+        plpdesc:end_sequence           = g_end_sequence
+        plpDESC:PREM_NO                = plqdesc_alias:PREM_NO
+        plpDESC:BUILD_NO               = plqdesc_alias:BUILD_NO
+        plpDESC:CODE                   = plqdesc_alias:CODE/raw
+        plpDESC:ARTICLE                = plqdesc_alias:ARTICLE/raw
+        plpDESC:SUB_CODE               = plqdesc_alias:SUB_CODE
+        plpDESC:RECORD_RDF             = plqdesc_alias:RECORD_RDF/raw
+        End
+
+    Next plqdesc_alias
+    End
+
+Access plqendorse_alias, Set plqendorse_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqendorse_alias:quote_no <> g_quote_no
+
+    Add plpENDORSE
+        Begin
+        plpENDORSE:policy_no              = G_policy_no
+        plpendorse:pol_Year               = g_year
+        plpendorse:end_sequence           = g_end_sequence
+        plpENDORSE:PREM_NO                = plqendorse_alias:PREM_NO
+        plpENDORSE:BUILD_NO               = plqendorse_alias:BUILD_NO
+        plpENDORSE:CODE                   = plqendorse_alias:CODE
+        plpENDORSE:SUB_CODE               = plqendorse_alias:SUB_CODE
+        plpENDORSE:RECORD_RDF             = plqendorse_alias:RECORD_RDF/raw
+        End
+
+    Next plqendorse_alias
+    End
+
+Access plqfarmliab_alias, Set plqfarmliab_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqfarmliab_alias:quote_no <> g_quote_no
+
+    Add plpFARMLIAB
+        Begin
+        plpFARMLIAB:policy_no              = G_policy_no
+        plpfarmliab:pol_year               = g_year
+        plpfarmliab:end_sequence           = g_end_sequence
+        plpFARMLIAB:PREM_NO                = plqfarmliab_alias:PREM_NO
+        plpFARMLIAB:BUILD_NO               = plqfarmliab_alias:BUILD_NO
+        plpFARMLIAB:RECORD_RDF             = plqfarmliab_alias:RECORD_RDF/raw
+        End
+
+    Next plqfarmliab_alias
+    End
+
+Access plqtotals_alias, Set plqtotals_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqtotals_alias:quote_no <> g_quote_no
+
+    Add plpTOTALS
+        Begin
+        plpTOTALS:policy_no              = G_policy_no
+        plptotals:pol_year               = g_year
+        plptotals:end_sequence           = g_end_sequence
+        plpTOTALS:PREM_NO                = plqtotals_alias:PREM_NO
+        plpTOTALS:BUILD_NO               = plqtotals_alias:BUILD_NO
+        plpTOTALS:RECORD_RDF             = plqtotals_alias:RECORD_RDF/raw
+        End
+
+    Next plqtotals_alias
+    End
+
+Access plqoutboard_alias, Set plqoutboard_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqoutboard_alias:quote_no <> g_quote_no
+
+    Add plpOUTBOARD
+        Begin
+        plpOUTBOARD:policy_no              = G_policy_no
+        plpoutboard:pol_year               = g_year
+        plpoutboard:end_sequence           = g_end_sequence
+        plpOUTBOARD:PREM_NO                = plqoutboard_alias:PREM_NO
+        plpOUTBOARD:BUILD_NO               = plqoutboard_alias:BUILD_NO
+        plpOUTBOARD:SUB_CODE               = plqoutboard_alias:SUB_CODE
+        plpOUTBOARD:RECORD_RDF             = plqoutboard_alias:RECORD_RDF/raw
+        End
+
+    Next plqoutboard_alias
+    End
+
+Access plqhomebus_alias, Set plqhomebus_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqhomebus_alias:quote_no <> g_quote_no
+
+    Add plpHOMEBUS
+        Begin
+        plpHOMEBUS:policy_no              = G_policy_no
+        plphomebus:pol_year               = g_year
+        plphomebus:end_sequence           = g_end_sequence
+        plpHOMEBUS:PREM_NO                = plqhomebus_alias:PREM_NO
+        plpHOMEBUS:BUILD_NO               = plqhomebus_alias:BUILD_NO
+        plpHOMEBUS:SUB_CODE               = plqhomebus_alias:SUB_CODE
+        plpHOMEBUS:RECORD_RDF             = plqhomebus_alias:RECORD_RDF/raw
+        End
+
+    Next plqhomebus_alias
+    End
+
+Access plqhomeaddin_alias, Set plqhomeaddin_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqhomeaddin_alias:quote_no <> g_quote_no
+
+    Add plpHOMEADDIN
+        Begin
+        plpHOMEADDIN:policy_no              = G_policy_no
+        plphomeaddin:pol_year               = g_year
+        plphomeaddin:end_sequence           = g_end_sequence
+        plpHOMEADDIN:PREM_NO                = plqhomeaddin_alias:PREM_NO
+        plpHOMEADDIN:BUILD_NO               = plqhomeaddin_alias:BUILD_NO
+        plpHOMEADDIN:TYPE                   = plqhomeaddin_alias:TYPE
+        plpHOMEADDIN:SUB_CODE               = plqhomeaddin_alias:SUB_CODE
+        plpHOMEADDIN:RECORD_RDF             = plqhomeaddin_alias:RECORD_RDF/raw
+        End
+
+    Next plqhomeaddin_alias
+    End
+
+-- plpstructures FILE UPDATE LOGIC
+
+L_PROCEDURE = "plpstructures FILE UPDATE"
+
+Access plqstructures_alias, Set plqstructures_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqstructures_alias:quote_no <> g_quote_no
+
+    Add plpSTRUCTURES
+        Begin
+        plpSTRUCTURES:policy_no              = G_policy_no
+        plpstructures:pol_year               = g_year
+        plpstructures:end_sequence           = g_end_sequence
+        plpSTRUCTURES:PREM_NO                = plqstructures_alias:PREM_NO
+        plpSTRUCTURES:BUILD_NO               = plqstructures_alias:BUILD_NO
+        plpSTRUCTURES:CODE                   = plqstructures_alias:CODE/raw
+        plpSTRUCTURES:RECORD_RDF             = plqstructures_alias:RECORD_RDF/raw
+        End
+
+    Next plqstructures_alias
+    End
+
+-- plpstructloc FILE UPDATE LOGIC
+
+L_PROCEDURE = "plpstructloc FILE UPDATE"
+
+Access plqstructloc_alias, Set plqstructloc_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqstructloc_alias:quote_no <> g_quote_no
+
+    Add plpSTRUCTLOC
+        Begin
+        plpSTRUCTLOC:policy_no              = G_policy_no
+        plpstructloc:pol_year               = g_year
+        plpstructloc:end_sequence           = g_end_sequence
+        plpSTRUCTLOC:PREM_NO                = plqstructloc_alias:PREM_NO
+        plpSTRUCTLOC:BUILD_NO               = plqstructloc_alias:BUILD_NO
+        plpSTRUCTLOC:CODE                   = plqstructloc_alias:CODE/raw
+        plpSTRUCTLOC:SUB_CODE               = plqstructloc_alias:SUB_CODE
+        plpSTRUCTLOC:RECORD_RDF             = plqstructloc_alias:RECORD_RDF/raw
+        End
+
+    Next plqstructloc_alias
+    End
+
+-- plpumbrella FILE UPDATE LOGIC
+
+L_PROCEDURE = "plpumbrella FILE UPDATE"
+
+Access plqumbrella_alias, Set plqumbrella_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqumbrella_alias:quote_no <> g_quote_no
+
+    Add plpUMBRELLA
+        Begin
+        plpUMBRELLA:policy_no              = G_policy_no
+        plpumbrella:pol_year               = g_year
+        plpumbrella:end_sequence           = g_end_sequence
+        plpUMBRELLA:RECORD_RDF             = plqumbrella_alias:RECORD_RDF/raw
+        End
+
+    Next plqumbrella_alias
+    End
+
+-- plpumdetail
+
+L_PROCEDURE = "plpumdetail FILE UPDATE"
+
+Access plqumdetail_alias, Set plqumdetail_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqumdetail_alias:quote_no <> g_quote_no
+
+    Add plpUMDETAIL
+        Begin
+        plpUMDETAIL:policy_no              = G_policy_no
+        plpumdetail:pol_year               = g_year
+        plpumdetail:end_sequence           = g_end_sequence
+        plpUMDETAIL:SUB_CODE               = plqumdetail_alias:SUB_CODE
+        plpUMDETAIL:RECORD_RDF             = plqumdetail_alias:RECORD_RDF/raw
+        if plqumdetail_alias:coverage_type = "H" then
+            plpumdetail:policy_number      = str(g_policy_no)
+        End
+
+    Next plqumdetail_alias
+    End
+
+-- plpwatercraft FILE UPDATE LOGIC
+
+L_PROCEDURE = "plpwatercraft FILE UPDATE"
+
+Access plqwatercraft_alias, Set plqwatercraft_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqwatercraft_alias:quote_no <> g_quote_no
+
+    Add plpWATERCRAFT
+        Begin
+        plpWATERCRAFT:policy_no              = G_policy_no
+        plpwatercraft:pol_year               = g_year
+        plpwatercraft:end_sequence           = g_end_sequence
+        plpWATERCRAFT:PREM_NO                = plqwatercraft_alias:PREM_NO
+        plpWATERCRAFT:BUILD_NO               = plqwatercraft_alias:BUILD_NO
+        plpWATERCRAFT:SUB_CODE               = plqwatercraft_alias:SUB_CODE
+        plpWATERCRAFT:RECORD_RDF             = plqwatercraft_alias:RECORD_RDF/raw
+        End
+
+    Next plqwatercraft_alias
+    End
+
+-- plpworkerscomp FILE UPDATE LOGIC
+
+L_PROCEDURE = "plpworkerscomp FILE UPDATE"
+
+Access plqworkerscomp_alias,
+   Set plqworkerscomp_alias:quote_no = g_quote_no, Approximate
+
+Repeat Begin
+    Exit If plqworkerscomp_alias:quote_no <> g_quote_no
+
+    Add plpWORKERSCOMP
+        Begin
+        plpWORKERSCOMP:policy_no              = G_policy_no
+        plpworkerscomp:pol_year               = g_year
+        plpworkerscomp:end_sequence           = g_end_sequence
+        plpWORKERSCOMP:PREM_NO                = plqworkerscomp_alias:PREM_NO
+        plpWORKERSCOMP:BUILD_NO               = plqworkerscomp_alias:BUILD_NO
+        plpWORKERSCOMP:RECORD_RDF             = plqworkerscomp_alias:RECORD_RDF/raw
+        End
+
+    Next plqworkerscomp_alias
+    End
+
+Update
+
+Errors
+Writefile("agqcv102p.err","<NL>")
+Writefile("agqcv102p.err","%S",L_PROCEDURE)
+Writefile("agqcv102p.err","<NL>")
+Writefile("agqcv102p.err","%N%S plqcv100p errors ",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv102p.err","<NL>")
+Writefile("agqcv102p.err","<NL>")
+
+End

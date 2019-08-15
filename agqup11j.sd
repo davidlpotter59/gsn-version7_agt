@@ -1,0 +1,104 @@
+%%
+Program
+        Name = "agqUP11j" ;
+        Type = "File" ;
+        Padcharacter = Space ;
+        Domain = "FLAT" ;
+
+        Global Unsigned Ascii Number G_app_no[11] ,
+                                     g_prem_no[4],
+                                     g_build_no[4] ;
+
+        Local unsigned ascii number l_liability_code[2],
+                                    l_type[1];
+
+        include "boprate.var"
+
+initialisation
+g_app_no      = val(commandline[1,11])
+g_prem_no     = val(commandline[12,15])
+g_build_no    = val(commandline[16,19])
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+access agqgeneral, set agqgeneral:app_no   = g_app_no,
+                       agqgeneral:prem_no  = g_prem_no,
+                       agqgeneral:build_no = g_build_no, generic
+
+do rate_coverages
+
+update
+
+Procedure Definition
+
+procedure rate_coverages
+begin
+access agqgaragekeepers, set agqgaragekeepers:app_no   = agqgeneral:app_no,
+                             agqgaragekeepers:prem_no  = agqgeneral:prem_no,
+                             agqgaragekeepers:build_no = agqgeneral:build_no, generic
+
+l_company_id       = agqgeneral:company_id
+l_state            = agqgeneral:state
+l_line_of_business = agqgeneral:line_of_business
+l_limit_1          = agqgaragekeepers:limit
+l_form             = agqgaragekeepers:form
+l_rate_form        = agqgaragekeepers:rate_form
+l_eff_date         = agqgeneral:eff_date
+
+include "bpsgaragerates.pro"
+
+l_type             = 1
+l_deductible       = agqgaragekeepers:comp_deductible
+l_deductible_2     = agqgaragekeepers:comp_deductible
+
+include "bpsgaragededuct.pro"
+
+l_update_sfpend_premium = l_garagekeepers_comp_premium *
+                          l_garagekeepers_deduct_factor
+
+change agqgaragekeepers
+    begin
+    agqgaragekeepers:comp_premium = l_garagekeepers_comp_premium *
+                                    l_garagekeepers_deduct_factor
+    end
+
+l_type             = 2
+l_deductible       = agqgaragekeepers:coll_deductible
+l_deductible_2     = agqgaragekeepers:coll_deductible
+
+include "bpsgaragededuct.pro"
+
+l_update_sfpend_premium = (l_update_sfpend_premium +
+                          (l_garagekeepers_coll_premium *
+                          l_garagekeepers_deduct_factor))
+
+change agqgaragekeepers
+    begin
+    agqgaragekeepers:coll_premium = l_garagekeepers_coll_premium *
+                                    l_garagekeepers_deduct_factor
+    end
+
+access agqend, set agqend:app_no   = g_app_no,
+                   agqend:prem_no  = g_prem_no,
+                   agqend:build_no = g_build_no, generic
+
+while agqend:app_no   = g_app_no and
+      agqend:prem_no  = g_prem_no and
+      agqend:build_no = g_build_no
+        begin
+        if agqend:code one of "BU1510", "MGK011" then
+            begin
+            change agqend
+                begin
+                agqend:premium = l_update_sfpend_premium
+                end
+            end
+
+        next agqend
+        end
+
+End
+
+End

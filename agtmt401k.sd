@@ -1,0 +1,899 @@
+%%                 
+Screen
+        Name = "agtmt401k";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqpanofault" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ,
+                                     g_vehicle_no[4] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7];
+
+        local tag l_tag[10] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_no_vehicles[4],
+                                    l_line_of_business[4],
+                                    l_additional_pip_option[2],
+                                    l_vehicle_no[4],
+                                    l_pip_option[2],
+                                    l_form[2],
+                                    l_limit[8],
+                                    l_mca301[1],
+                                    l_mca202[1],
+                                    l_mca301_prior[1],
+                                    l_mca202_prior[1],
+                                    l_remove_form[1],
+                                    l_mca841_prior[1],
+                                    l_mca842_prior[1],
+                                    l_mca841[1],
+                                    l_mca842[2],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_non_employee[1],
+                     l_additional_pip[1],
+                     l_code_2[7],
+                     l_screen[9],
+                     l_named_family_members[1],
+                     l_extra_code[7],
+                     l_first[1],
+                     l_addl_code[7],
+                     l_broadened_code[7],
+                     l_motor_bus_code[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_first_vehicle[1],
+                     l_first_str_vehicle[8],
+                     l_last_str_vehicle[8],
+                     l_str_vehicle[8],
+                     l_Form_edition[25],
+                     l_filler[25],
+                     l_um_uim[3],
+                     l_server_name[100],
+                     l_current_web_page[100],
+                     l_web_site_address[150],
+                     l_record_key[2],
+                     L_COMPANY_ID[10] ,
+                     l_description[75] ;
+
+        Access agqpanofault,
+           Set agqpanofault:app_NO     = G_app_NO , generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+        "calc" display "agtmt402" tagged back_fn ;
+        "func1" display "agtmt401k" tagged no_fault_fn ;
+        "redisplay" display/noreturn "agtmt401k" ;
+--        forwardtab ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "cap"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqvehicle:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER                            --"http://192.168.1.197/"
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "051webhelp_agtmt401k_scr_no_fault_pip.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+Access Validation
+If agqpanofault:app_NO <> G_app_NO then
+    Error 1000
+
+access agqpanofault_alias, set agqpanofault_alias:app_no = agqvehicle:app_no, generic
+
+l_first_str_vehicle = ""
+l_first_vehicle = "Y"
+l_last_str_vehicle = ""
+l_no_vehicles = 0
+while agqpanofault_alias:app_no = agqvehicle:app_no
+    begin
+    if l_first_vehicle = "Y" then
+        begin
+        l_first_str_vehicle  = str(agqpanofault_alias:vehicle_no)
+        l_first_vehicle = "N"
+        end
+    l_last_str_vehicle  = str(agqpanofault_alias:vehicle_no)
+    l_no_vehicles  = l_no_vehicles + 1
+
+    next agqpanofault_alias
+    end
+
+l_str_vehicle = str(agqpanofault:vehicle_no)
+if l_no_vehicles one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_vehicle = l_first_str_vehicle and
+   l_no_vehicles > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_vehicle <> l_first_str_vehicle and
+   l_str_vehicle <> l_last_str_vehicle and
+   l_no_vehicles > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_vehicle = l_last_str_vehicle and
+   l_no_vehicles > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+        }
+
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "No Fault/PIP..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+
+Panel at 6,20 to 6,100 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,20
+          properties
+            {
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+        }
+
+Panel at 6,55 to 6,100
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,55 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt401k.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 8,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,5 to 1,16
+             properties
+               {
+                 text = "Vehicle No:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 1,26 to 1,43
+             properties
+               {
+                 text = "Number of Vehicles:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 1,52 to 1,64
+             properties
+               {
+                 text = "Vehicle Type:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+              }
+         }
+
+Panel at 8,15 to 8,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+____                       ____                 ____________________
+%%
+
+components
+
+Fields
+101     Begin
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            disable(back_fn)
+            enable(accept_fn)
+            end
+        else
+            begin
+            enable(back_fn)
+            disable(accept_fn)
+            end
+
+        access sfscompany,
+           set sfscompany:company_id = agqvehicle:company_id, generic
+
+        l_agent_no   = agqvehicle:agent_no
+        Access agsdefault_cap,
+           Set agsdefault_cap:COMPANY_ID       = agqvehicle:company_id,
+               agsdefault_cap:state            = agqvehicle:state,
+               agsdefault_cap:agent_no         = agqvehicle:agent_no,
+               agsdefault_cap:LINE_OF_BUSINESS = agqvehicle:line_of_business, generic
+
+        End
+        agqpanofault:vehicle_no/displayonly/mask="ZZZZ" ;
+102     begin
+        access agqvehicle_alias, set agqvehicle_alias:app_no = g_app_no, generic
+
+        l_no_vehicles = 0
+        while agqvehicle_alias:app_no = g_app_no
+            begin
+            l_no_vehicles = l_no_vehicles + 1
+
+            next agqvehicle_alias
+            end
+        end
+        l_no_vehicles/displayonly/mask="ZZZZ" ;
+103     uppercase(castype:description) ;
+
+}
+
+carddialog GUI at 10,3 to 23,90
+Properties
+        {
+        layoutconstraints = stretch
+        }
+{
+Panel
+    properties
+        {
+        text = "Extraordinary Medical"
+        transparent = false
+        backgroundcolor = "#ADD8E6"
+        }
+{
+%%
+
+Extraordinary Medical Benefits [R_~~~~~~~~~0
+                                 _~~~100,000
+                                 _~~~300,000
+                                 _~~~500,000
+                                 _~1,000,000 R]
+
+%%
+
+components
+
+fields
+201     begin
+        if function one of "ADD" then
+            begin
+            access agqpanofault_alias, set agqpanofault_alias:app_no = agqpanofault:app_no, generic
+
+            agqpanofault:additional_option       = agqpanofault_alias:additional_option
+            agqpanofault:combined_option         = agqpanofault_alias:combined_option
+            agqpanofault:combined_limit          = agqpanofault_alias:combined_limit
+            agqpanofault:extra_medical_limit     = agqpanofault_alias:extra_medical_limit
+            agqpanofault:medical_expense_limit   = agqpanofault_alias:medical_expense_limit
+            agqpanofault:funeral_limit           = agqpanofault_alias:funeral_limit
+            agqpanofault:work_loss_total_limit   = agqpanofault_alias:work_loss_total_limit
+            agqpanofault:work_loss_monthly_limit = agqpanofault_alias:work_loss_monthly_limit
+            agqpanofault:accident_limit          = agqpanofault_alias:accident_limit
+            end
+        end
+        agqPANOFAULT:EXTRA_MEDICAL_LIMIT/values="0,100000,300000,500000,1000000"/default ;
+
+}
+
+Panel
+    properties
+        {
+        text = "Combination PIP"
+        transparent = false
+        backgroundcolor = "#ADD8E6"
+        }
+{
+%%
+
+Combination PIP: [R_~0
+                   _~$50,000/2,500/10,000
+                   _~$100,000/2,500/10,000
+                   _~$177,500/2,500/25,000
+                   _~$277,500/2,500/25,000  R]
+
+%%
+components
+
+fields
+201     agqPANOFAULT:COMBINED_LIMIT/values="0,50000,100000,177500,277500"/default
+        hide if agqpanofault:additional_option = 1
+        Switch(agqPANOFAULT:COMBINED_LIMIT)
+          Case 50000  : Begin
+                        agqPANOFAULT:FUNERAL_LIMIT = 2500
+                        agqPANOFAULT:ACCIDENT_LIMIT = 10000
+                        End
+          Case 100000 : Begin
+                        agqPANOFAULT:FUNERAL_LIMIT = 2500
+                        agqPANOFAULT:ACCIDENT_LIMIT = 10000
+                        End
+          Case 177500 : Begin
+                        agqPANOFAULT:FUNERAL_LIMIT = 2500
+                        agqPANOFAULT:ACCIDENT_LIMIT = 25000
+                        End
+          Case 277500 : Begin
+                        agqPANOFAULT:FUNERAL_LIMIT = 2500
+                        agqPANOFAULT:ACCIDENT_LIMIT = 25000
+                        End
+          End
+          if agqpanofault:combined_limit <> 0 then
+              begin
+              agqpanofault:combined_option         = 1
+              agqpanofault:additional_option       = 0
+              agqpanofault:medical_expense_limit   = 0
+              agqpanofault:work_loss_total_limit   = 0
+              agqpanofault:work_loss_monthly_limit = 0
+              end
+          if agqpanofault:combined_limit = 0 then
+              agqpanofault:combined_option         = 0 ;
+
+
+}
+
+Panel
+    properties
+        {
+        text = "Additional PIP"
+        transparent = false
+        backgroundcolor = "#ADD8E6"
+        }
+{
+%%
+
+Medical Expense: [R _~~None               Funeral Expense:  [R_~~None
+                    _~~$ 10,000                               _~~$1,500
+                    _~~$ 25,000                               _~~$2,500 R]
+                    _~~$ 50,000
+                    _~~$100,000 R]
+
+Work Loss:       [R _~~None               Accidental Death: [R_~~None
+                    _~~$1,000/$ 5,000                         _~~$ 5,000
+                    _~~$1,000/$15,000                         _~~$10,000
+                    _~~$1,500/$25,000                         _~~$25,000 R]
+                    _~~$2,500/$50,000 R]
+%%
+
+components
+
+fields
+201     agqPANOFAULT:MEDICAL_EXPENSE_LIMIT/values="0,10000,25000,50000,100000"/default
+        hide if agqpanofault:combined_option = 1 ;
+202     agqPANOFAULT:FUNERAL_LIMIT/values="0,1500,2500"/default
+        hide if agqpanofault:combined_option = 1 ;
+801     agqPANOFAULT:WORK_LOSS_TOTAL_LIMIT/values="0,5000,15000,25000,50000"/default
+        hide if agqpanofault:combined_option = 1
+        Switch(agqPANOFAULT:WORK_LOSS_TOTAL_LIMIT)
+          Case     0 : agqPANOFAULT:WORK_LOSS_MONTHLY_LIMIT =    0
+          Case  5000 : agqPANOFAULT:WORK_LOSS_MONTHLY_LIMIT = 1000
+          Case 15000 : agqPANOFAULT:WORK_LOSS_MONTHLY_LIMIT = 1000
+          Case 25000 : agqPANOFAULT:WORK_LOSS_MONTHLY_LIMIT = 1500
+          Case 50000 : agqPANOFAULT:WORK_LOSS_MONTHLY_LIMIT = 2500
+          End ;
+802     agqPANOFAULT:ACCIDENT_LIMIT/values="0,5000,10000,25000"/default
+        hide if agqpanofault:combined_option = 1
+        if agqpanofault:accident_limit <> 0 or
+           agqpanofault:work_loss_total_limit <> 0 or
+           agqpanofault:funeral_limit <> 0 or
+           agqpanofault:medical_expense_limit <> 0 then
+            begin
+            agqpanofault:additional_option = 1
+            agqpanofault:combined_option   = 0
+            agqpanofault:combined_limit    = 0
+            end
+        if agqpanofault:accident_limit = 0 and
+           agqpanofault:work_loss_total_limit = 0 and
+           agqpanofault:funeral_limit = 0 and
+           agqpanofault:medical_expense_limit = 0 then
+            begin
+            agqpanofault:additional_option = 0
+            end;
+
+}
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,1 to 26,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,5   tagged previous_fn
+        Properties {
+                Iconname = "btn_prev_vehicle.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+        Button at 1,30   tagged next_fn
+        Properties {
+                Iconname = "btn_next_vehicle.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+        Button at 1,75   tagged back_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+panel at 27,1 to 32,100
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    enable(back_fn)
+    disable(accept_fn)
+    end
+
+if abort = "YES" then
+    begin
+    enable(back_fn)
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(back_fn)
+    If FUNCTION one of "ADD", "CHANGE", "CHG" Then
+        Begin
+        access agqpanofault_alias, set agqpanofault_alias:app_no = agqpanofault:app_no, generic
+
+        while agqpanofault_alias:app_no = agqpanofault:app_no
+            begin
+            change agqpanofault_alias
+                begin
+                if agqvehicle:class_code not one of 691, 692, 693, 694, 695, 696 then
+                    begin
+                    if agqpanofault_alias:additional_option <> agqpanofault:additional_option then
+                        agqpanofault_alias:additional_option       = agqpanofault:additional_option
+                    if agqpanofault_alias:combined_option <> agqpanofault:combined_option then
+                        agqpanofault_alias:combined_option         = agqpanofault:combined_option
+                    if agqpanofault_alias:combined_limit <> agqpanofault:combined_limit then
+                        agqpanofault_alias:combined_limit          = agqpanofault:combined_limit
+                    if agqpanofault_alias:extra_medical_limit <> agqpanofault:extra_medical_limit then
+                        agqpanofault_alias:extra_medical_limit     = agqpanofault:extra_medical_limit
+                    if agqpanofault_alias:medical_expense_limit <> agqpanofault:medical_expense_limit then
+                        agqpanofault_alias:medical_expense_limit   = agqpanofault:medical_expense_limit
+                    if agqpanofault_alias:funeral_limit <> agqpanofault:funeral_limit then
+                        agqpanofault_alias:funeral_limit           = agqpanofault:funeral_limit
+                    if agqpanofault_alias:work_loss_total_limit <> agqpanofault:work_loss_total_limit then
+                        agqpanofault_alias:work_loss_total_limit   = agqpanofault:work_loss_total_limit
+                    if agqpanofault_alias:work_loss_monthly_limit <> agqpanofault:work_loss_monthly_limit then
+                        agqpanofault_alias:work_loss_monthly_limit = agqpanofault:work_loss_monthly_limit
+                    if agqpanofault_alias:accident_limit <> agqpanofault:accident_limit then
+                        agqpanofault_alias:accident_limit          = agqpanofault:accident_limit
+                    end
+                end
+
+            next agqpanofault_alias
+            end
+
+
+        L_RECORD_KEY = "PA"
+        L_STATE      = agqVEHICLE:STATE
+        l_line_of_business = agqvehicle:line_of_business
+        Access CASPANOFAULT, Set CASPANOFAULT:COMPANY_ID       = agqvehicle:COMPANY_ID,
+                                 CASPANOFAULT:STATE            = L_STATE,
+                                 CASPANOFAULT:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS, Generic
+
+        while CASPANOFAULT:RECORD_KEY       = L_RECORD_KEY and
+              CASPANOFAULT:COMPANY_ID       = agqvehicle:COMPANY_ID and
+              CASPANOFAULT:STATE            = L_STATE and
+              CASPANOFAULT:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS
+            begin
+            If agqvehicle:EFF_DATE >= CASPANOFAULT:EFF_DATE Then
+                Begin
+                L_ADDL_CODE  = CASPANOFAULT:ADDITIONAL_CODE
+                L_EXTRA_CODE = CASPANOFAULT:EXTRA_CODE
+                End
+
+            Next CASPANOFAULT
+            End
+        End
+
+    if l_addl_code <> "" then
+        begin
+        L_CODE = L_ADDL_CODE
+        l_vehicle_no = 0
+        Do ACCESS_agqEND1
+        If ((L_ADD_ENDORSEMENT = "Y" And
+           agqPANOFAULT:additional_option = 1) or
+           (l_add_endorsement = "Y" and
+           agqPANOFAULT:combined_option    = 1)) Then
+            begin
+            Do ADD_agqEND1
+            end
+        If L_ADD_ENDORSEMENT = "N" And
+           agqPANOFAULT:additional_option = 0 And
+           agqPANOFAULT:combined_option   = 0 Then
+            begin
+            Do DELETE_agqEND1
+            end
+        end
+
+    if l_extra_code <> "" then
+        begin
+        l_vehicle_no = 0
+        L_CODE = L_EXTRA_CODE
+        Do ACCESS_agqEND1
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPANOFAULT:EXTRA_MEDICAL_LIMIT <> 0 Then
+            Do ADD_agqEND1
+        If L_ADD_ENDORSEMENT = "N" And
+           agqPANOFAULT:EXTRA_MEDICAL_LIMIT = 0 Then
+            Do DELETE_agqEND1
+        end
+
+    End
+
+Procedure Definition
+
+Procedure ACCESS_agqEND1
+Begin
+l_vehicle_no = 0
+Access agqEND1, Set agqEND1:app_no   = agqVEHICLE:app_no ,
+                    agqEND1:VEHICLE_NO = L_VEHICLE_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqEND1:app_no   = agqVEHICLE:app_no and
+      agqEND1:VEHICLE_NO = L_VEHICLE_NO
+    begin
+    If agqEND1:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND1
+    End
+
+End
+
+Procedure ADD_agqEND1
+Begin
+l_vehicle_no = 0
+Access agqEND1, Set agqEND1:app_no   = agqVEHICLE:app_no ,
+                    agqEND1:VEHICLE_NO = L_VEHICLE_NO, Generic
+
+L_SUB_CODE = 0
+while agqEND1:app_no   = agqVEHICLE:app_no and
+      agqEND1:VEHICLE_NO = L_VEHICLE_NO
+    begin
+    L_SUB_CODE = agqEND1:SUB_CODE
+
+    Next agqEND1
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+l_state = agqvehicle:state
+l_line_of_business = agqvehicle:line_of_business
+if l_line_of_business = 0 then
+    l_line_of_business = agqvehicle:line_of_business
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqvehicle:COMPANY_ID,
+                      SFSOPTEND:STATE            = l_STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqvehicle:COMPANY_ID and
+      SFSOPTEND:STATE            = l_STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqvehicle:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqvehicle:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqEND1
+    Begin
+    agqEND1:app_no             =       agqVEHICLE:app_no
+    agqEND1:VEHICLE_NO           =       L_VEHICLE_NO
+    agqEND1:SUB_CODE             =       L_SUB_CODE
+    agqEND1:CODE                 =       L_CODE/raw
+    agqEND1:FORM_EDITION         =       L_FORM_EDITION/raw
+    agqEND1:DESCRIPTION          =       L_DESCRIPTION/raw
+    agqEND1:PREMIUM              =       0
+    End
+
+End
+
+Procedure DELETE_agqEND1
+Begin
+Access agqEND1, Set agqEND1:app_no   = agqVEHICLE:app_no ,
+                    agqEND1:VEHICLE_NO = L_VEHICLE_NO, Generic
+
+while agqEND1:app_no   = agqVEHICLE:app_no and
+      agqEND1:VEHICLE_NO = L_VEHICLE_NO
+    begin
+    If agqEND1:CODE = L_CODE Then
+        Delete agqEND1
+
+    Next agqEND1
+    End
+
+End
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END
+
+End

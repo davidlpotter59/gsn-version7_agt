@@ -1,0 +1,495 @@
+%%
+Program
+        Name = "agtup753" ;
+        Type = "File" ;
+        Padcharacter = Space ;
+        Domain = "flat" ;
+
+      Global Unsigned Ascii Number G_QUOTE_NO[8] ,
+                                   g_app_no[11] ,
+                                   G_END_SEQUENCE[4] ,
+                                   G_PRINTER[4] ,
+                                   G_OPT[2] ,
+                                   G_OPT1[2] ,
+                                   G_COPIES[2] ,
+                                   G_LOB[4] ,
+                                   G_PRINT_ALL[1] ;
+
+      Global String G_QUE[10] ,
+                    G_PROCESS[1] ,
+                    G_USERNAME[15],
+                    G_COPY_NAME[20] ,
+                    G_AGENT_NAME[50] ;
+
+      Global Mmddyyyy Date G_START_DATE[8] ,
+                           G_END_DATE[8] ;
+
+      Local Unsigned Ascii Number L_COUNTER[3],
+                                  l_opt[1] ,
+                                  l_underwriter[2] ;
+
+      Local String L_MACRO[15]="" ,
+                   L_REPORT[15]="",
+                   L_PARAMETER[20]="" ,
+                   l_scp102[1],
+                   l_scp103[1],
+                   l_lawn_care[1],
+                   L_APP[3]="sfs" ,
+                   L_SCAN_HOME_OFFICE[1]="N",
+                   L_POLICY[9],
+                   L_POLICY_STR[15],
+                   l_username_1[15],
+                   L_AR_COMMAND_LINE[51] ,
+                   L_COMMANDLINE[16] ,
+                   L_COPY_NAME[20] ,
+                   L_LOB_CODE[10] ,
+                   l_dec_pcl[15]="",
+                   l_quote_letter[15]="",
+                   L_DEC[15]="" ,
+                   L_AGENT_NAME[50] ,
+                   l_user_id_1[80],
+                   L_AGENT_NAME_1[50] ,
+                   L_NAME_1[50],
+                   L_NEW_AGENT_NO[1] ,
+                   L_NAME[50] ,
+                   L_FILE_NUMBER[80],
+                   l_email[50],
+                   l_email_1[50],
+                   l_subject[50],
+                   L_FILE_NAME[70],
+                   L_DRAWER[45],
+                   L_FOLDER_TYPE[80],
+                   l_step_id[80],
+                   l_flow_id[80],
+                   l_user_id[80],
+                   l_criteria_1[80],
+                   l_criteria_2[80],
+                   l_criteria_3[80],
+                   l_criteria_4[80],
+                   l_criteria_5[80],
+                   l_criteria_6[80],
+                   l_criteria_7[80],
+                   L_DOC_TYPE[45] ,
+                   L_DOC_DATE[70] ;
+
+        Local Unsigned Ascii Number L_AGENT_NO[4] ,
+                                    L_PRINTER[4] ,
+                                    L_MM[2],
+                                    L_DD[2],
+                                    L_YY[4] ,
+                                    L_MM_1[2],
+                                    L_DD_1[2],
+                                    L_YY_1[4] ,
+                                    L_END_SEQUENCE[4] ;
+
+        Local Unsigned Ascii Number L_POLICY_NO[9] ;
+
+        Include "sfsrevname7.var"
+
+        String L_ENTER[1]="";
+        String L_LOB_SUBLINE[2]="00";
+
+        Include "csexec.var"
+
+        Include "virtualdecs.var"
+
+        include "print.var"
+
+Initialisation
+g_app_no = val(commandline[1,11])
+g_quote_no = val(commandline[12,19])
+Do CREATE_MACRO
+
+Update
+
+Procedure Definition
+
+Procedure CREATE_MACRO
+Begin
+access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+l_username_1 = username
+access sfsemail, set sfsemail:company_id = agqcontractor:company_id,
+                     sfsemail:user_Id = l_username_1, generic
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+access sfqname, set sfqname:quote_no = g_quote_no, generic
+
+access sfsagent, set sfsagent:company_id = agqcontractor:company_id,
+                     sfsagent:agent_no   = agqcontractor:agent_no, generic
+
+I_CSEXEC_APPLICATION = "PRINT                    "/raw
+Include "sfscsexec.pro"
+
+L_DEC          = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF      = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+l_dec_pcl      = l_app+str(i_csexec_number)+".pcl"
+l_quote_letter = "QT"+str(i_csexec_number)+".cq"
+--if sfsagent:sub_producer_for = 0 then
+--    begin
+    Do CREATE_INDEX
+    --Do print_worksheet
+    do print_quote_letter
+    Access SCIPSIMAGE, Set SCIPSIMAGE:COMPANY_ID = SFSDEFAULT:COMPANY_ID, Generic
+
+    Proc("cli mv %s %s",L_DEC,L_DEC_PCL)/noconsole
+
+    L_UNIX_PATH = SCIPSIMAGE:DIRECTORY_PATH/raw
+    proc("cli mv %s %s",L_DEC_PCL,L_UNIX_PATH)/noconsole
+/*    end
+else
+    begin
+    do print_quote_letter
+    end*/
+
+End
+
+Procedure CREATE_INDEX
+Begin
+access scipsimage, set scipsimage:company_id = agqcontractor:company_id, generic
+
+L_DEC   = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DD    = Day(TODAYSDATE)
+L_MM    = Month(TODAYSDATE)
+L_YY    = Year(TODAYSDATE)
+L_DD_1  = Day(agqcontractor:eff_date)
+L_MM_1  = Month(agqcontractor:eff_date)
+L_YY_1  = Year(agqcontractor:eff_date)
+
+If SCIPSIMAGE:ZEROSUPPRESS_NUMBER = 1 Then
+    L_POLICY = Str(G_QUOTE_NO,"ZZZZZZZZZ")
+Else
+    L_POLICY = Str(G_QUOTE_NO,"999999999")
+
+If SCIPSIMAGE:ALPHA_CHARACTER = 1 Then
+    Begin
+    If SCIPSIMAGE:SPACE_BETWEEN_ALPHA_NUMBER = 0 Then
+        begin
+        L_POLICY_STR = "Q" + trun(L_POLICY)
+        end
+    else
+        begin
+        L_POLICY_STR = "Q " + trun(L_POLICY)
+        end
+    End
+Else
+    L_POLICY_STR = Trun(L_POLICY)
+
+L_FILE_NUMBER = Trun(SCIPSIMAGE:FILE_NUMBER[1]) + Trun(L_POLICY_STR) +
+                Trun(SCIPSIMAGE:FILE_NUMBER[2])
+
+I_NAME = sfqNAME:NAME[1]
+Include "sfsrevname7.pro"
+If SCIPSIMAGE:REVERSE_NAME = 1 Then
+    L_FILE_NAME = Trun(SCIPSIMAGE:FILE_NAME[1]) + Trun(I_REV_NAME) +
+                  Trun(SCIPSIMAGE:FILE_NAME[2])
+Else
+    L_FILE_NAME = Trun(SCIPSIMAGE:FILE_NAME[1]) + Trun(sfqNAME:NAME[1]) +
+                  Trun(SCIPSIMAGE:FILE_NAME[2])
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = sfqNAME:COMPANY_ID,
+                    SFSLINE:LINE_OF_BUSINESS = sfqNAME:LINE_OF_BUSINESS,
+                    SFSLINE:LOB_SUBLINE      = L_LOB_SUBLINE
+
+If SFSLINE:IMAGING_DRAWER Not One Of ""," " Then
+    Begin
+    L_DRAWER = Trun(SCIPSIMAGE:DRAWER[1]) + Trun(SFSLINE:IMAGING_DRAWER) +
+               Trun(SCIPSIMAGE:DRAWER[2])
+    End
+Else
+    Begin
+    L_DRAWER = Trun(SCIPSIMAGE:DRAWER[1]) + Trun(SCIPSIMAGE:DRAWER_NAME) +
+               Trun(SCIPSIMAGE:DRAWER[2])
+    End
+
+L_FOLDER_TYPE = Trun(SCIPSIMAGE:FOLDER_TYPE[1]) +
+                Trun(SCIPSIMAGE:FOLDER_TYPE2[6]) +
+                Trun(SCIPSIMAGE:FOLDER_TYPE[2])
+L_DOC_TYPE    = Trun(SCIPSIMAGE:DOC_TYPE[1]) +
+                Trun(SCIPSIMAGE:DOC_TYPE2[9]) +
+                Trun(SCIPSIMAGE:DOC_TYPE[2])
+L_DOC_DATE    = Trun(SCIPSIMAGE:DOC_DATE[1]) + Str(L_YY,4) + Str(L_MM,2) +
+                Str(L_DD,2) + Trun(SCIPSIMAGE:DOC_DATE[2])
+if scipsimage:flow_id[1] <> "" then
+    begin
+    l_flow_id     = trun(scipsimage:flow_id[1]) +
+                    trun(str(scipsimage:flow_types)) +
+                    trun(scipsimage:flow_id[2])
+    end
+if scipsimage:step_id[1] <> "" then
+    begin
+    l_step_id     = trun(scipsimage:step_id[1]) +
+                    trun(str(scipsimage:step_types)) +
+                    trun(scipsimage:step_id[2])
+    end
+if scipsimage:user_id[1] <> "" then
+    begin
+    access sfsagent, set sfsagent:company_id = agqcontractor:company_id,
+                         sfsagent:agent_no   = agqcontractor:agent_no, generic
+
+    l_underwriter = sfsagent:commercial_underwriter
+    access sfscomun, set sfscomun:company_id             = agqcontractor:company_id,
+                         sfscomun:commercial_underwriter = l_underwriter, generic
+
+    l_username_1 = sfscomun:imageright_userid
+    l_user_id_1  = trun(scipsimage:user_id[1]) +
+                   trun(l_username_1) +
+                   trun(scipsimage:user_id[2])
+    end
+
+if scipsimage:criteria_data[1] <> "" then
+    begin
+    l_criteria_1  = trun(scipsimage:criteria_data[1]) +
+                    "N" +
+                    trun(scipsimage:criteria_data[2])
+    l_criteria_2  = trun(scipsimage:criteria_data[3]) +
+                    Trun(str(agqcontractor:agent_no,4)) +
+                    trun(scipsimage:criteria_data[4])
+    l_criteria_3  = trun(scipsimage:criteria_data[5]) +
+                    Trun(str(agqcontractor:line_of_business,2)) +
+                    trun(scipsimage:criteria_data[6])
+    l_criteria_4  = trun(scipsimage:criteria_data[7]) +
+                    Str(L_YY_1,4) + Str(L_MM_1,2) + Str(L_DD_1,2) +
+                    trun(scipsimage:criteria_data[8])
+    l_criteria_5  = trun(scipsimage:criteria_data[9]) +
+                    trun(scipsimage:criteria_data[10])
+    l_criteria_6  = trun(scipsimage:criteria_data[11]) +
+                    trun(scipsimage:criteria_data[12])
+    l_criteria_7  = trun(scipsimage:criteria_data[13]) +
+                    trun(scipsimage:criteria_data[14])
+    end
+
+
+Deletefile("sfqindex")
+if agqcontractor:company_id not one of "FLEMINGTON" then
+    begin
+    Writefile ("sfqindex","%s%s%s%s<nl>",Trun(SCIPSIMAGE:FILE_NUMBER[1]),
+                                       "SC",
+                                       str(g_quote_no),
+                                       Trun(SCIPSIMAGE:FILE_NUMBER[2]))
+    end
+else
+    begin
+    Writefile ("sfqindex","%s%s%s%s<nl>",Trun(SCIPSIMAGE:FILE_NUMBER[1]),
+                                         "Q",
+                                         str(g_quote_no),
+                                         Trun(SCIPSIMAGE:FILE_NUMBER[2]))
+    end
+Writefile ("sfqindex","%s<nl>",L_FILE_NAME)
+Writefile ("sfqindex","%s<nl>",L_DRAWER)
+Writefile ("sfqindex","%s<nl>",L_FOLDER_TYPE)
+Writefile ("sfqindex","%s<nl>",L_DOC_TYPE)
+Writefile ("sfqindex","%s<nl>",L_DOC_DATE)
+if l_flow_id <> "" then
+    Writefile ("sfqindex","%s<nl>",l_flow_id)
+if l_step_id <> "" then
+    Writefile ("sfqindex","%s<nl>",l_step_id)
+if l_user_id_1 <> "" then
+   writefile("sfqindex","%s<nl>",l_user_id_1)
+if l_criteria_1 <> "" then
+    begin
+    Writefile ("sfqindex","%s<nl>",l_criteria_1)
+    Writefile ("sfqindex","%s<nl>",l_criteria_2)
+    Writefile ("sfqindex","%s<nl>",l_criteria_3)
+    Writefile ("sfqindex","%s<nl>",l_criteria_4)
+    Writefile ("sfqindex","%s<nl>",l_criteria_5)
+    Writefile ("sfqindex","%s<nl>",l_criteria_6)
+    Writefile ("sfqindex","%s<nl>",l_criteria_7)
+    end
+Writefile ("sfqindex","%s<nl>",SCIPSIMAGE:START_CAPTURE)
+Writefile ("sfqindex","%s<ff>",SCIPSIMAGE:END_CAPTURE)
+Closefile ("sfqindex")
+
+Proc("cli joinit sfqindex %s",L_DEC)
+
+End
+
+procedure print_quote_letter
+begin
+l_app           = "agq"
+If agqcontractor:company_id = "FLEMINGTON" then
+    {
+    proc("cli csbatch agqmso005 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso005.cq %s<nl>",l_dec)/noconsole
+    }
+else
+    {
+    proc("cli csbatch agqmso004 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004.cq %s<nl>",l_dec)/noconsole
+    }
+
+access agqclasscode, set agqclasscode:app_no = g_app_no, generic
+
+l_lawn_care = "N"
+while agqclasscode:app_no = g_app_no
+    begin
+    if agqclasscode:class_code = 3985 then
+        l_lawn_care = "Y"
+
+    next agqclasscode
+    end
+
+if l_lawn_care = "Y" then
+    begin
+    proc("cli csbatch agqmso004a %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004a.cq %s<nl>",l_dec)/noconsole
+    end
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+l_scp102 = "N"
+l_scp103 = "N"
+while agqend:app_no = g_app_no
+    begin
+    if agqend:code = "SCP102" then
+        l_scp102 = "Y"
+    if agqend:code = "SCP103" then
+        l_scp103 = "Y"
+
+    next agqend
+    end
+
+if l_scp102 = "Y" then
+    begin
+    proc("cli csbatch agqmso004b %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004b.cq %s<nl>",l_dec)/noconsole
+    end
+
+if l_scp103 = "Y" then
+    begin
+    proc("cli csbatch agqmso004c %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004c.cq %s<nl>",l_dec)/noconsole
+    end
+
+proc("cli csbatch agqmso002 %s",str(g_app_no,11))/noconsole
+Proc("cli joinit agqmso002.cq %s<nl>",l_dec)/noconsole
+
+access scipsimage, set scipsimage:company_id = agqcontractor:company_id, generic
+
+/*if sfsagent:sub_producer_for <> 0 then
+    begin
+    proc("cli pcl2pdf %s %s",l_dec,l_dec_pdf)/noconsole
+    proc("cli uuencode %s producer.pdf > producer.uue",l_dec_pdf)/noconsole
+    Proc("cli mail -s New Business %s < producer.uue",Trun(scipsimage:email_address[2]))/noconsole
+    end*/
+
+if sfsagent:sub_producer_for <> 0 and
+   agqcontractor:agent_no = sfsemail:agent_no then
+    begin
+    proc("cli pcl2pdf %s %s",l_dec,l_dec_pdf)/noconsole
+    if sfsagent:sub_producer_for one of 1701, 7110 then
+        begin
+        L_EMAIL   = trun(scipsimage:email_address[2])
+        L_SUBJECT = "New Business"
+
+        deletefile("referral.mf")
+        Writefile ("referral.mf","cli mail -s '%s' -a %s %s < /dev/null",trun(l_subject),trun(l_dec_pdf),Trun(L_EMAIL))
+        Closefile ("referral.mf")
+
+        Proc("cli chmod 777 referral.mf")/noconsole
+        Proc("cli cq referral")/noconsole
+        end
+    else
+    if sfsagent:sub_producer_for = 3300 and
+       scipsimage:sub_producer_email[1] <> "" and
+       agqpersonal:agent_no = sfsemail:agent_no then
+        begin
+        L_EMAIL   = trun(scipsimage:sub_producer_email[1])
+        L_EMAIL_1 = trun(scipsimage:sub_producer_email[2])
+        L_SUBJECT = "New Business"
+
+        deletefile("referral.mf")
+        Writefile ("referral.mf","cli mail -s '%s' -a %s %s < /dev/null",trun(l_subject),trun(l_dec_pdf),Trun(L_EMAIL))
+        Writefile ("referral.mf","cli mail -s '%s' -a %s %s < /dev/null",trun(l_subject),trun(l_dec_pdf),Trun(L_EMAIL_1))
+        Closefile ("referral.mf")
+
+        Proc("cli chmod 777 referral.mf")/noconsole
+        Proc("cli cq referral")/noconsole
+        end
+    end
+
+L_LOB_CODE = SFSLINE:LOB_CODE
+Access SCIPSCONTROL, Set SCIPSCONTROL:COMPANY_ID = agqcontractor:COMPANY_ID,
+                         SCIPSCONTROL:STATE      = agqcontractor:STATE,
+                         SCIPSCONTROL:LOB_CODE   = L_LOB_CODE,Exact
+
+if agqcontractor:company_id = "FARMERS" then
+    begin
+    proc(":cli csbatch tpd4q %s",str(g_app_no,11))/noconsole
+    Proc(":cli joinit tpd4q.cq %s<nl>",l_dec)/noconsole
+    end
+
+L_LOB_CODE = SFSLINE:LOB_CODE
+access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+end
+
+Procedure print_worksheet
+Begin
+Do REFRESH_WORK_FILES
+L_USERNAME = USERNAME
+I_REPORTA = "agqpr700"
+I_REPORT = "agqpr700.cq"
+I_REPORT_CQE = "agqpr700.cqe"
+I_APP = "agq"
+l_app = "agq"
+I_MACROA = I_APP+Str(I_CSEXEC_NUMBER)
+I_MACRO = I_APP+Str(I_CSEXEC_NUMBER)+".mf"
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+if agqprint1:app_no <> g_app_no then
+    begin
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+else
+    begin
+    delete agqprint1
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+
+Deletefile(I_MACRO)
+Writefile(I_MACRO,"clear list<nl>")
+Writefile(I_MACRO,"clear find<nl>")
+Writefile(I_MACRO,"clear sum<nl>")
+Writefile(I_MACRO,"run agqpr700<nl>")
+Writefile(I_MACRO,"cli rm agqpr700.cq<nl>")
+Writefile(I_MACRO,"rsave agqpr700<nl>")
+Writefile(I_MACRO,"cli joinit agqpr700.cq %s<nl>",L_DEC)
+Closefile(I_MACRO)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc("cli cq %s",I_MACRO)/noconsole
+Else
+    Proc("cli cq %s",I_MACRO)
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+delete agqprint1
+
+Do REFRESH_WORK_FILES
+End
+
+Procedure REFRESH_WORK_FILES
+Begin
+Proc ("cli agqprint1.mk")/noconsole
+end
+
+End

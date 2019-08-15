@@ -1,0 +1,652 @@
+%%                      
+Screen
+        Name = "agtmt8001i";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="agqbuspayroll" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_state[2] ;
+        global unsigned ascii number g_sub_code[4] ;
+
+        global string g_company_id[10] ,
+                      g_code[7] ;
+
+        Local Unsigned Ascii Number L_LIMIT[8] ,
+                                    L_Prem_TERR_FACTOR[5]=0/decimals=3,
+                                    l_Mess_terr_factor[5]=0/decimals=3,
+                                    l_total_premium[6]=0/dec=0,
+                                    l_burglary_terr_factor[5]=0/decimals=3,
+                                    l_no_days[3],
+                                    l_line_of_business[4]=0008,
+                                    L_INSIDE_MINIMUM[3]=0,
+                                    L_INSIDE_EACH_ADDL[3]=0,
+                                    L_GUARD_CHARGE[2]=0,
+                                    L_OUTSIDE_MINIMUM[3]=0,
+                                    L_OUTSIDE_EACH_ADDL[3]=0 ,
+                                    L_INSIDE_PER[5]=0,
+                                    L_OUTSIDE_PER[5]=0,
+                                    L_INSIDE_EACH_FACTOR[4]=0/decimals=2,
+                                    L_OUTSIDE_EACH_FACTOR[4]=0/decimals=2,
+                                    L_ARMORED_FACTOR[4]=0/decimals=2,
+                                    L_PREMISES_CLOSED_FACTOR[4]=0/decimals=2 ,
+                                    L_DEDUCTIBLE_FACTOR[4]=0/decimals=3 ,
+                                    L_WATCHPERSON_FACTOR[4]=0/decimals=3,
+                                    L_GUARDSERVICE_FACTOR[4]=0/decimals=3,
+                                    L_ALARM_FACTOR[4]=0/decimals=3,
+                                    L_SAFE_FACTOR[4]=0/decimals=3,
+                                    l_factor1[6]=0/decimals=3,
+                                    l_factor2[6]=0/decimals=3,
+                                    l_safe_class_code[6]=0,
+                                    L_HOLDUP_FACTOR[4]=0/decimals=3,
+                                    l_business_code_factor[4]=0/decimals=3,
+                                    l_business_closed_premium[8]=0/decimals=3,
+                                    l_business_closed_credit[8]=0/decimals=3,
+                                    l_entire_plot_factor[4]=0/decimals=3,
+                                    L_GASSYSTEMS_FACTOR[4]=0/decimals=3,
+                                    L_BULLET_FACTOR[4]=0/decimals=3,
+                                    L_CONVEYANCE_FACTOR[4]=0/decimals=3,
+                                    l_multi_messenger_factor[6]=0/decimals=3 ,
+                                    l_money_excess[8]=0,
+                                    l_bond_excess_factor1[4]=0/decimals=3,
+                                    l_bond_excess_factor2[4]=0/decimals=3,
+                                    l_crime1_terr[3],
+                                    l_loss_cost[5]=0/decimals=3,
+                                    l_rmf_factor[5]=0/decimals=3,
+                                    l_mess[3]=0,
+                                    l_sub[3] ;
+
+        Local String L_DESC[50],
+                     l_guard[1],
+                     l_username[15],
+                     l_messenger[1],
+                     l_misc_code[1],
+                     l_coverage_code[1],
+                     l_section[1],
+                     L_CODE[7],
+                     L_CODE_1[7],
+                     L_CODE_2[7],
+                     L_CODE_3[7],
+                     L_CODE_4[7],
+                     L_ADD_ENDORSEMENT[1] ,
+                     L_DELETE_ENDORSEMENT[1],
+                     L_FORM_EDITION[18],
+                     L_DESCRIPTION[55] ,
+                     L_INSIDE_MINIMUM_YES[1]="N",
+                     L_INSIDE_EACH_ADDL_YES[1]="N",
+                     L_OUTSIDE_MINIMUM_YES[1]="N",
+                     L_OUTSIDE_EACH_ADDL_YES[1]="N" ,
+                     l_company_id[10],
+                     L_SCREEN[8] ;
+
+        Local Signed Ascii Number l_package[4]=0/dec=2,
+                                  l_adjusted_rate1[8]=0/decimals=3,
+                                  l_adjusted_rate2[8]=0/decimals=3,
+                                  l_adjusted_rate3[8]=0/decimals=3,
+                                  l_adjusted_rate4[8]=0/decimals=3,
+                                  l_minimum_total1[8]=0/decimals=2,
+                                  l_minimum_total2[8]=0/decimals=2,
+                                  l_deviation[4]=0/dec=2 ;
+
+        Local Unsigned Ascii Number L_SUB_CODE[4],
+                                    L_STATE[2] ,
+                                    l_premium[6]=0;
+
+
+        Access agqbuspayroll,
+           Set agqbuspayroll:app_no     = G_app_no,
+               agqbuspayroll:prem_no    = g_prem_no,
+               agqbuspayroll:build_no   = g_build_no, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt8001i" ;
+
+        reaccess ;
+
+        include "stdfunc7.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+disable(accept_fn)
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+l_username = username
+l_company_id = sfsdefault:company_id
+
+l_username = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = sfsemail:agent_no, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+Access SFSLINE_ALIAS, Set SFSLINE_alias:COMPANY_ID       = l_company_id,
+                          SFSLINE_alias:LINE_OF_BUSINESS = g_line_of_business,
+                          SFSLINE_alias:LOB_SUBLINE      = "00", Generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = l_company_id,
+                    SFSLINE:LINE_OF_BUSINESS = g_line_of_business,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access agqname, set agqname:app_no = g_app_no,generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(delete_fn)
+    disable(accept_fn)
+    end
+
+access validation
+if agqbuspayroll:app_no     <> g_app_no or
+   agqbuspayroll:prem_no    <> g_prem_no or
+   agqbuspayroll:build_no   <> g_build_no then
+    error 1000
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        fontstyle = BOLD
+        backgroundcolor = "#ADD8E6"
+        scrollbarpolicy = asneeded
+        }
+{
+Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,75     tagged display_information_box
+                properties
+                  {
+                    text = "Business Income Information - Ordinary Payroll..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+Properties {
+           LayoutType = screen
+           }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     begin
+        access agqgeneral1, set agqgeneral1:app_no   = g_app_no,
+                                agqgeneral1:prem_no  = g_prem_no,
+                                agqgeneral1:build_no = g_build_no, generic
+
+        if function one of "ADD", "CHANGE" then
+            begin
+            disable(back_fn)
+            enable(accept_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            enable(back_fn)
+            end
+
+        if function one of "ADD" then
+            begin
+            agqbuspayroll:app_no                  = g_app_no
+            agqbuspayroll:prem_no                 = g_prem_no
+            agqbuspayroll:build_no                = g_build_no
+            agqbuspayroll:company_id              = agqgeneral1:company_id
+            agqbuspayroll:state                   = agqgeneral1:state
+            agqbuspayroll:rating_line_of_business = agqgeneral1:rating_line_of_business
+            end
+        end
+        agqbuspayroll:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        Button at 1.5,1   tagged add_fn
+            Properties {
+                       Iconname = "btn_add.bmp"
+                       }
+            Events     {
+                       Action = add_fn
+                       }
+
+        Button at 1.5,38    tagged change_fn
+            Properties {
+                       Iconname = "btn_edit.bmp"
+                       }
+            Events     {
+                       Action = change_fn
+                       }
+
+        Button at 1.5, 70 tagged delete_fn
+            Properties {
+                       Iconname = "btn_delete.bmp"
+                       }
+            Events     {
+                       Action = delete_fn
+                       }
+    }
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        Button to 1,1
+            properties {
+                       Iconname = "btn_print_screen.bmp"
+                       }
+            events     {
+                       action {
+                              function = "print"
+                              abort()
+                              }
+                       }
+    }
+
+Panel at 6.45,92
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        guidetext to 1,1
+            properties {
+                       text = "agtmt8001i.sd"
+                       fontsize = 9
+                       }
+    }
+
+Panel at 7,1 to 9,100
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        guidetext at 1.5,24 to 2.5,36
+            properties {
+                       text = "Location No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+
+        guidetext at 1.5,44 to 2.5,56
+            properties {
+                       text = "Building No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+    }
+
+Panel at 7.5,33 to 9,60 Tagged rating_pl
+{
+%%
+____                ____
+
+%%
+
+components
+
+fields
+101   agqbuspayroll:prem_no/displayonly ;
+102   agqbuspayroll:build_no/displayonly ;
+
+}
+
+Panel at 7,70 to 7,100
+    Properties {
+               layouttype = row
+               }
+    {
+    Components
+        Button at 1,55 tagged accept_fn
+            properties {
+                       Iconname = "btn_accept_edits.bmp"
+                       }
+            Events     {
+                       mouseclicked = accept
+                       }
+
+    }
+
+Panel at 10,5 to 26,100
+Properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+%%
+No Days:     ___
+
+                             Job Classification
+
+              __________________________________________________
+
+
+
+
+                                 Employee(s)
+
+              __________________________________________________
+
+
+
+
+%%
+
+components
+
+Fields
+101     begin
+        access agqgeneral1, set agqgeneral1:app_no = g_app_no, generic
+
+        access cpspayrolldays_alias, set cpspayrolldays_alias:company_id       = g_company_id,
+                                         cpspayrolldays_alias:state            = g_state,
+                                         cpspayrolldays_alias:line_of_business = g_line_of_business, generic
+        end
+        agqBUSPAYROLL:no_days
+        l_no_days = agqbuspayroll:no_days
+        agqbuspayroll:state   = agqgeneral1:state
+        access cpspayrolldays, set cpspayrolldays:company_id       = g_company_id,
+                                   cpspayrolldays:state            = g_state,
+                                   cpspayrolldays:line_of_business = g_line_of_business,
+                                   cpspayrolldays:days             = l_no_days, generic
+
+        if l_no_days <> cpspayrolldays:days then
+            error "Invalid Days Entered"
+
+        activehelp cpspayrolldays_alias:days;
+501     agqBUSPAYROLL:JOB_CLASSIFICATION/freetextlines=4 ;
+1201    agqBUSPAYROLL:EMPLOYEES/freetextlines=4 ;
+
+}
+
+
+-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,120
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+Panel at 30,1 to 30,100 Tagged icon_line2_tg
+Properties {
+           LayoutType = screen
+           }
+{
+Components
+    Button at 1,75   tagged back_fn
+        Properties {
+                   Iconname = "btn_close.bmp"
+                   }
+        Events     {
+                   Action {
+                          function = "back"
+                          abort()
+                          }
+                    }
+
+/*    Button at 1,36    tagged previous_fn
+        Properties {
+                   Iconname = "btn_prev_loc.bmp"
+                   }
+        Events     {
+                   Action = previous_fn
+                   }
+
+    Button at 1, 51 tagged next_fn
+        Properties {
+                   Iconname = "btn_next_loc.bmp"
+                   }
+        Events     {
+                   Action = next_fn
+                   }*/
+
+
+}
+
+}
+
+Update
+if UPDATEOK = "NO" then
+    begin
+    disable(accept_fn)
+    enable(back_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(back_fn)
+    Access CPSBUSMISCRATES, Set CPSBUSMISCRATES:COMPANY_ID = agqbuspayroll:company_id,
+                                CPSBUSMISCRATES:STATE = agqbuspayroll:state,
+                                CPSBUSMISCRATES:line_of_business = agqbuspayroll:rating_line_of_business, Generic
+
+    While CPSBUSMISCRATES:COMPANY_ID = agqbuspayroll:company_id And
+          CPSBUSMISCRATES:STATE = agqbuspayroll:state And
+          CPSBUSMISCRATES:line_of_business = agqbuspayroll:rating_line_of_business
+            Begin
+            write("%c%s",1005,"iamhere")
+            If agqNAME:EFF_DATE >= CPSBUSMISCRATES:EFF_DATE Then
+                Begin
+                L_CODE_1 = CPSBUSMISCRATES:PAYROLL_LIMITATION_CODE[1]
+                End
+
+            Next CPSBUSMISCRATES
+            End
+
+    If L_CODE_1 <> "" Then
+        Begin
+        L_CODE = L_CODE_1
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" Then
+            Do ADD_agqEND
+        End
+
+    End
+
+Procedure Definition
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqbuspayroll:company_id,
+                      SFSOPTEND:STATE = agqbuspayroll:state,
+                      SFSOPTEND:line_of_business = agqbuspayroll:rating_line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqbuspayroll:company_id Or
+            SFSOPTEND:STATE <> agqbuspayroll:state Or
+            SFSOPTEND:line_of_business <> agqbuspayroll:rating_line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqNAME:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqname:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqEND
+    Begin
+    agqEND:app_no               =       G_app_no
+    agqEND:PREM_NO              =       G_PREM_NO
+    agqEND:BUILD_NO             =       G_BUILD_NO
+    agqEND:SUB_CODE             =       L_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+    agqEND:PREMIUM              =       0
+    agqEND:LOB_END_CODE         =       "B"
+    End
+
+End
+
+End

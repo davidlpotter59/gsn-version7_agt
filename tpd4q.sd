@@ -1,0 +1,269 @@
+%%
+/*
+Date Written: January 16, 2003
+
+Name: tpd4q.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+01/16/2002             RMG              Starting form
+--------------------------------------------------------------
+*/
+
+Program
+  Name = "tpd4q";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+  String L_FILE_NAME[8] = "tpd4q.cq",
+         l_user_id[15]="";
+  unsigned ascii number l_app_no[11] ;
+  Unsigned Ascii Number L_FORM[1],
+                        l_printer[4]=0,
+                        l_agent_no[4]=0;
+  Unsigned Ascii Number L_TOTAL_DAYS;
+  Unsigned Ascii Number L_DAY_RATE;
+  Unsigned Ascii Number L_TOTAL_DAYS_REMAINING;
+  Unsigned Ascii Number L_PRO_RATA;
+  Unsigned Ascii Number L_TERROR_PREMIUM;
+  Wdate L_TODAYS_DATE;
+
+  Include "csfonts.inc"
+  Include "swsut100.var"
+  Include "center2.var"
+
+Initialization
+l_app_no = val(commandline[1,11])
+l_user_id = username
+Deletefile (L_FILE_NAME);
+
+Access agqNAME, Set agqNAME:app_no = l_app_no, generic
+
+Access agqLOCATION, Set agqLOCATION:app_no = l_app_no, generic
+
+Include "swsut100.inc"
+
+Access SFSCOMPANY, Set SFSCOMPANY:COMPANY_ID = agqNAME:COMPANY_ID, Generic
+
+Access agqMASTER, Set agqMASTER:app_no = l_app_no, generic
+
+Access agqEND, Set agqEND:app_no = l_app_no, generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = agqNAME:COMPANY_ID,
+                    SFSLINE:LINE_OF_BUSINESS = agqNAME:LINE_OF_BUSINESS,
+                    SFSLINE:LOB_SUBLINE      = "00", Exact
+
+access agqgeneral, set agqgeneral:app_no = l_app_no, generic
+
+access agqcontractor, set agqcontractor:app_no = l_app_no, generic
+
+access agqvehicle, set agqvehicle:app_no = l_app_no, generic
+
+if agqgeneral:agent_no <> 0 then
+    l_agent_no = agqgeneral:agent_no
+else
+if agqcontractor:agent_no <> 0 then
+    l_agent_no = agqcontractor:agent_no
+else
+if agqvehicle:agent_no <> 0 then
+    l_agent_no = agqvehicle:agent_no
+
+L_VERTICAL_POS = "250"
+L_STRING = "POLICYHOLDER DISCLOSURE"
+L_FONT = L_ARIAL_BOLD_12
+L_PITCH_HALF = 8
+L_PITCH_FULL = 16
+L_VERTICAL_POS = "+0"
+Include "center2.pro"
+
+L_STRING = "NOTICE OF TERRORISM INSURANCE COVERAGE"
+L_FONT = L_ARIAL_BOLD_12
+L_PITCH_HALF = 8
+L_PITCH_FULL = 16
+L_VERTICAL_POS = "+60"
+Include "center2.pro"
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9 )
+Writefile(L_FILE_NAME,"%s","<033>&a300h+120V")
+Writefile(L_FILE_NAME,"%s","You are hereby notified that under the Terrorism Risk Insurance Act of 2002, effective November 26, 2002, that you now")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9 )
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","have a right to purchase insurance coverage for losses arising out of acts of terrorism,")
+
+Writefile(L_FILE_NAME,"%s%s",trun(L_ARIAL_ITALIC_9)," as defined in Section 102(1) of the")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9 )
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","Act. ")
+Writefile(L_FILE_NAME,"%s",'The term "act of terrorism" means any act that is certified by the Secretary of the Treasury, in concurrence with the')
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","Secretary of State, and the Attorney General of the United States - to be an act of terrorism; to be a violent act or an act")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","that is dangerous to human life, property, or infrastructure; to have resulted in damage within the United States, or outside")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","the United States in the case of an air carrier or vessel or the premises of a United States mission; and to have been")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","committed by an individual or individuals acting on behalf of any foreign person or foreign interest, as part of an effort to")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","coerce the civilian population of the United States or to influence the policy or affect the conduct of the United States")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","Government by coercion. Coverage under your existing policy may be affected as follows:")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+120V")
+Writefile(L_FILE_NAME,"%s","Any terrorism exclusions for acts of terrorism,")
+
+Writefile(L_FILE_NAME,"%s%s",trun(L_ARIAL_ITALIC_9)," as defined in the Act,")
+
+Writefile(L_FILE_NAME,"%s%s",trun(L_ARIAL_9)," already contained in your policy or included in an ")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","endorsement are nullified as of November 26, 2002.")
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","You should know that coverage provided by this policy for losses caused by certified acts of terrorism is partially")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","reimbursed by the United States under a formula established by federal law. Under this formula, the United States pays")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","90% of covered terrorism losses exceeding the statutorily established deductible paid by the insurance company providing")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","the coverage.  The premium charged for this coverage is provided below and does not include any charges for the portion of")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+Writefile(L_FILE_NAME,"%s","loss covered by the federal government under the Act.")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+Writefile(L_FILE_NAME,"%s","<033>&a300h+300V")
+Writefile(L_FILE_NAME,"%s","SELECTION OR REJECTION OF TERRORISM INSURANCE COVERAGE")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a300h+120V")
+Writefile(L_FILE_NAME,"%s","You may accept or reject this offer of coverage.  If you elect to accept this coverage, the premium is payable according to")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+120V")
+Writefile(L_FILE_NAME,"%s","your billing notice.")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+300V")
+Writefile(L_FILE_NAME,"%s","You may reject this coverage by signing and returning the notice to us.  If you decline the coverage, an exclusion for")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+120V")
+Writefile(L_FILE_NAME,"%s","terrorism losses will be added to this policy.")
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+120V")
+Writefile(L_FILE_NAME,"%s","The portion of your annual premium that is for the coverage for terrorism, as defined in this Act, is: ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","$")
+Writefile(L_FILE_NAME,"%s",L_UNDERLINE_START)
+Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+
+if agqmaster:terrorism_premium <> 0 then
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TERRORISM_PREMIUM,"ZZZ.99"))
+else
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TPD6_TERRORISM_PREMIUM,"ZZZ.99"))
+Writefile(L_FILE_NAME,"%s",L_UNDERLINE_END)
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+240V")
+Writefile(L_FILE_NAME,"%s",'Please mark an "X" in one of the boxes below:')
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+200V<033>*c5050h5v0P") --horizontal line
+Writefile(L_FILE_NAME,"%s","<033>&a300h+0V<033>*c5a303b0P")   --left vertical line
+Writefile(L_FILE_NAME,"%s","<033>&a750h+0V<033>*c5a303b0P")   --left vertical line
+Writefile(L_FILE_NAME,"%s","<033>&a5350h+0V<033>*c5a303b0P")   --right vertical line
+
+Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+Writefile(L_FILE_NAME,"%s","I hereby elect to purchase terrorism coverage." )
+
+Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+Writefile(L_FILE_NAME,"%s","Sign and return this form to us." )
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a300h+60V<033>*c5050h5v0P","<NL>") --horizontal line
+
+Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+Writefile(L_FILE_NAME,"%s","I hereby decline the terrorism coverage. I understand that I will have no coverage for losses arising from acts of")
+
+Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+Writefile(L_FILE_NAME,"%s","terrorism.")
+
+Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+Writefile(L_FILE_NAME,"%s","Sign and return this form to us")
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a300h+60V<033>*c5050h5v0P","<NL>") --horizontal line
+
+Writefile(L_FILE_NAME,"%s","<033>&a2700h+240V")
+Writefile(L_FILE_NAME,"%s",SFSCOMPANY:NAME[1])
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+30V<033>*c2100h2v0P") --horizontal line
+Writefile(L_FILE_NAME,"%s%s","<033>&a2700h+0V<033>*c2100h2v0P","<NL>") --horizontal line
+Writefile(L_FILE_NAME,"%s","<033>&a300h-30V")
+Writefile(L_FILE_NAME,"%s","Policyholder/Applicant's Signature")
+Writefile(L_FILE_NAME,"%s","<033>&a2700h+0V")
+Writefile(L_FILE_NAME,"%s","Insurance Company")
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a2700h+0V")
+--Writefile(L_FILE_NAME,"%s","Q")
+Writefile(L_FILE_NAME,"%n",l_app_no)
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+30V<033>*c2100h2v0P") --horizontal line
+Writefile(L_FILE_NAME,"%s%s","<033>&a2700h+0V<033>*c2100h2v0P","<NL>") --horizontal line
+Writefile(L_FILE_NAME,"%s","<033>&a300h-20V")
+Writefile(L_FILE_NAME,"%s","Print Name")
+Writefile(L_FILE_NAME,"%s","<033>&a2700h+0V")
+Writefile(L_FILE_NAME,"%s","Application Number")
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a2700h+0V")
+Writefile(L_FILE_NAME,"%s%n","Agent # ",L_AGENT_NO)
+
+Writefile(L_FILE_NAME,"%s","<033>&a300h+30V<033>*c2100h2v0P") --horizontal line
+Writefile(L_FILE_NAME,"%s%s","<033>&a2700h+0V<033>*c2100h2v0P","<NL>") --horizontal line
+Writefile(L_FILE_NAME,"%s","<033>&a300h-20V")
+Writefile(L_FILE_NAME,"%s","Date")
+
+Writefile(L_FILE_NAME,"%s","<033>&a4620h7200V")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_8)
+Writefile(L_FILE_NAME,"%s","TPD4")
+
+Writefile(L_FILE_NAME,"%s","<FF>")
+
+update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+End

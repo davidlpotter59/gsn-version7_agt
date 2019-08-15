@@ -1,0 +1,961 @@
+%%                 
+Screen
+        Name = "agtmt3011";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqhomebus" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_personal_property_limit[8] ,
+                                     g_protection[2],
+                                     g_form[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_article[20],
+                      g_answer[1],
+                      g_code[7] ;
+
+        local MMDDYYYY date l_eff_date ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_protection[2],
+                                    l_remove_form[1],
+                                    l_rate[6]=0/dec=3,
+                                    l_line_of_business[4],
+                                    l_per[5]=0,
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ,
+                                    l_personal_prop_limit[8],
+                                    l_loss_income_limit[8],
+                                    l_ar_limit[8],
+                                    l_liability_limit[8],
+                                    l_medical_limit[8],
+                                    l_money_on_limit[8],
+                                    l_money_off_limit[8],
+                                    l_valuable_papers_limit[8],
+                                    l_fire_ext_limit[8],
+                                    l_limit[8],
+                                    l_agqend_sub_code[4] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_mpl49[1],
+                     l_system_id[15],
+                     l_message[150]="",
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_screen[10],
+                     l_valid[1]="N",
+                     l_description[55] ;
+
+        Access agqhomebus,
+           Set agqhomebus:app_NO   = G_app_NO ,
+               agqhomebus:prem_no  = g_prem_no,
+               agqhomebus:build_no = g_build_no ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access plsdefault, set plsdefault:company_id = agqpersonal:company_id,
+                       plsdefault:line_of_business = agqpersonal:line_of_business, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : if agqpersonal:company_id = "FARMERS" and
+                   agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+                   plsdefault:rating_algorithm_date <> 0 then
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3_new,iconname,"title_mho3.bmp")
+                      case 4  : setproperty(t_mho4_new,iconname,"title_mho4.bmp")
+                      case 6  : setproperty(t_mho6_new,iconname,"title_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3_new,iconname,"")
+                                setproperty(t_mho4_new,iconname,"")
+                                setproperty(t_mho6_new,iconname,"")
+                                end
+                      end
+                    end
+                else
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                      case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                      case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3,iconname,"")
+                                setproperty(t_mho4,iconname,"")
+                                setproperty(t_mho6,iconname,"")
+                                end
+                      end
+                   end
+
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if agqhomebus:app_no <> g_app_no or
+   agqhomebus:prem_no <> g_prem_no or
+   agqhomebus:build_no <> g_build_no then
+    function = "ADD"
+
+Access Validation
+If agqhomebus:app_NO <> G_app_NO or
+   agqhomebus:prem_no <> g_prem_no or
+   agqhomebus:build_no <> g_build_no Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+    fontstyle = BOLD
+
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho3_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,20 tagged t_mho4_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho6_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "MPL39 - Home Business Coverage"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt3011.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 25, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+A. Home Business:    ______________________________  ______________________________
+   Form Of Business: __  _______________________________________________
+B. Related Structures:   ______________________________ Limit:  ________
+C. Home Business Personal Property:
+   Property while at Residence Premises: ________
+   Off Premises Full Limit (MPL 42):       _
+   Personal Property Owned by Others:    ________
+D. Loss of Income and Extra Expense:     ________
+   Loss of Income/Extra Expense (MPL 43):  _
+   Extra Expense Only (MPL 56):            _
+1. Accounts Receivable:                  ________
+2. Fire Extinguisher:                    ________
+5. Money On/Off:                         ________ / ________
+6. Valuable Papers:                      ________
+
+Personal Injury/Advertising Injury Exclusion (MPL 45):  _
+Products and Completed Operations Exclusion (MPL 57):   _
+Loss Payee as Insured (MPL 51):                         _
+Protection:  __
+%%
+
+components
+
+Fields
+101     begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqHOMEBUS:app_no = G_app_no
+            agqHOMEBUS:PREM_NO = G_PREM_NO
+            agqHOMEBUS:BUILD_NO = G_BUILD_NO
+            End
+        If agqPERSONAL:MEDICAL_LIMIT < L_MEDICAL_LIMIT Then
+            begin
+            l_message = dialog("Invalid Limits Entered","error.bmp","The current medical limit is less than the minimum required of " +
+                                str(l_medical_limit, "$$$,$$$,$$$.") + "<NL>The current amount is " +
+                                str(agqpersonal:medical_limit,"$$$,$$$,$$$.") +
+                                "<NL><NL>Until the medical limit is increased to at least the minimum" +
+                                "<nl>you can not add this form at this time.","OK")
+            switch(l_message)
+              case "OK" : abort()
+              end
+            end
+        end
+        agqHOMEBUS:BUSINESS_DESC[1]/displayonly;
+101     Begin
+        Access agqpersonal, Set agqpersonal:app_no = G_app_no, Generic
+
+        Access agqPERSONAL, Set agqPERSONAL:app_no = G_app_no,
+                                agqPERSONAL:PREM_NO = G_PREM_NO,
+                                agqPERSONAL:BUILD_NO = G_BUILD_NO, Generic
+
+        If FUNCTION = "CHANGE" Then
+          Begin
+            agqHOMEBUS:COMPANY_ID       = agqpersonal:COMPANY_ID
+            agqHOMEBUS:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+            agqHOMEBUS:STATE            = agqPERSONAL:STATE
+            Do GET_BASICS
+          End
+
+        If FUNCTION = "ADD" Then
+          Begin
+            agqHOMEBUS:STATE = agqPERSONAL:STATE
+            agqHOMEBUS:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+            agqHOMEBUS:COMPANY_ID = agqpersonal:COMPANY_ID
+            Do SUBCODE
+            Do GET_BASICS
+          End
+        End
+        agqHOMEBUS:BUSINESS_DESC[1]/tabstop;
+102     agqHOMEBUS:BUSINESS_DESC[2]/tabstop;
+
+201     agqHOMEBUS:FORM_OF_BUSINESS/upper/tabstop
+        If agqHOMEBUS:FORM_OF_BUSINESS <> SFSFOB:FORM_OF_BUSINESS Then
+            Error 1264
+
+        Activehelp SFSFOB_ALIAS:FORM_OF_BUSINESS,
+                   SFSFOB_ALIAS:DESCRIPTION ;
+202     SFSFOB:DESCRIPTION;
+
+301     agqHOMEBUS:STRUCTURE_DESC/tabstop ;
+302     agqHOMEBUS:STRUCTURE_LIMIT/tabstop
+        Hide If agqHOMEBUS:STRUCTURE_DESC = ""
+        If agqHOMEBUS:STRUCTURE_DESC <> "" And
+           agqHOMEBUS:STRUCTURE_LIMIT = 0 Then
+            Error "Must enter a limit" ;
+
+501     Begin
+        If FUNCTION = "ADD" Or
+           FUNCTION = "CHANGE" Then
+            Begin
+            If agqHOMEBUS:STRUCTURE_DESC = "" Then
+                agqHOMEBUS:STRUCTURE_LIMIT = 0
+            End
+        End
+        agqHOMEBUS:RESIDENCE_PREMISES_LIMIT/tabstop ;
+601     agqHOMEBUS:MPL42/checkbox/values="0,1"/tabstop ;
+701     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqHOMEBUS:PERSONAL_PROPERTY_LIMIT = L_PERSONAL_PROP_LIMIT
+            End
+        End
+        agqHOMEBUS:PERSONAL_PROPERTY_LIMIT/default/tabstop ;
+701     Begin
+        If FUNCTION = "CHANGE" And
+           agqHOMEBUS:PERSONAL_PROPERTY_LIMIT = 0 Then
+            agqHOMEBUS:PERSONAL_PROPERTY_LIMIT = L_PERSONAL_PROP_LIMIT
+        End
+        agqHOMEBUS:PERSONAL_PROPERTY_LIMIT/displayonly ;
+
+801     Begin
+        If FUNCTION = "ADD" Then
+            agqHOMEBUS:LOSS_INCOME_LIMIT = L_LOSS_INCOME_LIMIT
+        End
+        agqHOMEBUS:LOSS_INCOME_LIMIT/default/tabstop
+        If agqHOMEBUS:LOSS_INCOME_LIMIT <> PLSHOMELOSS:LIMIT Then
+            Error 1238
+
+        Activehelp PLSHOMELOSS_ALIAS:LIMIT ;
+901     agqHOMEBUS:MPL43/checkbox/values="0,1"/tabstop;
+1001    agqHOMEBUS:MPL56/checkbox/values="0,1"/tabstop ;
+
+1101    Begin
+        If FUNCTION = "ADD" Then
+            agqHOMEBUS:AR_LIMIT = L_AR_LIMIT
+        End
+        agqHOMEBUS:AR_LIMIT/default/tabstop ;
+1101    Begin
+        If FUNCTION = "CHANGE" And
+           agqHOMEBUS:AR_LIMIT = 0 Then
+            agqHOMEBUS:AR_LIMIT = L_AR_LIMIT
+        End
+        agqHOMEBUS:AR_LIMIT/displayonly ;
+1201    Begin
+        If FUNCTION = "ADD" Then
+            agqHOMEBUS:FIRE_EXT_LIMIT = L_FIRE_EXT_LIMIT
+        End
+        agqHOMEBUS:FIRE_EXT_LIMIT/default/tabstop ;
+1201    Begin
+        If FUNCTION = "CHANGE" And
+           agqHOMEBUS:FIRE_EXT_LIMIT = 0 Then
+            agqHOMEBUS:FIRE_EXT_LIMIT = L_FIRE_EXT_LIMIT
+        End
+        agqHOMEBUS:FIRE_EXT_LIMIT/displayonly ;
+1301    Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqHOMEBUS:MONEY_ON_LIMIT = L_MONEY_ON_LIMIT
+            agqHOMEBUS:MONEY_OFF_LIMIT = L_MONEY_OFF_LIMIT
+            End
+        End
+        agqHOMEBUS:MONEY_ON_LIMIT/default/tabstop
+        If agqHOMEBUS:MONEY_ON_LIMIT <> PLSHOMEMONEY:MONEY_LIMIT_ON Then
+            Error 1238
+
+        Activehelp PLSHOMEMONEY_ALIAS:MONEY_LIMIT_ON ;
+1302    Begin
+        If FUNCTION = "ADD" Or
+           FUNCTION = "CHANGE" Then
+            agqHOMEBUS:MONEY_OFF_LIMIT = PLSHOMEMONEY:MONEY_LIMIT_OFF
+        End
+        agqHOMEBUS:MONEY_OFF_LIMIT/displayonly ;
+1301    Begin
+        If FUNCTION = "CHANGE" And
+           agqHOMEBUS:MONEY_ON_LIMIT = 0 Then
+            Begin
+            agqHOMEBUS:MONEY_ON_LIMIT = L_MONEY_ON_LIMIT
+            agqHOMEBUS:MONEY_OFF_LIMIT = L_MONEY_OFF_LIMIT
+            End
+        End
+        agqHOMEBUS:MONEY_ON_LIMIT/displayonly ;
+1302    agqHOMEBUS:MONEY_OFF_LIMIT/displayonly ;
+1401    Begin
+        If FUNCTION = "ADD" Then
+            agqHOMEBUS:VALUABLE_PAPERS_LIMIT = L_VALUABLE_PAPERS_LIMIT
+        End
+        agqHOMEBUS:VALUABLE_PAPERS_LIMIT/default/tabstop ;
+1401    Begin
+        If FUNCTION = "CHANGE" And
+           agqHOMEBUS:VALUABLE_PAPERS_LIMIT = 0 Then
+            agqHOMEBUS:VALUABLE_PAPERS_LIMIT = L_VALUABLE_PAPERS_LIMIT
+        End
+        agqHOMEBUS:VALUABLE_PAPERS_LIMIT/displayonly ;
+
+1601    agqHOMEBUS:MPL45/checkbox/values="0,1"/tabstop;
+1701    Begin
+        If FUNCTION = "ADD" Then
+            agqHOMEBUS:MPL57 = 1
+        End
+        agqHOMEBUS:MPL57/checkbox/values="0,1"/default/tabstop ;
+1801    agqHOMEBUS:MPL51/checkbox/values="0,1"/tabstop ;
+1901    Begin
+        access agqpersonal2, set agqpersonal2:app_no = g_app_no, generic
+
+        if agqpersonal2:fire_safe_score <= 5 then
+            agqhomebus:protection = 1
+        else
+        if agqpersonal2:fire_safe_score => 6 and
+           agqpersonal2:fire_safe_score <= 9 then
+            agqhomebus:protection = 2
+        else
+        if agqpersonal2:fire_safe_score >= 10 then
+            agqhomebus:protection = 3
+        End
+        agqhomebus:PROTECTION/displayonly ;
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 27,35 to 27,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 28,1 to 28,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+Update
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    If FUNCTION = "ADD" Or
+       FUNCTION = "CHANGE" Then
+        Begin
+        G_app_no   = agqHOMEBUS:app_no
+        G_PREM_NO  = agqHOMEBUS:PREM_NO
+        G_BUILD_NO = agqHOMEBUS:BUILD_NO
+        G_SUB_CODE = agqHOMEBUS:SUB_CODE
+        If agqHOMEBUS:RESIDENCE_PREMISES_LIMIT > G_PERSONAL_PROPERTY_LIMIT Or
+           agqHOMEBUS:PERSONAL_PROPERTY_LIMIT > G_PERSONAL_PROPERTY_LIMIT Then
+            Begin
+            Display Modal Screen "agqmt3011c"
+            With Initial Function "CHANGE"
+            End
+        End
+
+    Access agqpersonal, Set agqpersonal:app_no = G_app_no, Generic
+
+    Access PLSPREPRINTED, Set PLSPREPRINTED:COMPANY_ID       = agqHOMEBUS:COMPANY_ID,
+                              PLSPREPRINTED:STATE            = agqHOMEBUS:STATE,
+                              PLSPREPRINTED:LINE_OF_BUSINESS = agqHOMEBUS:LINE_OF_BUSINESS, Generic
+
+    while PLSPREPRINTED:COMPANY_ID       = agqHOMEBUS:COMPANY_ID and
+          PLSPREPRINTED:STATE            = agqHOMEBUS:STATE and
+          PLSPREPRINTED:LINE_OF_BUSINESS = agqHOMEBUS:LINE_OF_BUSINESS
+        begin
+        If agqpersonal:EFF_DATE >= PLSPREPRINTED:REFF_DATE Then
+            Begin
+            L_CODE_1 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[4] -- mpl42
+            L_CODE_2 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[5] -- mpl43
+            L_CODE_3 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[6] -- mpl45
+            L_CODE_4 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[7] -- mpl51
+            L_CODE_5 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[8] -- mpl56
+            L_CODE_6 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[9] -- mpl57
+            l_code_7 = "MPL38"
+            End
+
+        Next PLSPREPRINTED
+        End
+
+    If L_CODE_1 <> "" Then
+        Begin
+        L_CODE = L_CODE_1
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqHOMEBUS:MPL42 = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqHOMEBUS:MPL42 = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_2 <> "" Then
+        Begin
+        L_CODE = L_CODE_2
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqHOMEBUS:MPL43 = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqHOMEBUS:MPL43 = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_3 <> "" Then
+        Begin
+        L_CODE = L_CODE_3
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqHOMEBUS:MPL45 = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqHOMEBUS:MPL45 = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_4 <> "" Then
+        Begin
+        L_CODE = L_CODE_4
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqHOMEBUS:MPL51 = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqHOMEBUS:MPL51 = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_5 <> "" Then
+        Begin
+        L_CODE = L_CODE_5
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqHOMEBUS:MPL56 = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqHOMEBUS:MPL56 = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_6 <> "" Then
+        Begin
+        L_CODE = L_CODE_6
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqHOMEBUS:MPL57 = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqHOMEBUS:MPL57 = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_7 <> "" Then
+        Begin
+        L_CODE = L_CODE_7
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" Then
+            Do ADD_agqEND
+        End
+
+    End
+
+procedure definition
+
+Procedure SUBCODE
+Begin
+Access agqHOMEBUS_ALIAS, Set agqHOMEBUS_ALIAS:app_no   = G_app_no,
+                             agqHOMEBUS_ALIAS:PREM_NO  = G_PREM_NO,
+                             agqHOMEBUS_ALIAS:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+while agqHOMEBUS_ALIAS:app_no   = G_app_no and
+      agqHOMEBUS_ALIAS:PREM_NO  = G_PREM_NO and
+      agqHOMEBUS_ALIAS:BUILD_NO = G_BUILD_NO
+        begin
+        L_SUB_CODE = agqHOMEBUS_ALIAS:SUB_CODE
+
+        Next agqHOMEBUS_ALIAS
+        End
+
+agqHOMEBUS:SUB_CODE = L_SUB_CODE + 10
+G_SUB_CODE = agqHOMEBUS:SUB_CODE
+End
+
+Procedure GET_BASICS
+Begin
+Access agqpersonal, Set agqpersonal:app_no = G_app_no, Generic
+
+Access agqPERSONAL, Set agqPERSONAL:app_no   = G_app_no,
+                        agqPERSONAL:PREM_NO  = G_PREM_NO,
+                        agqPERSONAL:BUILD_NO = G_BUILD_NO, Generic
+
+L_COMPANY_ID       = agqpersonal:COMPANY_ID
+L_STATE            = agqPERSONAL:STATE
+L_LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+Access PLSHOMEBUS, Set PLSHOMEBUS:COMPANY_ID       = L_COMPANY_ID,
+                       PLSHOMEBUS:STATE            = L_STATE,
+                       PLSHOMEBUS:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS, Generic
+
+Repeat Begin
+    Exit If PLSHOMEBUS:COMPANY_ID <> L_COMPANY_ID Or
+            PLSHOMEBUS:STATE <> L_STATE Or
+            PLSHOMEBUS:LINE_OF_BUSINESS <> L_LINE_OF_BUSINESS
+
+    If agqpersonal:EFF_DATE >= PLSHOMEBUS:REFF_DATE Then
+        Begin
+        L_LIABILITY_LIMIT = PLSHOMEBUS:MINIMUM_LIABILITY
+        L_MEDICAL_LIMIT = PLSHOMEBUS:MINIMUM_MEDICAL
+        L_PERSONAL_PROP_LIMIT = PLSHOMEBUS:PERSONAL_PROPERTY_BASIC
+        L_LOSS_INCOME_LIMIT = PLSHOMEBUS:LOSS_INCOME_BASIC
+        L_AR_LIMIT = PLSHOMEBUS:AR_LIMIT
+        L_MONEY_ON_LIMIT = PLSHOMEBUS:MONEY_BASIC_LIMIT[1]
+        L_MONEY_OFF_LIMIT = PLSHOMEBUS:MONEY_BASIC_LIMIT[2]
+        L_FIRE_EXT_LIMIT = 1000
+        L_VALUABLE_PAPERS_LIMIT = PLSHOMEBUS:VALUABLE_PAPERS_LIMIT
+        G_PERSONAL_PROPERTY_LIMIT = PLSHOMEBUS:PERSONAL_PROP_LIMIT[8]
+        End
+
+    Next PLSHOMEBUS
+    End
+
+End
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_agqEND_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    L_agqEND_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+If L_agqEND_SUB_CODE <= G_SUB_CODE Then
+    L_agqEND_SUB_CODE = L_agqEND_SUB_CODE + 20
+Else
+    L_agqEND_SUB_CODE = L_agqEND_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqpersonal:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqpersonal:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqpersonal:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqpersonal:LINE_OF_BUSINESS Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If agqpersonal:EFF_DATE >= SFSOPTEND:EFF_DATE Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqEND
+    Begin
+    agqEND:app_no               =       G_app_no
+    agqEND:PREM_NO              =       G_PREM_NO
+    agqEND:BUILD_NO             =       G_BUILD_NO
+    agqEND:SUB_CODE             =       L_agqEND_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+    agqEND:PREMIUM              =       0
+    End
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqEND:app_no   <> G_app_no Or
+            agqEND:PREM_NO  <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+End

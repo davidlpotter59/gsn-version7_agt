@@ -1,0 +1,193 @@
+%%
+Program
+        Name = "agtup9937" ;
+        Type = "File" ;
+        Padcharacter = Space ;
+        Domain = "FLAT" ;
+
+        Global Unsigned Ascii Number G_app_no[11],
+                                     G_VEHICLE_NO[4] ,
+                                     g_rmf[6]=0/dec=4;
+
+        local unsigned ascii number l_sub[1]=0,
+                                    l_deductible[5]=0 ,
+                                    l_form[1]=0;
+
+        local string l_enter[1] ;
+
+        include "casrating.var"
+
+Initialisation
+G_app_no     = Val(COMMANDLINE[1,11])
+G_VEHICLE_NO = Val(COMMANDLINE[12,15])
+g_rmf        = val(commandline[16,21])
+
+Access agqVEHICLE, Set agqVEHICLE:app_no   = G_app_no,
+                       agqVEHICLE:VEHICLE_NO = G_VEHICLE_NO, generic
+
+Do rate_garagekeepers
+do update_agqend1
+
+Update
+
+Procedure Definition
+
+Procedure rate_garagekeepers
+Begin
+access agqgaragekeepers1, set agqgaragekeepers1:app_no   = g_app_no, generic
+
+l_sub = 1
+while l_sub < 4
+    begin
+    l_state            = agqvehicle:state
+    l_line_of_business = agqvehicle:line_of_business
+    l_type             = l_sub
+    l_company_id       = agqvehicle:company_id
+    l_limit            = agqgaragekeepers1:limit
+    if l_sub = 3 then
+        l_deductible   = agqgaragekeepers1:coll_deductible
+    else
+        l_deductible   = 100
+    access casgaragephysdam, set casgaragephysdam:company_id       = l_company_id,
+                                 casgaragephysdam:state            = l_state,
+                                 casgaragephysdam:line_of_Business = l_line_of_business,
+                                 casgaragephysdam:type             = l_type,
+                                 casgaragephysdam:deductible       = l_deductible,
+                                 casgaragephysdam:limit            = l_limit, approximate
+
+    l_limit = casgaragephysdam:limit
+    access casgaragephysdam, set casgaragephysdam:company_id       = l_company_id,
+                                 casgaragephysdam:state            = l_state,
+                                 casgaragephysdam:line_of_Business = l_line_of_business,
+                                 casgaragephysdam:type             = l_type,
+                                 casgaragephysdam:deductible       = l_deductible,
+                                 casgaragephysdam:limit            = l_limit, generic
+
+    while casgaragephysdam:company_id       = l_company_id and
+          casgaragephysdam:state            = l_state and
+          casgaragephysdam:line_of_Business = l_line_of_business and
+          casgaragephysdam:type             = l_type and
+          casgaragephysdam:deductible       = l_deductible and
+          casgaragephysdam:limit            = l_limit
+        begin
+        if (agqvehicle:eff_date >= casgaragephysdam:eff_date and
+           (agqvehicle:eff_date < casgaragephysdam:exp_date or
+           casgaragephysdam:exp_date = 0)) then
+            begin
+            if l_sub = 1 then
+                l_form = agqgaragekeepers1:specified_perils_form
+            else
+            if l_sub = 2 then
+                l_form = agqgaragekeepers1:comp_form
+            else
+            if l_sub = 3 then
+                l_form = agqgaragekeepers1:coll_form
+            switch(l_form)
+              case 1  : begin
+                        l_charge = casgaragephysdam:legal_liability_charge
+                        l_rate   = 1.00
+                        end
+              case 2  : begin
+                        l_charge = casgaragephysdam:direct_primary_charge
+                        l_rate   = 1.00
+                        end
+              default : begin
+                        l_charge = casgaragephysdam:legal_liability_charge
+                        l_rate   = casgaragephysdam:direct_excess_rate
+                        end
+              end
+            end
+
+        next casgaragephysdam
+        end
+
+    if l_sub = 1 then
+        l_deductible = agqgaragekeepers1:specified_perils_deductible
+    else
+    if l_sub = 2 then
+        l_deductible = agqgaragekeepers1:comp_deductible
+    else
+    if l_sub = 3 then
+        l_deductible = agqgaragekeepers1:coll_deductible
+    access casgaragededuct, set casgaragededuct:company_id       = l_company_id,
+                                casgaragededuct:state            = l_state,
+                                casgaragededuct:line_of_Business = l_line_of_business,
+                                casgaragededuct:type             = l_type,
+                                casgaragededuct:deductible       = l_deductible, generic
+
+    while casgaragededuct:company_id       = l_company_id and
+          casgaragededuct:state            = l_state and
+          casgaragededuct:line_of_Business = l_line_of_business and
+          casgaragededuct:type             = l_type and
+          casgaragededuct:deductible       = l_deductible
+        begin
+        if (agqvehicle:eff_date >= casgaragededuct:eff_date and
+           (agqvehicle:eff_date < casgaragededuct:exp_date or
+           casgaragededuct:exp_date = 0)) then
+            begin
+            l_deductible_rate     = casgaragededuct:factor
+            end
+
+        next casgaragededuct
+        end
+
+    change agqgaragekeepers1
+        begin
+        if agqgaragekeepers1:specified_perils_deductible <> 0 and
+           l_sub = 1 then
+            begin
+            agqgaragekeepers1:specified_perils_premium = l_charge *
+                                                        l_rate *
+                                                        l_deductible_rate *
+                                                        g_rmf
+            end
+        if agqgaragekeepers1:comp_deductible <> 0 and
+           l_sub = 2 then
+            begin
+            agqgaragekeepers1:comp_premium      = l_charge *
+                                                 l_rate *
+                                                 l_deductible_rate *
+                                                 g_rmf
+            end
+        if agqgaragekeepers1:coll_deductible <> 0 and
+           l_sub = 3 then
+            begin
+            agqgaragekeepers1:coll_premium      = l_charge *
+                                                 l_rate *
+                                                 g_rmf
+            end
+
+        end
+
+    l_sub = l_sub + 1
+    end
+
+end
+
+procedure update_agqend1
+begin
+access agqgaragekeepers1, set agqgaragekeepers1:app_no   = g_app_no, generic
+
+g_vehicle_no = 0
+access agqend1, set agqend1:app_no   = g_app_no,
+                    agqend1:vehicle_no = g_Vehicle_no, generic
+
+while agqend1:app_no   = g_app_no and
+      agqend1:vehicle_no = g_vehicle_no
+       begin
+       if agqend1:code = "CA9937" then
+           begin
+           change agqend1
+                begin
+                agqend1:premium = agqgaragekeepers1:comp_premium +
+                                  agqgaragekeepers1:coll_premium +
+                                  agqgaragekeepers1:specified_perils_premium
+                end
+            end
+
+        next agqend1
+        end
+
+end
+
+End

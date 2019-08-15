@@ -1,0 +1,109 @@
+Procedure CREATE_MACRO
+Begin
+Do REFRESH_WORK_FILES
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+L_USERNAME = USERNAME
+I_REPORTA = "agqpr9104"
+I_REPORT = "agqpr9104.cq"
+I_REPORT_CQE = "agqpr9104.cqe"
+I_APP = "agq"
+l_app = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF = L_APP+Str(I_CSEXEC_NUMBER)+".txt"
+I_PARAMETER = I_APP+Str(I_CSEXEC_NUMBER)+".par"
+I_MACROA = I_APP+Str(I_CSEXEC_NUMBER)
+I_MACRO = I_APP+Str(I_CSEXEC_NUMBER)+".mf"
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+if agqprint1:app_no <> g_app_no then
+    begin
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+else
+    begin
+    delete agqprint1
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+
+Deletefile(I_MACRO)
+Writefile(I_MACRO,"clear list<nl>")
+Writefile(I_MACRO,"clear find<nl>")
+Writefile(I_MACRO,"clear sum<nl>")
+Writefile(I_MACRO,"run agqpr9104<nl>")
+Writefile(I_MACRO,"cli rm agqpr9104.cq<nl>")
+Writefile(I_MACRO,"rsave agqpr9104<nl>")
+Writefile(I_MACRO,"cli joinit agqpr9104.cq %s<nl>",L_DEC)
+Closefile(I_MACRO)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc("cli cq %s",I_MACRO)/noconsole
+Else
+    Proc("cli cq %s",I_MACRO)
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)/noconsole
+    Proc("cli chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("cli rm %s",L_DEC)/noconsole
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)
+    Proc("cli chmod 777 %s ",L_DEC_PDF)
+    Proc("cli rm %s",L_DEC)
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client/noconsole
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+delete agqprint1
+
+Do REFRESH_WORK_FILES
+End
+
+Procedure REFRESH_WORK_FILES
+Begin
+Proc ("cli agqprint1.mk")/noconsole
+End

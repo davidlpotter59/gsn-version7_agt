@@ -1,0 +1,936 @@
+%%                 
+Screen
+        Name = "agtmt100j";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqmastsupp" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    l_line_of_business[4]=5,
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_company_id[10],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     l_description[55] ;
+
+        Access agqmastsupp,
+           Set agqmastsupp:app_NO           = G_app_NO,
+               agqmastsupp:line_of_business = l_line_of_business;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+        "calc" display "agtmt200" tagged calc_fn ;
+        "redisplay" display/noreturn "agtmt100j" ;
+        "update_totals" display/noreturn "boqmt010" ;
+--        forwardtab ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+disable(accept_fn)
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if agqgeneral:company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_pol_liab_limits.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(agqgeneral:line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(lebins_fn)
+    hide(ficof_fn)
+    end
+else
+if sfsdefault:company_id = "LEBINS" then
+    begin
+    hide(other_fn)
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+Access Validation
+If agqmastsupp:app_NO <> G_app_NO or
+   agqmastsupp:line_of_business <> l_line_of_business Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+    scrollbarpolicy = asneeded
+  }
+
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "Policy Information and Liability Limits..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,100 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,20
+          properties
+            {
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+        }
+
+Panel at 6,55 to 6,100
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,55 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt100j.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 30,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,28
+             properties
+               {
+                 text = "Policy Coverage Form:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 2,1 to 2,28 tagged other_fn
+             properties
+               {
+                 text = "Deductible:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,1 to 2,28 tagged lebins_fn
+             properties
+               {
+                 text = "Property Deductible:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 4,1 to 4,28
+             properties
+               {
+                 text = "Liability Limit:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+           guidetext at 5,1 to 5,28
+             properties
+               {
+                 text = "Medical Limit:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 6,1 to 6,28
+             properties
+               {
+                 text = "Personal Advertising Injury:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 7,1 to 7,28
+             properties
+               {
+                 text = "General Aggregate:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 9,1 to 9,28
+             properties
+               {
+                 text = "Property Off Premises:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 10,1 to 10,28
+             properties
+               {
+                 text = "Delete Nonowned:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 11,1 to 11,28
+             properties
+               {
+                 text = "Extend Hired Nonowned:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 12,1 to 12,28
+             properties
+               {
+                 text = "Exclude Terrorism:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+         }
+
+Panel at 8,30 to 23, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_   _______________
+_____
+
+_  __________
+__________
+__________
+__________
+
+________
+~~_
+~~_
+~~_
+%%
+
+components
+
+Fields
+101     Begin
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            enable(accept_fn)
+            disable(calc_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            enable(calc_fn)
+            end
+
+        access sfscompany,
+           set sfscompany:company_id = agqgeneral:company_id, generic
+
+        l_agent_no   = agqgeneral:agent_no
+        Access agsdefault_bop,
+           Set agsdefault_bop:COMPANY_ID       = agqgeneral:COMPANY_ID,
+               agsdefault_bop:state            = agqgeneral:state,
+               agsdefault_bop:agent_no         = agqgeneral:agent_no,
+               agsdefault_bop:LINE_OF_BUSINESS = agqgeneral:line_of_business, generic
+
+        access sfsform_alias,
+           set sfsform_alias:company_id       = agqgeneral:company_id,
+               sfsform_alias:state            = agqgeneral:state,
+               sfsform_alias:line_of_business = agqgeneral:line_of_business, generic
+
+        End
+        agqmastsupp:FORM/default/tabstop
+        l_form  = agqmastsupp:form
+        access sfsform, set sfsform:company_id       = agqgeneral:company_id,
+                            sfsform:state            = agqgeneral:state,
+                            sfsform:line_of_business = agqgeneral:line_of_business,
+                            sfsform:policy_form      = l_form, generic
+
+        if agqmastsupp:form <> sfsform:policy_form or
+           agqmastsupp:form = 0 then
+            error 1205
+
+        activehelp sfsform_alias:policy_form,
+                   sfsform_alias:description ;
+102     begin
+        l_form  = agqmastsupp:form
+        access sfsform, set sfsform:company_id       = agqgeneral:company_id,
+                            sfsform:state            = agqgeneral:state,
+                            sfsform:line_of_business = agqgeneral:line_of_business,
+                            sfsform:policy_form      = l_form, generic
+        end
+        sfsform:description ;
+201     Begin
+        access sfsdeductible_alias, set sfsdeductible_alias:company_id = agqgeneral:company_id,
+                                        sfsdeductible_alias:state      = agqgeneral:state,
+                                        sfsdeductible_alias:line_of_business = agqgeneral:line_of_business, generic
+
+        End
+        agqmastsupp:DEDUCTIBLE/default/tabstop
+        access sfsdeductible, set sfsdeductible:company_id       = agqgeneral:company_id,
+                                  sfsdeductible:state            = agqgeneral:state,
+                                  sfsdeductible:line_of_business = agqgeneral:line_of_business,
+                                  sfsdeductible:deductible       = agqmastsupp:deductible, generic
+
+        if agqmastsupp:deductible <> sfsdeductible:deductible then
+            error 1207
+
+        activehelp if sfsdeductible_alias:show_in_activehelp = 1 then
+                       sfsdeductible_alias:deductible
+                   else
+                       null ;
+
+401     Begin
+        access sfsliability_alias, set sfsliability_alias:company_id       = agqgeneral:company_id,
+                                       sfsliability_alias:state            = agqgeneral:state,
+                                       sfsliability_alias:line_of_business = agqgeneral:line_of_business, generic
+
+        End
+        agqmastsupp:LIABILITY_code/default/tabstop
+        l_liability_code = agqmastsupp:liability_code
+        access sfsliability, set sfsliability:company_id       = agqgeneral:company_id,
+                                 sfsliability:state            = agqgeneral:state,
+                                 sfsliability:line_of_business = agqgeneral:line_of_business,
+                                 sfsliability:liability_code   = l_liability_code, generic
+
+        if agqmastsupp:liability_code <> sfsliability:liability_code then
+            error 1238
+
+        agqmastsupp:liability = sfsliability:limit
+
+        activehelp sfsliability_alias:liability_code,
+                   sfsliability_alias:limit ;
+402     begin
+        l_liability_code = agqmastsupp:liability_code
+        access sfsliability, set sfsliability:company_id       = agqgeneral:company_id,
+                                 sfsliability:state            = agqgeneral:state,
+                                 sfsliability:line_of_business = agqgeneral:line_of_business,
+                                 sfsliability:liability_code   = l_liability_code, generic
+        end
+        sfsliability:limit/displayonly ;
+501     agqmastsupp:MEDICAL_LIMIT/displayonly/mask="ZZ,ZZZ,ZZ9";
+601     begin
+        if function one of "CHANGE", "CHG" then
+            agqmastsupp:personal_add_injury = sfsliability:limit
+        end
+        agqmastsupp:PERSONAL_ADD_INJURY/displayonly/mask="ZZ,ZZZ,ZZ9" ;
+701     Begin
+        If FUNCTION one of "CHANGE", "CHG" Then
+            Begin
+            Access SFSLIABILITY, Set SFSLIABILITY:COMPANY_ID = agqgeneral:COMPANY_ID,
+                                     SFSLIABILITY:STATE = agqgeneral:STATE,
+                                     SFSLIABILITY:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS,
+                                     SFSLIABILITY:LIABILITY_CODE = agqmastsupp:LIABILITY_CODE, Generic
+
+            agqmastsupp:GENERAL_AGGREGATE = SFSLIABILITY:LIMIT * agsdefault_bop:AGGREGATE_PERCENT
+            End
+        End
+        agqmastsupp:GENERAL_AGGREGATE/displayonly ;
+
+901     Begin
+        access bpsoffprem_alias, set bpsoffprem_alias:company_id = agqgeneral:company_id,
+                                     bpsoffprem_alias:state      = agqgeneral:state,
+                                     bpsoffprem_alias:line_of_business = agqgeneral:line_of_business, generic
+
+        End
+        agqmastsupp:OFF_PREMISES_LIMIT/default/tabstop/mask="ZZ,ZZZ,ZZ9"
+        access bpsoffprem, set bpsoffprem:company_id       = agqgeneral:company_id,
+                               bpsoffprem:state            = agqgeneral:state,
+                               bpsoffprem:line_of_business = agqgeneral:line_of_business,
+                               bpsoffprem:limit            = agqmastsupp:off_premises_limit, generic
+        if agqmastsupp:off_premises_limit <> bpsoffprem:limit then
+            error 1238
+
+        Access SFSPACKAGE, Set SFSPACKAGE:COMPANY_ID       = G_COMPANY_ID,
+                               SFSPACKAGE:STATE            = agqgeneral:state,
+                               SFSPACKAGE:LINE_OF_BUSINESS = agqgeneral:line_of_business, Generic
+
+        while SFSPACKAGE:COMPANY_ID       = G_COMPANY_ID and
+              SFSPACKAGE:STATE            = agqgeneral:state and
+              SFSPACKAGE:LINE_OF_BUSINESS = agqgeneral:line_of_business
+            begin
+            If agqgeneral:EFF_DATE >= SFSPACKAGE:EFF_DATE Then
+                agqmastsupp:PACKAGE_DEVIATION = SFSPACKAGE:PACKAGE_MOD
+
+            Next SFSPACKAGE
+            End
+
+        activehelp bpsoffprem_alias:limit ;
+1001    agqmastsupp:DELETE_HIRED_NONOWNED/checkbox/values="N,Y"/tabstop
+        hide if agqgeneral:class_code one of 51 and
+                agqgeneral:sub_code = 30
+        If agqmastsupp:DELETE_HIRED_NONOWNED = "Y" Then
+            agqmastsupp:EXTEND_HIRED_NONOWNED = "N" ;
+1101    agqmastsupp:EXTEND_HIRED_NONOWNED/checkbox/values="N,Y"/tabstop
+        hide if agqgeneral:class_code one of 51 and
+                agqgeneral:sub_code = 30
+        Hide If agqmastsupp:DELETE_HIRED_NONOWNED = "Y" ;
+1001    agqmastsupp:DELETE_HIRED_NONOWNED/checkbox/values="N,Y"/displayonly ;
+1101    agqmastsupp:EXTEND_HIRED_NONOWNED/checkbox/values="N,Y"/displayonly ;
+
+1201     begin
+         if function one of "CHANGE", "CHG" then
+            begin
+            if agqmastsupp:extend_hired_nonowned = "" then
+                agqmastsupp:extend_hired_nonowned = "N"
+            if agqmastsupp:delete_hired_nonowned = "" then
+                agqmastsupp:delete_hired_nonowned = "N"
+            do update_exclusion
+            if l_remove_form = 1 then
+                agqmastsupp:exclude_terrorism = 1
+            end
+        end
+        agqmastsupp:exclude_terrorism/checkbox/values="0,1"/default/tabstop ;
+}
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,1 to 24,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,75   tagged calc_fn
+        Properties {
+                Iconname = "btn_view_summary_totals.bmp"
+                }
+        Events  {
+                Action = calc_fn
+                }
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+panel at 24,1 to 30,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    enable(calc_fn)
+    disable(accept_fn)
+    end
+
+if abort = "YES" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(calc_fn)
+    If FUNCTION one of "CHANGE", "CHG." Then
+        Begin
+        Access agQgeneral, Set agqgeneral:app_no = agqmastsupp:APP_NO, Generic
+
+        Access agqgeneral, Set agqgeneral:app_no = agqmastsupp:APP_NO, Generic
+
+        while agqgeneral:app_no = agqmastsupp:APP_NO
+            begin
+            If agqgeneral:PROPERTY_LIMIT <> 0 And
+               agqmastsupp:FORM = 3 And
+               agqgeneral:MONEY_LIMIT_ON = 0 Then
+                Change agqgeneral
+                    Begin
+                    agqgeneral:MONEY_LIMIT_ON  = agsdefault_bop:MONEY_LIMIT_ON
+                    agqgeneral:MONEY_LIMIT_OFF = agsdefault_bop:MONEY_LIMIT_OFF
+                    End
+
+            If agqmastsupp:FORM = 1 And
+               agqgeneral:ATTACH_BU5001 = "N" Then
+                Change agqgeneral
+                    Begin
+                    agqgeneral:MONEY_LIMIT_ON = 0
+                    agqgeneral:MONEY_LIMIT_OFF = 0
+                    End
+
+            If agqgeneral:DIFFERENT_OFF_PREMISES = 0 Then
+                Change agqgeneral
+                    Begin
+                    agqgeneral:OFF_PREMISES_LIMIT = agqmastsupp:OFF_PREMISES_LIMIT
+                    End
+
+            Next agqgeneral
+            End
+
+        End
+
+    if function one of "ADD", "CHANGE", "CHG" then
+        begin
+        Access agqgeneral_ALIAS, Set agqgeneral_ALIAS:app_NO = G_app_NO, generic
+
+        while agqgeneral_alias:app_no = g_app_no
+            begin
+            change agqgeneral_alias
+                begin
+                agqgeneral_alias:remove_terrorism_form = agqmastsupp:exclude_terrorism
+                end
+
+            next agqgeneral_alias
+            end
+
+        Access agqgeneral, Set agqgeneral:app_no = g_APP_NO, generic
+
+        Access BPSRATE, Set BPSRATE:COMPANY_ID       = agqgeneral:COMPANY_ID,
+                            BPSRATE:STATE            = agqgeneral:state,
+                            BPSRATE:LINE_OF_BUSINESS = agqgeneral:line_of_business, Generic
+
+        l_code_1 = ""
+        while bpsrate:company_id = agqgeneral:company_id and
+              bpsrate:state = agqgeneral:state and
+              bpsrate:line_of_business = agqgeneral:line_of_business
+            begin
+            If agqgeneral:EFF_DATE >= BPSRATE:EFF_DATE Then
+                Begin
+                L_CODE_1 = BPSRATE:HIRED_NONOWNED_CODE[1] -- BU5004
+                L_CODE_2 = BPSRATE:HIRED_NONOWNED_CODE[2] -- BU0140
+                End
+
+            Next BPSRATE
+            End
+
+        If L_CODE_1 <> "" Then
+            Begin
+            -- delete Hired/Nonown
+            L_CODE = L_CODE_1
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqmastsupp:DELETE_HIRED_NONOWNED = "Y" Then
+                Do ADD_agqend
+            If L_ADD_ENDORSEMENT = "N" And
+               agqmastsupp:DELETE_HIRED_NONOWNED = "N" Then
+                Do DELETE_agqend
+            End
+
+        If L_CODE_2 <> "" Then
+            Begin
+            -- extend hired/nonowned
+            L_CODE = L_CODE_2
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqmastsupp:EXTEND_HIRED_NONOWNED = "Y" Then
+                Do ADD_agqend
+            If L_ADD_ENDORSEMENT = "N" And
+               agqmastsupp:EXTEND_HIRED_NONOWNED = "N" Then
+                Do DELETE_agqend
+            End
+        end
+
+    end
+
+Procedure Definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+procedure update_exclusion
+begin
+access agqgeneral, set agqgeneral:app_no = g_APP_NO, generic
+
+l_remove_form = 0
+while agqgeneral:app_no = g_APP_NO
+        begin
+        if agqgeneral:remove_terrorism_Form = 1 then
+            l_remove_form = 1
+
+        next agqgeneral
+        end
+
+end
+
+Procedure ACCESS_agqend
+Begin
+Access agqend, Set agqend:app_no = g_APP_NO ,
+                   agqend:PREM_NO  = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqend:app_no = g_APP_NO and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+    begin
+    If agqend:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend
+    End
+
+End
+
+Procedure ADD_agqend
+Begin
+Access agqend, Set agqend:app_no = g_APP_NO ,
+                   agqend:PREM_NO  = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+L_SUB_CODE = 0
+while agqend:app_no = g_APP_NO and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+        begin
+        L_SUB_CODE = agqend:SUB_CODE
+
+        Next agqend
+        End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access agqgeneral_ALIAS, Set agqgeneral_ALIAS:app_no = g_APP_NO,
+                             agqgeneral_ALIAS:PREM_NO  = G_PREM_NO,
+                             agqgeneral_ALIAS:BUILD_NO = G_BUILD_NO, Generic
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqgeneral:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqgeneral:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral:line_of_business,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqgeneral:COMPANY_ID and
+      SFSOPTEND:STATE            = agqgeneral:state and
+      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral:line_of_business and
+      SFSOPTEND:CODE             = L_CODE
+        begin
+        If (agqgeneral:EFF_DATE >= SFSOPTEND:EFF_DATE and
+           (agqgeneral:eff_date <= sfsoptend:exp_date or
+           sfsoptend:exp_date = 0)) Then
+            Begin
+            L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+            L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+            End
+
+        Next SFSOPTEND
+        End
+
+if l_form_edition <> "" then
+    begin
+    Add agqend
+        Begin
+        agqend:app_no             =       g_APP_NO
+        agqend:PREM_NO              =       0
+        agqend:BUILD_NO             =       0
+        agqend:SUB_CODE             =       L_SUB_CODE
+        agqend:CODE                 =       L_CODE
+        agqend:FORM_EDITION         =       L_FORM_EDITION
+        agqend:DESCRIPTION          =       L_DESCRIPTION
+        agqend:PREMIUM              =       0
+        agqend:lob_end_code         =       "X"
+        end
+    End
+
+End
+
+Procedure DELETE_agqend
+Begin
+Access agqend, Set agqend:app_no = g_APP_NO ,
+                   agqend:PREM_NO  = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+while agqend:app_no = g_APP_NO and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+        begin
+        If agqend:CODE = L_CODE Then
+            Delete agqend
+
+        Next agqend
+        End
+
+End
+
+End
+
+

@@ -1,0 +1,1336 @@
+%%                 
+Screen
+        Name = "agtmt101a";   --Search for Previous Entered Quotes
+        type = "detail";
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="100X25";
+        domain="dummy";
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        global string g_initial_screen[50];
+
+        local string l_system_id[15],
+                     l_enter[1],
+                     l_NAME_FIELD_SEARCH[50],
+                     l_company_id[10],
+                     l_screen_to_call[20],
+                     l_line_of_business_desc[30],
+                     l_username[15];
+
+        local unsigned ascii number l_application[11],
+                                    l_app_no_checkbox[1],
+                                    l_app_no[11],
+                                    l_line_of_business[4],
+                                    l_agent_no[4],
+                                    l_insured_checkbox[1];
+
+        local string l_user_id[15] = USERNAME;
+
+        Include "stdkeys7.inc"
+        !PageUp=scrollup
+        !PageDown=scrolldown
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+        reaccess;
+        "add" sequence "new"      tagged add_fn ;
+        "new" add/hidden/update="NO" ;
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden/update="NO" ;
+
+        "display_screen" continue begin
+                                    if l_app_no = 0 then
+                                      {
+                                        access agent_search,
+                                           set agent_search:app_no = "",generic
+                                        l_app_no = agent_search:app_no
+                                      }
+                                    g_app_no = l_app_no
+                                    function = "popup"
+                                  end;
+        "popup"  display/noreturn l_screen_to_call ;
+        "press_enter" continue begin
+
+                                 if fieldtext <> "" then     --if they do not hit enter you need to assign the value enter to the varible
+                                   {
+                                     if val(fieldtext) <> 0 then  --means it is a number
+                                       {
+                                         l_app_no = val(fieldtext)
+                                       }
+                                     else
+                                       {
+                                         l_NAME_FIELD_SEARCH = fieldtext
+                                       }
+                                   }
+                                 do display_correct_info(l_app_no,l_line_of_business,l_NAME_FIELD_SEARCH)
+                                 if l_app_no <> 0 then
+                                   {
+                                     if sfsdefault:company_id = "GGUND" then
+                                         l_screen_to_call = "agtmt102a"
+                                     else
+                                         l_screen_to_call = "agtmt102"
+                                     function = "display_screen"
+                                     abort()
+                                   }
+                                 else
+                                   if l_line_of_business <> 0 then
+                                     {
+                                     if sfsdefault:company_id = "GGUND" then
+                                         l_screen_to_call = "agtmt102a"
+                                     else
+                                         l_screen_to_call = "agtmt102"
+                                       function = "display_screen"
+                                       abort()
+                                     }
+                                   else
+                                     if l_NAME_FIELD_SEARCH <> "" then
+                                       {
+                                       if sfsdefault:company_id = "GGUND" then
+                                           l_screen_to_call = "agtmt102a"
+                                       else
+                                           l_screen_to_call = "agtmt102"
+                                         function = "display_screen"
+                                         abort()
+                                       }
+                              END;
+        Include "stdfunc7.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                               "REMOVE_SCREEN" {
+                                                 function = "exit" abort ()
+                                               }
+                             }
+        "clear_search_result"  {
+                              l_line_of_business = 0
+                              l_line_of_business_desc = ""
+                              l_app_no_checkbox = 0
+                              l_app_no = 0
+                              l_NAME_FIELD_SEARCH = ""
+                              l_insured_checkbox = 0
+                              proc ("cli /software/shells/agent_search.mk")/noconsole
+                              function = "REACCESS"
+                              abort()
+                            }
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+  postevent("agtmt101a","clear_search_result")
+
+l_username = username
+
+access sfsdefault,
+   set sfsdefault:sfs_code = "SFS", generic
+
+l_company_id = sfsdefault:company_id
+l_line_of_business = 0;
+
+access sfsemail,
+   set sfsemail:company_id = l_company_id,
+       sfsemail:user_id    = l_username, generic
+
+l_agent_no = sfsemail:agent_no
+
+access agqname,
+   set agqname:app_no = "", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(farmers_fn)
+    hide(lebins_fn)
+    hide(ggund_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    hide(ggund_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    hide(ggund_fn)
+    end
+else
+if sfsdefault:company_id one of "GGUND" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    hide(lebins_fn)
+    end
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    Transparent = False
+    backgroundcolor = "#ADD8E6"
+    scrollbarpolicy = asneeded
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+   Panel at 1,1 to 2,100 tagged ficof_fn
+     Properties
+        {
+        layouttype = screen
+        }
+    {
+      components
+          guidetext at 1,1 to 2,40
+               properties
+                 {
+                   iconname = "qp_logo.gif"
+                 }
+          guidetext at 1,83 to 2,100
+               properties
+                 {
+                   iconname = "ficof_logo.gif"
+                 }
+
+    }
+
+   Panel at 1,1 to 2,100 tagged lebins_fn
+     Properties
+        {
+        layouttype = screen
+        }
+    {
+      components
+          guidetext at 1,1 to 2,40
+               properties
+                 {
+                   iconname = "qp_logo.gif"
+                 }
+/*          guidetext at 1,83 to 2,100
+               properties
+                 {
+                   iconname = "ficof_logo.gif"
+                 }*/
+
+    }
+
+   Panel at 1,1 to 2,100 tagged ggund_fn
+     Properties
+        {
+        layouttype = screen
+        }
+    {
+      components
+          guidetext at 1,1 to 2,40
+               properties
+                 {
+                   iconname = "qp_logo.gif"
+                 }
+/*          guidetext at 1,83 to 2,100
+               properties
+                 {
+                   iconname = "ficof_logo.gif"
+                 }*/
+
+    }
+
+   Panel at 1,1 to 2,100 tagged farmers_fn
+     Properties
+        {
+        layouttype = screen
+        }
+    {
+      components
+          guidetext at 1,1 to 2,40
+               properties
+                 {
+                   iconname = "qp_logo.gif"
+                 }
+          guidetext at 1,83 to 2,100
+               properties
+                 {
+                   iconname = "salem_logo.gif"
+                 }
+
+    }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        scrollbarpolicy=asneeded
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Find A Proposal: Search Criteria... "
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+}
+
+  Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_printscreen.gif"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+   Panel at 6.45,91
+       Properties
+          {
+             layouttype = column
+           }
+      {
+        Components
+          guidetext to 1,1
+            properties
+              {
+                text = "agtmt101a.sd"
+                fontsize = 9
+              }
+      }
+
+
+   panel at 7,1 to 8,100
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 10
+           transparent = False
+           Backgroundcolor = "black"
+         }
+     }
+
+
+
+
+
+Panel at 10,10 to 20,60
+           Properties {
+                        LayoutType = screen
+                      }
+                   {
+                     Components
+                        guidetext at 1, 1  tagged t_view5
+                             properties
+                               {
+                                 text = "To search by"
+                                 fontsize = 14
+                                 fontstyle = Plain
+                                 fontname = "arial"
+                               }
+
+                        guidetext at 1,12 tagged t_view6
+                             properties
+                               {
+                                 text = "Proposal Number. . ."
+                                 fontsize = 14
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+
+                        guidetext at 2,10  tagged t_view8
+                             properties
+                               {
+                                 text = "Enter the proposal number here:"
+                                 fontsize = 14
+                                 fontstyle = plain
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+
+                        guidetext at 4, 1  tagged t_view9
+                             properties
+                               {
+                                 text = "To search by"
+                                 fontsize = 14
+                                 fontstyle = Plain
+                                 fontname = "arial"
+                               }
+
+                        guidetext at 4,12 tagged t_view10
+                             properties
+                               {
+                                 text = "Applicant's Name. . ."
+                                 fontsize = 14
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+
+
+                        guidetext at 5,10  tagged t_view12
+                             properties
+                               {
+                                 text = "Enter any part of applicant's name here:"
+                                 fontsize = 14
+                                 fontstyle = plain
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+
+                        guidetext at 7, 1  tagged t_view9
+                             properties
+                               {
+                                 text = "To search by"
+                                 fontsize = 14
+                                 fontstyle = Plain
+                                 fontname = "arial"
+                               }
+
+                        guidetext at 7,12 tagged t_view10
+                             properties
+                               {
+                                 text = "Line of Business. . ."
+                                 fontsize = 14
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+
+                        guidetext at 8,10  tagged t_view12
+                             properties
+                               {
+                                 text = "Select from the drop down list:"
+                                 fontsize = 14
+                                 fontstyle = plain
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                   }
+
+Panel at 10, 55 to 20, 95 tagged t_quote_search_field
+{
+%%
+
+_______________
+
+
+__________________________________________________
+
+
+_____________________
+
+
+____
+
+%%
+
+Components
+
+Fields
+  201  l_app_no ;
+  501  l_NAME_FIELD_SEARCH
+       hide if l_app_no <> 0 ;
+  801  BEGIN
+         Access SFSLINE,
+            Set SFSLINE:COMPANY_ID       = l_company_id, approximate
+       END
+       l_line_of_business_desc
+       If ((SFSLINE:DESCRIPTION = "" and
+           l_company_id <> "FLEMINGTON") or
+          (l_line_of_business_desc = "" and
+          l_company_id <> "FLEMINGTON")) Then
+       Error 1227
+       l_line_of_business = sfsline:line_of_business
+       hide if sfsemail:agent_no <> 0 or l_NAME_FIELD_SEARCH <> "" or l_app_no <> 0
+       Activehelp If SFSLINE:USE = "Y" Then
+                     SFSLINE:LINE_OF_BUSINESS
+                  Else
+                     NULL/width=5/heading="Line",
+
+                  If SFSLINE:USE = "Y" Then
+                     SFSLINE:DESCRIPTION
+                  Else
+                     NULL/width=30/heading="Description"/returntofield;
+  801  BEGIN
+         Access SFSLINE,
+            Set SFSLINE:COMPANY_ID   = l_company_id, approximate
+
+
+         access sfsagtlob,
+            set sfsagtlob:company_id = l_company_id,
+                sfsagtlob:agent_no   = l_agent_no, approximate
+       END
+       l_line_of_business_desc
+            If ((SFSLINE:DESCRIPTION = "" and
+                 l_company_id <> "FLEMINGTON") or
+                (l_line_of_business_desc = "" and
+                 l_company_id <> "FLEMINGTON")) Then
+       Error 1227
+       l_line_of_business = sfsagtlob:line_of_business
+       hide if sfsemail:agent_no = 0 or l_NAME_FIELD_SEARCH <> "" or l_app_no <> 0
+       Activehelp if sfsagtlob:agent_no = l_agent_no then
+                     SFSagtlob:LINE_OF_BUSINESS
+                  else
+                     NULL/width=5/heading="Line",
+                  if sfsagtlob:agent_no = l_agent_no then
+                     SFSagtlob:lob_DESCRIPTION
+                  else
+                    NULL/width=30/heading="Description"/returntofield;
+
+}
+
+  Panel at 19,20 to 21,100
+           Properties {
+                        LayoutType = screen
+                      }
+                   {
+                     Components
+                        guidetext at 2,10 tagged t_view2
+                             properties
+                               {
+                                 text = "Select"
+                                 fontsize = 14
+                                 fontstyle = Plain
+                                 fontname = "arial"
+                               }
+
+                        guidetext at 2,16 tagged t_view3
+                             properties
+                               {
+                                 text = '"View Search Results"'
+                                 fontsize = 14
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+
+                        guidetext at 2,37 tagged t_view4
+                             properties
+                               {
+                                 text = "below:"
+                                 fontsize = 14
+                                 fontstyle = Plain
+                                 fontname = "arial"
+                               }
+                   }
+
+Panel at 23,1 to 23,40 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+        Button at 1,10   tagged back_fn
+        Properties {
+                Iconname = "btn_bactomainscreen.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+Panel at 23,40 to 23,80  tagged view_button_panel
+    Properties
+      {
+        layouttype = screen
+      }
+    {
+      Components
+        Button at 1,15
+          properties
+            {
+              Iconname = "view_searchresults.bmp"
+
+            }
+          Events  {
+                    Action
+                      {
+                        function = "press_enter" accept()
+                        abort()
+                      }
+                  }
+    }
+
+}
+
+Procedure Definition
+
+procedure back_a_screen
+
+begin
+  function = "exit" abort ()
+  display screen "agtmt001"
+end
+
+
+Procedure display_correct_info(number l_app_no, number l_line_of_business, string l_search_str)
+BEGIN
+local file agent_search_a = alias for agent_search;
+local unsigned ascii number l_lob[4];
+
+if l_app_no not one of 0 then
+    {
+    access agqpersonal,
+       set agqpersonal:app_no = l_app_no, generic
+
+    access agqgeneral,
+       set agqgeneral:app_no = l_app_no, generic
+
+    access agqworkerscomp1,
+       set agqworkerscomp1:app_no = l_app_no, generic
+
+    access agqvehicle,
+       set agqvehicle:app_no = l_app_no, generic
+
+    access agqcontractor,
+       set agqcontractor:app_no = l_app_no, generic
+
+    access agqname,
+       set agqname:app_no = l_app_no, generic
+
+    Access SFSEMAIL,
+       Set SFSEMAIL:COMPANY_ID = SFSDEFAULT:COMPANY_ID,
+           SFSEMAIL:USER_ID    = L_USER_ID, Generic
+
+    if agqname:line_of_business = 99 then
+        l_lob = 99
+    else
+    if agqpersonal:app_no one of l_app_no then
+      {
+        l_lob = agqpersonal:line_of_business
+      }
+    else
+      if agqgeneral:app_no one of l_app_no then
+        {
+          l_lob = agqgeneral:line_of_business
+        }
+    else
+      if agqworkerscomp1:app_no one of l_app_no then
+        {
+          l_lob = agqworkerscomp1:line_of_business
+        }
+    else
+      if agqvehicle:app_no one of l_app_no then
+        {
+          l_lob = agqvehicle:line_of_business
+        }
+    else
+    if agqcontractor:app_no one of l_app_no then
+      {
+        l_lob = agqcontractor:line_of_business
+      }
+    else
+        l_lob = agqname:line_of_business
+
+    Access SFSLINE,
+       Set SFSLINE:COMPANY_ID       = l_COMPANY_ID,
+           SFSLINE:LINE_OF_BUSINESS = l_lob,
+           SFSLINE:LOB_SUBLINE      = "00", exact
+
+    if agqname:line_of_business one of 99 then
+        begin
+        if (sfsemail:agent_no = 0 and
+           agqname:agent_no <> sfsemail:agent_no) or
+           (sfsemail:agent_no <> 0 and
+           agqname:agent_no = sfsemail:agent_no) then
+            {
+            if agent_search:app_no = l_app_no then
+                delete agent_search
+
+            add agent_search
+                {
+                agent_search:app_no             = agqname:app_no
+                agent_search:line_of_business   = agqname:line_of_business
+                agent_search:NAME_FIELD_SEARCH  = agqname:name[1]
+                agent_search:agent_no           = agqname:agent_no
+                }
+            }
+        end
+    else
+        begin
+        if SFSLINE:LOB_CODE One Of "HOME","DWELLING","MOBILE" then
+            {
+        access agent_search,
+           set agent_search:app_no = l_app_no, exact
+
+        access agqpersonal,
+           set agqpersonal:app_no = l_app_no, generic
+
+        access sfsagent, set sfsagent:company_id = agqpersonal:company_id,
+                             sfsagent:agent_no   = agqpersonal:agent_no, generic
+
+        if ((sfsemail:agent_no = 0 and
+           agqpersonal:agent_no <> sfsemail:agent_no) or
+           (sfsemail:agent_no <> 0 and
+           agqpersonal:agent_no = sfsemail:agent_no) or
+           (sfsemail:agent_no <> 0 and
+           sfsagent:sub_producer_for = sfsemail:agent_no)) then
+          {
+          if agent_search:app_no = l_app_no then
+              delete agent_search
+
+            add agent_search
+              {
+                agent_search:app_no             = agqpersonal:app_no
+                agent_search:line_of_business   = agqpersonal:line_of_business
+                agent_search:NAME_FIELD_SEARCH  = agqpersonal:business_name[1]
+                agent_search:agent_no           = agqpersonal:agent_no
+              }
+          }
+      }
+    else
+    if SFSLINE:LOB_CODE One Of "BOP" then
+      {
+        access agent_search,
+           set agent_search:app_no = l_app_no, exact
+
+        access agqgeneral,
+               set agqgeneral:app_no = l_app_no, generic
+
+        if (sfsemail:agent_no = 0 and
+           agqgeneral:agent_no <> sfsemail:agent_no) or
+           (sfsemail:agent_no <> 0 and
+           agqgeneral:agent_no = sfsemail:agent_no) then
+          {
+          if agent_search:app_no = l_app_no then
+              delete agent_search
+
+            add agent_search
+              {
+                agent_search:app_no             = agqgeneral:app_no
+                agent_search:line_of_business   = agqgeneral:line_of_business
+                agent_search:NAME_FIELD_SEARCH  = agqgeneral:business_name[1]
+                agent_search:agent_no           = agqgeneral:agent_no
+              }
+          }
+      }
+    else
+    if SFSLINE:LOB_CODE One Of "PROPERTY", "LIABILITY", "SMP", "CINLAND", "ARTISAN" then
+      {
+        access agent_search,
+           set agent_search:app_no = l_app_no, exact
+
+        access agqname,
+               set agqname:app_no = l_app_no, generic
+
+        if (sfsemail:agent_no = 0 or
+           (sfsemail:agent_no <> 0 and
+           agqname:agent_no = sfsemail:agent_no)) then
+          {
+          if agent_search:app_no = l_app_no then
+              delete agent_search
+
+            add agent_search
+              {
+                agent_search:app_no             = agqname:app_no
+                agent_search:line_of_business   = agqname:line_of_business
+                agent_search:NAME_FIELD_SEARCH  = agqname:name[1]
+                agent_search:agent_no           = agqname:agent_no
+              }
+          }
+      }
+    else
+    if SFSLINE:LOB_CODE One Of "WORK" then
+      {
+        access agent_search,
+           set agent_search:app_no = l_app_no, exact
+
+        access agqworkerscomp1,
+               set agqworkerscomp1:app_no = l_app_no, generic
+
+        if (sfsemail:agent_no = 0 and
+           agqworkerscomp1:agent_no <> sfsemail:agent_no) or
+           (sfsemail:agent_no <> 0 and
+           agqworkerscomp1:agent_no = sfsemail:agent_no) then
+          {
+          if agent_search:app_no = l_app_no then
+              delete agent_search
+
+            add agent_search
+              {
+                agent_search:app_no             = agqworkerscomp1:app_no
+                agent_search:line_of_business   = agqworkerscomp1:line_of_business
+                agent_search:NAME_FIELD_SEARCH  = agqworkerscomp1:business_name[1]
+                agent_search:agent_no           = agqworkerscomp1:agent_no
+              }
+          }
+      }
+    else
+    if SFSLINE:LOB_CODE One Of "AUTO" then
+        {
+        access agent_search,
+              set agent_search:app_no = l_app_no, exact
+
+        access agqvehicle,
+               set agqvehicle:app_no = l_app_no, generic
+
+        if (sfsemail:agent_no = 0 and
+           agqvehicle:agent_no <> sfsemail:agent_no) or
+           (sfsemail:agent_no <> 0 and
+           agqvehicle:agent_no = sfsemail:agent_no) then
+            {
+          if agent_search:app_no = l_app_no then
+              delete agent_search
+
+            add agent_search
+                {
+                agent_search:app_no             = agqvehicle:app_no
+                agent_search:line_of_business   = agqvehicle:line_of_business
+                agent_search:NAME_FIELD_SEARCH  = agqvehicle:business_name[1]
+                agent_search:agent_no           = agqvehicle:agent_no
+                }
+            }
+        }
+    else
+    if SFSLINE:LOB_CODE One Of "SCP" then
+      {
+        access agent_search,
+           set agent_search:app_no = l_app_no, exact
+
+        access agqcontractor,
+               set agqcontractor:app_no = l_app_no, generic
+
+        if (sfsemail:agent_no = 0 and
+           agqcontractor:agent_no <> sfsemail:agent_no) or
+           (sfsemail:agent_no <> 0 and
+           agqcontractor:agent_no = sfsemail:agent_no) then
+          {
+          if agent_search:app_no = l_app_no then
+              delete agent_search
+
+            add agent_search
+              {
+                agent_search:app_no             = agqcontractor:app_no
+                agent_search:line_of_business   = agqcontractor:line_of_business
+                agent_search:NAME_FIELD_SEARCH  = agqcontractor:business_name[1]
+                agent_search:agent_no           = agqcontractor:agent_no
+              }
+          }
+      }
+    end
+  }
+else
+if l_line_of_business not one of 0 then
+  {
+    Access SFSLINE,
+           Set SFSLINE:COMPANY_ID       = l_COMPANY_ID,
+               SFSLINE:LINE_OF_BUSINESS = l_line_of_business,
+               SFSLINE:LOB_SUBLINE      = "00", exact
+
+    if SFSLINE:LOB_CODE One Of "HOME","DWELLING","MOBILE" then
+        {
+        l_app_no = 0
+        access agqpersonal,
+           set agqpersonal:app_no = l_app_no, approximate
+
+        while agqpersonal:errornumber <> 4026
+            {
+            if agqpersonal:line_of_business one of l_line_of_business then
+                {
+                access agent_search_a,
+                   set agent_search_a:app_no = agqpersonal:app_no,exact  --, using fourth index,  exact
+
+                access sfsagent, set sfsagent:company_id = agqpersonal:company_id,
+                                     sfsagent:agent_no   = agqpersonal:agent_no, generic
+
+                if ((sfsemail:agent_no = 0 and
+                   agqpersonal:agent_no <> sfsemail:agent_no) or
+                   (sfsemail:agent_no <> 0 and
+                   agqpersonal:agent_no = sfsemail:agent_no) or
+                   (sfsemail:agent_no <> 0 and
+                   sfsagent:sub_producer_for = sfsemail:agent_no)) then
+                    {
+                    if agent_search_a:app_no <> agqpersonal:app_no and
+                       agqpersonal:app_no <> 0 then
+                        {
+                        if agent_search:app_no = l_app_no then
+                            delete agent_search
+
+                        add agent_search_a
+                            {
+                            agent_search_a:app_no             = agqpersonal:app_no
+                            agent_search_a:line_of_business   = agqpersonal:line_of_business
+                            agent_search_a:NAME_FIELD_SEARCH  = agqpersonal:business_name[1]
+                            agent_search_a:agent_no           = agqpersonal:agent_no
+                            }
+                        }
+                    }
+                }
+
+            next agqpersonal
+            }
+        }
+    else
+    if SFSLINE:LOB_CODE One Of "BOP" then
+        {
+        access agqgeneral,
+             set agqgeneral:app_no = l_app_no, approximate
+
+        while agqgeneral:errornumber <> 4026
+            {
+            if agqgeneral:line_of_business one of l_line_of_business then
+                {
+                access agent_search_a,
+                     set agent_search_a:app_no = agqgeneral:app_no,exact  --, using fourth index,  exact
+
+                if (sfsemail:agent_no = 0 and
+                   agqgeneral:agent_no <> sfsemail:agent_no) or
+                   (sfsemail:agent_no <> 0 and
+                   agqgeneral:agent_no = sfsemail:agent_no) then
+                    {
+                    if agent_search_a:app_no <> agqgeneral:app_no and
+                       agqgeneral:app_no <> 0 then
+                        {
+                        if agent_search_a:app_no = agqgeneral:app_no then
+                            delete agent_search_a
+
+                        add agent_search_a
+                            {
+                            agent_search_a:app_no             = agqgeneral:app_no
+                            agent_search_a:line_of_business   = agqgeneral:line_of_business
+                            agent_search_a:NAME_FIELD_SEARCH  = agqgeneral:business_name[1]
+                            agent_search_a:agent_no           = agqgeneral:agent_no
+                            }
+                        }
+                    }
+                }
+            next agqgeneral
+            }
+        }
+    else
+    if SFSLINE:LOB_CODE One Of "SMP", "PROPERTY", "LIABILITY", "CINLAND", "ARTISAN", "CPORTFOLIO" then
+        {
+        access agqname,
+             set agqname:app_no = l_app_no, approximate
+
+        while agqname:errornumber <> 4026
+            {
+            if agqname:line_of_business one of l_line_of_business then
+                {
+                access agent_search_a,
+                     set agent_search_a:app_no = agqname:app_no,exact  --, using fourth index,  exact
+
+                if (sfsemail:agent_no = 0 and
+                   agqname:agent_no <> sfsemail:agent_no) or
+                   (sfsemail:agent_no <> 0 and
+                   agqname:agent_no = sfsemail:agent_no) then
+                    {
+                    if agent_search_a:app_no <> agqname:app_no and
+                       agqname:app_no <> 0 then
+                        {
+                        if agent_search_a:app_no = agqname:app_no then
+                            delete agent_search_a
+
+                        add agent_search_a
+                            {
+                            agent_search_a:app_no             = agqname:app_no
+                            agent_search_a:line_of_business   = agqname:line_of_business
+                            agent_search_a:NAME_FIELD_SEARCH  = agqname:name[1]
+                            agent_search_a:agent_no           = agqname:agent_no
+                            }
+                        }
+                    }
+                }
+            next agqname
+            }
+        }
+    else
+    if SFSLINE:LOB_CODE One Of "WORK" then
+        {
+        access agqworkerscomp1,
+             set agqworkerscomp1:app_no = l_app_no, approximate
+
+        while agqworkerscomp1:errornumber <> 4026
+            {
+            if agqworkerscomp1:line_of_business one of l_line_of_business then
+                {
+                access agent_search_a,
+                     set agent_search_a:app_no = agqworkerscomp1:app_no,exact  --, using fourth index,  exact
+
+                if (sfsemail:agent_no = 0 and
+                   agqworkerscomp1:agent_no <> sfsemail:agent_no) or
+                   (sfsemail:agent_no <> 0 and
+                   agqworkerscomp1:agent_no = sfsemail:agent_no) then
+                    {
+                    if agent_search_a:app_no <> agqworkerscomp1:app_no and
+                       agqworkerscomp1:app_no <> 0 then
+                        {
+                        if agent_search_a:app_no = agqworkerscomp1:app_no then
+                            delete agent_search_a
+
+                        add agent_search_a
+                            {
+                            agent_search_a:app_no             = agqworkerscomp1:app_no
+                            agent_search_a:line_of_business   = agqworkerscomp1:line_of_business
+                            agent_search_a:NAME_FIELD_SEARCH  = agqworkerscomp1:business_name[1]
+                            agent_search_a:agent_no           = agqworkerscomp1:agent_no
+                            }
+                        }
+                    }
+                }
+            next agqworkerscomp1
+            }
+        }
+    else
+    if SFSLINE:LOB_CODE One Of "AUTO" then
+        {
+        access agqvehicle,
+             set agqvehicle:app_no = l_app_no, approximate
+
+        while agqvehicle:errornumber <> 4026
+            {
+            if agqvehicle:line_of_business one of l_line_of_business then
+                {
+                access agent_search_a,
+                     set agent_search_a:app_no = agqvehicle:app_no,exact  --, using fourth index,  exact
+
+                if (sfsemail:agent_no = 0 and
+                   agqvehicle:agent_no <> sfsemail:agent_no) or
+                   (sfsemail:agent_no <> 0 and
+                   agqvehicle:agent_no = sfsemail:agent_no) then
+                    {
+                    if agent_search_a:app_no <> agqvehicle:app_no and
+                       agqvehicle:app_no <> 0 then
+                        {
+                        if agent_search_a:app_no = agqvehicle:app_no then
+                            delete agent_search_a
+
+                        add agent_search_a
+                            {
+                            agent_search_a:app_no             = agqvehicle:app_no
+                            agent_search_a:line_of_business   = agqvehicle:line_of_business
+                            agent_search_a:NAME_FIELD_SEARCH  = agqvehicle:business_name[1]
+                            agent_search_a:agent_no           = agqvehicle:agent_no
+                            }
+                        }
+                    }
+                }
+            next agqvehicle
+            }
+        }
+    else
+    if SFSLINE:LOB_CODE One Of "SCP" then
+        {
+        access agqcontractor,
+             set agqcontractor:app_no = l_app_no, approximate
+
+        while agqcontractor:errornumber <> 4026
+            {
+            if agqcontractor:line_of_business one of l_line_of_business then
+                {
+                access agent_search_a,
+                     set agent_search_a:app_no = agqcontractor:app_no,exact  --, using fourth index,  exact
+
+                if (sfsemail:agent_no = 0 and
+                   agqcontractor:agent_no <> sfsemail:agent_no) or
+                   (sfsemail:agent_no <> 0 and
+                   agqcontractor:agent_no = sfsemail:agent_no) then
+                    {
+                    if agent_search_a:app_no <> agqcontractor:app_no and
+                       agqcontractor:app_no <> 0 then
+                        {
+                        if agent_search_a:app_no = agqcontractor:app_no then
+                            delete agent_search_a
+
+                        add agent_search_a
+                            {
+                            agent_search_a:app_no             = agqcontractor:app_no
+                            agent_search_a:line_of_business   = agqcontractor:line_of_business
+                            agent_search_a:NAME_FIELD_SEARCH  = agqcontractor:business_name[1]
+                            agent_search_a:agent_no           = agqcontractor:agent_no
+                            }
+                        }
+                    }
+                }
+            next agqcontractor
+            }
+        }
+    else
+    if SFSLINE:LOB_CODE One Of "CPORTFOLIO" then
+        {
+         access agent_search_a,
+                set agent_search_a:app_no = agqcontractor:app_no,exact  --, using fourth index,  exact
+
+         if (sfsemail:agent_no = 0 and
+            agqname:agent_no <> sfsemail:agent_no) or
+            (sfsemail:agent_no <> 0 and
+            agqname:agent_no = sfsemail:agent_no) then
+             {
+             if agent_search_a:app_no <> agqname:app_no and
+                agqname:app_no <> 0 then
+                 {
+                 if agent_search_a:app_no = agqname:app_no then
+                     delete agent_search_a
+
+                 add agent_search_a
+                     {
+                     agent_search_a:app_no             = agqname:app_no
+                     agent_search_a:line_of_business   = agqname:line_of_business
+                     agent_search_a:NAME_FIELD_SEARCH  = agqname:name[1]
+                     agent_search_a:agent_no           = agqname:agent_no
+                     }
+                  }
+             }
+        }
+    }
+else
+if l_search_str <> "" then
+  {
+    l_app_no = 0
+    access agent_search,
+       set agent_search:NAME_FIELD_SEARCH  = "", generic, using third index
+
+    access agqname, set agqname:app_no = l_app_no, approximate
+
+    while agqname:app_no <> 0
+        {
+        if pos(trun(lowercase(l_search_str)),lowercase(agqname:name[1])) > 0 then
+            {
+            access agent_search_a,
+                set agent_search_a:app_no = agqname:app_no, exact
+
+            if (sfsemail:agent_no = 0 and
+               agqname:agent_no <> sfsemail:agent_no) or
+               (sfsemail:agent_no <> 0 and
+               agqname:agent_no = sfsemail:agent_no) then
+                {
+                if agent_search_a:app_no <> agqname:app_no and
+                   agqname:app_no <> 0 and
+                   agqname:line_of_business one of 2, 6, 8, 11, 13, 99 then
+                    {
+                    add agent_search
+                        {
+                        agent_search:app_no             = agqname:app_no
+                        agent_search:line_of_business   = agqname:line_of_business
+                        agent_search:NAME_FIELD_SEARCH  = agqname:name[1]
+                        agent_search:agent_no           = agqname:agent_no
+                        }
+                    }
+                }
+            }
+        next agqname
+        }
+
+    access agqgeneral,
+       set agqgeneral:app_no = l_app_no, approximate
+
+    while agqgeneral:app_no <> 0
+      {
+        if pos(trun(lowercase(l_search_str)),lowercase(agqgeneral:business_name[1])) > 0 then
+            {
+            access agent_search_a,
+                set agent_search_a:app_no = agqgeneral:app_no, exact
+
+            if (sfsemail:agent_no = 0 and
+               agqgeneral:agent_no <> sfsemail:agent_no) or
+               (sfsemail:agent_no <> 0 and
+               agqgeneral:agent_no = sfsemail:agent_no) then
+                {
+                if agent_search_a:app_no <> agqgeneral:app_no and agqgeneral:app_no <> 0 then
+                    {
+                    add agent_search
+                        {
+                        agent_search:app_no             = agqgeneral:app_no
+                        agent_search:line_of_business   = agqgeneral:line_of_business
+                        agent_search:NAME_FIELD_SEARCH  = agqgeneral:business_name[1]
+                        agent_search:agent_no           = agqgeneral:agent_no
+                        }
+                    }
+                }
+            }
+        next agqgeneral
+      }
+
+    access agqname, set agqname:app_no = l_app_no, approximate
+
+    while agqname:app_no <> 0
+      {
+        if pos(trun(lowercase(l_search_str)),lowercase(agqname:name[1])) > 0 then
+            {
+            access agent_search_a,
+                set agent_search_a:app_no = agqname:app_no, exact
+
+            if (sfsemail:agent_no = 0 and
+               agqname:agent_no <> sfsemail:agent_no) or
+               (sfsemail:agent_no <> 0 and
+               agqname:agent_no = sfsemail:agent_no) then
+                {
+                if agent_search_a:app_no <> agqname:app_no and agqname:app_no <> 0 then
+                    {
+                    add agent_search
+                        {
+                        agent_search:app_no             = agqname:app_no
+                        agent_search:line_of_business   = agqname:line_of_business
+                        agent_search:NAME_FIELD_SEARCH  = agqname:name[1]
+                        agent_search:agent_no           = agqname:agent_no
+                        }
+                    }
+                }
+            }
+        next agqname
+      }
+
+    access agqworkerscomp1,
+       set agqworkerscomp1:app_no = l_app_no, approximate
+
+    while agqworkerscomp1:app_no <> 0
+      {
+        if pos(trun(lowercase(l_search_str)),lowercase(agqworkerscomp1:business_name[1])) > 0 then
+            {
+            access agent_search_a,
+                set agent_search_a:app_no = agqworkerscomp1:app_no, exact
+
+            if (sfsemail:agent_no = 0 and
+               agqworkerscomp1:agent_no <> sfsemail:agent_no) or
+               (sfsemail:agent_no <> 0 and
+               agqworkerscomp1:agent_no = sfsemail:agent_no) then
+                {
+                if agent_search_a:app_no <> agqworkerscomp1:app_no and agqworkerscomp1:app_no <> 0 then
+                    {
+                    add agent_search
+                        {
+                        agent_search:app_no             = agqworkerscomp1:app_no
+                        agent_search:line_of_business   = agqworkerscomp1:line_of_business
+                        agent_search:NAME_FIELD_SEARCH  = agqworkerscomp1:business_name[1]
+                        agent_search:agent_no           = agqworkerscomp1:agent_no
+                        }
+                    }
+                }
+            }
+        next agqworkerscomp1
+      }
+
+    access agqpersonal,
+        set agqpersonal:app_no = l_app_no, approximate
+
+    while agqpersonal:app_no <> 0
+        {
+        if pos(trun(lowercase(l_search_str)),lowercase(agqpersonal:business_name[1])) > 0 then
+            {
+            access agent_search_a,
+                 set agent_search_a:app_no = agqpersonal:app_no, exact
+
+            access sfsagent, set sfsagent:company_id = agqpersonal:company_id,
+                                 sfsagent:agent_no   = agqpersonal:agent_no, generic
+
+            if ((sfsemail:agent_no = 0 and
+               agqpersonal:agent_no <> sfsemail:agent_no) or
+               (sfsemail:agent_no <> 0 and
+               agqpersonal:agent_no = sfsemail:agent_no) or
+               (sfsemail:agent_no <> 0 and
+               sfsagent:sub_producer_for = sfsemail:agent_no)) then
+                {
+                if agent_search_a:app_no <> agqpersonal:app_no and agqpersonal:app_no <> 0 then
+                    {
+                    add agent_search
+                        {
+                        agent_search:app_no             = agqpersonal:app_no
+                        agent_search:line_of_business   = agqpersonal:line_of_business
+                        agent_search:NAME_FIELD_SEARCH  = agqpersonal:business_name[1]
+                        agent_search:agent_no           = agqpersonal:agent_no
+                        }
+                    }
+                }
+            }
+
+        next agqpersonal
+        }
+
+    access agqvehicle,
+        set agqvehicle:app_no = l_app_no, approximate
+
+    while agqvehicle:app_no <> 0
+        {
+        if pos(trun(lowercase(l_search_str)),lowercase(agqvehicle:business_name[1])) > 0 then
+            {
+            access agent_search_a,
+                 set agent_search_a:app_no = agqvehicle:app_no, exact
+
+            if (sfsemail:agent_no = 0 and
+               agqvehicle:agent_no <> sfsemail:agent_no) or
+               (sfsemail:agent_no <> 0 and
+               agqvehicle:agent_no = sfsemail:agent_no) then
+                {
+                if agent_search_a:app_no <> agqvehicle:app_no and agqvehicle:app_no <> 0 then
+                    {
+                    add agent_search
+                        {
+                        agent_search:app_no             = agqvehicle:app_no
+                        agent_search:line_of_business   = agqvehicle:line_of_business
+                        agent_search:NAME_FIELD_SEARCH  = agqvehicle:business_name[1]
+                        agent_search:agent_no           = agqvehicle:agent_no
+                        }
+                    }
+                }
+            }
+
+        next agqvehicle
+        }
+
+    access agqcontractor,
+        set agqcontractor:app_no = l_app_no, approximate
+
+    while agqcontractor:app_no <> 0
+        {
+        if pos(trun(lowercase(l_search_str)),lowercase(agqcontractor:business_name[1])) > 0 then
+            {
+            access agent_search_a,
+                 set agent_search_a:app_no = agqcontractor:app_no, exact
+
+            if (sfsemail:agent_no = 0 and
+               agqcontractor:agent_no <> sfsemail:agent_no) or
+               (sfsemail:agent_no <> 0 and
+               agqcontractor:agent_no = sfsemail:agent_no) then
+                {
+                if agent_search_a:app_no <> agqcontractor:app_no and agqcontractor:app_no <> 0 then
+                    {
+                    add agent_search
+                        {
+                        agent_search:app_no             = agqcontractor:app_no
+                        agent_search:line_of_business   = agqcontractor:line_of_business
+                        agent_search:NAME_FIELD_SEARCH  = agqcontractor:business_name[1]
+                        agent_search:agent_no           = agqcontractor:agent_no
+                        }
+                    }
+                }
+            }
+
+        next agqcontractor
+        }
+    }
+
+END
+
+End

@@ -1,0 +1,780 @@
+%%
+Screen
+        Name = "agtmt405a" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "agqdriver" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_vehicle_no[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+        Global Unsigned Ascii Number g_sub_code[4] ;
+
+        global string g_add[1] ;
+
+        local tag l_tag[10] ;
+
+        string l_username[15] ,
+               l_first_location[1]="Y" ,
+               l_first_str_location[12]="",
+               l_last_str_location[12]="",
+               l_server_name[100],
+               l_screen[9],
+               l_prior_accident_violation[1],
+               l_continue_1[3],
+               l_current_web_page[150],
+               l_web_site_address[150],
+               l_vehicle_desc[50],
+               l_company_id[10],
+               l_user_id[15]="",
+               l_str_location[12]="";
+
+        local unsigned ascii number l_found[1]=0,
+                                    l_sub_code[4]=0 ,
+                                    l_no_vehicles[4],
+                                    l_no_locations[2]=0,
+                                    l_agent_no[4],
+                                    l_first_vehicle_no[4]=0,
+                                    l_last_vehicle_no[4]=0 ;
+
+        Access agqdriver,
+           Set agqdriver:app_NO   = G_app_NO,
+               agqdriver:sub_code = g_sub_code, approximate
+
+        Include "stdkeys7.inc"
+
+Style definition
+        include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "redisplay" display/noreturn "agtmt405a" ;
+        add tagged add_fn ;
+
+        Include "stdfunc7.inc"
+        "back" return  tagged close_fn ;
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+screen entry
+l_user_id = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "073webhelp_agtmt405a_scr_driver_info_details.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+l_username = username
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = l_username, generic
+
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+if g_add = "Y" then
+    begin
+    function = "ADD"
+    g_add = "N"
+    end
+
+Access Validation
+If agqdriver:app_NO <> G_app_NO then
+    Error 1000 ;
+
+access agqdriver_alias, set agqdriver_alias:app_no = agqdriver:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_vehicle_no  = 0
+l_last_vehicle_no   = 0
+while agqdriver_alias:app_no = agqdriver:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqdriver_alias:sub_code)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqdriver_alias:sub_code)
+    l_no_locations  = l_no_locations + 1
+
+    next agqdriver_alias
+    end
+
+l_str_location = str(agqdriver:sub_code)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Driver Information..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100 Tagged quote_no
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101     begin
+        if function one of "ADD" then
+            agqdriver:app_no = g_app_no
+        end
+        agqdriver:app_NO/displayonly ;
+
+}
+
+Panel at 6,5 to 6,20 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,20
+          properties
+              {
+              Iconname = "btn_edit_entries.bmp"
+              }
+          Events
+              {
+              Action = change_fn
+              }
+
+    }
+
+Panel at 6,35 to 6,50 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,15
+          properties
+              {
+              Iconname = "btn_delete_drivers_info.bmp"
+              }
+          Events
+              {
+              Action = delete_fn
+              }
+
+    }
+
+Panel at 6,65 to 6,80 tagged accept_fn
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,15
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt405a.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 13,1 to 20,100        tagged farmers_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,30
+             properties
+               {
+                 text = "Relationship To Insured:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 2,1 to 2, 30
+             properties
+               {
+                 text = "Date of Birth:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 3,1 to 3,30  tagged violation_fn
+             properties
+               {
+                 text = "Accidents/Violations:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+             events
+               {
+               mouseclicked
+                   {
+                   l_screen = "agtmt405b"
+                   g_sub_code = agqdriver:sub_code
+                   do display_popup
+                   }
+                }
+
+            guidetext at 4,1 to 4,30
+             properties
+               {
+                 text = "Years Licensed:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 5,1 to 5,30
+             properties
+               {
+                 text = "Driver License State:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 6,1 to 6,30
+             properties
+               {
+                 text = "Driver's License Number:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+         }
+
+Panel at 13,1 to 20,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,30
+             properties
+               {
+                 text = "Relationship To Insured:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 2,1 to 2, 30
+             properties
+               {
+                 text = "Date of Birth:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 3,1 to 3,30  tagged violation_fn
+             properties
+               {
+                 text = "Accidents/Violations:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+             events
+               {
+               mouseclicked
+                   {
+                   l_screen = "agtmt405b"
+                   g_sub_code = agqdriver:sub_code
+                   do display_popup
+                   }
+                }
+            guidetext at 4,1 to 4,30
+             properties
+               {
+                 text = "Years Licensed:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 5,1 to 5,30
+             properties
+               {
+                 text = "Driver License State:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 6,1 to 6,30
+             properties
+               {
+                 text = "Driver's License Number:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+         }
+
+Panel at 9,10 to 12,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+Name: __________________________________________________
+
+                Sex: [R _~~Male   _~~Female  R]
+%%
+components
+
+Fields
+101     BEGIN
+        If FUNCTION = "ADD" Then
+            Do SUBCODE
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "074webhelp_agtmt405a_scr_driver_info_details_tbx_name.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+
+        End
+        agqDRIVER:NAME/tabstop                          Mandatory;
+301     Begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "075webhelp_agtmt405a_scr_driver_info_details_rbn_sex.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        If FUNCTION = "ADD" Then
+            agqDRIVER:SEX = "M"
+        End
+        agqDRIVER:SEX/values="M,F"/default/tabstop ;
+
+}
+
+Panel at 13,32 to 20,100
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+____________________
+__________
+_
+__
+___
+_______________
+%%
+
+components
+
+Fields
+101     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "076webhelp_agtmt405a_scr_driver_info_details_tbx_relation.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        end
+        agqDRIVER:RELATION_TO_INSURED/uppercase/tabstop ;
+201     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "077webhelp_agtmt405a_scr_driver_info_details_tbx_dob.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        end
+        agqDRIVER:BIRTH_DATE/tabstop      mandatory ;
+301     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "078webhelp_agtmt605a_scr_driver_info_details_cbx_accidents.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        end
+        agqDRIVER:ACCIDENT_VIOLATION/tabstop mandatory
+        if agqdriver:accident_violation not one of "N", "Y" then
+            error "Must enter a N or Y" ;
+401     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "079webhelp_agtmt405a_scr_driver_info_details_tbx_yrs_licensed.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        end
+        agqDRIVER:YEARS_LICENSED/tabstop ;
+501     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "080webhelp_agtmt405a_scr_driver_info_details_tbx_license_state.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        if function one of "ADD" then
+            begin
+            switch(agqvehicle:state)
+              case 29 : agqdriver:str_state = "NJ"
+              case 37 : agqdriver:str_state = "PA"
+              case 19 : agqdriver:str_state = "MD"
+              default : agqdriver:str_state = "NJ"
+              end
+            end
+        end
+        agqDRIVER:STR_STATE/default/tabstop     mandatory ;
+601     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "081webhelp_agtmt405a_scr_driver_info_details_tbx_license_num.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        end
+        agqdriver:license_no/tabstop   tagged license_tag mandatory
+        If agqdriver:license_no[15] = "" and
+           sfsdefault:company_id <> "LEBINS" then
+            begin
+            l_continue_1 = dialog("WARNING","warning.bmp","Your entry does not appear to have the correct number of characters, are you sure you enter the correct Driver License number?","Yes","No")
+            if l_continue_1 = "No" then
+                goto(license_tag)
+            end ;
+
+
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+    Components
+        line at 1.25,1 to 1.25,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,1 to 25,100 Tagged ickcon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5   tagged driver_fn
+        Properties {
+                Iconname = "btn_add_drivers_info.bmp"
+                }
+        Events  {
+                action = add_fn
+                }
+        Button at 1,35   tagged previous_fn
+        Properties {
+                Iconname = "btn_previous.bmp"
+                }
+        Events  {
+                action = previous_fn
+                }
+        Button at 1,55   tagged next_fn
+        Properties {
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                action = next_fn
+                }
+        Button at 1,75   tagged nextscreen_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+        }
+
+/*panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.25,1 to 1.25,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }*/
+
+panel at 26,1 to 30,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    enable(close_fn)
+    disable(accept_fn)
+    end
+
+if abort = "YES" then
+    begin
+    enable(close_fn)
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(close_fn)
+    function = "redisplay"
+    end
+
+procedure definition
+
+procedure display_popup
+begin
+display modal screen l_screen
+
+end
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+Procedure SUBCODE
+Begin
+Access agqdriver_ALIAS, Set agqdriver_ALIAS:app_no   = agqdriver:app_no, generic
+
+L_SUB_CODE = 0
+while agqdriver_ALIAS:app_no   = agqdriver:app_no
+    begin
+    L_SUB_CODE = agqdriver_ALIAS:SUB_CODE
+
+    Next agqdriver_ALIAS
+    End
+
+agqdriver:SUB_CODE = L_SUB_CODE + 10
+End
+
+end

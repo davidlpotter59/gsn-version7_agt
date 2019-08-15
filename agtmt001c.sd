@@ -1,0 +1,350 @@
+%%
+Screen
+        Name         = "agtmt001c" ;
+        Type         = "Detail" ;
+        domain       = "Dummy";
+        ScreenSize   = "100x30"
+--        resizeable   = true
+        padcharacter = space;
+--        Statusbar    = False
+        iconline     = 0
+--        Resizable    = True
+
+        global unsigned ascii number g_enhancement[1] ,
+                                     g_form[1] ,
+                                     g_line_of_business[4] ;
+
+        local string l_company_id[10],
+                     l_username[15],
+                     l_screen_to_call[20],
+                     l_search_screen_to_call[20];
+
+        local unsigned ascii number l_line_of_business[4],
+                                    l_state[2],
+                                    l_agent_no[4];
+
+
+Functions
+
+        "func1" display l_screen_to_call ;
+
+        include "stdfunc7.inc"
+
+toolbar definition
+
+screen entry
+access sfsdefault, set sfsdefault:SFS_CODE = "SFS", generic
+
+l_username   = username
+l_company_id = sfsdefault:company_id
+
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if sfsemail:agent_no = 0 then
+    {
+    l_agent_no = 9999
+    }
+else
+    {
+    l_agent_no = sfsemail:agent_no
+    }
+
+if l_company_id = "FLEMINGTON" then
+    hide(farmers_contractors)
+else
+    hide(ficof_contractors)
+
+if sfsemail:agent_no <> 0 and
+   sfsemail:agent_no not one of 9999, 9998 and
+   l_company_id = "FARMERS" then
+    begin
+--    hide(auto)
+    hide(ficof_contractors)
+--    hide(farmers_contractors)
+    end
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = l_agent_no, exact
+
+l_state = sfsagent:state
+
+screen at 1,1 to 30,100  tagged main_screen
+    Properties
+        {
+        Layouttype = screen
+        layoutconstraints = stretch
+        bordercolor = "black"
+        borderwidth=2
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+    {
+
+    panel/hidden
+        {
+        Fields
+            function at 1,1 ;
+
+        }
+
+    panel at 1,1 to 2,100   tagged heading_line
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+
+    }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+        }
+
+    panel at 3,1 to 4,100
+        Properties
+            {
+            LayoutType = screen
+            backgroundcolor = "Grey"
+            transparent = False
+            }
+        {
+        components
+            guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                    {
+                    text = "Commercial Lines..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                    }
+
+        }
+
+    Panel at 6,40 to 7,58 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_back_to_main_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "back"
+                        abort()
+                        }
+                    }
+        }
+
+    panel at 8,1 to 8,100 tagged line_panel_1
+        {
+        Components
+            line at 1,1 to 1,100
+                Properties
+                    {
+                    Linestyle = embossed
+                    Linewidth = 5
+                    Transparent = False
+                    Backgroundcolor = "black"
+                    foregroundcolor = "black"
+                    }
+        }
+
+    Panel at 10,35 to 11,60 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "Salem_bop_button.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 35
+                        else
+                            g_line_of_business = 5
+                        l_line_of_business = 9996
+                        g_enhancement      = 0
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 14,35 to 15,60 tagged auto
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "com_auto_lob15_btn.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 45
+                        else
+                            g_line_of_business = 15
+                        l_line_of_business = 9996
+                        g_enhancement      = 0
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+/*    Panel at 14,55 to 15,80 tagged auto
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_com_auto_lob16.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 46
+                        else
+                            g_line_of_business = 16
+                        l_line_of_business = 9996
+                        g_enhancement      = 0
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }*/
+
+    Panel at 18,35 to 19,60      tagged ficof_contractors
+        Properties
+            {
+            layouttype = column
+           }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "sm_contractor.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 36
+                        else
+                            g_line_of_business = 6
+                        l_line_of_business = 9996
+                        g_enhancement      = 0
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 18,35 to 19,60 tagged farmers_contractors
+        Properties
+            {
+            layouttype = column
+           }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_sm_contractor_salem.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 36
+                        else
+                            g_line_of_business = 6
+                        l_line_of_business = 9996
+                        g_enhancement      = 0
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+}
+
+
+End

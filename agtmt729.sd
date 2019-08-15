@@ -1,0 +1,1925 @@
+%%
+Screen
+        Name = "agtmt729" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "agqname" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+        Global Unsigned Ascii Number g_sub_code[4] ;
+        Global Unsigned Ascii Number g_enhancement[1] ;
+
+        global string g_literal[100] ,
+                      g_answer[1] ;
+
+        local array[13] of tag l_the_tag[15] ,
+                               l_the_count[15];
+
+        local array[13] of string l_literal[100] ,
+                                  l_screen_name[8] ,
+                                  l_answer[1],
+                                  l_view_1[4],
+                                  l_value[1] ,
+                                  l_old_answer[1],
+                                  l_screen_name_2[8] ;
+
+        local array[13] of unsigned ascii number l_view[1],
+                                                 l_highlight[1],
+                                                 l_print_special_edit[1],
+                                                 l_card_dialog[2] ;
+
+        Local String L_SCREEN[8],
+                     L_USER_ID[15] ,
+                     L_NAME[50] ,
+                     l_line_of_business[10],
+                     l_phone_number[15],
+                     l_social_security_number[15],
+                     l_marital_status[15],
+                     l_occupation[50],
+                     l_occupation_1[50],
+                     l_first[1],
+                     l_occupation_2[50],
+                     l_employers_name[50],
+                     l_employers_name_1[50],
+                     l_employers_name_2[50],
+                     l_employers_address_1[50],
+                     l_employers_address_2[50] ,
+                     l_employers_address_3[50],
+                     l_employers_address_4[50] ,
+                     l_contact_uw[10]="Contact UW",
+                     l_ss_1[15],
+                     l_ss_2[15],
+                     l_cr_1[15],
+                     l_cr_2[15],
+                     l_entity[50],
+                     l_busop[50],
+                     l_contact[50],
+                     l_owner[15],
+                     l_continue[100],
+                     l_rev_name_1[90],
+                     l_first_name_1[50],
+                     l_last_name_1[50],
+                     l_rev_name_2[90],
+                     l_first_name_2[50],
+                     l_continue_1[2],
+                     l_continue_2[3],
+                     l_last_name_2[50],
+                     l_rev_name_3[90],
+                     l_first_name_3[50],
+                     l_last_name_3[50],
+                     l_name_1[50],
+                     l_name_2[50],
+                     l_name_3[50],
+                     l_prev_quote_str[18]="Previous Quote No:",
+                     l_csexec_application[25] ,
+                     L_CHECK_RECEIVED[1] ,
+                     l_username[15],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_company_id[10],
+                     l_system_id[15] ;
+
+        Local Unsigned Ascii Number L_NO_DAYS[3] ,
+                                    l_special_flag_1[3] ,
+                                    l_year[4],
+                                    l_end_sequence[4],
+                                    l_popup_complete[1],
+                                    l_show_coverage_bound[1],
+                                    l_print_special_edit_wording[1],
+                                    l_sub[2],
+                                    l_app_type[2],
+                                    l_sub_code[4],
+                                    l_count[3],
+                                    l_age[3],
+                                    l_loop[3],
+                                    l_sales[8],
+                                    l_special_flag_2[3],
+                                    l_special_flag_3[3] ,
+                                    l_address_line_1[1],
+                                    l_address_line_2[1],
+                                    l_address_line_3[1],
+                                    l_release[1],
+                                    l_state[2],
+                                    l_csexec_number[12],
+                                    l_sub_code_1[4],
+                                    l_inquiry[1],
+                                    l_dont_continue[1],
+                                    l_abort_program[1] ;
+
+        Access agqname,
+           Set agqname:app_NO = g_app_no, generic ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+
+
+        include "styles.inc"
+
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "back" display/noreturn "agtmt721" tagged back_fn ;
+
+        "displayit"  display/noreturn "agtmt730" tagged nextscreen_fn;
+        "func1" display l_screen ;
+         "redisplay" display/noreturn "agtmt729" ;
+        "change" sequence "chg|redisplay"   tagged change_fn ;
+        "chg" change/hidden ;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+screen entry
+l_user_id = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_app_quest1.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+if agqapplication:answer[1] not one of "N", "Y" and
+   agqapplication:answer[2] not one of "N", "Y" and
+   agqapplication:answer[3] not one of "N", "Y" and
+   agqapplication:answer[4] not one of "N", "Y" and
+   agqapplication:answer[5] not one of "N", "Y" and
+   agqapplication:answer[6] not one of "N", "Y" and
+   agqapplication:answer[7] not one of "N", "Y" and
+   agqapplication:answer[8] not one of "N", "Y" and
+   agqapplication:answer[9] not one of "N", "Y" and
+   agqapplication:answer[10] not one of "N", "Y" and
+   agqapplication:answer[11] not one of "N", "Y" and
+   agqapplication:answer[12] not one of "N", "Y" and
+   agqapplication:answer[13] not one of "N", "Y" then
+    l_first = "Y"
+else
+    l_first = "N"
+
+access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+access sfsline, set sfsline:company_id       = agqcontractor:company_id,
+                    sfsline:line_of_business = agqcontractor:line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+l_username = username
+access sfsemail, set sfsemail:company_id = agqcontractor:company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if agqcontractor:company_id = "FARMERS" and
+   sfsline:lob_code one of "DWELLING", "HOME" then
+    l_continue_1 = dialog("WARNING","warning.bmp","Reminder, you cannot bind coverage for an underground oil tank or an abandoned underground oil tank.","OK")
+
+do access_agsapplication
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+if agqapplication:app_no <> g_app_no then
+    begin
+    do update_agqapplication
+    do update_agqapplication1
+    end
+else
+    begin
+    do access_agqapplication
+    do access_agqapplication1
+    end
+
+/*switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)*/
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+Access Validation
+If agqname:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen -- column
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+/*            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }*/
+
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Underwriting Submission: Application..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101  g_app_NO/displayonly ;
+
+}
+
+Panel at 6,25 to 6,40 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_edit_entries.bmp"
+              }
+          Events
+              {
+              Action = change_fn
+              }
+
+    }
+
+Panel at 6,60 to 6,75 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt729.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+--                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 7,5 to 24, 100 Tagged rating_pl
+{
+%%
+*------------------------------------------------------------------*------*------*
+|                              QUESTIONS...                        |  NO  |  YES |
+*------------------------------------------------------------------*------*------*
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+| ________________________________________________________________~|[R~_~~|~~~_R]| __________
+*------------------------------------------------------------------*------*------*
+
+%%
+
+components
+
+Fields
+401     l_literal[1]/displayonly   tagged t_view1
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(1)
+                                     }
+                       };
+501     l_literal[2]/displayonly    tagged t_view2
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(2)
+                                     }
+                       };
+601     l_literal[3]/displayonly      tagged t_view3
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(3)
+                                     }
+                       };
+701     l_literal[4]/displayonly        tagged t_view4
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(4)
+                                     }
+                       };
+801     l_literal[5]/displayonly            tagged t_view5
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(5)
+                                     }
+                       };
+901     l_literal[6]/displayonly           tagged t_view6
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(6)
+                                     }
+                       };
+1001    l_literal[7]/displayonly             tagged t_view7
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(7)
+                                     }
+                       };
+1101    l_literal[8]/displayonly              tagged t_view8
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(8)
+                                     }
+                       };
+1201    l_literal[9]/displayonly              tagged t_view9
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(9)
+                                     }
+                       };
+1301    l_literal[10]/displayonly              tagged t_view10
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(10)
+                                     }
+                       };
+1401    l_literal[11]/displayonly               tagged t_view11
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(11)
+                                     }
+                       };
+1501    l_literal[12]/displayonly               tagged t_view12
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(12)
+                                     }
+                       };
+1601    l_literal[13]/displayonly              tagged t_view13
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(13)
+                                     }
+                       };
+
+402     begin
+        l_sub_code_1 = 1
+        if l_answer[1] = "Y" and
+           l_screen_name[1] <> "" then
+            begin
+            do check_popup(1)
+            l_sub_code_1 = 1
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[1] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[1] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[1] = "Y" and
+--           l_highlight[1] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[1] = l_answer[1]
+        end
+        l_answer[1]/values="N,Y"/tabstop
+        hide if l_literal[1] = ""
+
+        if l_old_answer[1] <> l_answer[1] then
+            begin
+            do update_answer
+            if l_answer[1] = "N" then
+                begin
+                l_continue_1 = dialog("WARNING","warning.bmp","40% of premium is required to bind coverage","OK")
+                end
+            end ;
+403     l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[1] one of "Y", "" ;
+
+502     begin
+        l_sub_code_1 = 2
+        if l_answer[2] = "Y" then
+            begin
+            do check_popup(2)
+            l_sub_code_1 = 2
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+        if l_answer[2] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[2] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[2] = "Y" and
+--           l_highlight[2] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[2] = l_answer[2]
+        end
+        l_answer[2]/values="N,Y"/tabstop
+        hide if l_literal[2] = ""
+
+        if l_old_answer[2] <> l_answer[2] then
+            do update_answer ;
+503     l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[2] one of "N", "" or
+                l_highlight[2] = 0 ;
+
+602     begin
+        l_sub_code_1 = 3
+        if l_answer[3] = "Y" then
+            begin
+            do check_popup(3)
+            l_sub_code_1 = 3
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[3] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[3] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[3] = "Y" and
+--           l_highlight[3] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[3] = l_answer[3]
+        end
+        l_answer[3]/values="N,Y"/tabstop
+        hide if l_literal[3] = ""
+
+        if l_old_answer[3] <> l_answer[3] then
+            do update_answer ;
+603     l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[3] one of "N", "" or
+                l_highlight[3] = 0 ;
+
+702     begin
+        l_sub_code_1 = 4
+        if l_answer[4] = "Y" then
+            begin
+            do check_popup(4)
+            l_sub_code_1 = 4
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[4] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[4] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[4] = "Y" and
+--           l_highlight[4] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[4] = l_answer[4]
+        end
+        l_answer[4]/values="N,Y"/tabstop
+        hide if l_literal[4] = ""
+
+        if l_old_answer[4] <> l_answer[4] then
+            do update_answer ;
+703     l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[4] one of "N", "" or
+                l_highlight[4] = 0 ;
+
+802     begin
+        l_sub_code_1 = 5
+        if l_answer[5] = "Y" then
+            begin
+            do check_popup(5)
+            l_sub_code_1 = 5
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[5] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[5] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[5] = "Y" and
+--           l_highlight[5] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[5] = l_answer[5]
+        end
+        l_answer[5]/values="N,Y"/tabstop
+        hide if l_literal[5] = ""
+
+        if l_old_answer[5] <> l_answer[5] then
+            do update_answer ;
+803     l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[5] one of "N", "" or
+                l_highlight[5] = 0 ;
+
+902     begin
+        l_sub_code_1 = 6
+        if l_answer[6] = "Y" then
+            begin
+            do check_popup(6)
+            l_sub_code_1 = 6
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[6] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[6] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[6] = "Y" and
+--           l_highlight[6] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[6] = l_answer[6]
+        end
+        l_answer[6]/values="N,Y"/tabstop
+        hide if l_literal[6] = ""
+
+        if l_old_answer[6] <> l_answer[6] then
+            do update_answer ;
+903     l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[6] one of "N", "" or
+                l_highlight[6] = 0 ;
+
+1002    begin
+        l_sub_code_1 = 7
+        if l_answer[7] = "Y" then
+            begin
+            do check_popup(7)
+            l_sub_code_1 = 7
+            if l_popup_complete = 1 then
+               do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[7] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[7] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[7] = "Y" and
+--           l_highlight[7] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[7] = l_answer[7]
+        end
+        l_answer[7]/values="N,Y"/tabstop
+        hide if l_literal[7] = ""
+
+        if l_old_answer[7] <> l_answer[7] then
+            do update_answer ;
+1003    l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[7] one of "N", "" or
+                l_highlight[7] = 0 ;
+
+1102    begin
+        l_sub_code_1 = 8
+        if l_answer[8] one of "Y", "N" then
+            begin
+            do check_popup(8)
+            l_sub_code_1 = 8
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[8] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_Id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[8] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[8] one of "Y", "N" and
+--           l_highlight[8] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[8] = l_answer[8]
+        end
+        l_answer[8]/values="N,Y"/tabstop
+        hide if l_literal[8] = ""
+
+        if l_old_answer[8] <> l_answer[8] then
+            do update_answer ;
+1103    l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[8] one of "N", "" or
+                l_highlight[8] = 0 ;
+
+1202    begin
+        l_sub_code_1 = 9
+        if l_answer[9] = "Y" then
+            begin
+            do check_popup(9)
+            l_sub_code_1 = 9
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[9] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[9] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[9] = "Y" and
+--           l_highlight[9] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[9] = l_answer[9]
+        end
+        l_answer[9]/values="N,Y"/tabstop
+        hide if l_literal[9] = ""
+
+        if l_answer[9] = "N" and
+           l_old_answer[9] one of "", "Y" and
+           agqcontractor:company_id = "FLEMINGTON" then
+            begin
+            l_continue_1 = dialog("WARNING","warning.bmp","Coverage cannot be bound - Contact your underwriter","OK")
+            end
+
+        if l_old_answer[9] <> l_answer[9] then
+            do update_answer ;
+1203    l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[9] one of "Y", "" or
+             l_highlight[9] = 0 ;
+
+1302    begin
+        l_sub_code_1 = 10
+        if l_answer[10] = "Y" then
+            begin
+            do check_popup(10)
+            l_sub_code_1 = 10
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[10] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[10] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[10] = "Y" and
+--           l_highlight[10] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[10] = l_answer[10]
+        end
+        l_answer[10]/values="N,Y"/tabstop
+        hide if l_literal[10] = ""
+
+        if l_old_answer[10] <> l_answer[10] then
+            do update_answer ;
+1303    l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[10] one of "N", "" or
+                l_highlight[10] = 0 ;
+
+1402    begin
+        l_sub_code_1 = 11
+        if l_answer[11] = "Y" then
+            begin
+            do check_popup(11)
+            l_sub_code_1 = 11
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[11] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[11] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[11] = "Y" and
+--           l_highlight[11] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[11] = l_answer[11]
+        end
+        l_answer[11]/values="N,Y"/tabstop
+        hide if l_literal[11] = ""
+
+        if l_old_answer[11] <> l_answer[11] then
+            do update_answer ;
+1403    l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[11] one of "N", "" or
+                l_highlight[11] = 0 ;
+
+1502    begin
+        l_sub_code_1 = 12
+        if l_answer[12] = "Y" then
+            begin
+            do check_popup(12)
+            l_sub_code_1 = 12
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[12] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[12] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[12] = "Y" and
+--           l_highlight[12] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[12] = l_answer[12]
+        end
+        l_answer[12]/values="N,Y"/tabstop
+        hide if l_literal[12] = ""
+
+        if l_old_answer[12] <> l_answer[12] then
+            do update_answer ;
+1503    l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[12] one of "N", "" or
+                l_highlight[12] = 0 ;
+
+1602    begin
+        l_sub_code_1 = 13
+        if l_answer[13] = "Y" then
+            begin
+            do check_popup(13)
+            l_sub_code_1 = 13
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+
+        if l_answer[13] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FARMERS" then
+            do display_white(l_the_tag[l_sub_code_1],"white",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+        if l_answer[13] not one of "N", "Y" and
+           l_first = "N" and
+           l_company_id = "FLEMINGTON" then
+            do display_white(l_the_tag[l_sub_code_1],"yellow",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+
+--        if l_answer[13] = "Y" and
+--           l_highlight[13] = 1 then
+--            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        l_old_answer[13] = l_answer[13]
+        end
+        l_answer[13]/values="N,Y"/tabstop
+        hide if l_literal[13] = ""
+
+        if l_old_answer[13] <> l_answer[13] then
+            do update_answer ;
+1603    l_contact_uw/displayonly/showasguidetext
+        hide if l_answer[13] one of "N", "" or
+                l_highlight[13] = 0 ;
+
+}
+
+-- draw a line
+panel at 25,1 to 25,100 tagged line_panel_1
+    {
+    Components
+        line at 1.25,1 to 1.25,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 26,1 to 26,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,10   tagged back_fn
+        Properties {
+                Iconname = "btn_back.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+        Button at 1,70   tagged nextscreen_fn
+        Properties {
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                Action = nextscreen_fn
+                }
+
+}
+
+/*panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.25,1 to 1.25,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }*/
+panel at 28,1 to 30,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+
+}
+
+/*screen exit
+if function one of "EXIT", "BACK" then
+    begin
+    do clear_popup_information
+    l_loop = 1
+    l_print_special_edit_wording = 0
+    while l_loop <= 60
+        begin
+        if l_highlight[l_loop] = 1 and
+           l_answer[l_loop]    = "YES" then
+            l_show_coverage_bound = 1
+        if l_print_special_edit[l_loop] = 1 and
+           l_answer[l_loop]             = "YES" then
+            l_print_special_edit_wording = 1
+        l_loop = l_loop + 1
+        end
+    if l_show_coverage_bound = 1 and
+       agqcontractor:company_id <> "FARMERS" then
+        l_continue_1 = dialog("COVERAGE BOUND","warning.bmp","Contact an Underwriter Before Binding","OK")
+    if l_print_special_edit_wording = 1 then
+        l_continue_1 = dialog("FAMILY DAYCARE SUPPLEMENTAL","warning.bmp","Please submit completed Family Daycare Supplemental Application for binding","OK")
+--    if l_show_coverage_bound = 1 and
+--       agqcontractor:company_id = "FARMERS" then
+--        l_continue_1 = dialog("WARNING","warning.bmp","Ineligible, cannot bind coverage.","OK")
+    end*/
+
+procedure definition
+
+procedure display_white(tag l_tag, string l_color, string l_position, string l_display_screen)
+begin
+--if l_position = "Y" then
+--    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+--    end
+end
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+procedure check_popup(number l_sub_code_1)
+begin
+l_popup_complete = 0
+access agqapplication, set agqapplication:app_no   = g_app_no,
+                           agqapplication:sub_code = l_sub_code_1, generic
+
+if agqapplication:screen_name = "agtmt500" and
+   agqapplication:check_amount <> 0 then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name = "agtmt501" and
+   agqapplication:str_policy_no[1] <> "" then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name = "agtmt502" and
+   agqapplication:str_policy_no[1] <> "" and
+   agqcontractor:company_id = "FARMERS" then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name = "agtmt502" and
+   agqapplication:policy_year[1] <> 0 and
+   agqapplication:previous_carrier[1] <> "" and
+   agqapplication:premium[1] <> 0 and
+   agqapplication:reason[1] <> "" and
+   agqcontractor:company_id = "FLEMINGTON" then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name = "agtmt549" and
+   agqapplication:percentage <> 0 then
+    l_popup_complete = 1
+
+if agqapplication:screen_name = "agtmt502" and
+   agqapplication:policy_year[1] <> 0 and
+   agqcontractor:company_id = "FICOF" then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name = "agtmt534" and
+   agqapplication:license_no <> "" then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name =  "agtmt504" and
+   agqapplication:date_of_loss[1] <> 0 then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name one of "agtmt505", "agtmt506" and
+   agqapplication:no_years <> 0 then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name = "agtmt507" and
+   agqapplication:limit[1] <> 0 then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name = "agtmt508" and
+   agqapplication:total_number[1] <> 0 then
+    begin
+    l_popup_complete = 1
+    end
+
+if (agqapplication:screen_name = "agtmt509" and
+   (agqapplication:trustee_name <> "" or
+   agqapplication:ownership_agreement[1] <> 0 or
+   agqapplication:ownership_agreement[2] <> 0 or
+   agqapplication:ownership_agreement[3] <> 0 or
+   agqapplication:ownership_agreement[4] <> 0)) then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name one of "agtmt503", "agtmt519", "agtmt552" and
+   agqapplication:remarks <> "" then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name one of "agtmt553" and
+   agqapplication:start_date[1] <> 0 and
+   agqapplication:work_completed[1] <> "" and
+   agqapplication:project_location[1] <> "" and
+   agqapplication:amount_received[1] <> 0 then
+    l_popup_complete = 1
+
+if agqapplication:screen_name = "agtmt551" and
+   agqapplication:years_business <> 0 then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name = "agtmt510" and
+   agqapplication:hours <> "" then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name = "agtmt511" and
+   agqapplication:total_number[1] <> 0 then
+    begin
+    l_popup_complete = 1
+    end
+
+if (agqapplication:screen_name = "agtmt512" and
+   (agqapplication:fuel_tank[1] <> 0 or
+   agqapplication:fuel_tank[2] <> 0 or
+   agqapplication:fuel_tank[3] <> 0)) then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name one of "agtmt513", "agtmt514", "agtmt515", "agtmt516" and
+   agqapplication:year_replaced_updated <> 0 then
+    begin
+    l_popup_complete = 1
+    end
+
+if (agqapplication:screen_name = "agtmt517" and
+   (agqapplication:completion_date <> 0 or
+   agqapplication:renovation_value <> 0)) then
+    begin
+    l_popup_complete = 1
+    end
+
+if agqapplication:screen_name = "agtmt518" and
+   agqapplication:total_number[1] <> 0 then
+    begin
+    l_popup_complete = 1
+    end
+
+if (agqapplication:screen_name = "agtmt520" and
+   (agqapplication:fob[1] <> 0 or
+   agqapplication:fob[2] <> 0 or
+   agqapplication:fob[3] <> 0 or
+   agqapplication:fob[4] <> 0 or
+   agqapplication:fob[5] <> 0 or
+   agqapplication:fob[6] <> 0 or
+   agqapplication:remarks <> "")) then
+    begin
+    l_popup_complete = 1
+    end
+
+if (agqapplication:screen_name = "agtmt521" and
+   (agqapplication:total_number[1] <> 0 or
+   agqapplication:total_number[2] <> 0)) then
+    begin
+    l_popup_complete = 1
+    end
+
+if (agqapplication:screen_name = "agtmt522" and
+   (agqapplication:contact_name <> "" or
+   agqapplication:contact_phone_no <> "")) then
+    begin
+    l_popup_complete = 1
+    end
+
+end
+
+procedure display_blue(tag l_tag, string l_color, string l_position, string l_display_screen)
+begin
+if ((l_position = "Y" or
+   (l_position = "N" and
+   l_display_screen = "agtmt551")) and
+   l_display_screen <> "") then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure display_red(tag l_tag, string l_color, string l_position, string l_display_screen)
+begin
+if ((l_position = "Y" or
+   (l_position = "N" and
+   l_display_screen = "agtmt551")) and
+   l_display_screen <> "") then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure display_background_red(tag l_tag, string l_color, string l_position, string l_display_screen)
+begin
+if l_position = "Y" then
+    begin
+    setproperty(l_tag,backgroundcolor,l_color)
+    end
+end
+
+procedure remove_blue(tag l_tag, string l_color, string l_position, string l_display_screen)
+begin
+if l_position = "N" or
+   l_display_screen = "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure remove_red(tag l_tag, string l_color, string l_position, string l_display_screen)
+begin
+if l_position = "N" or
+   l_display_screen = "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure clear_popup_information
+begin
+access agqapplication_alias, set agqapplication_alias:app_no = g_app_no, generic
+
+while agqapplication_alias:app_no = g_app_no
+    begin
+    change agqapplication_alias
+        begin
+        if agqapplication_alias:screen_name = "agtmt500" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            agqapplication_alias:check_amount = 0
+            end
+
+        if agqapplication_alias:screen_name = "agtmt501" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            l_count = 0
+            while l_count < 6
+                begin
+                l_count = l_count + 1
+                agqapplication_alias:str_policy_no[l_count] = ""
+                agqapplication_alias:type_coverage[l_count] = ""
+                end
+            end
+
+        if agqapplication_alias:screen_name = "agtmt502" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            agqapplication_alias:policy_year[1]      = 0
+            agqapplication_alias:previous_carrier[1] = ""/raw
+            agqapplication_alias:premium[1]          = 0
+            agqapplication_alias:reason[1]           = ""/raw
+            agqapplication_alias:policy_year[2]      = 0
+            agqapplication_alias:previous_carrier[2] = ""/raw
+            agqapplication_alias:premium[2]          = 0
+            agqapplication_alias:reason[2]           = ""/raw
+            agqapplication_alias:policy_year[3]      = 0
+            agqapplication_alias:previous_carrier[3] = ""/raw
+            agqapplication_alias:premium[3]          = 0
+            agqapplication_alias:reason[3]           = ""/raw
+            agqapplication_alias:policy_year[4]      = 0
+            agqapplication_alias:previous_carrier[4] = ""/raw
+            agqapplication_alias:premium[4]          = 0
+            agqapplication_alias:reason[4]           = ""/raw
+            agqapplication_alias:policy_year[5]      = 0
+            agqapplication_alias:previous_carrier[5] = ""/raw
+            agqapplication_alias:premium[5]          = 0
+            agqapplication_alias:reason[5]           = ""/raw
+            end
+
+        if agqapplication_alias:screen_name one of "agtmt504" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            agqapplication_alias:date_of_loss[1]       = 0
+            agqapplication_alias:paid_amount[1]        = 0
+            agqapplication_alias:reserve_amount[1]     = 0
+            agqapplication_alias:losses_open_closed[1] = ""
+            agqapplication_alias:loss_description[1]   = " "/raw
+            agqapplication_alias:date_of_loss[2]       = 0
+            agqapplication_alias:paid_amount[2]        = 0
+            agqapplication_alias:reserve_amount[2]     = 0
+            agqapplication_alias:losses_open_closed[2] = ""
+            agqapplication_alias:loss_description[2]   = " "/raw
+            agqapplication_alias:date_of_loss[3]       = 0
+            agqapplication_alias:paid_amount[3]        = 0
+            agqapplication_alias:reserve_amount[3]     = 0
+            agqapplication_alias:losses_open_closed[3] = ""
+            agqapplication_alias:loss_description[3]   = " "/raw
+            agqapplication_alias:date_of_loss[4]       = 0
+            agqapplication_alias:paid_amount[4]        = 0
+            agqapplication_alias:reserve_amount[4]     = 0
+            agqapplication_alias:losses_open_closed[4] = ""
+            agqapplication_alias:loss_description[4]   = " "/raw
+            agqapplication_alias:date_of_loss[5]       = 0
+            agqapplication_alias:paid_amount[5]        = 0
+            agqapplication_alias:reserve_amount[5]     = 0
+            agqapplication_alias:losses_open_closed[5] = ""
+            agqapplication_alias:loss_description[5]   = " "/raw
+            end
+
+        if agqapplication_alias:screen_name one of "agtmt505", "agtmt506" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            agqapplication_alias:no_years = 0
+            end
+
+        if agqapplication_alias:screen_name one of "agtmt553" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            agqapplication_alias:start_date[1]       = 0
+            agqapplication_alias:work_completed[1]   = ""
+            agqapplication_alias:project_location[1] = ""
+            agqapplication_alias:amount_received[1]  = 0
+            agqapplication_alias:start_date[2]       = 0
+            agqapplication_alias:work_completed[2]   = ""
+            agqapplication_alias:project_location[2] = ""
+            agqapplication_alias:amount_received[2]  = 0
+            agqapplication_alias:start_date[3]       = 0
+            agqapplication_alias:work_completed[3]   = ""
+            agqapplication_alias:project_location[3] = ""
+            agqapplication_alias:amount_received[3]  = 0
+            end
+
+        if agqapplication_alias:screen_name one of "agtmt549" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            agqapplication_alias:percentage = 0
+            end
+
+        if agqapplication_alias:screen_name = "agtmt507" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            agqapplication_alias:limit[1] = 0
+            agqapplication_alias:limit[2] = 0
+            end
+
+        if agqapplication_alias:screen_name one of "agtmt508" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            agqapplication_alias:total_number[1] = 0
+            agqapplication_alias:total_number[2] = 0
+            agqapplication_alias:firewall        = 0
+            end
+
+        if agqapplication_alias:screen_name = "agtmt509" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            agqapplication_alias:ownership_agreement[1] = 0
+            agqapplication_alias:ownership_agreement[2] = 0
+            agqapplication_alias:ownership_agreement[3] = 0
+            agqapplication_alias:ownership_agreement[4] = 0
+            agqapplication_alias:trustee_name           = ""
+            agqapplication_alias:limit[1]               = 0
+            end
+
+        if agqapplication_alias:screen_name one of "agtmt503", "agtmt552" and
+           agqapplication_alias:answer <> "Y" then
+            begin
+            agqapplication_alias:remarks = ""
+            end
+
+        end
+
+    next agqapplication_alias
+    end
+
+end
+
+procedure access_agsapplication
+begin
+access agsapplication, set agsapplication:company_id         = agqcontractor:company_id,
+                           agsapplication:line_of_business   = agqcontractor:line_of_business, generic
+
+l_count = 0
+while agsapplication:company_id         = agqcontractor:company_id and
+      agsapplication:line_of_business   = agqcontractor:line_of_business
+        begin
+        if (agqcontractor:eff_date >= agsapplication:reff_date and
+           (agqcontractor:eff_date <= agsapplication:rexp_date or
+           agsapplication:rexp_date = 0)) then
+            begin
+            if agsapplication:sub_code <= 13 then
+                begin
+                if agsapplication:class_code <> 0 then
+                    begin
+                    access agqclasscode, set agqclasscode:app_no = g_app_no, generic
+
+                    while agqclasscode:app_no = g_app_no
+                        begin
+                        if agqclasscode:class_code = agsapplication:class_code then
+                            begin
+                            l_sub_code_1                  = agsapplication:sub_code
+                            l_screen_name[l_sub_code_1]   = agsapplication:screen_name[1]
+                            l_screen_name_2[l_sub_code_1] = agsapplication:screen_name[2]
+                            l_literal[l_sub_code_1]       = agsapplication:literal
+                            l_the_tag[l_sub_code_1]       = tag(trun(agsapplication:tag_name))
+                            end
+
+                        next agqclasscode
+                        end
+                    end
+                else
+                    begin
+                    if agqcontractor:form one of 4 and
+                       agsapplication:property_only = 0 then
+                        begin
+                        l_sub_code_1                  = agsapplication:sub_code
+                        l_screen_name[l_sub_code_1]   = agsapplication:screen_name[1]
+                        l_screen_name_2[l_sub_code_1] = agsapplication:screen_name[2]
+                        l_literal[l_sub_code_1]       = agsapplication:literal
+                        l_the_tag[l_sub_code_1]       = tag(trun(agsapplication:tag_name))
+                        end
+                    else
+                        begin
+                        l_sub_code_1                  = agsapplication:sub_code
+                        l_screen_name[l_sub_code_1]   = agsapplication:screen_name[1]
+                        l_screen_name_2[l_sub_code_1] = agsapplication:screen_name[2]
+                        l_literal[l_sub_code_1]       = agsapplication:literal
+                        l_the_tag[l_sub_code_1]       = tag(trun(agsapplication:tag_name))
+                        end
+                    end
+
+                end
+
+            end
+
+        next agsapplication
+        end
+
+end
+
+procedure printguidetext(tag current_tag, string display_string)
+begin
+    setproperty(current_tag, text, display_string)
+end
+
+procedure access_agsapplication_screen
+begin
+access agsapplication, set agsapplication:company_id         = agqcontractor:company_id,
+                           agsapplication:line_of_business   = agqcontractor:line_of_business,
+                           agsapplication:sub_code           = l_sub_code_1, generic
+
+while agsapplication:company_id         = agqcontractor:company_id and
+      agsapplication:line_of_business   = agqcontractor:line_of_business and
+      agsapplication:sub_code           = l_sub_code_1
+        begin
+        if (agqcontractor:eff_date >= agsapplication:reff_date and
+           (agqcontractor:eff_date <= agsapplication:rexp_date or
+           agsapplication:rexp_date = 0)) then
+            begin
+            l_screen_name[l_sub_code_1]   = agsapplication:screen_name[1]
+            l_screen_name_2[l_sub_code_1] = agsapplication:screen_name[2]
+            end
+
+        next agsapplication
+        end
+
+end
+
+procedure access_agqapplication
+begin
+access agqapplication_alias, set agqapplication_alias:app_no = g_app_no, generic
+
+while agqapplication_alias:app_no = g_app_no
+        begin
+        if agqapplication_alias:answer = "Y" then
+            l_answer[agqapplication_alias:sub_code] = "Y"
+        else
+        if agqapplication_alias:answer = "N" then
+            l_answer[agqapplication_alias:sub_code] = "N"
+        else
+            l_answer[agqapplication_alias:sub_code] = ""
+        l_highlight[agqapplication_alias:sub_code] = agqapplication_alias:highlight_if_yes
+        l_print_special_edit[agqapplication_alias:sub_code] = agqapplication_alias:print_special_edit
+        l_phone_number = agqapplication_alias:phone_number
+        l_social_security_number = agqapplication_alias:social_security_number
+        l_age = agqapplication_alias:age
+        l_marital_status = agqapplication_alias:marital_status
+        l_occupation = agqapplication_alias:occupation
+        l_employers_name = agqapplication_alias:employers_name
+        if agqapplication_alias:employers_address[1] <> "" then
+            l_employers_address_1 = agqapplication_alias:employers_address[1]
+        if agqapplication_alias:employers_address[2] <> "" then
+            l_employers_address_2 = agqapplication_alias:employers_address[2]
+        l_entity = agqapplication_alias:occupation
+        l_busop = agqapplication_alias:employers_address[2]
+        l_contact = agqapplication_alias:employers_name
+        l_owner = agqapplication_alias:marital_status
+
+        next agqapplication_alias
+        end
+
+end
+
+procedure access_agqapplication1
+begin
+access agqapplication1_alias, set agqapplication1_alias:app_no = g_app_no, generic
+
+while agqapplication1_alias:app_no = g_app_no
+        begin
+        l_occupation_1        = agqapplication1_alias:occupation[1]
+        l_occupation_2        = agqapplication1_alias:occupation[2]
+        l_employers_name_1    = agqapplication1_alias:employers_name[1]
+        l_employers_name_2    = agqapplication1_alias:employers_name[2]
+        if agqapplication1_alias:employers_address[1] <> "" then
+            l_employers_address_1 = agqapplication1_alias:employers_address[1]
+        if agqapplication1_alias:employers_address[2] <> "" then
+            l_employers_address_2 = agqapplication1_alias:employers_address[2]
+        l_employers_address_3 = agqapplication1_alias:employers_address[3]
+        l_employers_address_4 = agqapplication1_alias:employers_address[4]
+        l_ss_1                = agqapplication1_alias:social_security[1]
+        l_ss_2                = agqapplication1_alias:social_security[2]
+        l_cr_1                = agqapplication1_alias:credit_report[1]
+        l_cr_2                = agqapplication1_alias:credit_report[2]
+
+        next agqapplication1_alias
+        end
+
+end
+
+procedure update_agqapplication
+begin
+access agsapplication, set agsapplication:company_id         = agqcontractor:company_id,
+                           agsapplication:line_of_business   = agqcontractor:line_of_business, generic
+
+while agsapplication:company_id         = agqcontractor:company_id and
+      agsapplication:line_of_business   = agqcontractor:line_of_business
+        begin
+        access agqapplication_alias, set agqapplication_alias:app_no = g_app_no,
+                                         agqapplication_alias:sub_code = agsapplication:sub_code, generic
+
+        if agsapplication:literal <> "" then
+            begin
+            if agqapplication_alias:app_no <> g_app_no or
+               agqapplication_alias:sub_code <> agsapplication:sub_code then
+                begin
+                if agsapplication:sub_code <= 13 then
+                    begin
+                    add agqapplication_alias
+                        begin
+                        agqapplication_alias:app_no           = g_app_no
+                        agqapplication_alias:sub_code           = agsapplication:sub_code
+                        agqapplication_alias:literal            = agsapplication:literal
+                        agqapplication_alias:screen_name        = agsapplication:screen_name[1]
+                        agqapplication_alias:highlight_if_yes   = agsapplication:highlight_if_yes
+                        agqapplication_alias:print_special_edit = agsapplication:print_special_edit
+                        agqapplication_alias:dont_print_with_app_questions = agsapplication:dont_print_with_app_questions
+                        end
+                    end
+
+                end
+            end
+
+        next agsapplication
+        end
+
+end
+
+procedure update_agqapplication1
+begin
+access agsapplication, set agsapplication:company_id         = agqcontractor:company_id,
+                           agsapplication:line_of_business   = agqcontractor:line_of_business, generic
+
+while agsapplication:company_id         = agqcontractor:company_id and
+      agsapplication:line_of_business   = agqcontractor:line_of_business
+        begin
+        access agqapplication1_alias, set agqapplication1_alias:app_no = g_app_no,
+                                          agqapplication1_alias:sub_code = agsapplication:sub_code, generic
+
+        if agsapplication:literal <> "" then
+            begin
+            if agqapplication1_alias:app_no <> g_app_no or
+               agqapplication1_alias:sub_code <> agsapplication:sub_code then
+                begin
+                add agqapplication1_alias
+                    begin
+                    agqapplication1_alias:app_no           = g_app_no
+                    agqapplication1_alias:sub_code           = agsapplication:sub_code
+                    end
+
+                end
+            end
+
+        next agsapplication
+        end
+
+end
+
+procedure update_answer
+begin
+access agqapplication_alias, set agqapplication_alias:app_no = g_app_no,
+                                 agqapplication_alias:sub_code = l_sub_code_1, generic
+
+if agqapplication_alias:app_no = g_app_no and
+   agqapplication_alias:sub_code = l_sub_code_1 then
+    begin
+    change agqapplication_alias
+        begin
+        agqapplication_alias:phone_number = l_phone_number
+        agqapplication_alias:social_security_number = l_social_security_number
+        agqapplication_alias:age = l_age
+        agqapplication_alias:employers_address[1] = l_employers_address_1
+        if sfsline:business_type = "P" then
+            begin
+            agqapplication_alias:marital_status = l_marital_status
+            agqapplication_alias:occupation = l_occupation
+            agqapplication_alias:employers_name = l_employers_name
+            agqapplication_alias:employers_address[2] = l_employers_address_2
+            end
+        else
+            begin
+            agqapplication_alias:marital_status = l_owner
+            agqapplication_alias:occupation = l_entity
+            agqapplication_alias:employers_name = l_contact
+            agqapplication_alias:employers_address[2] = l_busop
+            end
+        if l_answer[l_sub_code_1] = "Y" then
+            agqapplication_alias:answer  = "Y"
+        else
+        if l_answer[l_sub_code_1] = "N" then
+            agqapplication_alias:answer  = "N"
+        end
+
+    if l_answer[l_sub_code_1] = "Y" then
+        begin
+        if l_screen_name[l_sub_code_1] <> "" then
+            begin
+            g_sub_code = l_sub_code_1
+            l_screen = trun(l_screen_name[l_sub_code_1])
+            g_literal = trun(l_literal[l_sub_code_1])
+            g_answer = l_answer[l_sub_code_1]
+            display modal screen l_screen
+            end
+        end
+    else
+    if l_answer[l_sub_code_1] = "N" and
+       l_screen_name[l_sub_code_1] = "agtmt551" and
+       agqcontractor:company_id = "FLEMINGTON" then
+        begin
+        g_sub_code = l_sub_code_1
+        l_screen = trun(l_screen_name[l_sub_code_1])
+        g_literal = trun(l_literal[l_sub_code_1])
+        g_answer = l_answer[l_sub_code_1]
+        display modal screen l_screen
+        end
+    end
+
+if l_answer[l_sub_code_1] = "N" then
+    begin
+    do remove_blue(l_the_tag[l_sub_code_1],"black",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+    do remove_red(l_the_tag[l_sub_code_1],"black",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+    do clear_popup_information
+    end
+
+end
+
+procedure update_answer1
+begin
+access agqapplication1_alias, set agqapplication1_alias:app_no = g_app_no,
+                                  agqapplication1_alias:sub_code = l_sub_code_1, generic
+
+if agqapplication1_alias:app_no = g_app_no and
+   agqapplication1_alias:sub_code = l_sub_code_1 then
+    begin
+    change agqapplication1_alias
+        begin
+        agqapplication1_alias:occupation[1]        = l_occupation_1
+        agqapplication1_alias:occupation[2]        = l_occupation_2
+        agqapplication1_alias:employers_name[1]    = l_employers_name_1
+        agqapplication1_alias:employers_name[2]    = l_employers_name_2
+        agqapplication1_alias:employers_address[1] = l_employers_address_1
+        agqapplication1_alias:employers_address[2] = l_employers_address_2
+        agqapplication1_alias:employers_address[3] = l_employers_address_3
+        agqapplication1_alias:employers_address[4] = l_employers_address_4
+        agqapplication1_alias:social_security[1]   = l_ss_1
+        agqapplication1_alias:social_security[2]   = l_ss_2
+        agqapplication1_alias:credit_report[1]     = l_cr_1
+        agqapplication1_alias:credit_report[2]     = l_cr_2
+        end
+    end
+
+end
+
+procedure display_popup
+begin
+do update_answer
+if l_old_answer[l_sub_code_1] one of "N", "" and
+   l_answer[l_sub_code_1] one of "Y" and
+   function = "CHANGE" then
+    begin
+    g_sub_code = l_sub_code_1
+    if l_screen_name[l_sub_code_1] <> "" then
+        begin
+        g_literal = l_literal[l_sub_code_1]
+        display modal screen l_screen_name[l_sub_code_1]
+        with initial function "CHANGE|BACK"
+        end
+    end
+
+end
+
+procedure display_view (number l_sub)
+begin
+if l_screen_name[l_sub] <> "" and
+   l_answer[l_sub] = "Y" then
+    begin
+    l_screen = l_screen_name[l_sub]
+    g_sub_code = l_sub
+    g_literal  = trun(l_literal[l_sub])
+    g_answer = l_answer[l_sub]
+    display modal screen l_screen
+    end
+else
+if l_screen_name[l_sub] = "agtmt551" and
+   agqcontractor:company_id = "FLEMINGTON" and
+   l_answer[l_sub] = "N" then
+    begin
+    l_screen = l_screen_name[l_sub]
+    g_sub_code = l_sub
+    g_literal  = trun(l_literal[l_sub])
+    g_answer = l_answer[l_sub]
+    display modal screen l_screen
+    end
+
+end
+
+End

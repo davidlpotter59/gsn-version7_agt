@@ -1,0 +1,551 @@
+%%                 
+Screen
+        Name = "agtmt346a";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqendorse3" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local signed ascii number l_premium[6] ;
+
+        local unsigned ascii number l_sub_code[4]=0030,
+                                    l_form[2],
+                                    l_line_of_business[4],
+                                    l_rate[6]=0/dec=3,
+                                    l_limit[8],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_no_locations[2]=0,
+                                    l_first_prem_no[4]=0,
+                                    l_first_build_no[4]=0,
+                                    l_last_prem_no[4]=0,
+                                    l_last_build_no[4]=0,
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     l_heading[60],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ,
+                     l_first_location[1]="Y" ,
+                     l_first_str_location[12]="",
+                     l_last_str_location[12]="",
+                     l_str_location[12]="";
+
+
+        Access agqendorse3,
+           Set agqendorse3:app_NO   = G_app_NO ,
+               agqendorse3:prem_no  = g_prem_no,
+               agqendorse3:build_no = g_build_no,
+               agqendorse3:code     = g_code, generic;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        add/autoupdate tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+        "redisplay" display/noreturn "agtmt346a" ;
+        "func1" display/noreturn "agtmt346" tagged detail_fn;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+
+screen entry
+disable(accept_fn)
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+l_sub_code = 30
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+if agqendorse3:app_no <> g_app_no or
+   agqendorse3:prem_no <> g_prem_no or
+   agqendorse3:build_no <> g_build_no or
+   agqendorse3:code <> g_code then
+    function = "ADD"
+
+Access Validation
+If agqendorse3:app_NO   <> G_app_NO or
+   agqendorse3:prem_no  <> g_prem_no or
+   agqendorse3:build_no <> g_build_no or
+   agqendorse3:code     <> g_code Then
+    Error 1000 ;
+
+access agqendorse3_alias, set agqendorse3_alias:app_no   = agqendorse3:app_no,
+                           agqendorse3_alias:prem_no  = agqendorse3:prem_no,
+                           agqendorse3_alias:build_no = agqendorse3:build_no,
+                           agqendorse3_alias:code     = agqendorse3:code, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqendorse3_alias:app_no   = agqendorse3:app_no and
+      agqendorse3_alias:prem_no  = agqendorse3:prem_no and
+      agqendorse3_alias:build_no = agqendorse3:build_no and
+      agqendorse3_alias:code     = agqendorse3:code
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqendorse3_alias:prem_no) +
+                               str(agqendorse3_alias:build_no) +
+                               str(agqendorse3_alias:sub_code)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqendorse3_alias:prem_no) +
+                           str(agqendorse3_alias:build_no) +
+                           str(agqendorse3_alias:sub_code)
+    l_no_locations  = l_no_locations + 1
+
+    next agqendorse3_alias
+    end
+
+l_str_location = str(agqendorse3:prem_no) +
+                 str(agqendorse3:build_no) +
+                 str(agqendorse3:sub_code)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent         = false
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+/*            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }*/
+
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,80     tagged display_information_box
+                properties
+                  {
+                    text = "MIM121 - Contractors Tool Floater - Scheduled Tools"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35 tagged accept_fn
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt346a.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,15 to 23, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+
+                Deductible: _____
+                     Limit: _________
+                   Premium: _________
+
+%%
+
+Components
+
+Fields
+201     Begin
+         if function one of "ADD","NEW","CHG","CHANGE" then
+           {
+             enable(accept_fn)
+             disable(close_fn)
+           }
+         else
+           {
+             disable(accept_fn)
+             enable(close_fn)
+           }
+        End
+        agqendorse3:DEDUCTIBLE_1/displayonly
+        hide if sfsemail:agent_no = 0 ;
+201     Begin
+         if function one of "ADD","NEW","CHG","CHANGE" then
+           {
+             enable(accept_fn)
+             disable(close_fn)
+           }
+         else
+           {
+             disable(accept_fn)
+             enable(close_fn)
+           }
+        End
+        agqendorse3:DEDUCTIBLE_1/default
+        hide if sfsemail:agent_no <> 0 ;
+301     agqendorse3:limit[3]/displayonly ;
+401     agqendorse3:PREMIUM[2]/displayonly ;
+
+
+}
+
+Panel at 23,40 to 23,100 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,15
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "view_detail.gif"
+            }
+          Events  {
+                    Action = detail_fn
+                  }
+
+    }
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,1 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+/*        Button at 1,5   tagged add_fn
+        Properties {
+                Iconname = "btn_add.bmp"
+                }
+        Events  {
+                Action = add_fn
+                }*/
+        Button at 1,35   tagged previous_fn
+        Properties {
+                Iconname = "btn_previous.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+        Button at 1,55   tagged next_fn
+        Properties {
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+        Button at 1,80   tagged close_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+Update
+if UPDATEOK = "NO" then
+  {
+    enable (close_fn)
+    disable(accept_fn)
+  }
+
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    Access agqendorse3_ALIAS, Set agqendorse3_ALIAS:app_no   = agqendorse3:app_no,
+                                  agqendorse3_ALIAS:PREM_NO  = agqendorse3:PREM_NO,
+                                  agqendorse3_ALIAS:BUILD_NO = agqendorse3:BUILD_NO,
+                                  agqendorse3_ALIAS:CODE     = agqendorse3:CODE, Generic
+
+    Change agqendorse3_ALIAS
+        Begin
+        agqendorse3_ALIAS:TOTAL_PREMIUM = agqendorse3_ALIAS:PREMIUM[1]
+        End
+
+    function = "redisplay"
+    end
+
+Procedure Definition
+
+Procedure SUBCODE
+Begin
+Access agqendorse3_alias, Set agqendorse3_alias:app_no   = G_app_no,
+                           agqendorse3_alias:PREM_NO  = G_PREM_NO,
+                           agqendorse3_alias:BUILD_NO = G_BUILD_NO,
+                           agqendorse3_alias:CODE     = G_CODE, Generic
+
+L_SUB_CODE = 0
+While agqendorse3_alias:app_no   = G_app_no And
+      agqendorse3_alias:PREM_NO  = G_PREM_NO And
+      agqendorse3_alias:BUILD_NO = G_BUILD_NO And
+      agqendorse3_alias:CODE     = G_CODE
+        Begin
+        L_SUB_CODE = agqendorse3_alias:SUB_CODE
+
+        Next agqendorse3_alias
+        End
+
+L_SUB_CODE = L_SUB_CODE + 10
+End
+
+End

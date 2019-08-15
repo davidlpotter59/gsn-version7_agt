@@ -1,0 +1,770 @@
+%%                 
+Screen
+        Name = "agtmt356a";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqdesc3" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local signed ascii number l_premium[6] ;
+
+        local unsigned ascii number l_sub_code[4]=0030,
+                                    l_form[2],
+                                    l_line_of_business[4],
+                                    l_rate[6]=0/dec=3,
+                                    l_per[4]=0,
+                                    l_limit[8],
+                                    l_limit_1[8],
+                                    l_deductible[5],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_no_locations[2]=0,
+                                    l_first_prem_no[4]=0,
+                                    l_first_build_no[4]=0,
+                                    l_last_prem_no[4]=0,
+                                    l_last_build_no[4]=0,
+                                    l_total[8],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     l_heading[60],
+                     L_COMPANY_ID[10] ,
+                     l_continue_1[2],
+                     l_description[55] ,
+                     l_first_location[1]="Y" ,
+                     l_first_str_location[12]="",
+                     l_last_str_location[12]="",
+                     l_str_location[12]="";
+
+
+        Access agqdesc3,
+           Set agqdesc3:app_NO   = G_app_NO ,
+               agqdesc3:prem_no  = g_prem_no,
+               agqdesc3:build_no = g_build_no,
+               agqdesc3:code     = g_code, generic;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        add/autoupdate tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+        "redisplay" display/noreturn "agtmt356a" ;
+        "exit" display/noreturn "agtmt356" tagged back_fn;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+
+screen entry
+function = ""
+disable(accept_fn)
+enable(close_fn)
+access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+l_sub_code = 30
+l_username  = username
+l_system_id = "bop"
+access sfsemail, set sfsemail:company_id = agqcontractor:company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqcontractor:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+/*switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end*/
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+/*if sfsemail:agent_no <> 0 then
+    hide(rate_fn)*/
+
+if agqdesc3:app_no <> g_app_no or
+   agqdesc3:prem_no <> g_prem_no or
+   agqdesc3:build_no <> g_build_no or
+   agqdesc3:code <> g_code then
+    function = "ADD"
+
+Access Validation
+If agqdesc3:app_NO   <> G_app_NO or
+   agqdesc3:prem_no  <> g_prem_no or
+   agqdesc3:build_no <> g_build_no or
+   agqdesc3:code     <> g_code Then
+    Error 1000 ;
+
+access agqdesc3_alias, set agqdesc3_alias:app_no   = agqdesc3:app_no,
+                           agqdesc3_alias:prem_no  = agqdesc3:prem_no,
+                           agqdesc3_alias:build_no = agqdesc3:build_no,
+                           agqdesc3_alias:code     = agqdesc3:code, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqdesc3_alias:app_no   = agqdesc3:app_no and
+      agqdesc3_alias:prem_no  = agqdesc3:prem_no and
+      agqdesc3_alias:build_no = agqdesc3:build_no and
+      agqdesc3_alias:code     = agqdesc3:code
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqdesc3_alias:prem_no) +
+                               str(agqdesc3_alias:build_no) +
+                               str(agqdesc3_alias:sub_code)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqdesc3_alias:prem_no) +
+                           str(agqdesc3_alias:build_no) +
+                           str(agqdesc3_alias:sub_code)
+    l_no_locations  = l_no_locations + 1
+
+    next agqdesc3_alias
+    end
+
+l_str_location = str(agqdesc3:prem_no) +
+                 str(agqdesc3:build_no) +
+                 str(agqdesc3:sub_code)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent         = false
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+/*            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }*/
+
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,80     tagged display_information_box
+                properties
+                  {
+                    text = "MIM121 - Contractors Tool Floater - Scheduled Tools"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+    }
+
+Panel at 6,55 to 6,70
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35 tagged accept_fn
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt356a.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 24, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+      Limit: ____________
+
+Description: ___________________________________________________________________________
+
+
+
+
+
+
+
+
+
+
+%%
+
+Components
+
+Fields
+101     Begin
+         if function one of "ADD","NEW","CHG","CHANGE" then
+           {
+             enable(accept_fn)
+             disable(close_fn)
+           }
+         else
+           {
+             disable(accept_fn)
+             enable(close_fn)
+           }
+
+        If FUNCTION = "ADD" Then
+            Begin
+            agqdesc3:app_no   = G_app_no
+            agqdesc3:PREM_NO  = G_PREM_NO
+            agqdesc3:BUILD_NO = G_BUILD_NO
+            agqdesc3:CODE     = G_CODE
+            Do SUBCODE
+            agqdesc3:SUB_CODE = L_SUB_CODE
+            End
+        End
+        agqdesc3:LIMIT
+        l_limit_1 = agqdesc3:limit ;
+101     agqdesc3:limit/displayonly
+        if function one of "ADD", "CHANGE" then
+            begin
+            do access_sfsoptend
+            agqdesc3:rate = l_rate
+            agqdesc3:TOTAL_PREMIUM = ((agqdesc3:LIMIT Divide 100) *
+                                     agqdesc3:RATE)
+            End ;
+301     agqdesc3:DESCRIPTION/freetextlines=10/uppercase;
+
+}
+
+/*Panel at 8,30 to 8, 100 Tagged rate_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+                                  Rate: ________
+%%
+
+Components
+
+Fields
+101     agqdesc3:rate/default
+        hide if sfsemail:agent_no <> 0 ;
+
+} */
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 27,1 to 27,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5   tagged add_fn
+        Properties {
+                Iconname = "btn_add_tool.bmp"
+                }
+        Events  {
+                Action = add_fn
+                }
+        Button at 1,25   tagged previous_fn
+        Properties {
+                Iconname = "btn_small_previous.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+        Button at 1,40   tagged next_fn
+        Properties {
+                Iconname = "btn_small_next.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+        Button at 1,60  tagged delete_fn
+        Properties {
+                Iconname = "btn_delete_tool.bmp"
+                }
+        Events  {
+                Action = delete_fn
+                }
+        Button at 1,80   tagged close_fn
+        Properties {
+                Iconname = "btn_small_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+panel at 28,1 to 28,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+Update
+if UPDATEOK = "NO" then
+  {
+    enable (close_fn)
+    disable(accept_fn)
+  }
+else
+  {
+    enable (close_fn)
+    disable(accept_fn)
+  }
+
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    disable(accept_fn)
+    enable(close_fn)
+
+    Access agqdesc3_ALIAS, Set agqdesc3_ALIAS:app_no   = G_app_no,
+                               agqdesc3_ALIAS:PREM_NO  = G_PREM_NO,
+                               agqdesc3_ALIAS:BUILD_NO = G_BUILD_NO,
+                               agqdesc3_ALIAS:CODE     = G_CODE, Generic
+
+    l_premium = 0
+    l_limit   = 0
+    While agqdesc3_ALIAS:app_no   = G_app_no And
+          agqdesc3_ALIAS:PREM_NO  = G_PREM_NO And
+          agqdesc3_ALIAS:BUILD_NO = G_BUILD_NO And
+          agqdesc3_ALIAS:CODE     = G_CODE
+        begin
+        l_premium = l_premium +
+                    agqdesc3_alias:total_premium
+        l_limit   = l_limit +
+                    agqdesc3_alias:limit
+
+        next agqdesc3_alias
+        end
+
+    l_deductible = 250
+    if function = "DELETE" then
+        begin
+        l_premium = 0
+        l_limit = 0
+        l_deductible = 0
+        end
+    Access agqendorse3, Set agqendorse3:app_no     = G_app_no,
+                            agqendorse3:PREM_NO    = G_PREM_NO,
+                            agqendorse3:BUILD_NO   = G_BUILD_NO,
+                            agqendorse3:CODE       = G_CODE,
+                            agqendorse3:sub_code_1 = 00,
+                            agqendorse3:sub_code_2 = 10, Generic
+
+    if agqendorse3:app_no     = G_app_no and
+       agqendorse3:PREM_NO    = G_PREM_NO and
+       agqendorse3:BUILD_NO   = G_BUILD_NO and
+       agqendorse3:CODE       = G_CODE and
+       agqendorse3:sub_code_1 = 00 and
+       agqendorse3:sub_code_2 = 10 then
+        begin
+        change agqendorse3
+            begin
+            agqendorse3:premium[2]   = l_premium
+            agqendorse3:deductible_1 = l_deductible
+            agqendorse3:limit[3]     = l_limit
+            end
+
+        end
+    else
+        begin
+        add agqendorse3
+            begin
+            agqendorse3:app_no       = g_app_no
+            agqendorse3:prem_no      = g_prem_no
+            agqendorse3:build_no     = g_build_no
+            agqendorse3:code         = g_code
+            agqendorse3:sub_code     = 10
+            agqendorse3:premium[2]   = l_premium
+            agqendorse3:limit[3]     = l_limit
+            agqendorse3:deductible_1 = l_deductible
+            end
+
+        end
+
+    l_code_1 = "MIM120"
+    If L_CODE_1 <> "" Then
+        Begin
+        L_CODE = L_CODE_1
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" Then
+            Do ADD_agqEND
+        End
+
+    End
+
+Procedure Definition
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = G_PREM_NO and
+      agqEND:BUILD_NO = G_BUILD_NO
+        begin
+        If agqEND:CODE = L_CODE Then
+            L_ADD_ENDORSEMENT = "N"
+
+        Next agqEND
+        End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = G_PREM_NO and
+      agqEND:BUILD_NO = G_BUILD_NO
+        begin
+        L_SUB_CODE = agqEND:SUB_CODE
+
+        Next agqEND
+        End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqcontractor:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqcontractor:COMPANY_ID and
+      SFSOPTEND:STATE            = agqcontractor:STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+        begin
+    If agqcontractor:EFF_DATE >= SFSOPTEND:EFF_DATE Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_form_edition <> "" then
+Add agqEND
+    Begin
+    agqEND:app_no               =       G_app_no
+    agqEND:PREM_NO              =       G_PREM_NO
+    agqEND:BUILD_NO             =       G_BUILD_NO
+    agqEND:SUB_CODE             =       L_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+    agqEND:PREMIUM              =       0
+    End
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = G_PREM_NO and
+      agqEND:BUILD_NO = G_BUILD_NO
+        begin
+        If agqEND:CODE = L_CODE Then
+            Delete agqEND
+
+        Next agqEND
+        End
+
+End
+
+Procedure SUBCODE
+Begin
+Access agqdesc3_ALIAS, Set agqdesc3_ALIAS:app_no   = G_app_no,
+                           agqdesc3_ALIAS:PREM_NO  = G_PREM_NO,
+                           agqdesc3_ALIAS:BUILD_NO = G_BUILD_NO,
+                           agqdesc3_ALIAS:CODE     = G_CODE, Generic
+
+L_SUB_CODE = 0
+While agqdesc3_ALIAS:app_no   = G_app_no And
+      agqdesc3_ALIAS:PREM_NO  = G_PREM_NO And
+      agqdesc3_ALIAS:BUILD_NO = G_BUILD_NO And
+      agqdesc3_ALIAS:CODE     = G_CODE
+        Begin
+        L_SUB_CODE = agqdesc3_ALIAS:SUB_CODE
+
+        Next agqdesc3_ALIAS
+        End
+
+L_SUB_CODE = L_SUB_CODE + 10
+End
+
+procedure access_sfsoptend
+begin
+access agqcontractor, set agqcontractor:app_no   = g_app_no,
+                          agqcontractor:prem_no  = g_prem_no,
+                          agqcontractor:build_no = g_build_no, generic
+
+access sfsoptend, set sfsoptend:company_id       = agqcontractor:company_id,
+                      sfsoptend:state            = agqcontractor:state,
+                      sfsoptend:line_of_business = agqcontractor:line_of_business,
+                      sfsoptend:code             = g_code, generic
+
+l_rate = 0
+l_per  = 0
+while sfsoptend:company_id       = agqcontractor:company_id and
+      sfsoptend:state            = agqcontractor:state and
+      sfsoptend:line_of_business = agqcontractor:line_of_business and
+      sfsoptend:code             = g_code
+        begin
+        if agqcontractor:eff_date >= sfsoptend:eff_date then
+            begin
+            l_rate = sfsoptend:premium_1[1]
+            l_per  = sfsoptend:limit[1]
+            end
+
+        next sfsoptend
+        end
+
+end
+
+End

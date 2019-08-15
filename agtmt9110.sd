@@ -1,0 +1,1992 @@
+%%
+Screen
+        Name = "agtmt9110" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "agqpersonal" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4],
+                                     g_state[2],
+                                     g_form[1] ;
+
+        global string g_zipcode_change[1] ,
+                      g_initial_screen[50] ,
+                      g_daycare[1],
+                      g_central_heat[1] ;
+
+
+        Local Unsigned Ascii Number L_LINE_OF_BUSINESS[4]=0,
+                                    l_val_zipcode[5],
+                                    l_dollar_sign_at[2],
+                                    l_sub[2],
+                                    l_status[2],
+                                    l_claim_year[2],
+                                    l_limit[8],
+                                    l_zipcode_5[5],
+                                    l_no_mtg[1],
+                                    l_sub_code[4],
+                                    l_total_paid[10],
+                                    l_checkbox_1[1],
+                                    l_checkbox_2[1],
+                                    l_checkbox_3[1],
+                                    l_checkbox_4[1],
+                                    l_checkbox_5[1],
+                                    l_checkbox_6[1],
+                                    l_checkbox_7[1],
+                                    l_checkbox_8[1],
+                                    l_warning[3],
+                                    l_no_claims[2],
+                                    l_sub_1[2],
+                                    l_binding_limit[8],
+                                    l_csexec_number[12],
+                                    i_csexec_number[12],
+                                    l_prior_status[2],
+                                    l_restricted[1]=0,
+                                    l_restricted_distance[5]=0/dec=2,
+                                    l_tier[2]=0 ;
+
+        local date l_loss_date[8] ;
+
+        local string l_zipcode[9],
+                     l_csexec_application[25],
+                     l_continue[1],
+                     l_enable[1],
+                     l_subject[100],
+                     l_loss_amount[8],
+                     l_email[50],
+                     l_bound[1],
+                     l_user_id[15],
+                     l_sent[1],
+                     l_screen_1[10]="",
+                     l_screen[9],
+                     l_app[3]="agq",
+                     l_printing[1],
+                     l_dec[15],
+                     l_business_desc_1[30],
+                     l_business_desc_2[30],
+                     l_continue_1[3],
+                     l_str_zipcode[9],
+                     l_str_state[2],
+                     l_continue_2[3],
+                     l_continue_3[2],
+                     l_sub_line[2],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_server_name[100],
+                     l_lob_code[10],
+                     l_over_10000[1]="N",
+                     l_aplus_over_10000[1]="N",
+                     l_code[7],
+                     l_form_edition[25],
+                     l_description[75],
+                     L_COMPANY_ID[10] ;
+
+        include "swsut100.var"
+
+        include "virtualdecs.var"
+
+        include "print.var"
+
+        Access agqpersonal,
+           Set agqpersonal:app_NO = G_app_NO, generic ;
+
+/*----------------------------------------------------------------------------*/
+/* FILENAME: STDKEYS7.INC                                                     */
+/* USE     : Standard function key assignments.                               */
+/* remove add, change, delete                                                 */
+/*----------------------------------------------------------------------------*/
+
+        !Escape=Cancel/error;
+        !Escape=Abort/field/prompt;
+        !Escape=Closewindow/help;
+        !Escape="Exit"/function;
+        !Escape=noeffect ;
+
+        !F1=Help;                               !Sf1=Help;
+
+        !F2=Activehelp/field/icon="ActHlp"
+
+        !F3=Backfield/prompt/icon="|<-";
+        !F3=Backtab/fields/icon="ABORT";
+        !F3=Backtab/passivehelp;                !Sf3=Backfield/field/help;
+        !F3=Pageup/activehelp;
+        !F3="Prev"/function;                    !Sf3="Prev"/function;
+
+
+        !F4=Forwardtab/fields/icon="OK"/edit ;
+        !F4=Forwardtab/passivehelp;             !Sf4=Forwardfield/field/help;
+        !F4=Pagedown/activehelp;
+        !F4="Next"/function;                    !Sf4="Next"/function;
+
+        !F5="Search"/function;                  !Sf5="Find"/function;
+        !F5=Zoom/help;
+
+--        !F6="Add"/function;                     !Sf6="Append"/function;
+
+--        !F7="Change"/function;                  !Sf7="Delete"/function;
+
+--        !F2="Delete"/function;
+
+        !F9=Abort/error;
+        !F9=Refresh/field/function/prompt;
+        !F9=Closewindow/help/icon="Close";
+        !F1="Print"/function/icon="Print"; /* this will display a list icon */
+
+        !F10=Abort/field/prompt;
+        !F10=Cancel/error/icon="Done";
+        !F10="Exit"/function;                   !Sf10="Stop"/function;
+
+        !C2=Backfield/prompt;
+        !C2=Backtab/field;
+        !C2=Backtab/passivehelp;                !Sc2=Backfield/field/help;
+        !C2=Pageup/activehelp;
+        !C2="Prev"/function;                    !Sc2="Prev"/function;
+
+        !C4=Forwardtab/field;
+        !C4=Forwardtab/passivehelp;             !Sc4=Forwardfield/field/help;
+        !C4=Pagedown/activehelp;
+        !C4="Next"/function;                    !Sc4="Next"/function;
+
+/*----------------------------- End STDKEYS.INC ------------------------------*/
+
+
+Style definition
+                include "styles.inc"
+                Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "func1" sequence "final" tagged submit_fn ;
+        "final" continue begin
+                         if l_checkbox_1 = 1 and
+                            l_checkbox_2 = 1 and
+                            l_checkbox_3 = 1 and
+                            l_checkbox_4 = 1 and
+                            l_checkbox_5 = 1 and
+                            l_checkbox_6 = 1 and
+                            l_checkbox_8 = 1 and
+                            agqpersonal:raters_name <> "" and
+                            agqpersonal:company_id = "FARMERS" then
+                             begin
+                             if agqname:quote_no = 0 then
+                                 begin
+                                 l_continue_1 = dialog("Warning","question.bmp","You are about to submit your application to underwriting, do you wish to continue?","Yes","No")
+                                 if l_continue_1 = "Yes" then
+                                     begin
+                                     l_continue_2 = dialog("Warning","question.bmp","Have you printed the Proposal and Application?","Yes","No")
+                                     if l_continue_2 = "Yes" then
+                                         begin
+                                         l_screen_1 = "agtmt9111"
+                                         function = "popup"
+                                         end
+                                     else
+                                         begin
+                                         l_continue_3 = dialog("Warning","question.bmp","Please print the proposal prior to issuance for signature","OK")
+                                         end
+                                     end
+                                 end
+                             else
+                                 begin
+                                 l_screen_1 = "agtmt9111"
+                                 function = "popup"
+                                 end
+                             end
+                         else
+                             begin
+                             error "You need to complete all the information before you can submit to underwriting"
+                             end
+                         end ;
+        "popup"  display/noreturn l_screen_1 ;
+
+        "func2"  display "agtmt9104" tagged totals_fn ;
+        "back"   display/noreturn "agtmt001" tagged back_fn ;
+
+        "func3"  sequence "worksheet"  tagged worksheet_fn ;
+        "worksheet" continue begin
+                             l_printing = "Y"
+                             do create_macro
+                             end  ;
+
+        "func4"  sequence "quoteletter"  tagged quote_letter_fn ;
+        "quoteletter" continue begin
+                               l_printing = "Y"
+                               do print_quote_letter
+                               end ;
+        "func5"  sequence "rating" tagged rating_info_fn ;
+        "rating" continue begin
+                          l_screen_1 = "agtmt9101"
+                          function = "popup"
+                          end ;
+        "goto"   display/noreturn l_screen ;
+        "func6"  display/noreturn "agtmt9102" tagged policy_info_fn ;
+        "func7"  sequence "opt" tagged optional_endorsement_fn ;
+        "opt"    continue begin
+                          l_screen_1 = "agtmt9103"
+                          function = "popup"
+                          end ;
+
+        "func9"  display/noreturn "agtmt9105" tagged mailing_address_fn ;
+        "func10" display/noreturn "agtmt9106" tagged location_address_fn ;
+        "func11" display/noreturn "agtmt9108" tagged application_fn ;
+        "func12" display/noreturn "agtmt9107" tagged mtg_fn ;
+        "func13" display/noreturn "agtmt9105a" tagged corporate_officer_fn ;
+
+        "redisplay" display/noreturn "agtmt9110" ;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+l_warning = 0
+g_initial_screen = ""
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : switch(g_form)
+                  case 3  : setproperty(t_mho3,iconname,"title_mho3.bmp")
+                  case 4  : setproperty(t_mho4,iconname,"title_mho4.bmp")
+                  case 6  : setproperty(t_mho6,iconname,"title_mho6.bmp")
+                  default : begin
+                            setproperty(t_mho3,iconname,"")
+                            setproperty(t_mho4,iconname,"")
+                            setproperty(t_mho6,iconname,"")
+                            end
+                  end
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_username = username
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+l_user_Id = username
+access sfsemail, set sfsemail:company_id = agqpersonal:company_id,
+                     sfsemail:user_Id = l_user_id, generic
+
+if agqname:policy_no <> 0 and
+   sfsemail:agent_no <> 0 then
+    disable(quote_letter_fn)
+
+access sfsagent, set sfsagent:company_id = agqpersonal:company_id,
+                     sfsagent:agent_no   = agqpersonal:agent_no, generic
+
+if sfsagent:sub_producer_for <> 0 and
+   sfsemail:agent_no = sfsagent:agent_no then
+    setproperty(submit_fn,iconname,"btn_submit_to_soa.bmp")
+else
+    setproperty(submit_fn,iconname,"btn_submit_to_uw.bmp")
+
+--if l_enable = "Y" then
+--begin
+do check_files
+if (sfsagent:sub_producer_for = 0 or
+   (sfsagent:sub_producer_for <> 0 and
+   agqpersonal:agent_no <> sfsemail:agent_no)) then
+    begin
+    if agqname:quote_no = 0 then
+        begin
+        if sfsdefault:company_Id = "FARMERS" then
+            begin
+            if l_checkbox_1 = 0 then
+                l_enable = "N"
+            else
+            if l_checkbox_2 = 0 then
+                l_enable = "N"
+            else
+            if l_checkbox_3 = 0 then
+                l_enable = "N"
+            else
+            if l_checkbox_4 = 0 then
+                l_enable = "N"
+            else
+            if l_checkbox_5 = 0 then
+                l_enable = "N"
+            else
+            if l_checkbox_6 = 0 then
+                l_enable = "N"
+            else
+            if l_checkbox_8 = 0 then
+                l_enable = "N"
+
+            if l_checkbox_6 = 0 then
+                begin
+                setproperty(wording,text,"Application not complete - all questions must be answered prior to referral")
+                show(unbound_wording)
+                end
+/*            else
+            if l_checkbox_1 = 1 and
+               l_checkbox_2 = 1 and
+               l_checkbox_3 = 1 and
+               l_checkbox_4 = 1 and
+               l_checkbox_5 = 1 and
+               l_checkbox_6 = 1 and
+               l_checkbox_8 = 1 then
+                l_enable = "Y"*/
+            end
+--        else
+--            l_enable = "Y"
+        end
+    end
+--end
+
+if agqpersonal:raters_name = "" then
+    function = "CHANGE"
+
+if (sfsagent:sub_producer_for = 0 or
+   (sfsagent:sub_producer_for <> 0 and
+   agqpersonal:agent_no <> sfsemail:agent_no)) then
+    begin
+    access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+    while agqapplication:app_no = g_app_no
+        begin
+        if agqapplication:sub_code = 25 and
+           agqapplication:answer = "N" then
+            begin
+            g_central_heat = "N"
+            end
+        if agqapplication:sub_code = 23 then
+            g_daycare = agqapplication:daycare
+
+        next agqapplication
+        end
+    end
+
+if (sfsagent:sub_producer_for = 0 or
+   (sfsagent:sub_producer_for <> 0 and
+   agqpersonal:agent_no <> sfsemail:agent_no)) then
+    begin
+    l_no_claims = 0
+    access agqlosses, set agqlosses:app_no = g_app_no, generic
+
+    l_sub_1 = 1
+    l_total_paid = 0
+    while l_sub_1 < 6
+        begin
+        l_loss_date = agqlosses:date_of_loss[l_sub_1]
+        l_claim_year = year(agqname:eff_date) - year(l_loss_date)
+        if l_loss_date <> 0 then
+            begin
+            if ((l_claim_year < 3 or
+               (l_claim_year = 3 and
+               month(l_loss_date) >= month(agqname:eff_date)))) then
+                begin
+                if ((day(l_loss_date) >= day(agqname:eff_date) and
+                   l_claim_year = 3) or
+                   l_claim_year < 3) then
+                    begin
+                    l_no_claims = l_no_claims + 1
+                    end
+                end
+            end
+
+        l_sub_1 = l_sub_1 + 1
+        end
+
+    access agqclaim, set agqclaim:app_no = g_app_no, generic
+
+    l_aplus_over_10000 = "N"
+    while agqclaim:app_no = g_app_no
+        begin
+        l_claim_year = year(agqname:eff_date) - year(agqclaim:loss_date)
+        if ((l_claim_year < 3 or
+           (l_claim_year = 3 and
+           month(agqclaim:loss_date) >= month(agqname:eff_date))) and
+           agqclaim:policy_type one of "HO", "H" and
+           agqclaim:name <> "INSURED NAME DIFFERENT" and
+           agqclaim:loss_amount not one of "", "0", "$0") then
+            begin
+            l_continue = "N"
+            if l_claim_year = 3 and
+               month(agqclaim:loss_date) = month(agqname:eff_date) and
+               day(agqclaim:loss_date) >= day(agqname:eff_date) then
+                l_continue = "Y"
+
+            if l_claim_year = 3 and
+               month(agqclaim:loss_date) > month(agqname:eff_date) then
+                l_continue = "Y"
+
+            if l_claim_year < 3 then
+                l_continue = "Y"
+
+            if l_continue = "Y" then
+                begin
+                l_no_claims = l_no_claims + 1
+                end
+            end
+
+        next agqclaim
+        end
+
+    if ((g_daycare = "Y" and
+       sfsemail:agent_no <> 0) or
+       (g_central_heat = "N" and
+       sfsemail:agent_no <> 0)) then
+        begin
+        l_enable = "N"
+        end
+
+    if l_no_claims >= 3 and
+       sfsemail:agent_no <> 0 then
+        begin
+        l_warning = l_warning + 1
+        l_enable = "N"
+        end
+
+    l_no_mtg = 0
+    access agqsupp_alias, set agqsupp_alias:app_no = g_app_no, generic
+
+    while agqsupp_alias:app_no = g_app_no
+        begin
+        l_no_mtg = l_no_mtg + 1
+
+    next agqsupp_alias
+    end
+
+    if l_no_mtg >= 3 then
+        begin
+        warning "Refer to Company-Exceeds Binding Authority"
+        end
+
+    do check_for_warnings
+    end
+
+l_server_name = sfsprofile:UNIX_SERVER
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+if agqpersonal:company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "23webhelp_agtmt9110_scr_final_check.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+if g_form = 4 then
+    disable(mtg_fn)
+
+access agqsupp, set agqsupp:app_no = g_app_no, generic
+
+if agqsupp:app_no <> g_app_no then
+    disable(mtg_fn)
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access agsdefault_plp, set agsdefault_plp:company_id       = agqpersonal:company_id,
+                           agsdefault_plp:state            = agqpersonal:state,
+                           agsdefault_plp:agent_no         = agqpersonal:agent_no,
+                           agsdefault_plp:line_of_business = agqpersonal:line_of_business,
+                           agsdefault_plp:form             = agqpersonal:form, generic
+
+if (sfsagent:sub_producer_for = 0 or
+   (sfsagent:sub_producer_for <> 0 and
+   agqpersonal:agent_no <> sfsemail:agent_no)) then
+    begin
+    access agqstatus, set agqstatus:app_no = g_app_no, generic
+
+    l_prior_status = agqstatus:status_code
+    if l_bound = "" then
+        l_bound = agqpersonal:bound
+    if agqpersonal:company_id = "FARMERS" and
+       l_bound = "N" and
+--       agsdefault_plp:allow_agent_to_print_cd = 1 and
+       agqname:quote_no = 0 and
+       l_checkbox_6 = 1 then
+        begin
+        if agqstatus:status_code = 6 then
+            begin
+            l_enable = "Y"
+            hide(unbound_wording)
+            end
+        else
+        if agqstatus:status_code = 4 then
+            begin
+            l_enable = "N"
+            disable(quote_letter_fn)
+            setproperty(wording,text,"QUOTE DECLINED")
+            show(unbound_wording)
+            end
+        else
+        if agqstatus:status_code = 7 then
+            begin
+            l_enable = "N"
+            setproperty(wording,text,"Need more information, contact your Underwriter")
+            show(unbound_wording)
+            end
+        else
+        if agqstatus:status_code one of 1, 3 then
+            begin
+            l_enable = "N"
+            setproperty(wording,text,"Account Not Bound - Underwriting Action Pending")
+            show(unbound_wording)
+            end
+
+        if agqpersonal:sent_email = 0 then
+            do email_underwriter
+        end
+    else
+    if agqpersonal:company_id = "FARMERS" and
+       l_bound = "Y" and
+--       agsdefault_plp:allow_agent_to_print_cd = 1 and
+       agqname:quote_no = 0 and
+       l_checkbox_6 = 1 then
+        begin
+        hide(unbound_wording)
+--        l_enable = "Y"
+        end
+
+    if agqstatus:status_code not one of 4, 6, 7 then
+        do update_agqstatus
+
+      if l_prior_status <> agqstatus:status_code then
+          function = "redisplay"
+--        end
+    end
+
+if agqname:quote_no <> 0 then
+    begin
+    l_enable = "N"
+    end
+
+if agqname:sub_producer_submitted <> 0 and
+   sfsagent:sub_producer_for <> 0 and
+   agqpersonal:agent_no = sfsemail:agent_no then
+    begin
+    l_enable = "N"
+    setproperty(wording,text,"Application already submitted for Approval")
+    show(unbound_wording)
+    end
+
+if agqpersonal:bound = "N" and
+   agqstatus:status_code not one of 6 then
+    l_enable = "N"
+
+if l_enable = "N" then
+    disable(submit_fn)
+else
+    enable(submit_fn)
+
+Access Validation
+If agqpersonal:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        scrollbarpolicy = always
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,28 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,20 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Final Checklist..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100 Tagged quote_no
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101  agqpersonal:APP_NO/displayonly ;
+}
+
+Panel at 6,1 to 6,100 Tagged farmers_fn
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,7
+        Properties {
+                Iconname = "btn_view_print_worksheet.bmp"
+                }
+        Events  {
+                Action = worksheet_fn
+                }
+        Button at 1,35   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+        Button at 1,58
+        Properties {
+                Iconname = "btn_view_print_proposal.bmp"
+                }
+        Events  {
+                Action = quote_letter_fn
+                }
+        }
+
+Panel at 6,70 to 6,100 Tagged ficof_fn
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,7
+        Properties {
+                Iconname = "btn_view_print_worksheet.bmp"
+                }
+        Events  {
+                Action = worksheet_fn
+                }
+        Button at 1,58
+        Properties {
+                Iconname = "btn_view_print_quote_and_app.bmp"
+                }
+        Events  {
+                Action = quote_letter_fn
+                }
+
+}
+
+Panel at 5.45,91
+Properties
+  {
+    layouttype = column
+  }
+{
+  Components
+    guidetext to 1,1
+       properties
+         {
+           text = "agtmt9110.sd"
+           fontsize = 9
+         }
+}
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+
+Panel at 8,30 to 8,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1   tagged rating_info
+        Properties {
+                Iconname = "btn_rating_infomation.bmp"
+                }
+        Events  {
+                Action = rating_info_fn
+                }
+        }
+
+Panel at 10,30 to 10,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1    tagged optional_endorsement_info
+        Properties {
+                Iconname = "btn_opt_endt.bmp"
+                }
+        Events  {
+                Action = optional_endorsement_fn
+                }
+
+        }
+
+Panel at 12,30 to 12,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_mail_address.bmp"
+                }
+        Events  {
+                Action = mailing_address_fn
+                }
+
+}
+
+Panel at 14,30 to 14,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_corporate_officer.bmp"
+                }
+        Events  {
+                Action = corporate_officer_fn
+                }
+
+}
+
+Panel at 16,30 to 16,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_loc_address.bmp"
+                }
+        Events  {
+                Action = location_address_fn
+                }
+
+}
+
+Panel at 18,30 to 18,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_mortgagee.bmp"
+                }
+        Events  {
+                Action = mtg_fn
+                }
+
+}
+
+Panel at 20,30 to 20,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_application.bmp"
+                }
+        Events  {
+                Action = application_fn
+                }
+
+}
+
+Panel at 8,65 to 8,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_1/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 10,65 to 10,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_3/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 12,65 to 12,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_4/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 14,65 to 14,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_8/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 16,65 to 16,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_5/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 18,65 to 18,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_7/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 20,65 to 20,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_6/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 22,5 to 23,90 Tagged rater_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        fontstyle = bold
+        }
+{
+%%
+Enter CSR or Producer Name:  __________________________________________________
+Enter CSR or Producer Email: __________________________________________________
+
+%%
+
+components
+
+Fields
+101     begin
+        access agqagtcontact_alias, set agqagtcontact_alias:company_id = agqpersonal:company_id,
+                                        agqagtcontact_alias:agent_no   = agqpersonal:agent_no, generic
+
+        end
+        agqpersonal:raters_name/uppercase mandatory
+
+        activehelp agqagtcontact_alias:raters_name ;
+201     begin
+        access agqagtcontact_alt, set agqagtcontact_alt:company_id  = agqpersonal:company_id,
+                                      agqagtcontact_alt:agent_no    = agqpersonal:agent_no,
+                                      agqagtcontact_alt:raters_name = agqpersonal:raters_name, generic
+
+        agqpersonal:email = agqagtcontact_alt:email
+        end
+        agqpersonal:email/default mandatory
+
+        activehelp agqagtcontact_alt:email ;
+
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,10 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1   tagged back_info
+        Properties {
+                Iconname = "btn_view_summary_totals.bmp"
+                }
+        Events  {
+                Action = totals_fn
+                }
+        }
+
+Panel at 25,70 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged submit_fn
+        Properties {
+                Iconname = ""
+                }
+        Events  {
+                Action = submit_fn
+                }
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+panel at 27,1 to 27, 100 tagged unbound_wording
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,100 tagged wording
+             properties
+               {
+                 text = ""
+                 fontsize = 18
+                 fontstyle = bold
+                 fontname = "Arial"
+                 contentalignment = middle
+               }
+         }
+
+panel at 27,1 to 32,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+}
+
+update
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    access agqagtcontact, set agqagtcontact:company_id  = agqpersonal:company_id,
+                              agqagtcontact:agent_no    = agqpersonal:agent_no,
+                              agqagtcontact:raters_name = agqpersonal:raters_name, generic
+
+    if agqagtcontact:raters_name = agqpersonal:raters_name then
+        begin
+        change agqagtcontact
+            begin
+            agqagtcontact:email       = agqpersonal:email/raw
+            agqagtcontact:expansion   = ""/raw
+            end
+        end
+    else
+        begin
+        add agqagtcontact
+            begin
+            agqagtcontact:company_id  = agqpersonal:company_id/raw
+            agqagtcontact:agent_no    = agqpersonal:agent_no
+            agqagtcontact:raters_name = agqpersonal:raters_name/raw
+            agqagtcontact:email       = agqpersonal:email/raw
+            agqagtcontact:expansion   = ""/raw
+            end
+        end
+    end
+
+procedure definition
+
+procedure update_agqstatus
+begin
+access agqpersonal_alias, set agqpersonal_alias:app_no = g_app_no, generic
+
+access agqstatus, set agqstatus:app_no = g_app_no, generic
+
+if agqpersonal_alias:bound = "Y" and
+   sfsagent:sub_producer_for = 0 then
+    l_status = 2
+else
+if agqpersonal_alias:bound = "Y" and
+   sfsagent:sub_producer_for <> 0 then
+    l_status = 9
+else
+if agqpersonal_alias:bound = "N" then
+    l_status = 3
+
+access agsstatus, set agsstatus:company_id  = agqpersonal:company_id,
+                      agsstatus:status_code = l_status, generic
+
+if agqstatus:app_no = g_app_no then
+    begin
+    change agqstatus
+        begin
+        agqstatus:trans_date         = todaysdate
+        agqstatus:status_code        = l_status
+        agqstatus:status_description = agsstatus:description/raw
+        agqstatus:policy_no          = 0
+        agqstatus:agent_no           = agqpersonal:agent_no
+        agqstatus:company_id         = agqpersonal:company_id/raw
+        end
+    end
+else
+if agqstatus:app_no <> g_app_no then
+    begin
+    add agqstatus
+        begin
+        agqstatus:app_no             = g_app_no
+        agqstatus:insured_name       = agqname:name[1]/raw
+        agqstatus:trans_date         = todaysdate
+        agqstatus:status_code        = l_status
+        agqstatus:status_description = agsstatus:description/raw
+        agqstatus:policy_no          = 0
+        agqstatus:agent_no           = agqpersonal:agent_no
+        agqstatus:company_id         = agqpersonal:company_id/raw
+        end
+    end
+
+access agqstatusnotes, set agqstatusnotes:app_no = g_app_no, generic
+
+do subcode
+if agqpersonal_alias:bound = "Y" then
+    begin
+    if agqstatusnotes:app_no <> g_app_no then
+        begin
+        add agqstatusnotes
+            begin
+            agqstatusnotes:app_no            = g_app_no
+            agqstatusnotes:trans_date        = todaysdate
+            agqstatusnotes:sub_code          = l_sub_code
+            agqstatusnotes:notes             = "Agent has submitted quote bound"
+            agqstatusnotes:note_created_by   = "agtmt9110"
+            agqstatusnotes:status_code       = l_status
+            end
+        end
+    else
+        begin
+        change agqstatusnotes
+            begin
+            agqstatusnotes:trans_date        = todaysdate
+            agqstatusnotes:sub_code          = l_sub_code
+            agqstatusnotes:notes             = "Agent has submitted quote bound"
+            agqstatusnotes:note_created_by   = "agtmt9110"
+            agqstatusnotes:status_code       = l_status
+            end
+        end
+    end
+else
+    begin
+    if agqstatusnotes:app_no <> g_app_no then
+        begin
+        add agqstatusnotes
+            begin
+            agqstatusnotes:app_no            = g_app_no
+            agqstatusnotes:trans_date        = todaysdate
+            agqstatusnotes:sub_code          = l_sub_code
+            agqstatusnotes:notes             = "Agent's quote has been emailed to the underwriter not bound"
+            agqstatusnotes:note_created_by   = "agtmt9110"
+            agqstatusnotes:status_code       = l_status
+            end
+        end
+    else
+        begin
+        change agqstatusnotes
+            begin
+            agqstatusnotes:trans_date        = todaysdate
+            agqstatusnotes:sub_code          = l_sub_code
+            agqstatusnotes:notes             = "Agent's quote has been emailed to the underwriter not bound"
+            agqstatusnotes:note_created_by   = "agtmt9110"
+            agqstatusnotes:status_code       = l_status
+            end
+        end
+    end
+
+end
+
+procedure subcode
+begin
+access agqstatusnotes_alias, set agqstatusnotes_alias:app_no = g_app_no, generic
+
+l_sub_code = 0
+while agqstatusnotes_alias:app_no = g_app_no
+    begin
+    l_sub_code = agqstatusnotes_alias:sub_code
+
+    next agqstatusnotes_alias
+    end
+
+l_sub_code = l_sub_code + 10
+end
+
+procedure email_underwriter
+begin
+access sfsagent_alias, set sfsagent_alias:company_id = agqpersonal:company_id,
+                           sfsagent_alias:agent_no   = sfsemail:agent_no, generic
+
+access sfsperun, set sfsperun:company_id           = sfsagent:company_id,
+                     sfsperun:personal_underwriter = sfsagent:personal_underwriter, generic
+
+access scipsimage, set scipsimage:company_id = agqpersonal:company_id, generic
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access agqmailingaddress, set agqmailingaddress:app_no = g_app_no, generic
+
+l_printing = "N"
+do print_quote_letter
+--do create_macro
+if sfsagent_alias:sub_producer_for <> 0 then
+    l_email = scipsimage:email_address[2]
+else
+    L_EMAIL   = trun(sfsperun:email_1)
+L_SUBJECT = "Referral to Review for app" + trun(str(agqpersonal:app_no)) + " - " + trun(toggle(agqpersonal:business_name[1]))
+
+deletefile("referral.mf")
+--Writefile ("referral.mf","cli uuencode ./referral.pdf referral1.pdf> referral.uue<nl>")
+Writefile ("referral.mf","cli mail -s '%s' -a referral.pdf %s < /dev/null",trun(l_subject),Trun(L_EMAIL))
+writefile ("referral.mf","<NL>")
+--Writefile ("referral.mf","%s%s%s%s%s%s%s","cli mail -s ","'",Trun(L_SUBJECT),"'"," ","support@farmersofsalem.com"," < referral.uue<nl>")
+--Writefile ("referral.mf","%s%s%s%s%s%s%s","cli mail -s ","'",Trun(L_SUBJECT),"'"," ","csamuels@farmersofsalem.com"," < referral.uue<nl>")
+Writefile ("referral.mf","cli mail -s '%s' -a referral.pdf mchambers@farmersofsalem.com < /dev/null",trun(l_subject))
+writefile ("referral.mf","<NL>")
+Closefile ("referral.mf")
+
+Proc("cli chmod 777 referral.mf")/noconsole
+Proc("cli cq referral")/noconsole
+
+access agqpersonal_alias, set agqpersonal_alias:app_no = agqpersonal:app_no, generic
+
+if agqpersonal_alias:app_no = agqpersonal:app_no and
+   sfsagent_alias:sub_producer_for = 0 then
+    begin
+    change agqpersonal_alias
+        begin
+        agqpersonal_alias:sent_email = 1
+        end
+    end
+
+end
+
+procedure check_for_warnings
+begin
+do minimum_maximum_limits
+
+l_limit = agqpersonal:dwelling_limit * 0.70
+if agqpersonal:contents_limit > l_limit then
+    l_warning = l_warning + 1
+
+if agqpersonal:townhouse_units > 8 then
+    begin
+    l_warning = l_warning + 1
+    end
+
+if agqpersonal:three_four_family = 1 then
+    begin
+    l_warning = l_warning + 1
+    end
+
+if agqpersonal:dwelling_limit > l_binding_limit and
+   l_binding_limit <> 0 then
+    begin
+    l_warning = l_warning + 1
+    end
+
+if agqpersonal:year_construction < 1920 then
+    begin
+    l_warning = l_warning + 1
+    end
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+while agqend:app_no = g_app_no
+    begin
+    if agqend:code = "MPL180" then
+        begin
+        l_warning = l_warning + 1
+        end
+
+    next agqend
+    end
+
+l_no_mtg = 0
+access agqsupp_alias, set agqsupp_alias:app_no = g_app_no, generic
+
+while agqsupp_alias:app_no = g_app_no
+    begin
+    l_no_mtg = l_no_mtg + 1
+
+    next agqsupp_alias
+    end
+
+if l_no_mtg >= 3 then
+    begin
+    l_warning = l_warning + 1
+    end
+
+access agqwatercraft, set agqwatercraft:app_no = g_app_no, generic
+
+while agqwatercraft:app_no = g_app_no
+    begin
+    if agqwatercraft:horse_power[1] > 100 then
+        begin
+        l_warning = l_warning + 1
+        end
+
+    if agqwatercraft:horse_power[2] > 150 then
+        begin
+        l_warning = l_warning + 1
+        end
+
+    if agqwatercraft:sailboat_feet > 26 then
+        begin
+        l_warning = l_warning + 1
+        end
+
+    next agqwatercraft
+    end
+
+access agqdesc1, set agqdesc1:app_no = g_app_no, generic
+
+while agqdesc1:app_no = g_app_no
+    begin
+    if agqdesc1:code = "MPL15" then
+        begin
+        if agqdesc1:article = "JEWELRY" and
+           agqdesc1:limit > 25000 then
+            begin
+            l_warning = l_warning + 1
+            end
+
+        if agqdesc1:article = "FINE ARTS" and
+           agqdesc1:limit > 50000 then
+            begin
+            l_warning = l_warning + 1
+            end
+
+        end
+
+    next agqdesc1
+    end
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+while agqapplication:app_no = g_app_no
+    begin
+    if agqapplication:sub_code one of 2, 16, 22, 23, 24, 28, 29, 30 and
+       agqapplication:answer = "Y" then
+        begin
+        l_warning = l_warning + 1
+        end
+
+    if agqapplication:sub_code = 31 and
+       agqapplication:answer = "Y" and
+       agqapplication:breed_for_profit = "Y" then
+        begin
+        l_warning = l_warning + 1
+        end
+
+    next agqapplication
+    end
+
+/*access agqpersonal2, set agqpersonal2:app_no = g_app_no, generic
+
+if agqpersonal2:credit_score_tier >= 20 then
+    begin
+    l_warning = l_warning + 1
+    if l_first = "Y" and
+       l_warning = 1 then
+        begin
+        l_first = "N"
+        l_comments = trun(l_comments_3)  +
+                     "<NL>" +
+                     "<NL>" +
+                     "Tier is 20 or greater"
+        end
+    else
+        begin
+        l_comments = trun(l_comments) +
+                     "<NL>" +
+                     "Tier is 20 or greater"
+        end
+    end*/
+
+access agqpersonal_alias, set agqpersonal_alias:app_no = g_app_no, generic
+
+l_bound = "Y"
+if agqpersonal_alias:app_no = g_app_no then
+    begin
+    change agqpersonal_alias
+        begin
+        if l_warning > 0 then
+            begin
+            l_bound = "N"
+            agqpersonal_alias:bound = "N"
+            end
+        else
+            begin
+            l_bound = "Y"
+            agqpersonal_alias:bound = "Y"
+            end
+        end
+    end
+
+end
+
+procedure minimum_maximum_limits
+begin
+access sfsminmax, set sfsminmax:company_id       = agqpersonal:company_id,
+                      sfsminmax:state            = agqpersonal:state,
+                      sfsminmax:line_of_business = agqpersonal:line_of_business,
+                      sfsminmax:form             = agqpersonal:form, generic
+
+while sfsminmax:company_id        = agqpersonal:company_id and
+      sfsminmax:state             = agqpersonal:state and
+      sfsminmax:line_of_business  = agqpersonal:line_of_business and
+      sfsminmax:form              = agqpersonal:form
+        begin
+        if (agqpersonal:eff_date >= sfsminmax:eff_date and
+           (agqpersonal:eff_date <= sfsminmax:exp_date or
+           sfsminmax:exp_date = 0)) then
+            begin
+            l_binding_limit   = sfsminmax:binding_maximum
+            end
+
+        next sfsminmax
+        end
+
+end
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END
+
+procedure check_files
+begin
+l_checkbox_1 = 1
+l_checkbox_2 = 1
+--l_checkbox_4 = 1
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+if agqend:app_no = g_app_no then
+    begin
+    l_checkbox_3 = 1
+    do check_endorsement_edition_dates
+    end
+
+access agqmailingaddress, set agqmailingaddress:app_no = g_app_no, generic
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+if agqname:name[1] = "" or
+   agqname:address[1] = "" or
+   agqname:city = "" or
+   agqname:str_state = "" or
+   agqname:str_zipcode = "" then
+    l_checkbox_4 = 0
+else
+    l_checkbox_4 = 1
+
+access agqpersonal_alias, set agqpersonal_alias:app_no = g_app_no, generic
+
+l_checkbox_5 = 1
+while agqpersonal_alias:app_no = g_app_no
+    begin
+    access agqlocation, set agqlocation:app_no   = agqpersonal_alias:app_no, generic
+
+    if agqlocation:address = "" or
+       agqlocation:city = "" or
+       agqlocation:str_state = "" or
+       agqlocation:str_zipcode = "" then
+        l_checkbox_5 = 0
+
+    next agqpersonal_alias
+    end
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+l_checkbox_6 = 1
+while agqapplication:app_no = g_app_no
+    begin
+    if agqapplication:literal <> "" and
+       agqapplication:answer not one of "N", "Y" and
+       agqapplication:sub_code >= 11 and
+       agqapplication:sub_code < 60 then
+        begin
+        l_checkbox_6 = 0
+        end
+
+    next agqapplication
+    end
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+while agqapplication:app_no = g_app_no
+    begin
+    l_sub_code = agqapplication:sub_code
+
+    next agqapplication
+    end
+
+if l_sub_code < 11 then
+    l_checkbox_6 = 0
+
+access agqsupp, set agqsupp:app_no = g_app_no, generic
+
+if agqsupp:app_no = g_app_no then
+    l_checkbox_7 = 1
+else
+    l_checkbox_7 = 0
+
+access agqfobinfo, set agqfobinfo:app_no = g_app_no, generic
+
+if agqfobinfo:name[1] = "" or
+   agqfobinfo:mailing_address[1] = "" or
+--   agqfobinfo:social_security_no[1] = 0 or
+   agqfobinfo:occupation[1] = "" then
+    l_checkbox_8 = 0
+else
+    l_checkbox_8 = 1
+
+end
+
+procedure check_endorsement_edition_dates
+begin
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access agqname, set agqname:app_no = agqpersonal:app_no, exact
+
+Access agqend, Set agqend:app_no = g_app_no, generic
+
+while agqend:app_no = g_app_no
+    begin
+    l_code = agqend:code
+    access sfsoptend, set sfsoptend:company_id       = agqpersonal:company_id,
+                          sfsoptend:state            = agqpersonal:state,
+                          sfsoptend:line_of_business = agqpersonal:line_of_business,
+                          sfsoptend:code             = l_code, generic
+
+    l_form_edition = ""
+    l_description  = ""
+    while sfsoptend:company_id       = agqpersonal:company_id and
+          sfsoptend:state            = agqpersonal:state and
+          sfsoptend:line_of_business = agqpersonal:line_of_business and
+          sfsoptend:code             = l_code
+            begin
+            if (agqname:eff_date >= sfsoptend:eff_date and
+               (agqname:eff_date <= sfsoptend:exp_date or
+               sfsoptend:exp_date = 0)) then
+                begin
+                l_form_edition = sfsoptend:form_edition
+                l_description  = sfsoptend:description
+                end
+
+            next sfsoptend
+            end
+
+    if l_form_edition <> "" then
+        begin
+        change agqend
+            Begin
+            agqend:form_edition         =       l_form_edition/raw
+            agqend:description          =       l_description/raw
+            end
+        End
+    else
+        begin
+        delete agqend
+        end
+
+    Next agqend
+    End
+
+end
+
+procedure print_quote_letter
+begin
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+if sfscompany:debug_mode = 0 then
+    begin
+    proc("cli csbatch agqmso9104 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso9104.cq %s<nl>",l_dec)/noconsole
+
+    proc("cli csbatch agqmso9104a %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso9104a.cq %s<nl>",l_dec)/noconsole
+    end
+else
+    begin
+    proc("cli csbatch agqmso9104 %s",str(g_app_no,11))
+    Proc("cli joinit agqmso9104.cq %s<nl>",l_dec)
+
+    proc("cli csbatch agqmso9104a %s",str(g_app_no,11))
+    Proc("cli joinit agqmso9104a.cq %s<nl>",l_dec)
+    end
+
+access sfsline, set sfsline:company_id       = agqpersonal:company_id,
+                    sfsline:line_of_business = agqpersonal:line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+L_LOB_CODE = SFSLINE:LOB_CODE
+Access SCIPSCONTROL, Set SCIPSCONTROL:COMPANY_ID = agqpersonal:COMPANY_ID,
+                         SCIPSCONTROL:STATE      = agqpersonal:STATE,
+                         SCIPSCONTROL:LOB_CODE   = L_LOB_CODE,Exact
+
+if scipscontrol:dont_print_tpd4_new_business = 0 and
+   agqmaster:terrorism_premium <> 0 and
+   sfsline:lob_code not one of "DWELLING" and
+   agqpersonal:company_id = "FARMERS" then
+    begin
+    proc(":cli csbatch tpd7q %s",str(g_app_no,11))/noconsole
+    Proc(":cli joinit tpd7q.cq %s<nl>",l_dec)/noconsole
+    end
+else
+if scipscontrol:dont_print_tpd4_new_business = 0 and
+   sfsline:lob_code one of "DWELLING" and
+   agqmaster:terrorism_premium <> 0 and
+   agqpersonal:company_id = "FARMERS" then
+    begin
+    proc(":cli csbatch tpd7q %s",str(g_app_no,11))/noconsole
+    Proc(":cli joinit tpd7q.cq %s<nl>",l_dec)/noconsole
+    end
+else
+if agqmaster:tpd6_terrorism_premium <> 0 and
+   scipscontrol:dont_print_tpd4_new_business = 0 and
+   agqpersonal:company_id = "FARMERS" then
+    begin
+    proc(":cli csbatch tpd7q %s",str(g_app_no,8))/noconsole
+    Proc(":cli joinit tpd7q.cq %s<nl>",l_dec)/noconsole
+    end
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+if l_printing = "Y" then
+    begin
+    L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+    L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+    L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+    If SFSCOMPANY:DEBUG_MODE = 0 Then
+        Begin
+        Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+        Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+        Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+        End
+    Else
+        Begin
+        Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+        Proc("chmod 777 %s ",L_DEC_PDF)
+        Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+        End
+
+    Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+    end
+else
+    begin
+    l_dec_pdf = "referral.pdf"
+    If SFSCOMPANY:DEBUG_MODE = 0 Then
+        Begin
+        Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+        Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+        end
+    else
+        Begin
+        Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+        Proc("chmod 777 %s ",L_DEC_PDF)
+        end
+    end
+
+end
+
+Procedure CREATE_MACRO
+Begin
+Do REFRESH_WORK_FILES
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+L_USERNAME = USERNAME
+I_REPORTA = "agqpr9104"
+I_REPORT = "agqpr9104.cq"
+I_REPORT_CQE = "agqpr9104.cqe"
+I_APP = "agq"
+l_app = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF = L_APP+Str(I_CSEXEC_NUMBER)+".txt"
+I_PARAMETER = I_APP+Str(I_CSEXEC_NUMBER)+".par"
+I_MACROA = I_APP+Str(I_CSEXEC_NUMBER)
+I_MACRO = I_APP+Str(I_CSEXEC_NUMBER)+".mf"
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+if agqprint1:app_no <> g_app_no then
+    begin
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+else
+    begin
+    delete agqprint1
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+
+Deletefile(I_MACRO)
+Writefile(I_MACRO,"clear list<nl>")
+Writefile(I_MACRO,"clear find<nl>")
+Writefile(I_MACRO,"clear sum<nl>")
+Writefile(I_MACRO,"run agqpr9104<nl>")
+Writefile(I_MACRO,"cli rm agqpr9104.cq<nl>")
+Writefile(I_MACRO,"rsave agqpr9104<nl>")
+Writefile(I_MACRO,"cli joinit agqpr9104.cq %s<nl>",L_DEC)
+Closefile(I_MACRO)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc("cli cq %s",I_MACRO)/noconsole
+Else
+    Proc("cli cq %s",I_MACRO)
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)/noconsole
+    Proc("cli chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("cli rm %s",L_DEC)/noconsole
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)
+    Proc("cli chmod 777 %s ",L_DEC_PDF)
+    Proc("cli rm %s",L_DEC)
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client/noconsole
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+delete agqprint1
+
+Do REFRESH_WORK_FILES
+End
+
+Procedure REFRESH_WORK_FILES
+Begin
+Proc ("cli agqprint1.mk")/noconsole
+End
+
+end

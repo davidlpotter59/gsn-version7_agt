@@ -1,0 +1,763 @@
+%%                 
+Screen
+        Name = "agtmt307";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqcomputer" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    l_computer_limit[8],
+                                    l_computer_limit_1[8],
+                                    l_computer_limit_2[8],
+                                    l_form_1[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_limit_1[8],
+                                    l_limit_2[8],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_description_1[20],
+                     l_description_2[20],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ;
+
+        Access agqcomputer,
+           Set agqcomputer:app_NO   = G_app_NO ,
+               agqcomputer:prem_no  = g_prem_no,
+               agqcomputer:build_no = g_build_no ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        add/autoupdate   tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+g_code = "BU0370"
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(farmers_fn)
+    hide(lebins_fn)
+    hide(ggund_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(ggund_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(ggund_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "GGUND" then
+    begin
+    hide(ficof_fn)
+    hide(other_fn)
+    hide(lebins_fn)
+    hide(farmers_fn)
+    hide(t_line_of_business)
+    hide(t_line_of_business_1)
+    end
+
+if agqcomputer:app_no <> g_app_no or
+   agqcomputer:prem_no <> g_prem_no or
+   agqcomputer:build_no <> g_build_no then
+    function = "ADD"
+
+Access Validation
+If agqcomputer:app_NO   <> G_app_NO or
+   agqcomputer:prem_no  <> g_prem_no or
+   agqcomputer:build_no <> g_build_no Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent         = false
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,83 to 2,100 tagged ggund_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,60     tagged display_information_box
+                properties
+                  {
+                    text = "BU0370 - Computer Coverage"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt307.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 8,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,5 to 1,30
+             properties
+               {
+                 text = "Limit of Liability-Section 1"
+                 fontsize = 12
+--                 contentalignment = right
+                 underlined = true
+                 fontstyle = bold
+                 fontname = "arial"
+               }
+        }
+
+Panel at 9,10 to 11,100 tagged other_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,30
+             properties
+               {
+                 text = "Hardware:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontstyle = italic
+                 fontname = "arial"
+               }
+
+           guidetext at 2,1 to 2,30
+             properties
+               {
+                 text = "Software:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontstyle = italic
+                 fontname = "arial"
+               }
+
+           guidetext at 3,1 to 3,30
+             properties
+               {
+                 text = "Total Limit of Liability-Section 1:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontstyle = italic
+                 fontname = "arial"
+               }
+
+         }
+
+Panel at 9,10 to 11,100 tagged ggund_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,30
+             properties
+               {
+                 text = "Hardware/Media:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontstyle = italic
+                 fontname = "arial"
+               }
+
+         }
+
+Panel at 9,42 to 11,100 Tagged other_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+___________
+___________
+___________
+
+
+%%
+
+components
+
+Fields
+101     begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqcomputer:app_no   = g_app_no
+            agqcomputer:PREM_NO  = G_PREM_NO
+            agqcomputer:BUILD_NO = G_BUILD_NO
+            End
+
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+        l_form = agqmaster:form
+        access bpsdefault1, set bpsdefault1:company_id       = agqgeneral:company_id,
+                                bpsdefault1:line_of_business = agqgeneral:line_of_business,
+                                bpsdefault1:form             = l_form, generic
+
+        if agqgeneral:company_id = "FLEMINGTON" then
+            begin
+            access bpssupplemental, set bpssupplemental:company_id       = agqgeneral:company_id,
+                                        bpssupplemental:state            = agqgeneral:state,
+                                        bpssupplemental:line_of_business = agqgeneral:line_of_business, generic
+
+            while bpssupplemental:company_id       = agqgeneral:company_id and
+                  bpssupplemental:state            = agqgeneral:state and
+                  bpssupplemental:line_of_business = agqgeneral:line_of_business
+                begin
+                if agqgeneral:eff_date >= bpssupplemental:eff_date then
+                    begin
+                    if g_enhancement = 1 then
+                        begin
+                        l_computer_limit = agqgeneral:property_limit * (bpssupplemental:computer_hardware_percent divide 100)
+                        if bpssupplemental:computer_coverage_hardware > l_computer_limit then
+                            L_COMPUTER_LIMIT   = bpssupplemental:computer_coverage_hardware
+                        l_computer_limit_1 = agqgeneral:property_limit * (bpssupplemental:computer_software_percent divide 100)
+                        if bpssupplemental:computer_coverage_media > l_computer_limit_1 then
+                            l_computer_limit_1 = bpssupplemental:computer_coverage_media
+                        l_computer_limit_2 = agqgeneral:property_limit * (bpssupplemental:extra_expense_percent divide 100)
+                        if bpssupplemental:extra_expense_limit > l_computer_limit_2 then
+                            l_computer_limit_2 = bpssupplemental:extra_expense_limit
+                        end
+                    else
+                        begin
+                        l_computer_limit = agqgeneral:property_limit * (bpsdefault1:computer_hardware_percent divide 100)
+                        if bpsdefault1:computer_hardware_limit > l_computer_limit then
+                            L_COMPUTER_LIMIT   = bpsdefault1:computer_hardware_limit
+                        l_computer_limit_1 = agqgeneral:property_limit * (bpsdefault1:computer_software_percent divide 100)
+                        if bpsdefault1:computer_software_limit > l_computer_limit_1 then
+                            l_computer_limit_1 = bpsdefault1:computer_software_limit
+                        l_computer_limit_2 = agqgeneral:property_limit * (bpsdefault1:extra_expense_percent divide 100)
+                        if bpsdefault1:extra_expense_limit > l_computer_limit_2 then
+                            l_computer_limit_2 = bpsdefault1:extra_expense_limit
+                        end
+                    end
+                next bpssupplemental
+                end
+            end
+        end
+        agqcomputer:limit[1]/tabstop/default/mask="ZZ,ZZZ,ZZZ"
+        if agqcomputer:limit[1] < l_computer_limit and
+           agqgeneral:company_id = "FLEMINGTON" then
+            error "The limit you entered is less then the minimum allowed";
+201     agqcomputer:limit[3]/tabstop/mask="ZZ,ZZZ,ZZZ"/default
+        if agqcomputer:limit[3] < l_computer_limit_1 and
+           agqgeneral:company_id = "FLEMINGTON" then
+            error "The limit you entered is less then the minimum allowed";
+301     agqcomputer:limit[1] + agqcomputer:limit[3]/displayonly/mask="ZZ,ZZZ,ZZZ" ;
+
+}
+
+Panel at 9,42 to 11,100 Tagged ggund_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+___________
+
+
+%%
+
+components
+
+Fields
+101     begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqcomputer:app_no   = g_app_no
+            agqcomputer:PREM_NO  = G_PREM_NO
+            agqcomputer:BUILD_NO = G_BUILD_NO
+            End
+
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+        l_form = agqmaster:form
+        access bpsdefault1, set bpsdefault1:company_id       = agqgeneral:company_id,
+                                bpsdefault1:line_of_business = agqgeneral:line_of_business,
+                                bpsdefault1:form             = l_form, generic
+
+        if agqgeneral:company_id = "FLEMINGTON" then
+            begin
+            access bpssupplemental, set bpssupplemental:company_id       = agqgeneral:company_id,
+                                        bpssupplemental:state            = agqgeneral:state,
+                                        bpssupplemental:line_of_business = agqgeneral:line_of_business, generic
+
+            while bpssupplemental:company_id       = agqgeneral:company_id and
+                  bpssupplemental:state            = agqgeneral:state and
+                  bpssupplemental:line_of_business = agqgeneral:line_of_business
+                begin
+                if agqgeneral:eff_date >= bpssupplemental:eff_date then
+                    begin
+                    if g_enhancement = 1 then
+                        begin
+                        l_computer_limit = agqgeneral:property_limit * (bpssupplemental:computer_hardware_percent divide 100)
+                        if bpssupplemental:computer_coverage_hardware > l_computer_limit then
+                            L_COMPUTER_LIMIT   = bpssupplemental:computer_coverage_hardware
+                        l_computer_limit_1 = agqgeneral:property_limit * (bpssupplemental:computer_software_percent divide 100)
+                        if bpssupplemental:computer_coverage_media > l_computer_limit_1 then
+                            l_computer_limit_1 = bpssupplemental:computer_coverage_media
+                        l_computer_limit_2 = agqgeneral:property_limit * (bpssupplemental:extra_expense_percent divide 100)
+                        if bpssupplemental:extra_expense_limit > l_computer_limit_2 then
+                            l_computer_limit_2 = bpssupplemental:extra_expense_limit
+                        end
+                    else
+                        begin
+                        l_computer_limit = agqgeneral:property_limit * (bpsdefault1:computer_hardware_percent divide 100)
+                        if bpsdefault1:computer_hardware_limit > l_computer_limit then
+                            L_COMPUTER_LIMIT   = bpsdefault1:computer_hardware_limit
+                        l_computer_limit_1 = agqgeneral:property_limit * (bpsdefault1:computer_software_percent divide 100)
+                        if bpsdefault1:computer_software_limit > l_computer_limit_1 then
+                            l_computer_limit_1 = bpsdefault1:computer_software_limit
+                        l_computer_limit_2 = agqgeneral:property_limit * (bpsdefault1:extra_expense_percent divide 100)
+                        if bpsdefault1:extra_expense_limit > l_computer_limit_2 then
+                            l_computer_limit_2 = bpsdefault1:extra_expense_limit
+                        end
+                    end
+                next bpssupplemental
+                end
+            end
+        end
+        agqcomputer:limit[1]/tabstop/default/mask="ZZ,ZZZ,ZZZ" ;
+
+}
+
+Panel at 16,1 to 16,100 tagged other_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,5 to 1,30
+             properties
+               {
+                 text = "Limit of Liability-Section 2"
+                 fontsize = 12
+--                 contentalignment = right
+                 underlined = true
+                 fontstyle = bold
+                 fontname = "arial"
+               }
+        }
+
+Panel at 17,10 to 17,100  tagged other_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,30
+             properties
+               {
+                 text = "Extra Expense:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontstyle = italic
+                 fontname = "arial"
+               }
+
+         }
+
+Panel at 17,42 to 17, 100 Tagged other_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+___________
+
+%%
+
+components
+
+Fields
+101     agqcomputer:limit[2]/tabstop/mask="ZZ,ZZZ,ZZZ"
+        if agqcomputer:limit[2] < l_computer_limit_2 and
+           agqgeneral:company_id = "FLEMINGTON" then
+            error "The limit you entered is less then the minimum allowed";
+
+}
+
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,35 to 23,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+update
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    access agqgeneral, set agqgeneral:app_no   = agqcomputer:app_no,
+                            agqgeneral:prem_no  = agqcomputer:prem_no,
+                            agqgeneral:build_no = agqcomputer:build_no, generic
+
+    access agqmaster, set agqmaster:app_no = agqcomputer:app_no, generic
+
+    l_form_1 = agqmaster:form
+    Access agsdefault_bop, Set agsdefault_bop:COMPANY_ID       = agqgeneral:COMPANY_ID,
+                               agsdefault_bop:state            = agqgeneral:state,
+                               agsdefault_bop:agent_no         = agqgeneral:agent_no,
+                               agsdefault_bop:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS,
+                               agsdefault_bop:form             = l_form_1, generic
+
+    access agqcompdesc, set agqcompdesc:app_no = g_app_no,
+                            agqcompdesc:prem_no = agqcomputer:prem_no,
+                            agqcompdesc:build_no = agqcomputer:build_no,  generic
+
+    if agqcompdesc:app_no   = g_app_no and
+       agqcompdesc:prem_No  = agqcomputer:prem_no and
+       agqcompdesc:build_no = agqcomputer:build_no then
+        begin
+        change agqcompdesc
+            begin
+            agqcompdesc:limit             = agqcomputer:limit[1]
+            agqcompdesc:hardware_software = "H"
+            agqcompdesc:description       = agsdefault_bop:computer_hardware
+            end
+
+        access agqcompdesc, set agqcompdesc:app_no = g_app_no,
+                                agqcompdesc:prem_no = agqcomputer:prem_no,
+                                agqcompdesc:build_no = agqcomputer:build_no,
+                                agqcompdesc:sub_code = 20, generic
+
+        if agqcompdesc:app_no   = g_app_no and
+           agqcompdesc:prem_No  = agqcomputer:prem_no and
+           agqcompdesc:build_no = agqcomputer:build_no and
+           agqcompdesc:sub_code = 20 then
+            begin
+            change agqcompdesc
+                begin
+                agqcompdesc:limit             = agqcomputer:limit[3]
+                agqcompdesc:hardware_software = "S"
+                agqcompdesc:description       = agsdefault_bop:computer_software
+                end
+            end
+        end
+    else
+        begin
+        add agqcompdesc
+            begin
+            agqcompdesc:app_no            = g_app_no
+            agqcompdesc:prem_no           = g_prem_no
+            agqcompdesc:build_no          = g_build_no
+            agqcompdesc:sub_code          = 10
+            agqcompdesc:hardware_software = "H"
+            agqcompdesc:description       = agsdefault_bop:computer_hardware
+            agqcompdesc:limit             = agqcomputer:limit[1]
+            agqcompdesc:expansion         = ""/raw
+            end
+
+        add agqcompdesc
+            begin
+            agqcompdesc:app_no            = g_app_no
+            agqcompdesc:prem_no           = g_prem_no
+            agqcompdesc:build_no          = g_build_no
+            agqcompdesc:sub_code          = 20
+            agqcompdesc:hardware_software = "S"
+            agqcompdesc:description       = agsdefault_bop:computer_software
+            agqcompdesc:limit             = agqcomputer:limit[3]
+            agqcompdesc:expansion         = ""/raw
+            end
+        end
+    end
+
+End

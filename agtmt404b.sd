@@ -1,0 +1,724 @@
+%%
+Screen
+        Name = "agtmt404b" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "agqsupp1" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_vehicle_no[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+        Global Unsigned Ascii Number g_enhancement[1] ;
+
+        string l_username[15] ,
+               l_first_location[1]="Y" ,
+               l_first_str_location[12]="",
+               l_last_str_location[12]="",
+               l_server_name[100],
+               l_current_web_page[150],
+               l_web_site_address[150],
+               l_vehicle_desc[50],
+               l_company_id[10],
+               l_user_id[15]="",
+               l_str_location[12]="";
+
+        local unsigned ascii number l_found[1]=0,
+                                    l_sub_code[4]=0 ,
+                                    l_no_vehicles[4],
+                                    l_no_locations[2]=0,
+                                    l_agent_no[4],
+                                    l_first_vehicle_no[4]=0,
+                                    l_last_vehicle_no[4]=0 ;
+
+        Access agqsupp1,
+           Set agqsupp1:app_NO   = G_app_NO,
+               agqsupp1:vehicle_no  = g_vehicle_no, generic
+
+        Include "stdkeys7.inc"
+
+Style definition
+        include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        Include "stdfunc7.inc"
+        "back" return  tagged close_fn ;
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+screen entry
+l_user_id = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "071webhelp_agtmt404b_scr_loss_payee.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+l_username = username
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = l_username, generic
+
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(farmers_fn)
+    hide(ficof_fn)
+    end
+
+Access Validation
+If agqsupp1:app_NO   <> G_app_NO or
+   agqsupp1:vehicle_no  <> g_vehicle_no then
+    Error 1000 ;
+
+/*access agqsupp1_alias, set agqsupp1_alias:app_no   = agqsupp1:app_no,
+                           agqsupp1_alias:vehicle_no  = agqsupp1:vehicle_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_vehicle_no  = 0
+l_last_vehicle_no   = 0
+while agqsupp1_alias:app_no   = agqsupp1:app_no and
+      agqsupp1_alias:vehicle_no  = agqsupp1:vehicle_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqsupp1_alias:vehicle_no) +
+                               str(agqsupp1_alias:sub_code)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqsupp1_alias:vehicle_no) +
+                           str(agqsupp1_alias:sub_code)
+    l_no_locations  = l_no_locations + 1
+
+    next agqsupp1_alias
+    end
+
+l_str_location = str(agqsupp1:vehicle_no) +
+                 str(agqsupp1:sub_code)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end*/
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Loss Payee..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100 Tagged quote_no
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101     begin
+        if function one of "ADD" then
+            agqsupp1:app_no = g_app_no
+        end
+        agqsupp1:app_NO/displayonly ;
+
+}
+
+Panel at 6,35 to 6,100 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,25
+          properties
+              {
+              Iconname = "btn_edit_entries.bmp"
+              }
+          Events
+              {
+              Action = change_fn
+              }
+
+    }
+
+Panel at 6,35 to 6,50 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_edit_entries.bmp"
+              }
+          Events
+              {
+              Action = change_fn
+              }
+
+    }
+
+Panel at 6,60 to 6,75 tagged accept_fn
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt404b.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 9,1 to 9,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,5 to 1,16
+             properties
+               {
+                 text = "Vehicle No:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 1,26 to 1,43
+             properties
+               {
+                 text = "Number of Vehicles:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 1,52 to 1,65
+             properties
+               {
+                 text = "Vehicle Description:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+              }
+         }
+
+Panel at 9,15 to 9,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+____                       ____                    ________________________________
+%%
+
+components
+
+Fields
+101     Begin
+        access agqvehicle, set agqvehicle:app_no     = g_app_no,
+                               agqvehicle:vehicle_no = g_vehicle_no, generic
+
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            disable(close_fn)
+            enable(accept_fn)
+            end
+        else
+            begin
+            enable(close_fn)
+            disable(accept_fn)
+            end
+
+        access sfscompany,
+           set sfscompany:company_id = agqvehicle:company_id, generic
+
+        l_agent_no   = agqvehicle:agent_no
+        Access agsdefault_cap,
+           Set agsdefault_cap:COMPANY_ID       = agqvehicle:COMPANY_ID,
+               agsdefault_cap:state            = agqvehicle:state,
+               agsdefault_cap:agent_no         = agqvehicle:agent_no,
+               agsdefault_cap:LINE_OF_BUSINESS = agqvehicle:line_of_business, generic
+
+        End
+        g_vehicle_no/displayonly/mask="ZZZZ" ;
+102     begin
+        access agqvehicle_alias, set agqvehicle_alias:app_no = g_app_no, generic
+
+        l_no_vehicles = 0
+        while agqvehicle_alias:app_no = g_app_no
+            begin
+            l_no_vehicles = l_no_vehicles + 1
+
+            next agqvehicle_alias
+            end
+        end
+        l_no_vehicles/displayonly/mask="ZZZZ" ;
+0103    begin
+        if agqvehicle:type = 2 then
+            begin
+            access castype, set castype:company_id = agqvehicle:company_id,
+                                castype:state = agqvehicle:state,
+                                castype:line_of_business = agqvehicle:line_of_business,
+                                castype:type = agqvehicle:type, generic
+
+            l_vehicle_desc = str(agqvehicle:year) + " - " +
+                             trun(agqvehicle:make) + " - " +
+                             trun(uppercase(castype:description))
+            end
+        else
+            begin
+            access cassize, set cassize:company_id = agqvehicle:company_id,
+                                cassize:state = agqvehicle:state,
+                                cassize:line_of_business = agqvehicle:line_of_business,
+                                cassize:size = agqvehicle:size_class, generic
+
+            l_vehicle_desc = str(agqvehicle:year) + " - " +
+                             trun(agqvehicle:make) + " - " +
+                             trun(uppercase(cassize:description))
+            end
+        end
+        l_vehicle_desc/displayonly ;
+
+}
+
+Panel at 11,1 to 23,95
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+            guidetext at 2,1 to 2,18
+             properties
+               {
+                 text = "Type:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+              }
+            guidetext at 4,1 to 4,18
+             properties
+               {
+                 text = "Name:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+              }
+           guidetext at 7,1 to 7,18
+             properties
+               {
+                 text = "Address:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 10,1 to 10,18
+             properties
+               {
+                 text = "City State Zip:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 11,1 to 11,18
+             properties
+               {
+                 text = "Account No:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+         }
+
+
+Panel at 11,20 to 23, 95 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+
+____________________    Sub Type: ________________
+
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+_________________________________ ____  __________
+_________________________
+
+%%
+
+components
+
+Fields
+201     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            l_user_id = username
+            l_username = username
+            l_company_id = sfsdefault:company_id
+
+            access sfsprofile,
+                    set sfsprofile:user_id  = l_username, exact
+
+            If SFSPROFILE:USER_ID <> L_USERNAME Then
+                Begin
+                L_USERNAME = "default"
+                Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+                End
+
+            l_server_name = sfsprofile:UNIX_SERVER
+            l_current_web_page = "071webhelp_agtmt404b_scr_loss_payee.htm"
+            do change_current_browser(l_server_name,l_current_web_page)
+            }
+
+        access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+        access agqvehicle, set agqvehicle:app_no   = g_app_no,
+                               agqvehicle:vehicle_no  = g_vehicle_no, generic
+
+        if function one of "ADD" then
+            begin
+            agqsupp1:vehicle_no = g_Vehicle_no
+            agqsupp1:mortgage_type_1 = "L"
+            agqsupp1:change_at_renewal = "N"
+            agqsupp1:mortgage_type_2 = "L"
+            do subcode
+            end
+        access sfspayortype, set sfspayortype:company_id = agqvehicle:company_id,
+                                 sfspayortype:payor_code = agqsupp1:mortgage_type_1, generic
+
+        access sfsmorttype, set sfsmorttype:company_id    = agqvehicle:company_id,
+                                sfsmorttype:mortgage_code = agqsupp1:mortgage_type_2, generic
+        end
+        sfspayortype:description/displayonly ;
+202     sfsmorttype:description/displayonly;
+401     agqsupp1:name[1]/tabstop ;
+501     agqsupp1:NAME[2]/tabstop;
+601     agqsupp1:NAME[3]/tabstop;
+701     agqsupp1:ADDRESS[1]/tabstop;
+801     agqsupp1:ADDRESS[2]/tabstop;
+901     agqsupp1:ADDRESS[3]/tabstop;
+1001    agqsupp1:CITY/tabstop     ;
+1002    agqsupp1:STR_STATE/tabstop  ;
+1003    agqsupp1:STR_ZIPCODE/tabstop ;
+1003    begin
+        If agqsupp1:STR_ZIPCODE[6,9] = "" Then
+            agqsupp1:STR_ZIPCODE[6,9] = "0000"
+        End
+        agqsupp1:STR_ZIPCODE/displayonly ;
+1101    agqsupp1:ACCOUNT_NO/tabstop ;
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+    Components
+        line at 1.25,1 to 1.25,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,1 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,75   tagged nextscreen_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+/*panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.25,1 to 1.25,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }*/
+
+panel at 26,1 to 30,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    enable(close_fn)
+    disable(accept_fn)
+    end
+
+if abort = "YES" then
+    begin
+    enable(close_fn)
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(close_fn)
+    end
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+Procedure ACCESS_agqsupp1ALIAS
+Begin
+Access agqsupp1_ALIAS, Set agqsupp1_ALIAS:app_no   = agqsupp1:app_no,
+                          agqsupp1_ALIAS:vehicle_no  = agqsupp1:vehicle_no, generic
+
+L_FOUND = 0
+While agqsupp1_ALIAS:app_no   = agqsupp1:app_no And
+      agqsupp1_ALIAS:vehicle_no  = agqsupp1:vehicle_no
+        Begin
+        If agqsupp1_ALIAS:MORTGAGE_TYPE_2 = "P" Then
+            L_FOUND = L_FOUND + 1
+
+        Next agqsupp1_ALIAS
+        End
+
+End
+
+Procedure SUBCODE
+Begin
+Access agqsupp1_ALIAS, Set agqsupp1_ALIAS:app_no   = agqsupp1:app_no,
+                           agqsupp1_ALIAS:vehicle_no  = agqsupp1:vehicle_no, generic
+
+L_SUB_CODE = 0
+while agqsupp1_ALIAS:app_no   = agqsupp1:app_no and
+      agqsupp1_ALIAS:vehicle_no  = agqsupp1:vehicle_no
+    begin
+    L_SUB_CODE = agqsupp1_ALIAS:SUB_CODE
+
+    Next agqsupp1_ALIAS
+    End
+
+agqsupp1:SUB_CODE = L_SUB_CODE + 10
+End
+
+end

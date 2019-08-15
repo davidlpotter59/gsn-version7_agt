@@ -1,0 +1,4832 @@
+%%
+Program
+        Name = "agtup602" ;
+        Type = "file" ;
+        Padcharacter = Space ;
+        Domain = "sfsdefault" ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ,
+                                     g_vehicle_no[4],
+                                     G_LINE_OF_BUSINESS[4] ;
+
+        Local Unsigned Ascii Number L_VEHICLES[3],
+                                    L_SUB[2]=0,
+                                    l_no_trucks[2]=0,
+                                    l_minimum_difference[3]=0,
+                                    l_short_term_total[8]=0,
+                                    l_short_term_policy_total[8]=0,
+                                    l_days_rate[7]=0/dec=4,
+                                    l_pro_rata_premium[8]=0/dec=4,
+                                    l_dumping_Rate[5]=0/dec=3,
+                                    l_rmf[6]=0/dec=4,
+                                    l_personal_injury_waiver[4]=0/dec=3,
+                                    l_nonowned_addl_insured[3]=0/dec=2,
+                                    l_mobile_equip_comp[4]=0/dec=3,
+                                    l_waiver_factor[6]=0/dec=3,
+                                    l_mobile_equip_coll[4]=0/dec=3,
+                                    L_VEHICLE_NO[4],
+                                    l_liability_1[8],
+                                    l_um_uim_limit_1[8]=0,
+                                    l_um_uim_limit_2[8]=0,
+                                    l_remove_code[1],
+                                    l_deductible_factor[6]=0/dec=4,
+                                    l_deductible1[6]=0,
+                                    l_loss_cost[6]=0/dec=4,
+                                    l_loss_cost_1[6]=0/dec=4,
+                                    l_remove_terrorism[1]=0,
+                                    L_CSEXEC_NUMBER[12],
+                                    l_deductible[5]=0,
+                                    L_INCLUDE_DOC[1]=0,
+                                    l_increase_limit_option[1]=0,
+                                    l_rating_type[1]=0,
+                                    L_PACKAGE[4]=0/decimals=2,
+                                    l_liability_factor[5]=0/dec=3,
+                                    l_physical_damage_factor[5]=0/dec=3,
+                                    l_broad_premium_1[4]=0,
+                                    l_motor_bus_liability[5]=0/dec=3,
+                                    L_PACKAGE_TOTAL[8]=0,
+                                    L_NO_AUTOS[2]=0,
+                                    L_SURCHARGE_FACTOR[8]=0/dec=6,
+                                    L_SURCHARGE_MINIMUM[2]=0,
+                                    L_INSTALLMENT_CHARGE[6]=0/decimals=0,
+                                    L_FINAL_TOTAL[8]=0,
+                                    L_TOTAL[8]=0,
+                                    L_ANOTHER_POLICY_CREDIT[3]=0/decimals=2,
+                                    L_TOTAL1[8]=0,
+                                    l_vehicle_totals[8]=0,
+                                    L_TOTAL2[8]=0,
+                                    L_HIRED_NONOWNED_TOTAL[8]=0,
+                                    l_nonowned_premium_1[6]=0,
+                                    L_NONOWNED_HIRED_FUNERAL_TOTAL[6]=0,
+                                    L_BROAD_TOTAL[8]=0,
+                                    L_MINIMUM[4]=0,
+                                    l_truck_1[1]=0,
+                                    L_SURCHARGE[6]=0,
+                                    I_CSEXEC_NUMBER[12]=0,
+                                    L_HOLD_PAYMENT_PLAN[4]=0,
+                                    l_last_location[4]=0,
+                                    L_MOTOR_BUS_TOTAL[6]=0/decimals=0 ,
+                                    L_PIP_BROADENED_PREMIUM[6]=0/decimals=0;
+              Unsigned Ascii Number L_DAY_RATE[8]/decimals =4,
+                                    L_TOTAL_DAYS[5]/decimals =0;
+              Unsigned Ascii Number L_TOTAL_DAYS_REMAINING[5]/decimals = 0;
+              Unsigned Ascii Number L_PRO_RATA[8]/decimals =4;
+              Unsigned Ascii Number L_TERRORISM_PREMIUM[8]/decimals =0;
+
+        Local Signed Ascii Number L_EXPERIENCE_1[5]=0/decimals=3 ,
+                                  L_EXPERIENCE_2[5]=0/decimals=3,
+                                  L_EXPERIENCE_3[5]=0/decimals=3,
+                                  L_SCHEDULE_1[5]=0/decimals=3 ,
+                                  L_SCHEDULE_2[5]=0/decimals=3,
+                                  L_SCHEDULE_3[5]=0/decimals=3,
+                                  L_SUB_TOTAL[9]=0/decimals=2,
+                                  L_DEV_OTHER[6]=0/decimals=3 ,
+                                  l_days,
+                                  L_PACKAGE_PREMIUM[6]=0 ;
+
+        String l_mobile_equip_code[7]="",
+               l_display_field,
+               l_form_added[1]="N",
+               l_policy_wide_First[1]="Y",
+               l_pa_doc[1]="N",
+               l_truck[1]="N",
+               l_pp[1]="N",
+               L_UM_UIM[3]="",
+               l_commandline[18]="",
+               l_covered_by_workers_comp[1]="",
+               l_non_stacked[1]="",
+               L_MINIMUM_APPLIES[1]="N",
+               L_DESCRIPTION[75],
+               L_FORM_EDITION[25],
+               L_FIRST_TIME[1]="Y",
+               l_set_to_zero[1]="Y",
+               l_pp_vehicles[1],
+               l_first_hired_nonowned[1]="Y",
+               l_first_doc[1]="Y",
+               l_entry[1]="Y",
+               L_NO_COVERAGE[10]=" NO COVRG ",
+               L_DEVIATION_HIT[1]="N" ;
+
+        local date l_surcharge_date[8] ;
+
+        String L_ENTER[1];
+
+        Include "casrating.var"
+
+initialisation
+G_APP_NO     = val(commandline[1,11])
+L_TOTAL = 0
+L_FINAL_TOTAL = 0
+L_SURCHARGE = 0
+L_SUB = 0
+L_VEHICLE_NO = 0
+L_PACKAGE_TOTAL=0
+l_truck = "N"
+l_pp = "N"
+L_NO_AUTOS=0
+L_INCLUDE_DOC=0
+L_INSTALLMENT_CHARGE=0
+l_no_trucks = 0
+L_FINAL_TOTAL=0
+L_TOTAL=0
+L_TOTAL1=0
+L_HIRED_NONOWNED_TOTAL=0
+L_ANOTHER_POLICY_CREDIT=0
+L_MINIMUM=0
+L_SURCHARGE=0
+L_SURCHARGE_FACTOR=0
+L_SURCHARGE_MINIMUM=0
+L_MOTOR_BUS_TOTAL=0
+L_HOLD_PAYMENT_PLAN=0
+--I_INSTALLMENT=0
+L_EXPERIENCE_1=0
+L_EXPERIENCE_2=0
+l_EXPERIENCE_3=0
+L_SCHEDULE_1=0
+L_SCHEDULE_2=0
+L_SCHEDULE_3=0
+L_DEV_OTHER=0
+L_PACKAGE_PREMIUM=0
+L_MINIMUM_APPLIES[1]="N"
+L_UM_UIM=""
+L_RECORD_KEY=""
+L_NOFAULT=""
+L_NON_EMPLOYEE=""
+L_DUMPING=""
+L_MISC="N"
+L_FORM_BUSINESS=""
+L_CODE=""
+L_COMPANY_ID=""
+L_FIRST="N"
+L_STATE=0
+L_LINE_OF_BUSINESS=0
+L_TYPE=0
+L_OPTION=0
+L_NAMED_DEDUCTIBLE_ONLY=0
+L_EXTRA_LIMIT=0
+L_EXTRA_TOTAL_1=0
+L_EXTRA_TOTAL_2=0
+L_MEDICAL_LIMIT=0
+L_MEDICAL_PREMIUM=0
+L_WORK_MONTHLY=0
+L_WORK_TOTAL=0
+l_motor_bus_liability = 0
+L_WORK_PREMIUM=0
+L_FUNERAL_LIMIT=0
+L_FUNERAL_PREMIUM=0
+L_ACCIDENT_LIMIT=0
+L_ACCIDENT_PREMIUM=0
+L_COMBINED_LIMIT=0
+L_COMBINED_PREMIUM=0
+L_FAMILY_DEDUCTIBLE=0
+L_SPLIT_LIMIT=0
+L_SINGLE_LIMIT=0
+L_PP_CHARGE=0
+L_OTHER_FACTOR=0
+L_AGE=0
+L_END_FACTOR=0
+L_END_LIMIT=0
+L_END_PREMIUM1=0
+L_LIAB_PREM=0
+L_MED_PAY_PREM=0
+L_COMP_PREM=0
+L_COLL_PREM=0
+L_BASIC_PIP_PREM=0
+L_BROAD_PIP_PREM=0
+L_BROADENED_CHARGE=0
+L_DOC_PREM=0
+L_HIRED_LIAB_PREM=0
+L_HIRED_PHYS_DAM_PREM=0
+L_NONOWNED_PREM=0
+L_MOTOR_BUS_PREM=0
+L_RENTAL_PREM=0
+L_SAFETY_FACTOR_1=0
+L_SAFETY_FACTOR_2=0
+L_SAFETY_FACTOR_3=0
+L_SAFETY_FACTOR_4=0
+L_SAFETY_FACTOR_5=0
+L_ANTITHEFT_FACTOR_1=0
+L_ANTITHEFT_FACTOR_2=0
+L_ANTITHEFT_FACTOR_3=0
+L_ANTITHEFT_FACTOR_4=0
+L_ANTITHEFT_FACTOR_5=0
+L_RENTAL_BASE=0
+L_RENTAL_MIN_PER_DAY=0
+L_RENTAL_MIN_DAYS=0
+L_RENTAL_PER=0
+L_RENTAL_COMP=0
+L_RENTAL_COLL=0
+L_DOC_LIMIT=0
+L_DOC_LIABILITY=0
+L_DOC_MED_PAY=0
+L_DOC_MED_PAY_LIMIT=0
+L_DOC_UM_LIMIT=0
+L_DOC_UM_UIM=0
+L_DOC_COMP=0
+L_DOC_COLL=0
+L_HIRED_LIAB_RATE=0
+L_HIRED_LIAB_PER=0
+L_HIRED_LIAB_MINIMUM=0
+L_HIRED_LIAB_LIMIT=0
+L_HIRED_PER=0
+L_HIRED_MINIMUM=0
+L_HIRED_COMP_RATE=0
+L_HIRED_COLL_RATE=0
+L_HIRED_ADDL_INSURED=0
+L_NONOWNED_LIAB_LIMIT=0
+L_NONOWNED_PERCENT=0
+L_NONOWNED_EMPLOYEE_FACTOR=0
+L_NONOWNED_PARTNER_FACTOR=0
+L_NONOWNED_EMPLOYEES=0
+L_NONOWNED_EMPLOYEES_PREMIUM=0
+L_FUNERAL_NONOWNED_HIRED_PREMIUM=0
+L_FIRST_AUTO=0
+L_EACH_ADDL_AUTO=0
+L_ADDITIONAL_PIP=0
+L_PIP_DEDUCTIBLE=0
+L_DEDUCTIBLE_BASIC_PIP=0
+L_DEDUCTIBLE_MEDICAL_EXPENSE=0
+l_stranger_ped_pip = 0
+L_EXTENDED_LIMIT=0
+L_EXTENDED_CHARGE=0
+L_EXTENDED_PER=0
+L_PEDESTRIAN_CHARGE=0
+L_PEDESTRIAN_PER=0
+L_ADDL_PIP_FAMILY_MEMBER=0
+L_TORT_FACTOR=0
+L_SECONDARY_OPTION=0
+L_BROADENED_BASIC_PIP=0
+L_MOTOR_BUS_LIAB=0
+L_MOTOR_BUS_MEDICAL=0
+L_MOTOR_BUS_MEDICAL_LIMIT=0
+L_TERRITORY=0
+L_TERR_COMP_FACTOR=0
+L_TERR_COLL_FACTOR=0
+L_LIMIT=0
+L_ORIGINAL_COST=0
+L_COST=0
+L_PIP_CHARGE=0
+L_ADDITIONAL_CHARGE=0
+L_COMBINED_CHARGE=0
+L_CHARGE=0
+L_TOWING_PER=0
+L_TOWING_CHARGE=0
+L_TOWING_PER_DISABLEMENT=0
+L_CLASS_CODE=0
+L_COMP_DEDUCTIBLE=0
+L_COLL_DEDUCTIBLE=0
+L_ORIGINAL_COMP_RATE=0
+L_ORIGINAL_COLL_RATE=0
+L_COMP_RATE=0
+L_COLL_RATE=0
+L_COMP_FACTOR=0
+L_COLL_FACTOR=0
+L_COMP_PREMIUM=0
+L_COLL_PREMIUM=0
+L_TOWING_PREMIUM=0
+L_DOC_PREMIUM=0
+L_MED_EXP_PREMIUM=0
+L_HIRED_LIAB_PREMIUM=0
+L_HIRED_COMP_PREMIUM=0
+L_HIRED_COLL_PREMUIM=0
+L_HIRED_PHYS_DAM_PREMIUM=0
+L_HIRED_PREMIUM=0
+L_NONOWNED_PREMIUM=0
+L_RENTAL_PREMIUM=0
+L_RENTAL_COMP_PREMIUM=0
+L_RENTAL_COLL_PREMIUM=0
+L_TRUCK_INCREASE=0
+L_OTHER_INCREASE=0
+L_PP_INCREASE=0
+L_TRUCK_INCREASE_1=0
+L_OTHER_INCREASE_1=0
+L_PP_INCREASE_1=0
+L_ANTITHEFT_FACTOR=0
+L_SAFETY_FACTOR=0
+L_PHYS_DAM_PREMIUM=0
+L_MED_PAY_CHARGE=0
+L_MED_PAY_PREMIUM=0
+L_UM_UIM_CHARGE=0
+L_UM_UIM_FACTOR=0
+L_UM_UIM_PREMIUM=0
+L_UNDERINSURED_PREMIUM=0
+L_DOC_UM_UIM_PREMIUM=0
+L_DOC_UNDERINSURED_PREMIUM=0
+L_LIAB_TOTAL=0
+L_DOC_OTHER_TOTAL=0
+L_DOC_OTHER_LIAB_TOTAL=0
+L_HIRED_AUTO_LIAB_TOTAL=0
+L_HIRED_COMP_TOTAL=0
+L_NONOWNED_LIAB_TOTAL=0
+L_NONOWNED_MED_PAY_TOTAL=0
+L_NONOWNED_PART_TOTAL=0
+L_BASIC_PIP_TOTAL=0
+L_BROAD_PIP_TOTAL=0
+L_ADDL_PIP_TOTAL=0
+L_EXT_MED_PIP_TOTAL=0
+L_PED_PIP_TOTAL=0
+L_MED_EXP_TOTAL=0
+L_GAP_TOTAL=0
+L_SOUND_TOTAL=0
+L_MED_PAY_TOTAL=0
+L_UM_UIM_TOTAL=0
+L_UNDERINSURED_TOTAL=0
+L_PIP_PREM_TOTAL=0
+L_COMP_TOTAL=0
+L_COLL_TOTAL=0
+L_RENTAL_TOTAL=0
+L_TOWING_TOTAL=0
+L_NONOWNED_TOTAL=0
+L_HIRED_LIAB_TOTAL=0
+L_HIRED_PHYS_DAM_TOTAL=0
+L_DOC_TOTAL=0
+L_END_TOTAL=0
+L_MISC_TOTAL=0
+L_LIABILITY_PREMIUM=0
+L_PIP_PREMIUM=0
+L_PED_PREMIUM=0
+L_BROAD_PREMIUM=0
+L_ADDITIONAL_PREMIUM=0
+L_EXTENDED_PREMIUM=0
+L_ADDL_PIP_PREMIUM=0
+L_FARM_FACTOR=0
+L_FLOWER_CARS_LIAB=0
+L_FLOWER_CARS_PHYS_DAM=0
+L_LIMO_LIAB=0
+L_LIMO_PHYS_DAM=0
+L_FUNERAL_HIRED_NONOWNED=0
+L_PLATES_FACTOR=0
+L_PLATES_PER=0
+L_MOTOR_HOME_LIAB=0
+L_MOTOR_HOME_PHYS_DAM=0
+L_MOTOR_HOME_CONTENTS_PER=0
+L_MOTOR_HOME_CONTENTS_DEDUCT=0
+L_MOTOR_HOME_RATE=0
+L_AUDIO_PER=0
+L_AUDIO_DEDUCTIBLE=0
+L_AUDIO_RATE=0
+L_CHASSIS=0
+L_LIAB_FACTORS=0
+L_PHYS_FACTORS=0
+L_TRAILERS=0
+L_TRUCKS=0
+L_UPDATE_SFPEND_PREMIUM=0
+L_END_PREMIUM=0
+L_MISC_PREMIUM=0
+L_EFF_DATE=0
+
+do vehicle_total
+Access agqvehicle, Set agqvehicle:app_no = g_app_no, generic
+
+do policy_total
+
+update
+
+Procedure Definition
+
+procedure vehicle_total
+begin
+access agqvehicle_alias, set agqvehicle_alias:app_no = g_app_no, generic
+
+l_no_trucks = 0
+l_pp_vehicles = "N"
+while agqvehicle_alias:app_no = g_app_no
+    begin
+    if agqvehicle_alias:type = 1 and
+       agqvehicle_alias:CLASS_CODE not one of 681, 682, 683, 684, 691, 692, 693, 694 Then
+        begin
+        l_no_trucks = l_no_trucks + 1
+        end
+
+    if agqvehicle_alias:type = 2 then
+        l_pp_vehicles = "Y"
+
+    next agqvehicle_alias
+    end
+
+access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+access casclass, set casclass:company_id       = agqvehicle:company_id,
+                     casclass:state            = agqvehicle:state,
+                     casclass:line_of_business = agqvehicle:line_of_business,
+                     casclass:type             = 1,
+                     casclass:table            = 1,
+                     casclass:class_code       = agqvehicle:class_code, generic
+
+while agqvehicle:app_no = g_app_no
+    begin
+    if agqvehicle:company_id = "FARMERS" and
+       agqvehicle:state = 29 and
+       agqvehicle:eff_date >= 12.01.2012 then
+        begin
+        if l_no_trucks >= 5 then
+            begin
+            change agqvehicle
+                begin
+                if casclass:fleet <> "Y" and
+                   agqvehicle:type = 1 and
+                   agqvehicle:CLASS_CODE not one of 681, 682, 683, 684, 691, 692, 693, 694 Then
+                    begin
+                    agqvehicle:class_code     = casclass:fleet_class_code
+                    end
+                end
+
+            access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+            if agqmaster:app_no = g_app_no then
+                begin
+                change agqmaster
+                    begin
+                    agqmaster:non_fleet = "F"
+                    end
+                end
+            end
+        else
+            begin
+            change agqvehicle
+                begin
+                if casclass:fleet = "Y" and
+                   agqvehicle:type = 1 and
+                   agqvehicle:CLASS_CODE not one of 681, 682, 683, 684, 691, 692, 693, 694 Then
+                    begin
+                    agqvehicle:class_code     = casclass:fleet_class_code
+                    end
+                end
+
+            access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+            if agqmaster:app_no = g_app_no then
+                begin
+                change agqmaster
+                    begin
+                    agqmaster:non_fleet = "N"
+                    end
+                end
+            end
+        end
+
+    next agqvehicle
+    end
+
+Access agqvehicle, Set agqvehicle:app_no     = g_app_no, generic
+
+while agqvehicle:app_no     = g_app_no
+    begin
+    access sfscompany, set sfscompany:company_id = agqvehicle:company_id, generic
+
+    Do GET_TOTALS
+
+    next agqvehicle
+    end
+
+end
+
+procedure policy_total
+begin
+access agqvehicle, set agqvehicle:app_no   = g_app_no, generic
+
+        Access agqdoc, Set agqdoc:app_no = agqvehicle:app_no, Generic
+
+        If agqdoc:INCLUDE_DOC = 0 Then
+            Begin
+            If agqdoc:LIABILITY <> 0 Then
+                Change agqdoc
+                    Begin
+                    agqdoc:INCLUDE_DOC = 1
+                    End
+        End
+        If agqdoc:BROADENED_ADDL_PIP = 1 And
+           agqdoc:BROADENED_PIP = 0 Then
+            Change agqdoc
+                Begin
+                agqdoc:BROADENED_PIP = 1
+                End
+        L_INCLUDE_DOC = agqdoc:INCLUDE_DOC
+        l_vehicle_totals = l_total1
+        if l_first_doc = "Y" then
+            begin
+            l_first_doc = "N"
+            l_doc_premium = 0
+            l_doc_total = 0
+            l_broad_premium = 0
+            if agqvehicle:state = 37 and
+               agsdefault_cap:auto_rating_bureau = "ISO" then
+                do drive_other_car_pa
+            else
+                Do DRIVE_OTHER_CAR
+            L_DOC_TOTAL = L_DOC_TOTAL + L_DOC_PREMIUM
+            end
+
+        if l_doc_premium <> 0 then
+            l_total1 = l_total1 + l_doc_premium
+        if l_broad_premium <> 0 then
+            l_total1 = l_total1 + l_broad_premium
+
+        if l_first_hired_nonowned = "Y" then
+            begin
+            l_First_hired_nonowned = "N"
+            Do HIRED
+            do NONOWNED
+            L_HIRED_NONOWNED_TOTAL = L_HIRED_LIAB_PREMIUM +
+                                     L_HIRED_PHYS_DAM_PREMIUM +
+                                     L_NONOWNED_PREMIUM_1 +
+                                     L_FUNERAL_NONOWNED_HIRED_PREMIUM
+            L_NONOWNED_TOTAL = L_NONOWNED_TOTAL + L_NONOWNED_PREMIUM_1
+            L_HIRED_LIAB_TOTAL = L_HIRED_LIAB_TOTAL + L_HIRED_LIAB_PREMIUM
+            L_HIRED_PHYS_DAM_TOTAL = L_HIRED_PHYS_DAM_TOTAL + L_HIRED_PHYS_DAM_PREMIUM
+            L_NONOWNED_MED_PAY_TOTAL = L_NONOWNED_MED_PAY_TOTAL +
+                                       L_FUNERAL_NONOWNED_HIRED_PREMIUM
+            if l_hired_nonowned_total <> 0 then
+                l_total1 = l_total1 + l_hired_nonowned_total
+            end
+
+        Do MINIMUM_PREMIUMS
+        if dateadd(agqvehicle:eff_date,0,1) <> agqvehicle:exp_date then
+            do get_short_term
+        If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+            Begin
+            L_FINAL_TOTAL = L_TOTAL1 + L_INSTALLMENT_CHARGE
+            End
+        Else
+            Begin
+            L_FINAL_TOTAL = L_TOTAL1
+            End
+
+--        do access_arspayplan
+--        if arspayplan:manual_payment_plan = 0 then
+--            Do INSTALLMENT
+        Do SURCHARGE
+        Do UPDATE_TOTALS
+
+end
+
+Procedure SURCHARGE
+Begin
+access sfssurcharge, set sfssurcharge:company_id = agqvehicle:company_id,
+                         sfssurcharge:state = agqvehicle:state,
+                         sfssurcharge:line_of_business = agqvehicle:line_of_business, generic
+
+l_surcharge_date = 0
+while sfssurcharge:company_id = agqvehicle:company_id and
+      sfssurcharge:state = agqvehicle:state and
+      sfssurcharge:line_of_business = agqvehicle:line_of_business
+        begin
+        if (agqvehicle:eff_date >= sfssurcharge:eff_date and
+           (l_surcharge_date < sfssurcharge:eff_date or
+           l_surcharge_date = 0)) then
+            begin
+            l_surcharge_date    = sfssurcharge:eff_date
+            l_surcharge_factor  = sfssurcharge:surcharge_factor
+            l_surcharge_minimum = sfssurcharge:minimum_premium
+            end
+        next sfssurcharge
+        end
+
+L_SURCHARGE = L_FINAL_TOTAL * L_SURCHARGE_FACTOR
+If L_SURCHARGE < L_SURCHARGE_MINIMUM Then
+    L_SURCHARGE = L_SURCHARGE_MINIMUM
+End
+
+Procedure GET_TOTALS
+Begin
+access agqvehicle_alt, set agqvehicle_alt:app_no = g_app_no, generic
+
+while agqvehicle_alt:app_no = g_app_no
+    begin
+    l_last_location = agqvehicle_alt:vehicle_no
+
+    next agqvehicle_alt
+    end
+
+L_LIABILITY_PREMIUM = 0
+l_liability = 0
+L_PHYS_DAM_PREMIUM = 0
+L_MED_PAY_PREMIUM = 0
+L_UM_UIM_PREMIUM = 0
+L_UNDERINSURED_PREMIUM = 0
+L_DOC_UM_UIM_PREMIUM = 0
+L_DOC_UNDERINSURED_PREMIUM = 0
+L_EXTENDED_PREMIUM = 0
+L_PIP_PREMIUM = 0
+L_PIP_CHARGE = 0
+L_RENTAL_PREMIUM = 0
+L_ADDL_PIP_PREMIUM = 0
+L_ADDITIONAL_PREMIUM = 0
+L_TOWING_PREMIUM = 0
+L_COMP_PREMIUM = 0
+L_COLL_PREMIUM = 0
+l_comp_premium_1 = 0
+l_coll_premium_1 = 0
+L_HIRED_PREMIUM = 0
+L_HIRED_COMP_PREMIUM = 0
+L_HIRED_LIAB_PREMIUM = 0
+L_HIRED_COLL_PREMUIM = 0
+L_HIRED_PHYS_DAM_PREMIUM = 0
+L_PED_PREMIUM = 0
+L_MED_EXP_PREMIUM = 0
+
+access agqvehicle_alias, set agqvehicle_alias:app_no     = agqvehicle:app_no,
+                             agqvehicle_alias:vehicle_no = agqvehicle:vehicle_no, generic
+
+if agqvehicle_alias:app_no     = agqvehicle:app_no and
+   agqvehicle_alias:vehicle_no = agqvehicle:vehicle_no then
+    begin
+    Change agqvehicle_ALIAS
+        Begin
+        agqvehicle_ALIAS:LINE_OF_BUSINESS = agqvehicle:line_of_business
+        agqvehicle_ALIAS:COMPANY_ID = agqvehicle:COMPANY_ID
+        end
+    End
+
+access agsdefault_cap, set agsdefault_cap:company_id       = agqvehicle:company_id,
+                           agsdefault_cap:state            = agqvehicle:state,
+                           agsdefault_cap:agent_no         = agqvehicle:agent_no,
+                           agsdefault_cap:line_of_business = agqvehicle:line_of_business,
+                           agsdefault_cap:form             = 0, generic
+
+-- loss cost
+do losscost
+
+-- premier factors
+Do PREMIER_FACTORS
+
+-- calculate deviation
+Do CALC_DEVIATION
+
+-- misc rates to be multiplied to the different coverages
+Do MISC_RATES
+
+access sfsline, set sfsline:company_id = agqvehicle:company_id,
+                    sfsline:line_of_business = agqvehicle:line_of_business,
+                    sfsline:lob_subline = "00", generic
+
+if sfsline:lob_code one of "CPORTFOLIO" then
+    begin
+    access agqmastsupp, set agqmastsupp:app_no = g_app_no,
+                            agqmastsupp:line_of_business = g_line_of_business, generic
+
+    l_liability_1 = agqmastsupp:liability
+    l_um_uim_limit_1 = agqmastsupp:um_uim_limit[1]
+    l_um_uim_limit_2 = agqmastsupp:um_uim_limit[2]
+    l_covered_by_workers_comp = agqmastsupp:covered_by_workers_comp
+    l_non_stacked = agqmastsupp:non_stacked
+    end
+else
+    begin
+    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+    l_liability_1 = agqmaster:liability
+    l_um_uim_limit_1 = agqmaster:um_uim_limit[1]
+    l_um_uim_limit_2 = agqmaster:um_uim_limit[2]
+    l_covered_by_workers_comp = agqmaster:covered_by_workers_comp
+    l_non_stacked = agqmaster:non_stacked
+    end
+
+-- increase rates
+Do INCREASE_LIABILITY_RATES
+
+-- coverage A
+do get_combined_deductible
+do get_liability_factor
+Do LIABILITY
+l_charge = l_charge * l_deductible_factor
+If L_LIABILITY_1 <> 0 Then
+    Begin
+    If agqvehicle:TYPE one of 1, 8 Then
+        Begin
+        L_CHARGE = L_CHARGE * L_TRUCK_INCREASE
+        if agqvehicle:type one of 1 then
+            begin
+            if sfsline:lob_code one of "CPORTFOLIO" then
+                begin
+                if agqmastsupp:non_fleet = "F" and
+                   agqvehicle_alias:CLASS_CODE not one of 681, 682, 683, 684, 691, 692, 693, 694 and
+                   agqvehicle:company_Id = "FARMERS" then
+                    begin
+                    l_charge = l_charge * l_liability_fleet
+                    end
+                else
+                if agqmastsupp:non_fleet = "F" and
+                   agqvehicle:company_Id not one of "FARMERS" then
+                    begin
+                    l_charge = l_charge * l_liability_fleet
+                    end
+                end
+            else
+                begin
+                if agqmaster:non_fleet = "F" and
+                   agqvehicle_alias:CLASS_CODE not one of 681, 682, 683, 684, 691, 692, 693, 694 and
+                   agqvehicle:company_Id = "FARMERS" then
+                    begin
+                    l_charge = l_charge * l_liability_fleet
+                    end
+                else
+                if agqmaster:non_fleet = "F" and
+                   agqvehicle:company_Id not one of "FARMERS" then
+                    begin
+                    l_charge = l_charge * l_liability_fleet
+                    end
+                end
+            Do RATING_FACTORS
+            Do SECOND_RATING_FACTORS
+            If agqvehicle:CLASS_CODE = 681 Or
+               agqvehicle:CLASS_CODE = 682 Or
+               agqvehicle:CLASS_CODE = 683 or
+               agqvehicle:CLASS_CODE = 684 or
+               agqvehicle:CLASS_CODE = 691 Or
+               agqvehicle:CLASS_CODE = 692 Or
+               agqvehicle:CLASS_CODE = 693 Then
+                begin
+                if sfscompany:hired_nonowned_rating = 1 then
+                    L_LIABILITY = (L_CHARGE * (L_LIAB_FACTORS + L_TRAILERS))
+                else
+                    begin
+                    if agqvehicle:state = 37 and
+                       agsdefault_cap:auto_rating_bureau = "ISO" then
+                        begin
+                        L_LIABILITY_premium = L_CHARGE * L_LIAB_FACTORS
+                        end
+                    else
+                        begin
+                        L_LIABILITY_premium = (L_CHARGE * (L_LIAB_FACTORS + L_TRAILERS))
+                        end
+                    end
+                end
+            Else
+                begin
+                if sfscompany:hired_nonowned_rating = 1 then
+                    L_LIABILITY = (L_CHARGE * (L_LIAB_FACTORS + L_TRUCKS))
+                else
+                    L_LIABILITY_PREMIUM = (L_CHARGE * (L_LIAB_FACTORS + L_TRUCKS))
+                end
+            End
+        else
+        if agqvehicle:type one of 8 then
+            begin
+            if sfscompany:hired_nonowned_rating = 1 then
+                l_liability = l_charge
+            else
+                l_liability_premium = l_charge
+            end
+        end
+    Else
+    If agqvehicle:TYPE = 2 Then
+        Begin
+        if sfscompany:hired_nonowned_rating = 1 then
+            L_LIABILITY = L_CHARGE * l_pp_increase
+        else
+            L_LIABILITY_PREMIUM = L_CHARGE * L_PP_INCREASE
+        If agqvehicle:CLASS_CODE = 7399 Then
+            begin
+            if sfscompany:hired_nonowned_rating = 1 then
+                L_LIABILITY = L_LIABILITY * L_FARM_FACTOR
+            else
+                L_LIABILITY_PREMIUM = L_LIABILITY_PREMIUM * L_FARM_FACTOR
+            end
+        End
+    Else
+    If agqvehicle:TYPE one of 3, 7, 8 and
+       agqvehicle:state one of 37 and
+       agsdefault_cap:auto_rating_bureau = "ISO" Then
+        Begin
+        Do RATING_FACTORS
+        if sfscompany:hired_nonowned_rating = 1 then
+            L_LIABILITY = L_CHARGE * l_other_increase * L_LIAB_FACTORS
+        else
+            L_LIABILITY_PREMIUM = L_CHARGE * L_OTHER_INCREASE * L_LIAB_FACTORS
+        end
+    else
+    If ((agqvehicle:TYPE one of 3 and
+       agqvehicle:state not one of 37) or
+       (agqvehicle:type one of 3 and
+       agqvehicle:state one of 37 and
+       agsdefault_cap:auto_rating_bureau not one of "ISO")) Then
+        Begin
+        Do RATING_FACTORS
+        if sfscompany:hired_nonowned_rating = 1 then
+            L_LIABILITY = L_CHARGE * l_other_increase * L_LIAB_FACTORS
+        else
+            L_LIABILITY_PREMIUM = L_CHARGE * L_OTHER_INCREASE * L_LIAB_FACTORS
+        end
+    Else
+        begin
+        if sfscompany:hired_nonowned_rating = 1 then
+            begin
+            Switch(agqvehicle:TYPE)
+              Case 4 : L_LIABILITY = L_CHARGE * l_truck_increase *
+                                     L_FLOWER_CARS_LIAB
+              Case 5 : L_LIABILITY = L_CHARGE * l_pp_increase *
+                                     L_LIMO_LIAB
+              Case 6 : L_LIABILITY = L_CHARGE * L_PLATES_FACTOR
+              Case 7 : L_LIABILITY = L_CHARGE * l_pp_increase *
+                                     L_MOTOR_HOME_LIAB
+              End
+            end
+        else
+        if agqvehicle:state one of 37 and
+           agsdefault_cap:auto_rating_bureau = "ISO" then
+            begin
+            Switch(agqvehicle:TYPE)
+              Case 4 : L_LIABILITY_PREMIUM = L_CHARGE * L_OTHER_INCREASE *
+                                             L_FLOWER_CARS_LIAB
+              Case 5 : L_LIABILITY_PREMIUM = L_CHARGE * L_OTHER_INCREASE *
+                                             L_LIMO_LIAB
+              Case 6 : L_LIABILITY_PREMIUM = L_CHARGE * L_PLATES_FACTOR *
+                                             l_pp_increase
+              case 9 : begin
+                       if agqvehicle:class_code one of 7040 then
+                           begin
+                           l_liability_premium = l_charge * l_liability_factor *
+                                                 l_truck_increase
+                           end
+                       else
+                       if agqvehicle:class_code one of 7214 then
+                           l_liability_premium = l_charge * l_liability_factor *
+                                                 l_other_increase
+                       else
+                           l_liability_premium = l_charge * l_liability_factor *
+                                                 l_other_increase
+                       end
+              end
+            end
+        else
+            begin
+            Switch(agqvehicle:TYPE)
+              Case 4 : L_LIABILITY_PREMIUM = L_CHARGE * L_TRUCK_INCREASE *
+                                             L_FLOWER_CARS_LIAB
+              Case 5 : L_LIABILITY_PREMIUM = L_CHARGE * L_PP_INCREASE *
+                                             L_LIMO_LIAB
+              Case 6 : L_LIABILITY_PREMIUM = L_CHARGE * L_PLATES_FACTOR
+              Case 7 : L_LIABILITY_PREMIUM = L_CHARGE * L_PP_INCREASE *
+                                             L_MOTOR_HOME_LIAB
+              end
+            End
+        end
+    l_liability_premium = l_liability_premium * l_companion_discount
+    l_liability = l_liability * l_companion_discount
+    If agqvehicle:ADDITIONAL_INSURED = "Y" Then
+        Begin
+        Do HIRED_AUTOS
+        access agqaddin2, set agqaddin2:app_no     = agqvehicle:app_no,
+                              agqaddin2:vehicle_no = agqvehicle:vehicle_no, generic
+
+        if sfscompany:hired_nonowned_rating = 1 then
+            begin
+            If agqaddin2:SIX_MONTHS_OR_LESS = "N" Then
+                L_LIABILITY = L_LIABILITY * L_HIRED_ADDL_INSURED
+            Else
+                L_LIABILITY = L_LIABILITY +
+                              agqaddin2:ADDL_INSURED_PREMIUM
+            end
+        else
+            begin
+            If agqaddin2:SIX_MONTHS_OR_LESS = "N" Then
+                L_LIABILITY_PREMIUM = L_LIABILITY_PREMIUM * L_HIRED_ADDL_INSURED
+            Else
+                L_LIABILITY_PREMIUM = L_LIABILITY_PREMIUM +
+                                      agqaddin2:ADDL_INSURED_PREMIUM
+            end
+        End
+    if sfscompany:hired_nonowned_rating = 1 then
+        begin
+        L_LIABILITY = L_LIABILITY * L_EXPERIENCE_2 * L_SCHEDULE_2 *
+                      L_DEV_OTHER * L_LIAB_PREM
+        l_liability_premium = l_liability
+        end
+    else
+        begin
+        L_LIABILITY_PREMIUM = L_LIABILITY_PREMIUM * L_EXPERIENCE_2 * L_SCHEDULE_2 *
+                              L_DEV_OTHER * L_LIAB_PREM
+        end
+
+    if agqvehicle:state one of 37 and
+       agsdefault_cap:auto_rating_bureau = "ISO" then
+        l_liability_premium = l_liability_premium * l_loss_cost
+
+    if agqvehicle:state one of 37 and
+       agqvehicle:class_code one of 691, 694, 692, 695, 693, 696 then
+        l_liability_premium = 0
+    End
+
+
+-- coverages F and G
+if agqvehicle:comp_deductible <> 0 or
+   agqvehicle:coll_deductible <> 0 then
+    begin
+    if sfscompany:hired_nonowned_rating = 1 then
+        do physical_damage_1
+    else
+        Do PHYSICAL_DAMAGE
+    if sfsline:lob_code one of "CPORTFOLIO" then
+        begin
+        if agqmastsupp:non_fleet = "F" and
+           agqvehicle_alias:CLASS_CODE not one of 681, 682, 683, 684, 691, 692, 693, 694 and
+           agqvehicle:company_Id = "FARMERS" and
+           agqvehicle:type one of 1 then
+            begin
+            l_comp_premium_1 = l_comp_premium_1 * l_comp_fleet
+            l_coll_premium_1 = l_coll_premium_1 * l_coll_Fleet
+            l_comp_premium   = l_comp_premium * l_comp_fleet
+            l_coll_premium   = l_coll_premium * l_coll_Fleet
+            end
+        else
+        if agqmastsupp:non_fleet = "F" and
+           agqvehicle:company_Id not one of "FARMERS" and
+           agqvehicle:type one of 1 then
+            begin
+            l_comp_premium_1 = l_comp_premium_1 * l_comp_fleet
+            l_coll_premium_1 = l_coll_premium_1 * l_coll_Fleet
+            l_comp_premium   = l_comp_premium * l_comp_fleet
+            l_coll_premium   = l_coll_premium * l_coll_Fleet
+            end
+        end
+    else
+        begin
+        if agqmaster:non_fleet = "F" and
+           agqvehicle_alias:CLASS_CODE not one of 681, 682, 683, 684, 691, 692, 693, 694 and
+           agqvehicle:company_Id = "FARMERS" and
+           agqvehicle:type one of 1 then
+            begin
+            l_comp_premium_1 = l_comp_premium_1 * l_comp_fleet
+            l_coll_premium_1 = l_coll_premium_1 * l_coll_Fleet
+            l_comp_premium   = l_comp_premium * l_comp_fleet
+            l_coll_premium   = l_coll_premium * l_coll_Fleet
+            end
+        else
+        if agqmaster:non_fleet = "F" and
+           agqvehicle:company_Id not one of "FARMERS" and
+           agqvehicle:type one of 1 then
+            begin
+            l_comp_premium_1 = l_comp_premium_1 * l_comp_fleet
+            l_coll_premium_1 = l_coll_premium_1 * l_coll_Fleet
+            l_comp_premium   = l_comp_premium * l_comp_fleet
+            l_coll_premium   = l_coll_premium * l_coll_Fleet
+            end
+        end
+
+    if sfscompany:hired_nonowned_rating = 1 then
+        begin
+        If agqvehicle:ORIGINAL_COST <> 0 Then
+            Begin
+        If agqvehicle:TYPE = 1 Then
+            Begin
+            Do RATING_FACTORS
+            Do SECOND_RATING_FACTORS
+            If agqvehicle:CLASS_CODE = 681 Or
+               agqvehicle:CLASS_CODE = 682 Or
+               agqvehicle:CLASS_CODE = 683 Or
+               agqvehicle:CLASS_CODE = 684 Or
+               agqvehicle:CLASS_CODE = 691 Or
+               agqvehicle:CLASS_CODE = 692 Or
+               agqvehicle:CLASS_CODE = 693 Then
+                Begin
+                If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                    L_COMP_PREMIUM = (L_COMP_PREMIUM * (L_PHYS_FACTORS + L_TRAILERS))
+                If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                    L_COLL_PREMIUM = (L_COLL_PREMIUM * (L_PHYS_FACTORS + L_TRAILERS))
+                L_PHYS_DAM_PREMIUM = L_COMP_PREMIUM + L_COLL_PREMIUM
+                End
+            Else
+                Begin
+                If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                    L_COMP_PREMIUM = (L_COMP_PREMIUM * (L_PHYS_FACTORS + L_TRUCKS))
+                If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                    L_COLL_PREMIUM = (L_COLL_PREMIUM * (L_PHYS_FACTORS + L_TRUCKS))
+                L_PHYS_DAM_PREMIUM = L_COMP_PREMIUM + L_COLL_PREMIUM
+                End
+            End
+        If agqvehicle:TYPE = 2 Or
+           agqvehicle:TYPE = 5 or
+           agqvehicle:type = 7 Then
+            Begin
+            If agqvehicle:ANTITHEFT[1] = "Y" Or
+               agqvehicle:ANTITHEFT[2] = "Y" Or
+               agqvehicle:ANTITHEFT[3] = "Y" Or
+               agqvehicle:ANTITHEFT[4] = "Y" Or
+               agqvehicle:ANTITHEFT[5] = "Y" Then
+                Begin
+                Do ANTITHEFT
+                If agqvehicle:ANTITHEFT[1] = "Y" Then
+                    L_ANTITHEFT_FACTOR = L_ANTITHEFT_FACTOR_1
+                If agqvehicle:ANTITHEFT[2] = "Y" And
+                   agqvehicle:ANTITHEFT[1] one of "N", "" Then
+                    L_ANTITHEFT_FACTOR = L_ANTITHEFT_FACTOR_2
+                If agqvehicle:ANTITHEFT[3] = "Y" And
+                   agqvehicle:ANTITHEFT[2] one of "N", "" And
+                   agqvehicle:ANTITHEFT[1] one of "N", "" Then
+                    L_ANTITHEFT_FACTOR = L_ANTITHEFT_FACTOR_3
+                If agqvehicle:ANTITHEFT[4] = "Y" And
+                   agqvehicle:ANTITHEFT[3] one of "N", "" And
+                   agqvehicle:ANTITHEFT[2] one of "N", "" And
+                   agqvehicle:ANTITHEFT[1] one of "N", "" Then
+                    L_ANTITHEFT_FACTOR = L_ANTITHEFT_FACTOR_4
+                If agqvehicle:ANTITHEFT[3] = "Y" And
+                   agqvehicle:ANTITHEFT[4] = "Y" Then
+                    L_ANTITHEFT_FACTOR = L_ANTITHEFT_FACTOR_5
+                End
+            Else
+                L_ANTITHEFT_FACTOR = 1.00
+            If agqvehicle:SAFETY <> 0 Then
+                Begin
+                Do SAFETY
+                L_SAFETY_FACTOR = L_SAFETY_FACTOR_1
+                If agqvehicle:SAFETY > 1 Then
+                    L_SAFETY_FACTOR = (L_SAFETY_FACTOR_1 -
+                                      ((agqvehicle:SAFETY - 1) * L_SAFETY_FACTOR_2))
+                End
+            Else
+                L_SAFETY_FACTOR = 1.00
+            Do TERRITORY_FACTORS
+            If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                L_COMP_PREMIUM = L_COMP_PREMIUM * L_TERR_COMP_FACTOR *
+                                 L_ANTITHEFT_FACTOR
+            If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                L_COLL_PREMIUM = L_COLL_PREMIUM * L_TERR_COLL_FACTOR *
+                                 L_SAFETY_FACTOR
+            If agqvehicle:TYPE = 5 Then
+                Begin
+                L_COMP_PREMIUM = L_COMP_PREMIUM * L_LIMO_PHYS_DAM
+                L_COLL_PREMIUM = L_COLL_PREMIUM * L_LIMO_PHYS_DAM
+                End
+            L_PHYS_DAM_PREMIUM = L_COMP_PREMIUM + L_COLL_PREMIUM
+            If agqvehicle:CLASS_CODE = 7399 Then
+                Begin
+                If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                    L_COMP_PREMIUM = L_COMP_PREMIUM * L_FARM_FACTOR
+                If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                    L_COLL_PREMIUM = L_COLL_PREMIUM * L_FARM_FACTOR
+                L_PHYS_DAM_PREMIUM = L_PHYS_DAM_PREMIUM * L_FARM_FACTOR
+                End
+            End
+        If agqvehicle:TYPE = 3 Then
+            Begin
+            Do RATING_FACTORS
+            If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                L_COMP_PREMIUM = L_COMP_PREMIUM * L_PHYS_FACTORS
+            If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                L_COLL_PREMIUM = L_COLL_PREMIUM * L_PHYS_FACTORS
+            L_PHYS_DAM_PREMIUM = L_COMP_PREMIUM + L_COLL_PREMIUM
+            End
+        If agqvehicle:TYPE = 4 Then
+            Begin
+            If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                L_COMP_PREMIUM = L_COMP_PREMIUM * L_FLOWER_CARS_PHYS_DAM
+            If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                L_COLL_PREMIUM = L_COLL_PREMIUM * L_FLOWER_CARS_PHYS_DAM
+            L_PHYS_DAM_PREMIUM = L_COMP_PREMIUM + L_COLL_PREMIUM
+            End
+        If agqvehicle:TYPE = 6 Then
+            Begin
+            If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                L_COMP_PREMIUM = L_COMP_PREMIUM * L_PLATES_FACTOR
+            If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                L_COLL_PREMIUM = L_COLL_PREMIUM * L_PLATES_FACTOR
+            L_PHYS_DAM_PREMIUM = L_COMP_PREMIUM + L_COLL_PREMIUM
+            End
+        If agqvehicle:TYPE = 7 and
+           agqvehicle:state not one of 37 Then
+            Begin
+            If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                L_COMP_PREMIUM = L_COMP_PREMIUM * L_MOTOR_HOME_PHYS_DAM
+            If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                L_COLL_PREMIUM = L_COLL_PREMIUM * L_MOTOR_HOME_PHYS_DAM
+            L_PHYS_DAM_PREMIUM = L_COMP_PREMIUM + L_COLL_PREMIUM
+            End
+        If agqvehicle:TYPE = 8 and
+           agqvehicle:state not one of 37 Then
+            Begin
+            do get_mobile_equipment_factors
+            If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                L_COMP_PREMIUM = L_COMP_PREMIUM * L_mobile_equip_comp
+            If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                L_COLL_PREMIUM = L_COLL_PREMIUM * L_mobile_equip_coll
+            L_PHYS_DAM_PREMIUM = L_COMP_PREMIUM + L_COLL_PREMIUM
+            End
+        If agqvehicle:CHASSIS = "Y" Then
+            Begin
+            If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                L_COMP_PREMIUM = L_COMP_PREMIUM * L_CHASSIS
+            If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                L_COLL_PREMIUM = L_COLL_PREMIUM * L_CHASSIS
+            L_PHYS_DAM_PREMIUM = L_PHYS_DAM_PREMIUM * L_CHASSIS
+            End
+
+        If L_COMP_PREMIUM <> 0 Then
+            L_COMP_PREMIUM = L_COMP_PREMIUM * L_EXPERIENCE_1 * L_SCHEDULE_1 *
+                             L_DEV_OTHER * L_COMP_PREM * l_companion_discount
+        l_comp_premium_1 = l_comp_premium
+        If L_COLL_PREMIUM <> 0 Then
+            L_COLL_PREMIUM = L_COLL_PREMIUM * L_EXPERIENCE_1 * L_SCHEDULE_1 *
+                             L_DEV_OTHER * L_COLL_PREM * l_companion_discount
+        l_coll_premium_1 = l_coll_premium
+        If L_PHYS_DAM_PREMIUM <> 0 Then
+            L_PHYS_DAM_PREMIUM = L_PHYS_DAM_PREMIUM * L_EXPERIENCE_1 * L_SCHEDULE_1 *
+                                 L_DEV_OTHER  * L_COMP_PREM * L_COLL_PREM *
+                                 l_companion_discount
+        End
+    end
+else
+begin
+If agqvehicle:ORIGINAL_COST <> 0 Then
+    Begin
+    If agqvehicle:TYPE = 1 Then
+        Begin
+        Do RATING_FACTORS
+        Do SECOND_RATING_FACTORS
+        If agqvehicle:CLASS_CODE = 681 Or
+           agqvehicle:CLASS_CODE = 682 Or
+           agqvehicle:CLASS_CODE = 683 Or
+           agqvehicle:CLASS_CODE = 684 Or
+           agqvehicle:CLASS_CODE = 691 Or
+           agqvehicle:CLASS_CODE = 692 Or
+           agqvehicle:CLASS_CODE = 693 Then
+            Begin
+            If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                begin
+                l_comp_premium_1 = (l_comp_premium_1 * (L_PHYS_FACTORS + L_TRAILERS))
+                end
+            If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                begin
+                l_coll_premium_1 = (l_coll_premium_1 * (L_PHYS_FACTORS + L_TRAILERS))
+                end
+            L_PHYS_DAM_PREMIUM = l_comp_premium_1 + l_coll_premium_1
+            End
+        Else
+            Begin
+            If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                begin
+                l_comp_premium_1 = (l_comp_premium_1 * (L_PHYS_FACTORS + L_TRUCKS))
+                end
+            If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                begin
+                l_coll_premium_1 = (l_coll_premium_1 * (L_PHYS_FACTORS + L_TRUCKS))
+                end
+            L_PHYS_DAM_PREMIUM = l_comp_premium_1 + l_coll_premium_1
+            End
+        End
+    If agqvehicle:TYPE = 2 Or
+       agqvehicle:TYPE = 5 or
+       agqvehicle:type = 7 Then
+        Begin
+        If agqvehicle:ANTITHEFT[1] = "Y" Or
+           agqvehicle:ANTITHEFT[2] = "Y" Or
+           agqvehicle:ANTITHEFT[3] = "Y" Or
+           agqvehicle:ANTITHEFT[4] = "Y" Or
+           agqvehicle:ANTITHEFT[5] = "Y" Then
+            Begin
+            Do ANTITHEFT
+            If agqvehicle:ANTITHEFT[1] = "Y" Then
+                L_ANTITHEFT_FACTOR = L_ANTITHEFT_FACTOR_1
+            If agqvehicle:ANTITHEFT[2] = "Y" And
+               agqvehicle:ANTITHEFT[1] = "N" Then
+                L_ANTITHEFT_FACTOR = L_ANTITHEFT_FACTOR_2
+            If agqvehicle:ANTITHEFT[3] = "Y" And
+               agqvehicle:ANTITHEFT[2] = "N" And
+               agqvehicle:ANTITHEFT[1] = "N" Then
+                L_ANTITHEFT_FACTOR = L_ANTITHEFT_FACTOR_3
+            If agqvehicle:ANTITHEFT[4] = "Y" And
+               agqvehicle:ANTITHEFT[3] = "N" And
+               agqvehicle:ANTITHEFT[2] = "N" And
+               agqvehicle:ANTITHEFT[1] = "N" Then
+                L_ANTITHEFT_FACTOR = L_ANTITHEFT_FACTOR_4
+            If agqvehicle:ANTITHEFT[3] = "Y" And
+               agqvehicle:ANTITHEFT[4] = "Y" Then
+                L_ANTITHEFT_FACTOR = L_ANTITHEFT_FACTOR_5
+            End
+        Else
+            L_ANTITHEFT_FACTOR = 1.00
+        If agqvehicle:SAFETY <> 0 Then
+            Begin
+            Do SAFETY
+            L_SAFETY_FACTOR = L_SAFETY_FACTOR_1
+            If agqvehicle:SAFETY > 1 Then
+                L_SAFETY_FACTOR = (L_SAFETY_FACTOR_1 -
+                                  ((agqvehicle:SAFETY - 1) * L_SAFETY_FACTOR_2))
+            End
+        Else
+            L_SAFETY_FACTOR = 1.00
+        Do TERRITORY_FACTORS
+        if l_terr_comp_factor = 0 then
+            l_terr_comp_factor = 1.00
+        if l_terr_coll_factor = 0 then
+            l_terr_coll_factor = 1.00
+        If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+            begin
+            l_comp_premium_1 = l_comp_premium_1 * L_TERR_COMP_FACTOR *
+                             L_ANTITHEFT_FACTOR
+            end
+        If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+            begin
+            l_coll_premium_1 = l_coll_premium_1 * L_TERR_COLL_FACTOR *
+                             L_SAFETY_FACTOR
+            end
+        If agqvehicle:TYPE = 5 Then
+            Begin
+            l_comp_premium_1 = l_comp_premium_1 * L_LIMO_PHYS_DAM
+            l_coll_premium_1 = l_coll_premium_1 * L_LIMO_PHYS_DAM
+            End
+        L_PHYS_DAM_PREMIUM = l_comp_premium_1 + l_coll_premium_1
+        If agqvehicle:CLASS_CODE = 7399 Then
+            Begin
+            If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+                l_comp_premium_1 = l_comp_premium_1 * L_FARM_FACTOR
+            If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+                l_coll_premium_1 = l_coll_premium_1 * L_FARM_FACTOR
+            L_PHYS_DAM_PREMIUM = L_PHYS_DAM_PREMIUM * L_FARM_FACTOR
+            End
+        End
+    If agqvehicle:TYPE = 3 Then
+        Begin
+        Do RATING_FACTORS
+        If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+            l_comp_premium_1 = l_comp_premium_1 * L_PHYS_FACTORS
+        If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+            l_coll_premium_1 = l_coll_premium_1 * L_PHYS_FACTORS
+        L_PHYS_DAM_PREMIUM = l_comp_premium_1 + l_coll_premium_1
+        End
+    If agqvehicle:TYPE = 4 Then
+        Begin
+        If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+            begin
+            l_comp_premium_1 = l_comp_premium_1 * L_FLOWER_CARS_PHYS_DAM
+            end
+        If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+            begin
+            l_coll_premium_1 = l_coll_premium_1 * L_FLOWER_CARS_PHYS_DAM_1
+            end
+        L_PHYS_DAM_PREMIUM = l_comp_premium_1 + l_coll_premium_1
+        End
+    If agqvehicle:TYPE = 6 Then
+        Begin
+        If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+            l_comp_premium_1 = l_comp_premium_1 * L_PLATES_FACTOR
+        If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+            l_coll_premium_1 = l_coll_premium_1 * L_PLATES_FACTOR
+        L_PHYS_DAM_PREMIUM = l_comp_premium_1 + l_coll_premium_1
+        End
+    If agqvehicle:TYPE = 7 and
+       agqvehicle:state not one of 37 Then
+        Begin
+        If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+            l_comp_premium_1 = l_comp_premium_1 * L_MOTOR_HOME_PHYS_DAM
+        If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+            l_coll_premium_1 = l_coll_premium_1 * L_MOTOR_HOME_PHYS_DAM
+        L_PHYS_DAM_PREMIUM = l_comp_premium_1 + l_coll_premium_1
+        End
+    If agqvehicle:TYPE = 8 and
+       agqvehicle:state not one of 37 Then
+        Begin
+        do get_mobile_equipment_factors
+        If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+            l_comp_premium_1 = l_comp_premium_1 * L_mobile_equip_comp
+        If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+            l_coll_premium_1 = l_coll_premium_1 * L_mobile_equip_coll
+        L_PHYS_DAM_PREMIUM = l_comp_premium_1 + l_coll_premium_1
+        End
+    If agqvehicle:CHASSIS = "Y" Then
+        Begin
+        If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+            l_comp_premium_1 = l_comp_premium_1 * L_CHASSIS
+        If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+            l_coll_premium_1 = l_coll_premium_1 * L_CHASSIS
+        L_PHYS_DAM_PREMIUM = L_PHYS_DAM_PREMIUM * L_CHASSIS
+        End
+
+    If l_comp_premium_1 <> 0 Then
+        l_comp_premium_1 = l_comp_premium_1 * L_EXPERIENCE_1 * L_SCHEDULE_1 *
+                         L_DEV_OTHER * L_COMP_PREM * l_loss_cost_1 * l_companion_discount
+    If l_coll_premium_1 <> 0 Then
+        l_coll_premium_1 = l_coll_premium_1 * L_EXPERIENCE_1 * L_SCHEDULE_1 *
+                         L_DEV_OTHER * L_COLL_PREM * l_loss_cost_1 * l_companion_discount
+    If L_PHYS_DAM_PREMIUM <> 0 Then
+        L_PHYS_DAM_PREMIUM = L_PHYS_DAM_PREMIUM * L_EXPERIENCE_1 * L_SCHEDULE_1 *
+                             L_DEV_OTHER  * L_COMP_PREM * L_COLL_PREM * l_companion_discount
+    End
+    end
+end
+
+-- coverage B
+Do MEDICAL_PAYMENTS
+If agqvehicle:MEDICAL_PAYMENTS <> 0 Then
+    Begin
+    If agqvehicle:TYPE one of 1, 8 Then
+        Begin
+        If agqvehicle:CLASS_CODE = 681 Or
+           agqvehicle:CLASS_CODE = 682 Or
+           agqvehicle:CLASS_CODE = 683 or
+           agqvehicle:class_code = 684 Then
+            L_MED_PAY_PREMIUM = L_MED_PAY_CHARGE * L_LIAB_FACTORS
+        Else
+        If agqvehicle:CLASS_CODE = 691 Or
+           agqvehicle:CLASS_CODE = 692 Or
+           agqvehicle:CLASS_CODE = 693 Then
+            L_MED_PAY_PREMIUM = 0
+        Else
+            L_MED_PAY_PREMIUM = L_MED_PAY_CHARGE
+        End
+    If agqvehicle:TYPE = 2 Then
+        Begin
+        If agqvehicle:NO_FAULT = "N" Then
+            L_MED_PAY_PREMIUM = L_MED_PAY_CHARGE
+        If agqvehicle:CLASS_CODE = 7399 Then
+            L_MED_PAY_PREMIUM = L_MED_PAY_PREMIUM * L_FARM_FACTOR
+        End
+    If agqvehicle:TYPE = 3 Then
+        L_MED_PAY_PREMIUM = L_MED_PAY_CHARGE * L_LIAB_FACTORS
+    If agqvehicle:TYPE = 4 Then
+        Begin
+        L_MED_PAY_PREMIUM = L_MED_PAY_CHARGE * L_FLOWER_CARS_LIAB
+        End
+    If agqvehicle:TYPE = 5 Then
+        Begin
+        L_MED_PAY_PREMIUM = L_MED_PAY_CHARGE * L_LIMO_LIAB
+        End
+    If agqvehicle:TYPE = 6 Then
+        Begin
+        L_MED_PAY_PREMIUM = L_MED_PAY_CHARGE * L_PLATES_FACTOR
+        End
+    If agqvehicle:TYPE = 7 Then
+        Begin
+        L_MED_PAY_PREMIUM = L_MED_PAY_CHARGE
+        End
+    If L_MED_PAY_PREMIUM <> 0 Then
+        L_MED_PAY_PREMIUM = L_MED_PAY_PREMIUM * L_EXPERIENCE_3 * L_SCHEDULE_3
+                            * L_DEV_OTHER * L_MED_PAY_PREM * l_companion_discount
+    End
+
+-- coverage C
+
+Access agqpip, Set agqpip:app_no = agqvehicle:app_no,
+                   agqpip:VEHICLE_NO = agqvehicle:VEHICLE_NO, Generic
+
+if agqvehicle:state one of 37 then
+    do no_fault_pa
+else
+    Do NO_FAULT
+If agqvehicle:STATE one of 19, 29 Then
+    Do NJPIP
+If agqvehicle:STATE = 07 Then
+    Do DEPIP
+If agqvehicle:STATE = 37 Then
+    begin
+    Do PAPIP
+    If agqvehicle:CLASS_CODE = 681 Or
+       agqvehicle:CLASS_CODE = 682 Or
+       agqvehicle:CLASS_CODE = 683 Or
+       agqvehicle:CLASS_CODE = 684 Or
+       agqvehicle:CLASS_CODE = 691 Or
+       agqvehicle:CLASS_CODE = 692 Or
+       agqvehicle:CLASS_CODE = 693 Then
+        begin
+        l_pip_charge = l_pip_charge * l_liab_factors
+        end
+    end
+
+If agqvehicle:TYPE = 2 Then
+    Begin
+    If agqvehicle:CLASS_CODE = 7399 Then
+        Begin
+        L_PIP_CHARGE = L_PIP_CHARGE * L_FARM_FACTOR
+        End
+    End
+
+l_underinsured_premium = 0
+-- coverage E
+if agqvehicle:state <> 37 then
+    begin
+    If agqvehicle:CLASS_CODE <> 681 And
+       agqvehicle:CLASS_CODE <> 682 And
+       agqvehicle:CLASS_CODE <> 683 And
+       agqvehicle:CLASS_CODE <> 684 And
+       agqvehicle:CLASS_CODE <> 691 And
+       agqvehicle:CLASS_CODE <> 692 And
+       agqvehicle:CLASS_CODE <> 693 Then
+        Begin
+        Do UM_UIM
+        If L_UM_UIM_LIMIT_1 <> 0 Then
+            Begin
+            If agqvehicle:TYPE = 1 Or
+               agqvehicle:TYPE = 2 Or
+               agqvehicle:TYPE = 3 Or
+               agqvehicle:TYPE = 4 Or
+               agqvehicle:TYPE = 5 Or
+               agqvehicle:TYPE = 6 Or
+               agqvehicle:TYPE = 7 or
+               agqvehicle:type = 8 Then
+                Begin
+                L_UNDERINSURED_PREMIUM = 0
+                if l_um_uim_factor = 0 then
+                    l_um_uim_factor = 1.00
+                L_UM_UIM_PREMIUM = L_UM_UIM_CHARGE * L_UM_UIM_FACTOR
+                End
+            End
+        End
+    end
+Else
+    Begin
+    If agqvehicle:CLASS_CODE <> 681 And
+       agqvehicle:CLASS_CODE <> 682 And
+       agqvehicle:CLASS_CODE <> 683 And
+       agqvehicle:CLASS_CODE <> 684 And
+       agqvehicle:CLASS_CODE <> 685 And
+       agqvehicle:CLASS_CODE <> 686 And
+       agqvehicle:CLASS_CODE <> 691 And
+       agqvehicle:CLASS_CODE <> 692 And
+       agqvehicle:CLASS_CODE <> 693 and
+       agqvehicle:CLASS_CODE <> 694 and
+       agqvehicle:CLASS_CODE <> 695 and
+       agqvehicle:CLASS_CODE <> 696 and
+       agqvehicle:class_code <> 671 and
+       agqvehicle:class_code <> 672 and
+       agqvehicle:class_code <> 673 and
+       agqvehicle:class_code <> 674 and
+       agqvehicle:class_code <> 675 and
+       agqvehicle:class_code <> 676 then
+        Begin
+        Do PA_UM_UIM
+        end
+    End
+
+If agqvehicle:TOWING = "Y" Then
+    Begin
+    Do TOWING
+    if l_towing_charge_1 <> 0 then
+        l_towing_premium = l_towing_charge_1 * l_towing_per * l_loss_cost_1
+    else
+        L_TOWING_PREMIUM = L_TOWING_CHARGE * L_TOWING_PER
+    If L_TOWING_PREMIUM <> 0 Then
+        L_TOWING_PREMIUM = L_TOWING_PREMIUM * L_SCHEDULE_3 * l_experience_3 *
+                           L_DEV_OTHER * l_companion_discount
+    End
+
+If agqvehicle:RENTAL_DAYS <> 0 Then
+    Begin
+    Do RENTAL
+    L_RENTAL_BASE = (agqvehicle:RENTAL_AMOUNT * (agqvehicle:RENTAL_DAYS
+                     Divide L_RENTAL_PER))
+    l_rental_comp = l_rental_comp * l_loss_cost_1
+    l_rental_coll = l_rental_coll * l_loss_cost_1
+    L_RENTAL_COMP_PREMIUM = L_RENTAL_BASE * L_RENTAL_COMP * L_EXPERIENCE_3 *
+                            L_SCHEDULE_3 * L_DEV_OTHER * L_RENTAL_PREM *
+                            l_companion_discount
+    L_RENTAL_COLL_PREMIUM = L_RENTAL_BASE * L_RENTAL_COLL * L_EXPERIENCE_3 *
+                            L_SCHEDULE_3 * L_DEV_OTHER * L_RENTAL_PREM *
+                            l_companion_discount
+    L_RENTAL_PREMIUM = L_RENTAL_COMP_PREMIUM + L_RENTAL_COLL_PREMIUM
+--    If L_RENTAL_PREMIUM <> 0 Then
+--        L_RENTAL_PREMIUM = L_RENTAL_PREMIUM * L_EXPERIENCE_3 * L_SCHEDULE_3 *
+--                           L_DEV_OTHER * L_RENTAL_PREM
+    End
+Else
+    L_RENTAL_PREMIUM = 0
+
+l_end_premium = 0
+if l_policy_wide_First = "Y" then
+    begin
+    l_vehicle_no = 0
+    Access agqend1, Set agqend1:app_no = agqvehicle:app_no ,
+                        agqend1:VEHICLE_NO = L_VEHICLE_NO, Generic
+
+    Repeat Begin
+        Exit If agqend1:app_no <> agqvehicle:app_no Or
+                agqend1:VEHICLE_NO <> L_VEHICLE_NO
+
+        L_UPDATE_SFPEND_PREMIUM = 0
+        L_CODE = agqend1:CODE
+        if agqend1:manual_premium = 0 then
+            begin
+            Do RATE_ENDORSEMENTS
+            if agqend1:code not one of "CA9937" then
+                begin
+                Change agqend1
+                    Begin
+                    agqend1:PREMIUM = L_UPDATE_SFPEND_PREMIUM
+                    end
+                End
+            else
+                begin
+                l_update_sfpend_premium = agqend1:premium
+                end
+            end
+        else
+            begin
+            l_update_sfpend_premium = agqend1:manual_premium
+            end
+
+        L_END_PREMIUM = L_END_PREMIUM + L_UPDATE_SFPEND_PREMIUM
+
+        Next agqend1
+        end
+
+    l_policy_wide_first = "N"
+    end
+
+Access agqend1, Set agqend1:app_no = agqvehicle:app_no ,
+                    agqend1:VEHICLE_NO = agqvehicle:VEHICLE_NO, Generic
+
+Repeat Begin
+    Exit If agqend1:app_no <> agqvehicle:app_no Or
+            agqend1:VEHICLE_NO <> agqvehicle:VEHICLE_NO
+
+    L_UPDATE_SFPEND_PREMIUM = 0
+    L_CODE = agqend1:CODE
+    if agqend1:manual_premium = 0 then
+        begin
+        Do RATE_ENDORSEMENTS
+        if agqend1:code not one of "CA9937" then
+            begin
+            Change agqend1
+                Begin
+                agqend1:PREMIUM = L_UPDATE_SFPEND_PREMIUM
+                end
+            End
+        else
+            begin
+            l_update_sfpend_premium = agqend1:premium
+            end
+        end
+    else
+        begin
+        l_update_sfpend_premium = agqend1:manual_premium
+        end
+
+    L_END_PREMIUM = L_END_PREMIUM + L_UPDATE_SFPEND_PREMIUM
+
+    Next agqend1
+    End
+
+Access agqmisc, Set agqmisc:app_no = G_app_no, Generic
+
+L_MISC_PREMIUM = 0
+If L_MISC <> "Y" Then
+    Begin
+    Repeat Begin
+        Exit If agqmisc:app_no <> G_app_no
+
+        if ((agqmisc:lob_end_code one of "Y" and
+           sfsline:lob_code one of "CPORTFOLIO") or
+           sfsline:lob_code not one of "CPORTFOLIO") then
+            begin
+            L_MISC_PREMIUM = L_MISC_PREMIUM + agqmisc:PREMIUM
+            L_MISC = "Y"
+            end
+
+        Next agqmisc
+        End
+    End
+
+L_TOTAL = L_LIABILITY_PREMIUM + L_COMP_PREMIUM_1 + L_COLL_PREMIUM_1 +
+          L_MED_PAY_PREMIUM + L_UM_UIM_PREMIUM + L_PED_PREMIUM +
+          L_PIP_CHARGE + L_ADDITIONAL_PREMIUM + L_EXTENDED_PREMIUM +
+          L_TOWING_PREMIUM + L_RENTAL_PREMIUM +
+          L_MED_EXP_PREMIUM + L_UNDERINSURED_PREMIUM
+
+l_short_term_total = l_total
+do short_term
+l_total = l_short_term_total
+
+L_LIAB_TOTAL = L_LIAB_TOTAL + L_LIABILITY_PREMIUM
+L_MED_PAY_TOTAL = L_MED_PAY_TOTAL + L_MED_PAY_PREMIUM
+L_UM_UIM_TOTAL = L_UM_UIM_TOTAL + L_UM_UIM_PREMIUM
+L_UNDERINSURED_TOTAL = L_UNDERINSURED_TOTAL + L_UNDERINSURED_PREMIUM
+L_PED_PIP_TOTAL = L_PED_PIP_TOTAL + L_PED_PREMIUM
+L_BASIC_PIP_TOTAL = L_BASIC_PIP_TOTAL + L_PIP_CHARGE
+L_ADDL_PIP_TOTAL = L_ADDL_PIP_TOTAL + L_ADDITIONAL_PREMIUM
+L_EXT_MED_PIP_TOTAL = L_EXT_MED_PIP_TOTAL + L_EXTENDED_PREMIUM
+L_BROAD_PIP_TOTAL = L_BROAD_PIP_TOTAL + L_BROAD_PREMIUM
+L_MED_EXP_TOTAL = L_MED_EXP_TOTAL + L_MED_EXP_PREMIUM
+L_COMP_TOTAL = L_COMP_TOTAL + L_COMP_PREMIUM_1
+L_COLL_TOTAL = L_COLL_TOTAL + L_COLL_PREMIUM_1
+L_RENTAL_TOTAL = L_RENTAL_TOTAL + L_RENTAL_PREMIUM
+L_TOWING_TOTAL = L_TOWING_TOTAL + L_TOWING_PREMIUM
+L_END_TOTAL = L_END_TOTAL + L_END_PREMIUM
+L_MISC_TOTAL = L_MISC_TOTAL + L_MISC_PREMIUM
+
+L_AGE  = ((Year(agqvehicle:EFF_DATE) - (agqvehicle:YEAR)) + 1)
+If Month(agqvehicle:EFF_DATE) >= 10 And
+   Month(agqvehicle:EFF_DATE) <= 12 Then
+    L_AGE = L_AGE + 1
+If L_AGE = 0 Then
+    L_AGE = 1
+If L_AGE > 6 Then
+    L_AGE = 6
+access agqvehicle_alias, set agqvehicle_alias:app_no = agqvehicle:app_no,
+                             agqvehicle_alias:vehicle_no = agqvehicle:vehicle_no, generic
+
+Change agqvehicle_ALIAS
+    Begin
+    agqvehicle_ALIAS:AGE                =       L_AGE
+    agqvehicle_ALIAS:VEHICLE_TOTALS[1]  =       L_LIABILITY_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[2]  =       L_MED_PAY_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[3]  =       L_UM_UIM_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[4]  =       L_PED_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[5]  =       L_PIP_CHARGE
+    agqvehicle_ALIAS:VEHICLE_TOTALS[6]  =       L_ADDITIONAL_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[7]  =       L_COMP_PREMIUM_1
+    agqvehicle_ALIAS:VEHICLE_TOTALS[8]  =       L_COLL_PREMIUM_1
+    agqvehicle_ALIAS:VEHICLE_TOTALS[9]  =       L_RENTAL_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[10] =       L_TOWING_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[11] =       L_EXTENDED_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[12] =       L_BROAD_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[13] =       L_MED_EXP_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[14] =       L_END_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[15] =       L_RENTAL_COMP_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[16] =       L_RENTAL_COLL_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[17] =       L_UNDERINSURED_PREMIUM
+    agqvehicle_ALIAS:VEHICLE_TOTALS[19] =       L_TOTAL
+    agqvehicle_alias:medical_premium    =       l_medical_premium
+    agqvehicle_alias:work_premium       =       l_work_premium
+    agqvehicle_alias:accident_premium   =       l_accident_premium
+    agqvehicle_alias:funeral_premium    =       l_funeral_premium
+    End
+
+L_TOTAL = L_TOTAL + L_END_PREMIUM + L_MISC_PREMIUM
+if l_entry = "Y" then
+    begin
+    l_total1 = 0
+    L_TOTAL1 = L_TOTAL + L_TOTAL1
+    l_entry = "N"
+    end
+else
+    begin
+    L_TOTAL1 = L_TOTAL + L_TOTAL1
+    end
+
+End
+
+procedure get_liability_factor
+begin
+L_COMPANY_ID       = agqvehicle:company_id
+L_STATE            = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+l_class_code       = agqvehicle:class_code
+access casotherrates, set casotherrates:company_id       = l_company_id,
+                          casotherrates:state            = l_state,
+                          casotherrates:line_of_business = l_line_of_business,
+                          casotherrates:class_code       = l_class_code, generic
+
+while casotherrates:company_id       = l_company_id and
+      casotherrates:state            = l_state and
+      casotherrates:line_of_business = l_line_of_business and
+      casotherrates:class_code       = l_class_code
+        begin
+        if (agqvehicle:eff_date >= casotherrates:eff_date and
+           (agqvehicle:eff_date < casotherrates:exp_date or
+           casotherrates:exp_date = 0)) then
+            begin
+            l_liability_factor       = casotherrates:liability_factor
+            l_physical_damage_factor = casotherrates:physical_damage_factor
+            l_rating_type            = casotherrates:rate_type
+            end
+
+        next casotherrates
+        end
+
+end
+
+Procedure LOSSCOST
+Begin
+L_COMPANY_ID       = agqvehicle:company_id
+L_STATE            = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+Access SFSLOSSCOST, Set SFSLOSSCOST:COMPANY_ID       = L_COMPANY_ID,
+                        SFSLOSSCOST:STATE            = L_STATE,
+                        SFSLOSSCOST:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS, Generic
+
+while SFSLOSSCOST:COMPANY_ID       = L_COMPANY_ID and
+      SFSLOSSCOST:STATE            = L_STATE and
+      SFSLOSSCOST:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS
+    begin
+    If agqvehicle:EFF_DATE >= SFSLOSSCOST:EFF_DATE Then
+        begin
+        L_LOSS_COST   = SFSLOSSCOST:RATE
+        l_loss_cost_1 = sfslosscost:rate_1[1]
+        end
+
+    Next SFSLOSSCOST
+    End
+
+If L_LOSS_COST = 0 or
+   l_loss_cost_1 = 0  Then
+    begin
+    L_LOSS_COST   = 1.0000
+    l_loss_cost_1 = 1.00
+    end
+
+end
+
+Procedure PREMIER_FACTORS
+Begin
+L_RECORD_KEY = "PR"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_TYPE = agqvehicle:TYPE
+L_EFF_DATE = agqvehicle:EFF_DATE
+
+Include "caspremier.pro"
+
+End
+
+Procedure HIRED
+Begin
+access agqnonowned, set agqnonowned:app_no = agqvehicle:app_no, generic
+
+If agqnonowned:app_no = agqvehicle:app_no Then
+    Begin
+    -- hired autos
+    Do INCREASE_LIABILITY_RATES
+    do get_combined_deductible
+    If agqnonowned:COST_OF_HIRE <> 0 Or
+       agqnonowned:IF_ANY = "Y" Then
+        Begin
+        Do HIRED_AUTOS
+
+        -- basic premium before increased limits and deviations
+        If agqnonowned:IF_ANY = "N" Then
+            Begin
+            L_HIRED_LIAB_PREMIUM = ((agqnonowned:COST_OF_HIRE Divide
+                                   L_HIRED_LIAB_PER) * L_HIRED_LIAB_RATE)
+            If L_HIRED_LIAB_PREMIUM < L_HIRED_LIAB_MINIMUM Then
+                Begin
+                L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_MINIMUM
+                if sfscompany:hired_nonowned_rating not one of 1 then
+                    Change agqnonowned
+                        Begin
+                        agqnonowned:MP[1] = "Y"
+                        End
+                End -- end of minimum premium
+
+            End -- end of if any = "N"
+
+        -- basic premium before increased limits and deviations
+        If agqnonowned:IF_ANY = "Y" Then
+            Begin
+            L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_MINIMUM
+            if sfscompany:hired_nonowned_rating not one of 1 then
+                Change agqnonowned
+                    Begin
+                    agqnonowned:MP[1] = "Y"
+                    End
+            End -- end of if any = "Y"
+
+        -- this was added because Salem uses the first vehicle to figure this
+        -- out, 5/28/2003 this was changed again to use the highest vehicle
+        -- using first vehicle was not correct
+        If SFSCOMPANY:HIRED_NONOWNED_RATING = 1 Then
+            Begin
+            Access agqvehicle_ALIAS, Set agqvehicle_ALIAS:app_no = agqvehicle:app_no, Generic
+
+            l_increase_1 = 0
+            while agqvehicle_alias:app_no = agqvehicle:app_no
+                begin
+                L_TYPE = agqvehicle_ALIAS:TYPE
+                if l_type = 8 and
+                   agqvehicle:state <> 37 then
+                    l_type = 1
+                if l_no_trucks = 0 and
+                   l_pp_vehicles = "Y" then
+                    l_type = 2
+                else
+                    l_type = 1
+                L_RECORD_KEY = "IL"
+                L_COMPANY_ID = agqvehicle:COMPANY_ID
+                L_STATE = agqvehicle:STATE
+                L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+                L_LIMIT = l_liability_1
+                L_EFF_DATE = agqvehicle:EFF_DATE
+                Access CASINCRLIAB, Set CASINCRLIAB:COMPANY_ID = L_COMPANY_ID ,
+                                        CASINCRLIAB:STATE = L_STATE,
+                                        CASINCRLIAB:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                                        CASINCRLIAB:LIMIT = L_LIMIT, Generic
+
+                Repeat Begin
+                    Exit If CASINCRLIAB:RECORD_KEY <> L_RECORD_KEY Or
+                            CASINCRLIAB:COMPANY_ID <> L_COMPANY_ID Or
+                            CASINCRLIAB:STATE <> L_STATE Or
+                            CASINCRLIAB:LINE_OF_BUSINESS <> L_LINE_OF_BUSINESS Or
+                            CASINCRLIAB:LIMIT <> L_LIMIT
+
+                    If L_EFF_DATE >= CASINCRLIAB:EFF_DATE Then
+                        Begin
+                        switch(l_type)
+                          case 1, 4, 8 : if l_increase_1 < casincrliab:factor[2] then
+                                             l_increase_1 = casincrliab:factor[2]
+                          case 2, 5, 7 : if l_increase_1 < casincrliab:factor[1] then
+                                             l_increase_1 = casincrliab:factor[1]
+                          default      : if l_increase_1 < casincrliab:factor[3] then
+                                             l_increase_1 = casincrliab:factor[3]
+                          end -- end of switch
+
+                        end -- end of l_eff_date logic
+
+                    Next CASINCRLIAB
+                    End  -- end of casincrliab
+
+                next agqvehicle_alias
+                end -- end of next vehicle
+
+            if l_increase_1 = 0 then
+                l_increase_1 = 1.00
+            if l_hired_minimum_factor = 0 then
+                l_hired_minimum_factor = 1.00
+            L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_PREMIUM *
+                                   l_hired_minimum_factor *
+                                   L_increase_1
+
+            if agqnonowned:if_any = "Y" then
+                Change agqnonowned
+                    Begin
+                    agqnonowned:HIRED_FACTOR = l_hired_liab_rate *
+                                               l_hired_minimum_factor *
+                                               L_increase_1
+                                               * L_EXPERIENCE_3 *
+                                               L_SCHEDULE_3 * L_DEV_OTHER *
+                                               l_companion_discount
+                    end -- end of change
+/*            else
+                Change agqnonowned
+                    Begin
+                    agqnonowned:HIRED_FACTOR = l_hired_liab_rate *
+                                               L_increase_1
+                                               * L_EXPERIENCE_3 *
+                                               L_SCHEDULE_3 * L_DEV_OTHER *
+                                               l_companion_discount
+                    end -- end of change*/
+
+            if l_increase_1 = 0 then
+                l_increase_1 = 1.00
+            if l_hired_minimum_factor = 0 then
+                l_hired_minimum_factor = 1.00
+            l_hired_liab_minimum = l_hired_liab_minimum *
+                                   l_hired_minimum_factor *
+                                   l_increase_1
+
+            If L_HIRED_LIAB_PREM = 0 Then
+                L_HIRED_LIAB_PREM = 1.00
+            L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_PREMIUM * L_HIRED_LIAB_PREM
+            L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_PREMIUM * L_EXPERIENCE_3 *
+                                   L_SCHEDULE_3 * L_DEV_OTHER *
+                                   l_companion_discount
+
+            l_hired_premium = l_hired_liab_premium
+
+            if l_hired_liab_premium <= l_hired_liab_minimum then
+                Change agqnonowned
+                    Begin
+                    l_hired_premium = l_hired_liab_minimum
+                    l_hired_liab_premium = l_hired_liab_minimum
+                    agqnonowned:MP[1] = "Y"
+                    End
+            else
+                Change agqnonowned
+                    Begin
+                    agqnonowned:MP[1] = "N"
+                    End
+
+            End -- end of salem logic
+        Else
+            begin
+            L_TYPE = agqvehicle:TYPE
+            if l_no_trucks = 0 and
+               l_pp_vehicles = "Y" then
+                l_type = 2
+            else
+                l_type = 1
+            l_hired_liab_premium = l_hired_liab_premium *
+                                   l_deductible_factor
+            if agqvehicle:state not one of 37 then
+                begin
+                Switch(L_TYPE)
+                  Case 1, 4, 8 : begin
+                                 L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_rate * L_TRUCK_INCREASE
+                                 l_hired_liab_minimum = l_hired_liab_minimum * l_truck_increase
+                                 end
+                  Case 2, 5, 7 : begin
+                                 L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_rate * L_PP_INCREASE
+                                 l_hired_liab_minimum = l_hired_liab_minimum * l_pp_increase
+                                 end
+                  Default      : begin
+                                 L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_rate * L_OTHER_INCREASE
+                                 l_hired_liab_minimum = l_hired_liab_minimum * l_other_increase
+                                 end
+                  End
+                if l_hired_liab_premium < l_hired_liab_minimum then
+                    l_hired_liab_premium = l_hired_liab_minimum
+                end
+            else
+                begin
+                l_hired_liab_premium = l_hired_liab_rate * l_other_increase *
+                                       l_loss_cost
+                if l_hired_liab_premium < l_hired_liab_minimum then
+                    l_hired_liab_premium = l_hired_liab_minimum * l_other_increase
+                end
+
+        if agqvehicle:state not one of 37 then
+            begin
+            Change agqnonowned
+                Begin
+                switch(l_type)
+                  case 1, 4, 8 : agqnonowned:HIRED_FACTOR = l_hired_liab_rate *
+                                                         l_truck_increase *
+                                                         L_EXPERIENCE_3 *
+                                                         L_SCHEDULE_3 *
+                                                         L_DEV_OTHER *
+                                                         l_companion_discount
+                  case 2, 5, 7 : agqnonowned:hired_factor = l_hired_liab_rate *
+                                                            l_pp_increase *
+                                                            l_experience_3 *
+                                                            l_schedule_3 *
+                                                            l_dev_other *
+                                                            l_companion_discount
+                  default      : agqnonowned:hired_factor = l_hired_liab_rate *
+                                                            l_other_increase *
+                                                            l_experience_3 *
+                                                            l_schedule_3 *
+                                                            l_dev_other *
+                                                            l_companion_discount
+                  end
+
+                end   -- end of change
+
+            If L_HIRED_LIAB_PREM = 0 Then
+                L_HIRED_LIAB_PREM = 1.00
+            L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_PREMIUM * L_HIRED_LIAB_PREM
+            L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_PREMIUM * L_EXPERIENCE_3 *
+                                   L_SCHEDULE_3 * L_DEV_OTHER *
+                                   l_companion_discount
+
+            l_hired_premium = l_hired_liab_premium
+            end
+        else
+            begin
+            Change agqnonowned
+                Begin
+                agqnonowned:hired_factor = l_hired_liab_rate *
+                                           l_other_increase *
+                                           l_loss_cost *
+                                           l_experience_3 *
+                                           l_schedule_3 *
+                                           l_dev_other *
+                                           l_companion_discount
+                end
+            If L_HIRED_LIAB_PREM = 0 Then
+                L_HIRED_LIAB_PREM = 1.00
+            L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_PREMIUM * L_HIRED_LIAB_PREM
+            L_HIRED_LIAB_PREMIUM = L_HIRED_LIAB_PREMIUM * L_EXPERIENCE_3 *
+                                   L_SCHEDULE_3 * L_DEV_OTHER *
+                                   l_companion_discount
+
+            l_hired_premium = l_hired_liab_premium
+            end
+
+        end  -- end of logic not for salem
+
+    End -- if any or cost of hired
+
+    If agqnonowned:COMP = "Y" Then
+        Begin
+        If L_HIRED_COMP_RATE <> 0 then
+            begin
+            if agqvehicle:state not one of 37 Then
+                begin
+                L_HIRED_COMP_PREMIUM = ((agqnonowned:COST_OF_HIRE Divide
+                                       L_HIRED_PER) * L_HIRED_COMP_RATE *
+                                       l_loss_cost_1 *
+                                       L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                       l_companion_discount *
+                                      L_DEV_OTHER)
+                end
+            else
+                begin
+                if agqnonowned:cost_of_hire_1 = 0 then
+                    l_hired_comp_premium = l_hired_minimum
+                else
+                    L_HIRED_COMP_PREMIUM = ((agqnonowned:COST_OF_HIRE_1 Divide
+                                           L_HIRED_PER) * L_HIRED_COMP_RATE *
+                                           l_loss_cost_1 *
+                                           L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                           l_companion_discount *
+                                          L_DEV_OTHER)
+                end
+            end
+        End
+
+    If agqnonowned:COLL = "Y" Then
+        Begin
+        If L_HIRED_COLL_RATE <> 0 Then
+            begin
+            if agqvehicle:state not one of 37 then
+                begin
+                L_HIRED_COLL_PREMUIM = ((agqnonowned:COST_OF_HIRE Divide
+                                       L_HIRED_PER) * L_HIRED_COLL_RATE *
+                                       l_loss_cost_1 *
+                                       L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                       l_companion_discount *
+                                       L_DEV_OTHER)
+                end
+            else
+                begin
+                if agqnonowned:cost_of_hire_1 <> 0 then
+                    L_HIRED_COLL_PREMUIM = ((agqnonowned:COST_OF_HIRE_1 Divide
+                                           L_HIRED_PER) * L_HIRED_COLL_RATE *
+                                           l_loss_cost_1 *
+                                           L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                           l_companion_discount *
+                                           L_DEV_OTHER)
+                end
+            end
+        End
+
+    If agqnonowned:COMP = "Y" Or
+       agqnonowned:COLL = "Y" Then
+        Begin
+        L_HIRED_PHYS_DAM_PREMIUM = L_HIRED_COMP_PREMIUM + L_HIRED_COLL_PREMUIM
+        If L_HIRED_PHYS_DAM_PREMIUM < L_HIRED_MINIMUM or
+           agqnonowned:if_any_1 = "Y" Then
+            Begin
+            L_HIRED_PHYS_DAM_PREMIUM = L_HIRED_MINIMUM
+            End
+        if l_hired_phys_dam_prem = 0 then
+            l_hired_phys_dam_prem = 1.00
+        L_HIRED_PHYS_DAM_PREMIUM = L_HIRED_PHYS_DAM_PREMIUM *
+                                   L_HIRED_PHYS_DAM_PREM
+        End
+
+    L_HIRED_AUTO_LIAB_TOTAL = L_HIRED_AUTO_LIAB_TOTAL + L_HIRED_LIAB_PREMIUM
+    L_HIRED_COMP_TOTAL = L_HIRED_COMP_TOTAL + L_HIRED_PHYS_DAM_PREMIUM
+
+    l_hired_premium = l_hired_premium + l_hired_phys_dam_premium
+    Change agqnonowned
+        Begin
+        agqnonowned:HIRED_PREMIUM = L_HIRED_PREMIUM
+        if agqnonowned:if_any = "N" then
+            agqnonowned:HIRED_FACTOR = (l_hired_premium divide
+                                       (agqnonowned:COST_OF_HIRE Divide
+                                       L_HIRED_LIAB_PER))
+        End
+
+    end
+
+end
+
+procedure nonowned
+begin
+If agqnonowned:app_no = agqvehicle:app_no Then
+    Begin
+    do get_combined_deductible
+    If agqnonowned:nonowned_auto_applicable = "Y" or
+       agqnonowned:no_employees > 0 Then
+        Begin
+        Do NONOWNED_AUTOS
+        If agqnonowned:PERCENT_USE_OWN_AUTOS <= L_NONOWNED_PERCENT  Then
+            Begin
+            L_NONOWNED_PREMIUM = L_NONOWNED_EMPLOYEES_PREMIUM
+            l_hired_liab_minimum = l_nonowned_employees_premium
+
+            -- get the increase limits factors if not minimum premium
+            If L_LIABILITY_1 > L_NONOWNED_LIAB_LIMIT Then
+                Begin
+
+                If SFSCOMPANY:HIRED_NONOWNED_RATING = 1 Then
+                    Begin
+                    l_increase_1 = 0
+                    Access agqvehicle_ALIAS, Set agqvehicle_ALIAS:app_no = agqvehicle:app_no, generic
+
+                    while agqvehicle_alias:app_no = agqvehicle:app_no
+                        begin
+                        L_TYPE = agqvehicle_ALIAS:TYPE
+                        if l_type = 8 and
+                           agqvehicle:state <> 37 then
+                            l_type = 1
+                            if l_no_trucks = 0 and
+                               l_pp_vehicles = "Y" then
+                                l_type = 2
+                            else
+                                l_type = 1
+                        L_RECORD_KEY = "IL"
+                        L_COMPANY_ID = agqvehicle:COMPANY_ID
+                        L_STATE = agqvehicle:STATE
+                        L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+                        L_LIMIT = l_liability_1
+                        L_EFF_DATE = agqvehicle:EFF_DATE
+                        Access CASINCRLIAB, Set CASINCRLIAB:COMPANY_ID = L_COMPANY_ID ,
+                                                CASINCRLIAB:STATE = L_STATE,
+                                                CASINCRLIAB:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                                                CASINCRLIAB:LIMIT = L_LIMIT, Generic
+
+                        Repeat Begin
+                            Exit If CASINCRLIAB:RECORD_KEY <> L_RECORD_KEY Or
+                                    CASINCRLIAB:COMPANY_ID <> L_COMPANY_ID Or
+                                    CASINCRLIAB:STATE <> L_STATE Or
+                                    CASINCRLIAB:LINE_OF_BUSINESS <> L_LINE_OF_BUSINESS Or
+                                    CASINCRLIAB:LIMIT <> L_LIMIT
+
+                            If L_EFF_DATE >= CASINCRLIAB:EFF_DATE Then
+                                Begin
+                                switch(l_type)
+                                  case 1, 4, 8  : if l_increase_1 < casincrliab:factor[2] then
+                                                      l_increase_1 = casincrliab:factor[2]
+                                  case 2, 5, 7  : if l_increase_1 < casincrliab:factor[1] then
+                                                      l_increase_1 = casincrliab:factor[1]
+                                  default       : if l_increase_1 < casincrliab:factor[3] then
+                                                      l_increase_1 = casincrliab:factor[3]
+                                  end
+                                end -- end of if eff_date
+
+                            Next CASINCRLIAB
+                            End -- end of repeat begin
+
+                        next agqvehicle_alias
+
+                        end -- end of while
+
+                    if l_increase_1 = 0 then
+                        l_increase_1 = 1.00
+                    if l_hired_minimum_factor = 0 then
+                        l_hired_minimum_factor = 1.00
+                    L_NONOWNED_PREMIUM = L_NONOWNED_PREMIUM * l_increase_1 *
+                                         l_hired_minimum_factor
+                    l_hired_liab_minimum = l_nonowned_premium
+
+                    End -- end of salem logic
+                Else
+                    begin
+                    l_nonowned_premium = l_nonowned_premium * l_deductible_factor
+                    L_TYPE = agqvehicle:TYPE
+                    if l_no_trucks = 0 and
+                       l_pp_vehicles = "Y" then
+                        l_type = 2
+                    else
+                        l_type = 1
+                    if agqvehicle:state not one of 37 then
+                        begin
+                        Switch(L_TYPE)
+                          Case 1, 8  : L_NONOWNED_PREMIUM = L_NONOWNED_PREMIUM *
+                                                         L_TRUCK_INCREASE
+                          Case 2  : L_NONOWNED_PREMIUM = L_NONOWNED_PREMIUM *
+                                                         L_PP_INCREASE
+                          Default : L_NONOWNED_PREMIUM = L_NONOWNED_PREMIUM *
+                                                         L_OTHER_INCREASE
+                          End
+                        end
+                    else
+                        begin
+                        l_nonowned_premium = l_nonowned_premium *
+                                             l_other_increase *
+                                             l_loss_cost
+                        end
+
+                    End -- end of other than salem logic
+
+                end  -- end of increase liability
+
+            If agqnonowned:EMPLOYEES_AS_INSUREDS = "Y" Then
+                L_NONOWNED_PREMIUM = (l_nonowned_premium +
+                                     (L_NONOWNED_PREMIUM *
+                                     L_NONOWNED_EMPLOYEE_FACTOR))
+
+            If agqnonowned:nonowned_auto_service = 1 Then
+                begin
+                do increase_liability_rates
+                Do LIABILITY
+                L_NONOWNED_PREMIUM = l_charge *
+                                     l_pp_increase *
+                                     l_nonowned_auto_service *
+                                     l_loss_cost *
+                                     agqnonowned:no_employees
+                end
+            If agqnonowned:nonowned_partnership = 1 Then
+                begin
+                do get_liability_factor
+                Do LIABILITY
+                L_NONOWNED_PREMIUM = l_charge *
+                                     l_pp_increase *
+                                     l_nonowned_partnership *
+                                     l_loss_cost
+                end
+
+            if agqnonowned:additional_insured = "Y" then
+                l_nonowned_premium = l_nonowned_premium *
+                                     l_nonowned_addl_insured
+
+            If L_NONOWNED_PREM = 0 Then
+                L_NONOWNED_PREM = 1.00
+            If L_NONOWNED_PREMIUM <> 0 Then
+                L_NONOWNED_PREMIUM = L_NONOWNED_PREMIUM * L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                     l_companion_discount *
+                                     L_DEV_OTHER * L_NONOWNED_PREM
+            l_nonowned_premium_1 = l_nonowned_premium
+            L_NONOWNED_LIAB_TOTAL = L_NONOWNED_LIAB_TOTAL + L_NONOWNED_PREMIUM_1
+
+            Change agqnonowned
+                Begin
+                agqnonowned:nonowned_premium = l_nonowned_premium_1
+                if sfscompany:hired_nonowned_rating = 1 then
+                    begin
+                    if l_nonowned_premium_1 <= l_hired_liab_minimum then
+                        begin
+                        l_nonowned_premium_1 = l_hired_liab_minimum
+                        agqnonowned:nonowned_premium = l_hired_liab_minimum
+                        agqnonowned:MP[2] = "Y"
+                        end
+                    else
+                        begin
+                        agqnonowned:mp[2] = "N"
+                        end
+                    end
+                else
+                    begin
+                    agqnonowned:mp[2] = "N"
+                    end
+                End -- end of change
+
+            End -- end of percent use own autos
+
+        end -- end of no employees
+    else
+        begin
+        Change agqnonowned
+            Begin
+            agqnonowned:nonowned_premium = l_nonowned_premium_1
+            end
+        end
+
+    If agqnonowned:FUNERAL_MEDICAL_PAYMENTS = "Y" Then
+        Begin
+        L_FUNERAL_NONOWNED_HIRED_PREMIUM = L_MED_PAY_TOTAL *
+                                           L_FUNERAL_HIRED_NONOWNED
+        End
+
+    End
+End
+
+Procedure DRIVE_OTHER_CAR
+Begin
+Access agqdoc, Set agqdoc:app_no = agqvehicle:app_no, Generic
+
+while agqdoc:app_no = agqvehicle:app_no
+    begin
+    l_broad_premium_1 = 0
+    If agqdoc:INCLUDE_DOC = 1 Then
+        Begin
+        Change agqdoc
+            Begin
+            if agqdoc:liability = 0 then
+                agqdoc:liability = l_liability_1
+            if agqdoc:um_uim_limit = 0 then
+                agqdoc:um_uim_limit = l_um_uim_limit_1
+            end
+        Do DOC
+        If agqvehicle:STATE <> 37 Then
+            Begin
+        -- if um/uim increased from basic limit
+            If agqdoc:UM_UIM_LIMIT > L_DOC_UM_LIMIT And
+               L_DOC_UM_LIMIT <> 0 Then
+                Do UM_UIM
+            End
+        Else
+            Begin
+            L_UM_UIM_FACTOR = 1.00
+            Do DOC_PA_UM_UIM
+            L_DOC_UM_UIM = L_DOC_UM_UIM_PREMIUM + L_DOC_UNDERINSURED_PREMIUM
+            End
+
+        If L_DOC_LIABILITY <> 0 Then
+            Begin
+            l_increase_1 = 0
+            If SFSCOMPANY:HIRED_NONOWNED_RATING = 1 Then
+                Begin
+                If L_LIABILITY_1 > L_DOC_LIMIT Then
+                    Begin
+                    Access agqvehicle_ALIAS, Set agqvehicle_ALIAS:app_no = agqvehicle:app_no, generic
+
+                    while agqvehicle_alias:app_no = agqvehicle:app_no
+                        begin
+                        l_type = agqvehicle_alias:type
+                        if l_type = 8 and
+                           agqvehicle_alias:state <> 37 then
+                            l_type = 1
+                        L_RECORD_KEY = "IL"
+                        L_COMPANY_ID = agqvehicle:COMPANY_ID
+                        L_STATE = agqvehicle:STATE
+                        L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+                        L_LIMIT = l_liability_1
+                        L_EFF_DATE = agqvehicle:EFF_DATE
+                        Access CASINCRLIAB, Set CASINCRLIAB:COMPANY_ID = L_COMPANY_ID ,
+                                                CASINCRLIAB:STATE = L_STATE,
+                                                CASINCRLIAB:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                                                CASINCRLIAB:LIMIT = L_LIMIT, Generic
+
+                        Repeat Begin
+                            Exit If CASINCRLIAB:RECORD_KEY <> L_RECORD_KEY Or
+                                    CASINCRLIAB:COMPANY_ID <> L_COMPANY_ID Or
+                                    CASINCRLIAB:STATE <> L_STATE Or
+                                    CASINCRLIAB:LINE_OF_BUSINESS <> L_LINE_OF_BUSINESS Or
+                                    CASINCRLIAB:LIMIT <> L_LIMIT
+
+                            If L_EFF_DATE >= CASINCRLIAB:EFF_DATE Then
+                                Begin
+                                switch(l_type)
+                                  case 1, 4, 8  : if l_increase_1 < casincrliab:factor[2] then
+                                                      l_increase_1 = casincrliab:factor[2]
+                                  case 2, 5, 7  : if l_increase_1 < casincrliab:factor[1] then
+                                                      l_increase_1 = casincrliab:factor[1]
+                                  default       : if l_increase_1 < casincrliab:factor[3] then
+                                                      l_increase_1 = casincrliab:factor[3]
+                                  end
+                                end -- end of if eff_date
+
+                            Next CASINCRLIAB
+                            End -- end of repeat begin
+
+                        next agqvehicle_alias
+
+                        end -- end of while
+
+                    end -- end of liability higher then minimum
+
+                if l_increase_1 = 0 then
+                    l_increase_1 = 1.00
+                if l_hired_minimum_factor = 0 then
+                    l_hired_minimum_factor = 1.00
+                L_DOC_LIABILITY = L_DOC_LIABILITY * l_hired_minimum_factor *
+                                  L_increase_1 * L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                  l_companion_discount *
+                                  L_DEV_OTHER * L_DOC_PREM
+
+                end -- end of hired_nonowned rating
+            else
+                L_DOC_LIABILITY = L_DOC_LIABILITY * l_loss_cost * l_pp_increase *
+                                  L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                  l_companion_discount *
+                                  L_DEV_OTHER * L_DOC_PREM
+
+            End
+
+        If L_DOC_MED_PAY <> 0 Then
+            L_DOC_MED_PAY = L_DOC_MED_PAY * L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                            L_DEV_OTHER * L_DOC_PREM * l_companion_discount
+        If L_DOC_COMP <> 0 And
+           agqdoc:COMP = "Y" Then
+            L_DOC_COMP = L_DOC_COMP * L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                         L_DEV_OTHER * L_DOC_PREM * l_companion_discount
+        Else
+            L_DOC_COMP = 0
+        If L_DOC_COLL <> 0 And
+           agqdoc:COLL = "Y" Then
+            L_DOC_COLL = L_DOC_COLL * L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                         L_DEV_OTHER * L_DOC_PREM * l_companion_discount
+        Else
+            L_DOC_COLL = 0
+        End
+
+    If agqdoc:BROADENED_PIP = 1 Then
+        Begin
+        if agqvehicle:state = 37 then
+            begin
+            L_RECORD_KEY = "PA"
+            L_COMPANY_ID = agqvehicle:COMPANY_ID
+            L_STATE = agqvehicle:STATE
+            L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+            L_EFF_DATE = agqvehicle:EFF_DATE
+            L_EXTRA_LIMIT = agqpanofault:EXTRA_MEDICAL_LIMIT
+
+            Include "caspippa.pro"
+
+            L_BROAD_PREMIUM_1 = L_BROADENED_CHARGE * l_loss_cost *
+                                L_EXPERIENCE_1 *
+                                L_SCHEDULE_3 * L_DEV_OTHER *
+                                l_companion_discount
+            If agqdoc:BROADENED_ADDL_PIP = 1 Then
+                L_BROAD_PREMIUM_1 = l_broad_premium_1 +
+                                    l_additional_premium
+            end
+        else
+        If agqvehicle:STATE <> 37 then
+            Begin
+            L_BROAD_PREMIUM_1 = (l_broad_premium_1 + (L_BROADENED_BASIC_PIP *
+                              L_EXPERIENCE_3 *
+                              L_SCHEDULE_3 * l_companion_discount *
+                              L_DEV_OTHER * L_BROAD_PIP_PREM))
+            If agqdoc:BROADENED_ADDL_PIP = 1 Then
+                L_BROAD_PREMIUM_1 = L_BROAD_PREMIUM_1 + L_FIRST_AUTO
+            End
+        Else
+            Begin
+            L_BROAD_PREMIUM_1 = (l_broad_premium_1 + (L_BROADENED_CHARGE *
+                              L_EXPERIENCE_1 *
+                              L_SCHEDULE_3 * l_companion_discount * L_DEV_OTHER))
+            If agqdoc:BROADENED_ADDL_PIP = 1 Then
+                L_BROAD_PREMIUM_1 = L_BROAD_PREMIUM_1 + L_ADDITIONAL_CHARGE +
+                                  L_COMBINED_CHARGE
+            End
+        l_broad_premium = l_broad_premium + l_broad_premium_1
+        End
+
+    If agqdoc:INCLUDE_DOC = 1 Then
+        Begin
+        L_DOC_PREMIUM = (L_DOC_PREMIUM + (L_DOC_LIABILITY + L_DOC_MED_PAY +
+                        (L_DOC_UM_UIM * L_UM_UIM_FACTOR) +
+                        L_DOC_COMP + L_DOC_COLL)) --+ L_BROAD_PREMIUM))
+        L_DOC_OTHER_LIAB_TOTAL = (L_DOC_OTHER_LIAB_TOTAL + L_DOC_LIABILITY +
+                                 L_DOC_MED_PAY +
+                                 (L_DOC_UM_UIM * L_UM_UIM_FACTOR))
+        End
+    L_DOC_OTHER_TOTAL = L_DOC_OTHER_TOTAL + L_DOC_COMP + L_DOC_COLL
+
+    Change agqdoc
+        Begin
+        if agqdoc:liability <> 0 then
+            agqdoc:LIABILITY_PREMIUM = L_DOC_LIABILITY
+        if agqdoc:medical_payments <> 0 then
+            agqdoc:MED_PAY_PREMIUM = L_DOC_MED_PAY
+        if agqdoc:um_uim_limit <> 0 then
+            agqdoc:UM_UIM_PREMIUM = L_DOC_UM_UIM * L_UM_UIM_FACTOR
+        if l_doc_comp <> 0 then
+            agqdoc:COMP_DEDUCT_PREMIUM = L_DOC_COMP
+        if l_doc_coll <> 0 then
+            agqdoc:COLL_DEDUCT_PREMIUM = L_DOC_COLL
+        if agqdoc:broadened_pip = 1 then
+            agqdoc:BROADENED_PREMIUM = L_BROAD_PREMIUM_1
+        End
+
+    Next agqdoc
+    End
+
+End
+
+Procedure DRIVE_OTHER_CAR_PA
+Begin
+Access agqdoc, Set agqdoc:app_no = agqvehicle:app_no, Generic
+
+while agqdoc:app_no = agqvehicle:app_no
+    begin
+    l_broad_premium_1 = 0
+    If agqdoc:INCLUDE_DOC = 1 Then
+        Begin
+        Change agqdoc
+            Begin
+            if agqdoc:liability = 0 then
+                agqdoc:liability = l_liability_1
+            if agqdoc:um_uim_limit = 0 then
+                agqdoc:um_uim_limit = l_um_uim_limit_1
+            end
+
+        l_pa_doc = "Y"
+        Do DOC
+
+        -- liability
+        Do LIABILITY
+        If L_LIABILITY_1 <> 0 Then
+            Begin
+            L_DOC_LIABILITY = L_CHARGE * l_doc_liability_1 * L_PP_INCREASE *
+                              l_loss_cost * L_EXPERIENCE_2 * L_SCHEDULE_2 *
+                              l_companion_discount *
+                              L_DEV_OTHER
+            end
+
+        -- UM/UIM
+        L_UM_UIM_FACTOR = 1.00
+        Do PA_UM_UIM
+        L_DOC_UM_UIM = ((l_um_uim_premium * l_doc_um_uim_1) +
+                       (l_underinsured_premium * l_doc_um_uim_1))
+
+        -- Comp deductible
+        l_age = 9
+        L_COMPANY_ID = agqvehicle:COMPANY_ID
+        L_STATE = agqvehicle:STATE
+        L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+        l_type = 2
+        L_DUMPING = agqvehicle:DUMP
+        If L_DUMPING one of "" Then
+            L_DUMPING = "N"
+        L_EFF_DATE = agqvehicle:EFF_DATE
+        L_COMP_DEDUCTIBLE = agqvehicle:COMP_DEDUCTIBLE
+        L_COLL_DEDUCTIBLE = agqvehicle:COLL_DEDUCTIBLE
+        l_territory = agqvehicle:territory
+        L_RECORD_KEY = "PD"
+        L_COMP_DEDUCTIBLE = 50
+        l_original_cost = 20000
+        Include "cascomp2.pro"
+
+        If L_comp_rate <> 0 And
+           agqdoc:COMP = "Y" Then
+            L_DOC_COMP = l_comp_rate * L_DOC_COMP_1 * l_loss_cost_1 *
+                         L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                         L_DEV_OTHER * L_DOC_PREM * l_companion_discount
+        Else
+            L_DOC_COMP = 0
+
+        -- coll deductible
+        L_RECORD_KEY = "PD"
+        L_COLL_DEDUCTIBLE = 100
+        l_original_cost = 20000
+        Include "cascoll2.pro"
+
+        If L_coll_rate <> 0 And
+           agqdoc:COLL = "Y" Then
+            L_DOC_COLL = l_coll_rate * L_DOC_COLL_1 * l_loss_cost_1 *
+                         L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                         L_DEV_OTHER * L_DOC_PREM * l_companion_discount
+        Else
+            L_DOC_COLL = 0
+        End
+
+    If agqdoc:BROADENED_PIP = 1 Then
+        Begin
+        L_RECORD_KEY = "PA"
+        L_COMPANY_ID = agqvehicle:COMPANY_ID
+        L_STATE = agqvehicle:STATE
+        L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+        L_EFF_DATE = agqvehicle:EFF_DATE
+        L_EXTRA_LIMIT = agqpanofault:EXTRA_MEDICAL_LIMIT
+
+        Include "caspippa.pro"
+
+        L_BROAD_PREMIUM_1 = L_BROADENED_CHARGE * l_loss_cost *
+                            L_EXPERIENCE_1 *
+                            L_SCHEDULE_3 * L_DEV_OTHER *
+                            l_companion_discount
+        If agqdoc:BROADENED_ADDL_PIP = 1 Then
+            L_BROAD_PREMIUM_1 = l_broad_premium_1 +
+                                l_additional_premium
+        l_broad_premium = l_broad_premium + l_broad_premium_1
+        End
+
+    If agqdoc:INCLUDE_DOC = 1 Then
+        Begin
+        L_DOC_PREMIUM = (L_DOC_PREMIUM + (L_DOC_LIABILITY + L_DOC_MED_PAY +
+                        (L_DOC_UM_UIM * L_UM_UIM_FACTOR) +
+                        L_DOC_COMP + L_DOC_COLL)) --+ L_BROAD_PREMIUM))
+        L_DOC_OTHER_LIAB_TOTAL = (L_DOC_OTHER_LIAB_TOTAL + L_DOC_LIABILITY +
+                                 L_DOC_MED_PAY +
+                                 (L_DOC_UM_UIM * L_UM_UIM_FACTOR))
+        End
+    L_DOC_OTHER_TOTAL = L_DOC_OTHER_TOTAL + L_DOC_COMP + L_DOC_COLL
+
+    Change agqdoc
+        Begin
+        if agqdoc:liability <> 0 then
+            agqdoc:LIABILITY_PREMIUM = L_DOC_LIABILITY
+        if agqdoc:medical_payments <> 0 then
+            agqdoc:MED_PAY_PREMIUM = L_DOC_MED_PAY
+        if agqdoc:um_uim_limit <> 0 then
+            agqdoc:UM_UIM_PREMIUM = L_DOC_UM_UIM * L_UM_UIM_FACTOR
+        if l_doc_comp <> 0 then
+            agqdoc:COMP_DEDUCT_PREMIUM = L_DOC_COMP
+        if l_doc_coll <> 0 then
+            agqdoc:COLL_DEDUCT_PREMIUM = L_DOC_COLL
+        if agqdoc:broadened_pip = 1 then
+            agqdoc:BROADENED_PREMIUM = L_BROAD_PREMIUM_1
+        End
+
+    Next agqdoc
+    End
+
+End
+
+Procedure INCREASE_LIABILITY_RATES
+Begin
+L_RECORD_KEY = "IL"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_LIMIT = L_LIABILITY_1
+l_increase_limit_option = agqvehicle:increase_limit_option
+L_EFF_DATE = agqvehicle:EFF_DATE
+
+if agqvehicle:state one of 37 and
+   agsdefault_cap:auto_rating_bureau = "ISO" then
+    begin
+    include "casincrliabpa.pro"
+    If agqvehicle:CLASS_CODE = 681 Or
+       agqvehicle:CLASS_CODE = 682 Or
+       agqvehicle:CLASS_CODE = 683 or
+       agqvehicle:CLASS_CODE = 684 or
+       agqvehicle:CLASS_CODE = 691 Or
+       agqvehicle:CLASS_CODE = 692 Or
+       agqvehicle:CLASS_CODE = 693 Then
+        begin
+        l_truck_increase = l_other_increase
+        end
+    end
+else
+    begin
+    Include "casincrliab.pro"
+    end
+
+End
+
+Procedure LIABILITY
+Begin
+L_RECORD_KEY = "LI"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+Switch(agqvehicle:TYPE)
+  Case 1, 4, 8 : L_TYPE = 1  -- trucks/trailers & Flower Cars/Hearses
+  Case 3       : L_TYPE = 3  -- churches/school buses
+  case 9       : l_type = l_rating_type
+  Default      : L_TYPE = 2  -- pp/limousines/motorhomes
+  End
+if l_pa_doc = "Y" then
+    l_type = 2
+L_TERRITORY = agqvehicle:TERRITORY
+If agqvehicle:STATE one of 7, 37 Then
+    Begin
+    L_NOFAULT = "N"
+    End
+Else
+    Begin
+    If agqvehicle:TYPE = 2 Or
+       agqvehicle:TYPE = 5 or
+       agqvehicle:type = 7 Then
+        L_NOFAULT = agqvehicle:NO_FAULT
+    Else
+        L_NOFAULT = "N"
+    End
+L_EFF_DATE = agqvehicle:EFF_DATE
+--if sfscompany:hired_nonowned_rating = 1 then
+--    L_LIMIT = L_LIABILITY_1
+--else
+    L_LIMIT = agsdefault_cap:rating_LIABILITY_limit
+if l_limit = 0 then
+    l_limit = agsdefault_cap:liability
+
+Include "casliability.pro"
+
+End
+
+Procedure ANTITHEFT
+Begin
+L_RECORD_KEY = "AT"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_TYPE = agqvehicle:TYPE
+if l_type = 8 and
+   agqvehicle:state <> 37 then
+    l_type = 1
+L_EFF_DATE = agqvehicle:EFF_DATE
+
+Include "casantitheft.pro"
+
+End
+
+Procedure SAFETY
+Begin
+L_RECORD_KEY = "SA"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_TYPE = agqvehicle:TYPE
+if l_type = 8 and
+   agqvehicle:state <> 37 then
+    l_type = 1
+
+Include "cassafety.pro"
+
+End
+
+Procedure RATING_FACTORS
+Begin
+L_RECORD_KEY = "RF"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_TYPE = agqvehicle:TYPE
+if l_type = 8 and
+   agqvehicle:state <> 37 then
+    l_type = 1
+L_CLASS_CODE = agqvehicle:CLASS_CODE
+
+Include "casratingfactors.pro"
+
+End
+
+Procedure SECOND_RATING_FACTORS
+Begin
+L_RECORD_KEY = "RF"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_TYPE = agqvehicle:TYPE
+if l_type = 8 and
+   agqvehicle:state <> 37 then
+    l_type = 1
+L_CLASS_CODE = agqvehicle:SECONDARY_CLASS
+
+If L_CLASS_CODE <> 0 Then
+    Begin
+    Include "cassecondratingfactors.pro"
+    End
+Else
+    Begin
+    L_TRUCKS = 0
+    L_TRAILERS = 0
+    End
+
+End
+
+Procedure HIRED_AUTOS
+Begin
+L_RECORD_KEY = "HI"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE = agqvehicle:EFF_DATE
+L_COMP_DEDUCTIBLE = agqnonowned:COMP_DEDUCTIBLE
+L_COLL_DEDUCTIBLE = agqnonowned:COLL_DEDUCTIBLE
+
+Include "cashired.pro"
+
+End
+
+Procedure NONOWNED_AUTOS
+Begin
+L_RECORD_KEY = "NO"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE = agqvehicle:EFF_DATE
+L_NONOWNED_EMPLOYEES = agqnonowned:NO_EMPLOYEES
+
+Include "casnonowned.pro"
+
+End
+
+Procedure NO_FAULT
+Begin
+L_RECORD_KEY = "PI"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+Switch(agqvehicle:TYPE)
+  Case 2, 5, 7 : L_TYPE = 2
+  Case 3       : L_TYPE = 3
+  case 9       : l_type = l_rating_type
+  Default      : L_TYPE = 1
+  End
+L_TERRITORY = agqvehicle:TERRITORY
+If agqvehicle:TYPE = 1 Then
+    L_NON_EMPLOYEE = L_COVERED_BY_WORKERS_COMP
+Else
+    L_NON_EMPLOYEE = agqvehicle:NON_EMPLOYEE
+L_EFF_DATE = agqvehicle:EFF_DATE
+
+Include "casnofault.pro"
+
+If L_PIP_CHARGE <> 0 Then
+    Begin
+    L_PIP_CHARGE = L_PIP_CHARGE * L_EXPERIENCE_3 * L_SCHEDULE_3 * L_DEV_OTHER *
+                   L_BASIC_PIP_PREM * l_companion_discount
+    If agqvehicle:TYPE = 5 Then
+        L_PIP_CHARGE = L_PIP_CHARGE * L_LIMO_LIAB
+    End
+
+access agqdriver, set agqdriver:app_no = g_app_no, generic
+
+if agqdriver:waive_personal_injury_protection[1] = 1 or
+   agqdriver:waive_personal_injury_protection[2] = 1 then
+    begin
+    l_pip_charge = l_pip_charge * l_personal_injury_waiver
+    end
+
+access agqpip, set agqpip:app_no = agqvehicle:app_no,
+                   agqpip:vehicle_no = agqvehicle:vehicle_no, generic
+
+l_state = agqvehicle:state
+l_deductible = agqpip:med_exp_deductible
+l_limit = agqpip:medical_expense_limit
+access casmedlimit, set casmedlimit:company_id = agqvehicle:company_id,
+                        casmedlimit:state = l_state,
+                        casmedlimit:line_of_business = agqvehicle:line_of_business,
+                        casmedlimit:deductible = l_deductible,
+                        casmedlimit:limit = l_limit, generic
+
+while casmedlimit:company_id = agqvehicle:company_id and
+      casmedlimit:state = l_state and
+      casmedlimit:line_of_business = agqvehicle:line_of_business and
+      casmedlimit:deductible = l_deductible and
+      casmedlimit:limit = l_limit
+        begin
+        if agqvehicle:eff_date >= casmedlimit:eff_date then
+            begin
+            l_pip_charge = l_pip_charge * casmedlimit:factor
+            end
+
+        next casmedlimit
+        end
+
+If agqvehicle:TYPE = 3 And
+   agqvehicle:STATE = 37 Then
+    Begin
+    L_RECORD_KEY = "MP"
+    L_COMPANY_ID = agqvehicle:COMPANY_ID
+    L_STATE = agqvehicle:STATE
+    L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+    L_TYPE = agqvehicle:TYPE
+    if l_type = 8 and
+       agqvehicle:state <> 37 then
+        l_type = 1
+    L_TERRITORY = agqvehicle:TERRITORY
+    L_NOFAULT = "N"
+    L_EFF_DATE = agqvehicle:EFF_DATE
+
+    Include "casmedpay.pro"
+
+    L_PIP_CHARGE = ((L_PIP_CHARGE + L_MED_PAY_CHARGE) *
+                   L_EXPERIENCE_3 * L_SCHEDULE_3 * L_DEV_OTHER * l_companion_discount)
+    End
+
+End
+
+Procedure NO_FAULT_PA
+Begin
+L_RECORD_KEY = "PI"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+Switch(agqvehicle:TYPE)
+  Case 2, 5, 7, 6  : L_TYPE = 2
+  Case 3           : L_TYPE = 3
+  Default          : L_TYPE = 1
+  End
+L_TERRITORY = agqvehicle:TERRITORY
+If agqvehicle:TYPE one of 1, 4, 6 Then
+    L_NON_EMPLOYEE = L_COVERED_BY_WORKERS_COMP
+Else
+    L_NON_EMPLOYEE = agqvehicle:NON_EMPLOYEE
+if agqvehicle:type one of 6 then
+    l_non_employee = "Y"
+L_EFF_DATE = agqvehicle:EFF_DATE
+
+Include "casnofault.pro"
+
+If L_PIP_CHARGE <> 0 Then
+    Begin
+    L_PIP_CHARGE = L_PIP_CHARGE * L_EXPERIENCE_3 * L_SCHEDULE_3 * L_DEV_OTHER *
+                   L_BASIC_PIP_PREM * l_companion_discount * l_loss_cost
+    If agqvehicle:TYPE = 5 Then
+        L_PIP_CHARGE = L_PIP_CHARGE * L_LIMO_LIAB
+    If agqvehicle:TYPE = 4 Then
+        L_PIP_CHARGE = L_PIP_CHARGE * L_flower_cars_LIAB
+    End
+
+access agqpip, set agqpip:app_no = agqvehicle:app_no,
+                   agqpip:vehicle_no = agqvehicle:vehicle_no, generic
+
+l_state = agqvehicle:state
+l_deductible = agqpip:med_exp_deductible
+l_limit = agqpip:medical_expense_limit
+access casmedlimit, set casmedlimit:company_id = agqvehicle:company_id,
+                        casmedlimit:state = l_state,
+                        casmedlimit:line_of_business = agqvehicle:line_of_business,
+                        casmedlimit:deductible = l_deductible,
+                        casmedlimit:limit = l_limit, generic
+
+while casmedlimit:company_id = agqvehicle:company_id and
+      casmedlimit:state = l_state and
+      casmedlimit:line_of_business = agqvehicle:line_of_business and
+      casmedlimit:deductible = l_deductible and
+      casmedlimit:limit = l_limit
+        begin
+        if agqvehicle:eff_date >= casmedlimit:eff_date then
+            begin
+            l_pip_charge = l_pip_charge * casmedlimit:factor
+            end
+
+        next casmedlimit
+        end
+
+If agqvehicle:TYPE = 3 And
+   agqvehicle:STATE = 37 Then
+    Begin
+    L_RECORD_KEY = "MP"
+    L_COMPANY_ID = agqvehicle:COMPANY_ID
+    L_STATE = agqvehicle:STATE
+    L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+    L_TYPE = agqvehicle:TYPE
+    L_TERRITORY = agqvehicle:TERRITORY
+    L_NOFAULT = "N"
+    L_EFF_DATE = agqvehicle:EFF_DATE
+
+    Include "casmedpay.pro"
+
+    L_PIP_CHARGE = ((L_PIP_CHARGE + L_MED_PAY_CHARGE) *
+                   L_EXPERIENCE_3 * L_SCHEDULE_3 * L_DEV_OTHER * l_companion_discount)
+    End
+
+End
+
+Procedure TERRITORY_FACTORS
+Begin
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_TERRITORY = agqvehicle:TERRITORY
+L_EFF_DATE = agqvehicle:EFF_DATE
+
+Include "casterrfactors.pro"
+
+End
+
+Procedure PHYSICAL_DAMAGE
+Begin
+L_AGE  = ((Year(agqvehicle:EFF_DATE) - (agqvehicle:YEAR)) + 1)
+If Month(agqvehicle:EFF_DATE) >= 10 And
+   Month(agqvehicle:EFF_DATE) <= 12 Then
+    L_AGE = L_AGE + 1
+If L_AGE = 0 Then
+    L_AGE = 1
+If L_AGE > 6 Then
+    L_AGE = 6
+if l_state one of 37 and
+   agsdefault_cap:auto_rating_bureau = "ISO" then
+    l_age = 9
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+Switch(agqvehicle:TYPE)
+  Case 5, 7    : L_TYPE = 2
+  Case 4, 8, 9 : L_TYPE = 1
+  Default      : L_TYPE = agqvehicle:TYPE
+  End
+L_DUMPING = agqvehicle:DUMP
+If L_DUMPING one of "" Then
+    L_DUMPING = "N"
+if l_dumping = "Y" and
+   l_state = 37 and
+   agsdefault_cap:auto_rating_bureau = "ISO" then
+    l_dumping = "N"
+if l_type = 8 then
+    l_dumping = "N"
+L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+L_EFF_DATE = agqvehicle:EFF_DATE
+L_COMP_DEDUCTIBLE = agqvehicle:COMP_DEDUCTIBLE
+L_COLL_DEDUCTIBLE = agqvehicle:COLL_DEDUCTIBLE
+if l_state = 37 and
+   agsdefault_cap:auto_Rating_bureau = "ISO" then
+    l_territory = agqvehicle:territory
+else
+    l_territory = 0
+
+-- comprehensive deductibles
+
+-- check to see if should use deductible factors or state pages
+L_RECORD_KEY = "CP"
+Include "cascomp.pro"
+
+-- if l_comp_factor = 0 then get the rate from state pages
+if agqvehicle:state one of 37 and
+   agsdefault_cap:auto_rating_bureau = "ISO" then
+    begin
+    -- private passenger deductibles
+    If L_TYPE = 2 Then
+        Begin
+        L_RECORD_KEY = "PD"
+        L_COMP_DEDUCTIBLE = 50
+        l_original_cost = 20000
+        Include "cascomp2.pro"
+        L_ORIGINAL_COMP_RATE = L_COMP_RATE
+        L_COMP_DEDUCTIBLE = 50
+        L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+        Include "cascomp2.pro"
+        L_COMP_PREMIUM_1 = (L_COMP_RATE - (L_ORIGINAL_COMP_RATE * L_COMP_FACTOR))
+
+        l_record_key = "AF"
+        L_AGE  = ((Year(agqvehicle:EFF_DATE) - (agqvehicle:YEAR)) + 1)
+        If Month(agqvehicle:EFF_DATE) >= 10 And
+           Month(agqvehicle:EFF_DATE) <= 12 Then
+            L_AGE = L_AGE + 1
+        If L_AGE = 0 Then
+            L_AGE = 1
+        If L_AGE > 6 Then
+            L_AGE = 6
+        include "casage.pro"
+
+        L_COMP_PREMIUM_1 = l_comp_rate * l_age_comp_factor * l_comp_factor
+
+        l_record_key = "OC"
+        include "casoriginal.pro"
+
+        if l_original_comp_factor_1 <> 0 then
+            l_original_comp_factor_2 = ((((agqvehicle:original_cost -
+                                       l_cost) divide 1000) *
+                                       l_original_comp_factor_1) +
+                                       l_original_comp_factor)
+        else
+            l_original_comp_factor_2 = l_original_comp_factor
+
+        l_comp_premium_2 = l_comp_rate * l_age_comp_factor *
+                           l_original_comp_factor_2
+        l_comp_premium_1 = l_comp_premium_2 - l_comp_premium_1
+        End
+    else
+    If L_TYPE <> 2 Then
+        Begin
+        L_RECORD_KEY = "PD"
+        l_original_cost = 20000
+        L_COMP_DEDUCTIBLE = 1
+        Include "cascomp2.pro"
+        L_ORIGINAL_COMP_RATE = L_COMP_RATE
+        L_COMP_DEDUCTIBLE = 1
+        L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+        Include "cascomp2.pro"
+
+        L_COMP_PREMIUM_1 = (L_COMP_RATE - (L_ORIGINAL_COMP_RATE * L_COMP_FACTOR))
+        l_record_key = "AF"
+        L_AGE  = ((Year(agqvehicle:EFF_DATE) - (agqvehicle:YEAR)) + 1)
+        If Month(agqvehicle:EFF_DATE) >= 10 And
+           Month(agqvehicle:EFF_DATE) <= 12 Then
+            L_AGE = L_AGE + 1
+        If L_AGE = 0 Then
+            L_AGE = 1
+        If L_AGE > 6 Then
+            L_AGE = 6
+        include "casage.pro"
+        L_COMP_PREMIUM_1 = l_comp_rate * l_age_comp_factor * l_comp_factor
+        l_record_key = "OC"
+        include "casoriginal.pro"
+        if l_original_comp_factor_1 <> 0 then
+            l_original_comp_factor_2 = ((((agqvehicle:original_cost -
+                                       l_cost) divide 1000) *
+                                       l_original_comp_factor_1) +
+                                       l_original_comp_factor)
+        else
+            l_original_comp_factor_2 = l_original_comp_factor
+
+        l_comp_premium_2 = l_comp_rate * l_age_comp_factor *
+                           l_original_comp_factor_2
+
+/*        if agqvehicle:dump = "Y" then
+            l_comp_premium_2 = l_comp_premium_2 *
+                               l_dumping_rate*/
+        l_comp_premium_1 = l_comp_premium_2 - l_comp_premium_1
+        End
+    if l_physical_damage_factor <> 0 then
+        l_comp_premium_1 = l_comp_premium_1 * l_physical_damage_factor
+    end
+else
+if (agqvehicle:state not one of 37 or
+   (agqvehicle:state = 37 and
+   agsdefault_cap:auto_rating_bureau not one of "ISO")) then
+    begin
+    If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+        Begin
+        If L_COMP_FACTOR = 0 Then
+            Begin
+            L_RECORD_KEY = "PD"
+            Include "cascomp1.pro"
+            L_COMP_PREMIUM_1 = L_COMP_RATE
+            End
+        -- else use the deductible factors rule 7.2 to caculate comp deductible premium
+        Else
+            Begin
+            -- private passenger deductibles
+            If L_TYPE = 2 Then
+                Begin
+                L_RECORD_KEY = "PD"
+                L_COMP_DEDUCTIBLE = 100
+                l_original_cost = 6000
+                Include "cascomp1.pro"
+                L_ORIGINAL_COMP_RATE = L_COMP_RATE
+                L_COMP_DEDUCTIBLE = 100
+                L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+                Include "cascomp1.pro"
+                L_COMP_PREMIUM_1 = (L_COMP_RATE - (L_ORIGINAL_COMP_RATE * L_COMP_FACTOR))
+                End
+            -- all other deductibles
+            If L_TYPE <> 2 Then
+                Begin
+                L_RECORD_KEY = "PD"
+                l_original_cost = 6000
+                L_COMP_DEDUCTIBLE = 1
+                Include "cascomp1.pro"
+                L_ORIGINAL_COMP_RATE = L_COMP_RATE
+                L_COMP_DEDUCTIBLE = 1
+                L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+                Include "cascomp1.pro"
+                L_COMP_PREMIUM_1 = (L_COMP_RATE - (L_ORIGINAL_COMP_RATE * L_COMP_FACTOR))
+                End
+            End
+        End
+    end
+
+-- collision deductibles
+
+if agqvehicle:coll_deductible <> 0 then
+    begin
+    L_AGE  = ((Year(agqvehicle:EFF_DATE) - (agqvehicle:YEAR)) + 1)
+    If Month(agqvehicle:EFF_DATE) >= 10 And
+       Month(agqvehicle:EFF_DATE) <= 12 Then
+        L_AGE = L_AGE + 1
+    If L_AGE = 0 Then
+        L_AGE = 1
+    If L_AGE > 6 Then
+        L_AGE = 6
+    if l_state one of 37 and
+       agsdefault_cap:auto_rating_bureau = "ISO" then
+        l_age = 9
+    L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+    L_COLL_DEDUCTIBLE = agqvehicle:COLL_DEDUCTIBLE
+    L_RECORD_KEY = "CL"
+    Include "cascoll.pro"
+
+    -- if l_coll_factor = 0 then get the rate from state pages
+    if agqvehicle:state one of 37 and
+       agsdefault_cap:auto_rating_bureau = "ISO" then
+        begin
+        If L_TYPE = 2 Then
+            Begin
+            L_RECORD_KEY = "PD"
+            L_COLL_DEDUCTIBLE = 100
+            l_original_cost = 20000
+            Include "cascoll2.pro"
+            L_ORIGINAL_COLL_RATE = L_COLL_RATE
+            L_COLL_DEDUCTIBLE = 100
+            L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+            Include "cascoll2.pro"
+            L_COLL_PREMIUM_1 = (L_COLL_RATE - (L_ORIGINAL_COLL_RATE * L_COLL_FACTOR))
+            l_record_key = "AF"
+            L_AGE  = ((Year(agqvehicle:EFF_DATE) - (agqvehicle:YEAR)) + 1)
+            If Month(agqvehicle:EFF_DATE) >= 10 And
+               Month(agqvehicle:EFF_DATE) <= 12 Then
+                L_AGE = L_AGE + 1
+            If L_AGE = 0 Then
+                L_AGE = 1
+            If L_AGE > 6 Then
+                L_AGE = 6
+            include "casage.pro"
+            L_COLL_PREMIUM_1 = l_coll_rate * l_age_coll_factor * l_coll_factor
+            l_record_key = "OC"
+            include "casoriginal.pro"
+            if l_original_coll_factor_1 <> 0 then
+                l_original_coll_factor_2 = ((((agqvehicle:original_cost -
+                                           l_cost) divide 1000) *
+                                           l_original_coll_factor_1) +
+                                           l_original_coll_factor)
+            else
+                l_original_coll_factor_2 = l_original_coll_factor
+
+            l_coll_premium_2 = l_coll_rate * l_age_coll_factor *
+                               l_original_coll_factor_2
+            l_coll_premium_1 = l_coll_premium_2 - l_coll_premium_1
+            End
+        else
+        If L_TYPE <> 2 Then
+            Begin
+            L_RECORD_KEY = "PD"
+            l_original_cost = 20000
+            L_COLL_DEDUCTIBLE = 100
+            Include "cascoll2.pro"
+            L_ORIGINAL_COLL_RATE = L_COLL_RATE
+            L_COLL_DEDUCTIBLE = 100
+            L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+            Include "cascoll2.pro"
+            L_COLL_PREMIUM_1 = (L_COLL_RATE - (L_ORIGINAL_COLL_RATE * L_COLL_FACTOR))
+            l_record_key = "AF"
+            L_AGE  = ((Year(agqvehicle:EFF_DATE) - (agqvehicle:YEAR)) + 1)
+            If Month(agqvehicle:EFF_DATE) >= 10 And
+               Month(agqvehicle:EFF_DATE) <= 12 Then
+                L_AGE = L_AGE + 1
+            If L_AGE = 0 Then
+                L_AGE = 1
+            If L_AGE > 6 Then
+                L_AGE = 6
+            include "casage.pro"
+            L_COLL_PREMIUM_1 = l_coll_rate * l_age_coll_factor * l_coll_factor
+            l_record_key = "OC"
+            include "casoriginal.pro"
+            if l_original_coll_factor_1 <> 0 then
+                l_original_coll_factor_2 = ((((agqvehicle:original_cost -
+                                           l_cost) divide 1000) *
+                                           l_original_coll_factor_1) +
+                                           l_original_coll_factor)
+            else
+                l_original_coll_factor_2 = l_original_coll_factor
+
+            l_coll_premium_2 = l_coll_rate * l_age_coll_factor *
+                               l_original_coll_factor_2
+            l_coll_premium_1 = l_coll_premium_2 - l_coll_premium_1
+            End
+        End
+    else
+    if (agqvehicle:state not one of 37 or
+       (agqvehicle:state one of 37 and
+       agsdefault_cap:auto_rating_bureau not one of "ISO")) then
+        begin
+        If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+            Begin
+            If L_COLL_FACTOR = 0 Then
+                Begin
+                L_RECORD_KEY = "PD"
+                Include "cascoll1.pro"
+                L_COLL_PREMIUM_1 = L_COLL_RATE
+                End
+            -- else use the deductible factors rule 7.2 to caculate coll deductible premium
+            Else
+                Begin
+                -- private passenger deductibles
+                If L_TYPE = 2 Then
+                    Begin
+                    L_RECORD_KEY = "PD"
+                    L_ORIGINAL_COST = 6000
+                    L_COLL_DEDUCTIBLE = 250
+                    Include "cascoll1.pro"
+                    L_ORIGINAL_COLL_RATE = L_COLL_RATE
+                    L_COLL_DEDUCTIBLE = 250
+                    L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+                    Include "cascoll1.pro"
+                    L_COLL_PREMIUM_1 = (L_COLL_RATE - (L_ORIGINAL_COLL_RATE * L_COLL_FACTOR))
+                    End
+                -- all other deductibles
+                If L_TYPE <> 2 Then
+                    Begin
+                    L_RECORD_KEY = "PD"
+                    L_COLL_DEDUCTIBLE = 100
+                    L_ORIGINAL_COST = 6000
+                    Include "cascoll1.pro"
+                    L_ORIGINAL_COLL_RATE = L_COLL_RATE
+                    L_COLL_DEDUCTIBLE = 100
+                    L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+                    Include "cascoll1.pro"
+                    L_COLL_PREMIUM_1 = (L_COLL_RATE - (L_ORIGINAL_COLL_RATE * L_COLL_FACTOR))
+                    End
+                End
+            End
+        end
+    end
+
+End
+
+Procedure PHYSICAL_DAMAGE_1
+Begin
+L_AGE  = ((Year(agqvehicle:EFF_DATE) - (agqvehicle:YEAR)) + 1)
+If Month(agqvehicle:EFF_DATE) >= 10 And
+   Month(agqvehicle:EFF_DATE) <= 12 Then
+    L_AGE = L_AGE + 1
+If L_AGE = 0 Then
+    L_AGE = 1
+If L_AGE > 6 Then
+    L_AGE = 6
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+Switch(agqvehicle:TYPE)
+  Case 5, 7 : L_TYPE = 2
+  Case 4, 8 : L_TYPE = 1
+  Default   : L_TYPE = agqvehicle:TYPE
+  End
+L_DUMPING = agqvehicle:DUMP
+If L_DUMPING = "" Then
+    L_DUMPING = "N"
+if l_type = 8 then
+    l_dumping = "N"
+L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+L_EFF_DATE = agqvehicle:EFF_DATE
+L_COMP_DEDUCTIBLE = agqvehicle:COMP_DEDUCTIBLE
+L_COLL_DEDUCTIBLE = agqvehicle:COLL_DEDUCTIBLE
+
+-- comprehensive deductibles
+
+-- check to see if should use deductible factors or state pages
+L_RECORD_KEY = "CP"
+Include "cascomp.pro"
+
+-- if l_comp_factor = 0 then get the rate from state pages
+If agqvehicle:COMP_DEDUCTIBLE <> 0 Then
+    Begin
+    If L_COMP_FACTOR = 0 Then
+        Begin
+        L_RECORD_KEY = "PD"
+        Include "cascomp1.pro"
+        L_COMP_PREMIUM = L_COMP_RATE
+        End
+-- else use the deductible factors rule 7.2 to caculate comp deductible premium
+    Else
+        Begin
+    -- private passenger deductibles
+        If L_TYPE = 2 Then
+            Begin
+            L_RECORD_KEY = "PD"
+            L_COMP_DEDUCTIBLE = 100
+            L_ORIGINAL_COST = 6000
+            Include "cascomp1.pro"
+            L_ORIGINAL_COMP_RATE = L_COMP_RATE
+            L_COMP_DEDUCTIBLE = 100
+            L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+            Include "cascomp1.pro"
+            L_COMP_PREMIUM = (L_COMP_RATE - (L_ORIGINAL_COMP_RATE * L_COMP_FACTOR))
+            End
+    -- all other deductibles
+        If L_TYPE <> 2 Then
+            Begin
+            L_RECORD_KEY = "PD"
+            L_ORIGINAL_COST = 6000
+            L_COMP_DEDUCTIBLE = 1
+            Include "cascomp1.pro"
+            L_ORIGINAL_COMP_RATE = L_COMP_RATE
+            L_COMP_DEDUCTIBLE = 1
+            L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+            Include "cascomp1.pro"
+            L_COMP_PREMIUM = (L_COMP_RATE - (L_ORIGINAL_COMP_RATE * L_COMP_FACTOR))
+            End
+        End
+    End
+
+-- collision deductibles
+
+L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+L_COLL_DEDUCTIBLE = agqvehicle:COLL_DEDUCTIBLE
+L_RECORD_KEY = "CL"
+Include "cascoll.pro"
+
+-- if l_coll_factor = 0 then get the rate from state pages
+If agqvehicle:COLL_DEDUCTIBLE <> 0 Then
+    Begin
+    If L_COLL_FACTOR = 0 Then
+        Begin
+        L_RECORD_KEY = "PD"
+        Include "cascoll1.pro"
+        L_COLL_PREMIUM = L_COLL_RATE
+        End
+-- else use the deductible factors rule 7.2 to caculate coll deductible premium
+    Else
+        Begin
+    -- private passenger deductibles
+        If L_TYPE = 2 Then
+            Begin
+            L_RECORD_KEY = "PD"
+            L_ORIGINAL_COST = 6000
+            L_COLL_DEDUCTIBLE = 250
+            Include "cascoll1.pro"
+            L_ORIGINAL_COLL_RATE = L_COLL_RATE
+            L_COLL_DEDUCTIBLE = 250
+            L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+            Include "cascoll1.pro"
+            L_COLL_PREMIUM = (L_COLL_RATE - (L_ORIGINAL_COLL_RATE * L_COLL_FACTOR))
+            End
+    -- all other deductibles
+        If L_TYPE <> 2 Then
+            Begin
+            L_RECORD_KEY = "PD"
+            L_COLL_DEDUCTIBLE = 100
+            L_ORIGINAL_COST = 6000
+            Include "cascoll1.pro"
+            L_ORIGINAL_COLL_RATE = L_COLL_RATE
+            L_COLL_DEDUCTIBLE = 100
+            L_ORIGINAL_COST = agqvehicle:ORIGINAL_COST
+            Include "cascoll1.pro"
+            L_COLL_PREMIUM = (L_COLL_RATE - (L_ORIGINAL_COLL_RATE * L_COLL_FACTOR))
+            End
+        End
+    End
+
+End
+
+Procedure MEDICAL_PAYMENTS
+Begin
+L_RECORD_KEY = "MP"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+Switch(agqvehicle:TYPE)
+  Case 4, 8 : L_TYPE = 1
+  Case 5, 7 : L_TYPE = 2
+  Default   : L_TYPE = agqvehicle:TYPE
+  End
+L_TERRITORY = agqvehicle:TERRITORY
+--L_NOFAULT = agqvehicle:NO_FAULT
+l_nofault = "N"
+L_EFF_DATE = agqvehicle:EFF_DATE
+L_LIMIT = agqvehicle:MEDICAL_PAYMENTS
+
+Include "casmedpay.pro"
+
+End
+
+procedure get_mobile_equipment_factors
+begin
+L_RECORD_KEY = "ME"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:LINE_OF_BUSINESS
+L_EFF_DATE = agqvehicle:EFF_DATE
+
+Include "casmobileequip.pro"
+
+End
+
+Procedure UM_UIM
+Begin
+L_RECORD_KEY = "UM"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_LIMIT = L_UM_UIM_LIMIT_1
+L_TYPE = agqvehicle:TYPE
+if l_type = 8 and
+   agqvehicle:state <> 37 then
+    l_type = 1
+L_EFF_DATE = agqvehicle:EFF_DATE
+L_FORM_BUSINESS = agqmaster:FORM_OF_BUSINESS
+
+Include "casumuim.pro"
+
+End
+
+Procedure PA_UM_UIM
+Begin
+If L_NON_STACKED = "N" Then
+    Begin
+    L_UM_UIM_PREMIUM = 0
+    L_UNDERINSURED_PREMIUM = 0
+    L_RECORD_KEY = "NS"
+    L_COMPANY_ID = agqvehicle:COMPANY_ID
+    L_STATE = agqvehicle:STATE
+    L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+    L_UM_UIM = "UM"
+    L_LIMIT = L_UM_UIM_LIMIT_1
+    L_EFF_DATE = agqvehicle:EFF_DATE
+    L_FORM_BUSINESS = agqmaster:FORM_OF_BUSINESS
+    switch(agqvehicle:type)
+      case 2, 5, 6, 7 : l_type = 2
+      default         : l_type = 1
+      end
+
+    Include "casnonstacked.pro"
+
+    if agqmaster:form_of_business one of "I", "M" then
+        l_um_uim_premium = ((l_um_uim_charge_1 +
+                           l_individual_married_factor) *
+                           l_loss_cost)
+    else
+        l_um_uim_premium = l_um_uim_charge_1 *
+                           l_loss_cost
+
+    L_UM_UIM = "UIM"
+    L_LIMIT = L_UM_UIM_LIMIT_2
+
+    Include "casnonstacked.pro"
+
+    L_UNDERINSURED_PREMIUM = L_UM_UIM_CHARGE_1 *
+                             l_loss_cost
+
+    End
+
+If L_NON_STACKED = "S" Then
+    Begin
+    L_UM_UIM_PREMIUM = 0
+    L_UNDERINSURED_PREMIUM = 0
+    L_RECORD_KEY = "ST"
+    L_COMPANY_ID = agqvehicle:COMPANY_ID
+    L_STATE = agqvehicle:STATE
+    L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+    L_UM_UIM = "UM"
+    L_LIMIT = L_UM_UIM_LIMIT_1
+    L_EFF_DATE = agqvehicle:EFF_DATE
+    L_FORM_BUSINESS = agqmaster:FORM_OF_BUSINESS
+    L_TYPE = agqvehicle:TYPE
+    Access agqvehicle_ALIAS, Set agqvehicle_ALIAS:app_no = G_app_no, Generic
+
+    L_NO_AUTOS = 0
+    Repeat Begin
+        Exit If agqvehicle_ALIAS:app_no <> G_app_no
+
+        L_NO_AUTOS = L_NO_AUTOS + 1
+
+        Next agqvehicle_ALIAS
+        End
+
+    Include "casstacked.pro"
+
+    L_UM_UIM_PREMIUM = L_UM_UIM_PREMIUM + L_UM_UIM_CHARGE
+
+    L_UM_UIM = "UIM"
+    L_LIMIT = L_UM_UIM_LIMIT_2
+
+    Include "casstacked.pro"
+
+    L_UNDERINSURED_PREMIUM = L_UNDERINSURED_PREMIUM + L_UM_UIM_CHARGE
+    End
+
+End
+
+Procedure DOC_PA_UM_UIM
+Begin
+If L_NON_STACKED = "N" Then
+    Begin
+    L_DOC_UM_UIM_PREMIUM = 0
+    L_DOC_UNDERINSURED_PREMIUM = 0
+    L_RECORD_KEY = "NS"
+    L_COMPANY_ID = agqvehicle:COMPANY_ID
+    L_STATE = agqvehicle:STATE
+    L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+    L_UM_UIM = "UM"
+    L_LIMIT = L_UM_UIM_LIMIT_1
+    L_EFF_DATE = agqvehicle:EFF_DATE
+    L_FORM_BUSINESS = "I"
+    L_TYPE = 2
+
+    Include "casnonstacked.pro"
+
+    L_DOC_UM_UIM_PREMIUM = L_DOC_UM_UIM_PREMIUM + L_UM_UIM_CHARGE_1
+
+    L_UM_UIM = "UIM"
+    L_LIMIT = L_UM_UIM_LIMIT_2
+
+    Include "casnonstacked.pro"
+
+    L_DOC_UNDERINSURED_PREMIUM = L_DOC_UNDERINSURED_PREMIUM + L_UM_UIM_CHARGE_1
+    End
+
+If L_NON_STACKED = "S" Then
+    Begin
+    L_DOC_UM_UIM_PREMIUM = 0
+    L_DOC_UNDERINSURED_PREMIUM = 0
+    L_RECORD_KEY = "ST"
+    L_COMPANY_ID = agqvehicle:COMPANY_ID
+    L_STATE = agqvehicle:STATE
+    L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+    L_UM_UIM = "UM"
+    L_LIMIT = L_UM_UIM_LIMIT_1
+    L_EFF_DATE = agqvehicle:EFF_DATE
+    L_FORM_BUSINESS = "I"
+    L_TYPE = 2
+    L_NO_AUTOS = 1
+
+    Include "casstacked.pro"
+
+    L_DOC_UM_UIM_PREMIUM = L_DOC_UM_UIM_PREMIUM + L_UM_UIM_CHARGE_1
+
+    L_UM_UIM = "UIM"
+    L_LIMIT = L_UM_UIM_LIMIT_2
+
+    Include "casstacked.pro"
+
+    L_DOC_UNDERINSURED_PREMIUM = L_DOC_UNDERINSURED_PREMIUM + L_UM_UIM_CHARGE_1
+    End
+
+End
+
+Procedure RENTAL
+Begin
+L_RECORD_KEY = "RT"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE = agqvehicle:EFF_DATE
+
+Include "casrental.pro"
+
+End
+
+Procedure PAPIP
+Begin
+Access agqpanofault, Set agqpanofault:app_no = agqvehicle:app_no,
+                         agqpanofault:VEHICLE_NO = agqvehicle:VEHICLE_NO, Generic
+
+L_RECORD_KEY = "PA"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE = agqvehicle:EFF_DATE
+L_EXTRA_LIMIT = agqpanofault:EXTRA_MEDICAL_LIMIT
+
+Include "caspippa.pro"
+
+If agqpanofault:EXTRA_MEDICAL_LIMIT <> 0 Then
+    Begin
+    if agqvehicle:company_id = "GGUND" then
+        l_rating_type = agqvehicle:type
+    else
+        begin
+        if l_rating_type = 0 then
+            l_rating_type = agqvehicle:type
+        end
+
+    Switch(l_rating_type)
+      Case 2  : Switch(agqvehicle:NON_EMPLOYEE)
+                  Case "Y" : L_EXTENDED_PREMIUM = L_EXTRA_TOTAL_1 * l_loss_cost *
+                                                  L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                                  L_DEV_OTHER * l_companion_discount
+                  Default  : L_EXTENDED_PREMIUM = L_EXTRA_TOTAL_2 * l_loss_cost *
+                                                  L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                                  L_DEV_OTHER * l_companion_discount
+                  End
+      Default : Switch(L_COVERED_BY_WORKERS_COMP)
+                  Case "N" : L_EXTENDED_PREMIUM = L_EXTRA_TOTAL_1 * l_loss_cost *
+                                                  L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                                  L_DEV_OTHER * l_companion_discount
+                  Default  : L_EXTENDED_PREMIUM = L_EXTRA_TOTAL_2 * l_loss_cost *
+                                                  L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                                                  L_DEV_OTHER * l_companion_discount
+                  End
+      End
+    End
+
+L_RECORD_KEY       = "AD"
+L_COMPANY_ID       = agqvehicle:COMPANY_ID
+L_STATE            = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE         = agqvehicle:EFF_DATE
+L_MEDICAL_LIMIT    = agqpanofault:MEDICAL_EXPENSE_LIMIT
+L_WORK_MONTHLY     = agqpanofault:WORK_LOSS_MONTHLY_LIMIT
+L_WORK_TOTAL       = agqpanofault:WORK_LOSS_TOTAL_LIMIT
+L_FUNERAL_LIMIT    = agqpanofault:FUNERAL_LIMIT
+L_ACCIDENT_LIMIT   = agqpanofault:ACCIDENT_LIMIT
+
+Include "caspipaddl.pro"
+
+If L_MEDICAL_PREMIUM  <> 0 Or
+   L_WORK_PREMIUM     <> 0 Or
+   L_FUNERAL_PREMIUM  <> 0 Or
+   L_ACCIDENT_PREMIUM <> 0 Then
+    Begin
+    l_medical_premium = l_medical_premium *
+                        l_loss_cost
+    l_work_premium = l_work_premium *
+                     l_loss_cost
+    l_funeral_premium = l_funeral_premium *
+                        l_loss_cost
+    l_accident_premium = l_accident_premium *
+                         l_loss_cost
+    L_ADDITIONAL_CHARGE = L_MEDICAL_PREMIUM +
+                          L_WORK_PREMIUM +
+                          L_FUNERAL_PREMIUM +
+                          L_ACCIDENT_PREMIUM
+    L_ADDITIONAL_PREMIUM = ((L_MEDICAL_PREMIUM +
+                           L_WORK_PREMIUM  +
+                           L_FUNERAL_PREMIUM  +
+                           L_ACCIDENT_PREMIUM) *
+                           L_EXPERIENCE_3 *
+                           L_SCHEDULE_3 *
+                           L_DEV_OTHER *
+                           l_companion_discount)
+    End
+
+L_RECORD_KEY       = "CO"
+L_COMPANY_ID       = agqvehicle:COMPANY_ID
+L_STATE            = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE         = agqvehicle:EFF_DATE
+L_COMBINED_LIMIT   = agqpanofault:COMBINED_LIMIT
+
+Include "caspipcombo.pro"
+
+If L_COMBINED_PREMIUM <> 0 Then
+    Begin
+    L_COMBINED_CHARGE    = L_COMBINED_PREMIUM
+    L_ADDITIONAL_PREMIUM = L_COMBINED_PREMIUM * l_loss_cost *
+                           L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                           L_DEV_OTHER * l_companion_discount
+    End
+
+End
+
+Procedure DEPIP
+Begin
+L_RECORD_KEY = "DE"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE = agqvehicle:EFF_DATE
+L_PIP_DEDUCTIBLE = agqpip:OPTIONAL_MED_EXP_DEDUCTIBLE
+If agqpip:SINGLE_LIMIT <> 0 Then
+    L_SINGLE_LIMIT = agqpip:SINGLE_LIMIT
+If agqpip:ADDL_LIMIT[1] <> 0 Then
+    L_SPLIT_LIMIT = agqpip:ADDL_LIMIT[1]
+
+Include "caspipde.pro"
+
+If agqpip:OPTIONAL_MED_EXP_DEDUCTIBLE <> 0 Then
+    Begin
+    If agqpip:NAMED_FAMILY_MEMBERS = "Y" Then
+        L_PIP_CHARGE = L_PIP_CHARGE * L_FAMILY_DEDUCTIBLE
+    Else
+        L_PIP_CHARGE = L_PIP_CHARGE * L_NAMED_DEDUCTIBLE_ONLY
+    End
+
+If agqvehicle:TYPE = 2 Or
+   agqvehicle:TYPE = 5 Or
+   agqvehicle:TYPE = 7 Then
+    L_PIP_CHARGE = L_PIP_CHARGE + L_PP_CHARGE
+Else
+    L_PIP_CHARGE = (l_pip_charge + (L_PIP_CHARGE * L_OTHER_FACTOR))
+
+If agqpip:BROADENED_PIP = "Y" Then
+    Begin
+    L_PIP_CHARGE = L_PIP_CHARGE + L_BROADENED_CHARGE
+    End
+
+End
+
+Procedure NJPIP
+Begin
+L_RECORD_KEY = "NF"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE = agqvehicle:EFF_DATE
+L_PIP_DEDUCTIBLE = agqpip:OPTIONAL_MED_EXP_DEDUCTIBLE
+
+Include "caspipnj.pro"
+
+-- pedestrian personal injury protection
+If agqpip:PEDESTRIAN = "Y" and
+   agqvehicle:class_code one of 7391 and
+   agqvehicle:type = 2 Then
+    Begin
+    L_PED_PREMIUM = L_PEDESTRIAN_CHARGE * L_PEDESTRIAN_PER * L_EXPERIENCE_3 *
+                    L_SCHEDULE_3 * L_DEV_OTHER * l_companion_discount
+    End
+else
+If agqpip:PEDESTRIAN = "Y" and
+   agqvehicle:class_code not one of 7391 and
+   agqvehicle:type not one of 2 Then
+    Begin
+    L_PED_PREMIUM = l_stranger_ped_pip * L_EXPERIENCE_3 *
+                    L_SCHEDULE_3 * L_DEV_OTHER * l_companion_discount
+    if l_ped_premium < 0 then
+        l_ped_premium = 1
+    End
+
+-- extended medical expense benefits
+If agqpip:EXTENDED_MEDICAL_EXPENSE > L_EXTENDED_LIMIT Then
+    Begin
+    L_EXTENDED_PREMIUM = L_EXTENDED_CHARGE * L_EXTENDED_PER * L_EXPERIENCE_3 *
+                         L_SCHEDULE_3 * L_DEV_OTHER * l_companion_discount
+    End
+
+-- basic PIP coverage options
+If agqpip:DELETION_OF_BENEFITS = "Y" Then -- nonmedical expense benefit elimination
+    Begin
+    L_PIP_CHARGE = L_PIP_CHARGE * L_DEDUCTIBLE_MEDICAL_EXPENSE * L_EXPERIENCE_3 *
+                   L_SCHEDULE_3 * L_DEV_OTHER * l_companion_discount
+    End
+
+if agqpip:waiver = 1 and
+   agqvehicle:state = 19 then
+    begin
+    l_pip_charge = l_pip_charge * l_waiver_factor
+    end
+
+-- medical expense benefits as secondary option
+If agqpip:SECONDARY_OPTION = "Y" Then
+    Begin
+    L_PIP_CHARGE = L_PIP_CHARGE * L_SECONDARY_OPTION * L_EXPERIENCE_3 *
+                   L_SCHEDULE_3 * L_DEV_OTHER * l_companion_discount
+    End
+
+L_ADDITIONAL_PREMIUM = 0
+L_ADDL_PIP_PREMIUM = 0
+If agqpip:ADDITIONAL_PIP = "Y" and
+   agqvehicle:type one of 2 Then
+    Begin
+    L_RECORD_KEY = "AP"
+    l_state = agqvehicle:state
+    L_CODE = "MCA822 "
+    L_OPTION = agqpip:ADDITIONAL_PIP_OPTION
+    Access agqaddlpip, Set agqaddlpip:app_no = agqvehicle:app_no,
+                           agqaddlpip:VEHICLE_NO = agqvehicle:VEHICLE_NO,
+                           agqaddlpip:CODE = L_CODE, Generic
+
+    L_ADDITIONAL_PIP = 0
+    Repeat Begin
+        Exit If agqaddlpip:app_no <> agqvehicle:app_no Or
+                agqaddlpip:VEHICLE_NO <> agqvehicle:VEHICLE_NO Or
+                agqaddlpip:CODE <> L_CODE
+
+        If agqaddlpip:FAMILY_MEMBERS <> "" And
+           agqaddlpip:CODE = "MCA822" Then
+            L_ADDITIONAL_PIP =  L_ADDITIONAL_PIP + 1
+
+        Next agqaddlpip
+        End
+
+    L_RECORD_KEY = "AP"
+    Include "casaddlpip.pro"
+    If L_FIRST = "N" Then
+        L_ADDL_PIP_PREMIUM = L_ADDL_PIP_PREMIUM + L_FIRST_AUTO
+    Else
+        L_ADDL_PIP_PREMIUM = L_ADDL_PIP_PREMIUM + L_EACH_ADDL_AUTO
+    L_FIRST = "Y"
+    L_ADDL_PIP_PREMIUM = (L_ADDL_PIP_PREMIUM + (L_ADDITIONAL_PIP *
+                         L_ADDL_PIP_FAMILY_MEMBER))
+    L_ADDITIONAL_PREMIUM = L_ADDL_PIP_PREMIUM
+    if sfscompany:hired_nonowned_rating = 1 then
+        l_additional_premium = l_additional_premium * L_EXPERIENCE_3 *
+                               L_SCHEDULE_3 * L_DEV_OTHER * l_companion_discount
+    End
+
+If agqpip:LIMITATION = "Y" Then
+    Begin
+    if agqvehicle:company_id = "GGUND" then
+        begin
+        if agqmaster:form_of_business not one of "C", "P", "L" then
+            l_liability_premium = l_liability_premium * l_tort_factor
+        end
+    else
+        begin
+        if sfscompany:hired_nonowned_rating = 1 then
+            begin
+            L_LIABILITY = L_LIABILITY * L_TORT_FACTOR
+            l_liability_premium = l_liability
+            end
+        else
+            L_LIABILITY_PREMIUM = L_LIABILITY_PREMIUM * L_TORT_FACTOR
+        end
+    End
+
+If agqpip:MEDICAL_EXP_MOTOR_BUS = "Y" Then
+    Begin
+    if sfscompany:hired_nonowned_rating = 1 then
+        begin
+        L_LIABILITY = L_LIABILITY * L_MOTOR_BUS_LIAB
+        l_liability_premium = l_liability
+        end
+    else
+        L_LIABILITY_PREMIUM = L_LIABILITY_PREMIUM * L_MOTOR_BUS_LIAB
+
+    L_RECORD_KEY = "LI"
+    L_COMPANY_ID = agqvehicle:COMPANY_ID
+    L_STATE = agqvehicle:STATE
+    L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+    Switch(agqvehicle:TYPE)
+      Case 1, 4, 8 : L_TYPE = 1  -- trucks/trailers & Flower Cars/Hearses
+      Case 3       : L_TYPE = 3  -- churches/school buses
+      Default      : L_TYPE = 2  -- pp/limousines/motorhomes
+      End
+    L_TERRITORY = agqvehicle:TERRITORY
+    If agqvehicle:STATE = 37 Then
+        Begin
+        L_NOFAULT = "N"
+        End
+    Else
+        Begin
+        If agqvehicle:TYPE = 2 Or
+           agqvehicle:TYPE = 5 or
+           agqvehicle:type = 7 Then
+            L_NOFAULT = agqvehicle:NO_FAULT
+        Else
+            L_NOFAULT = "N"
+        End
+    L_EFF_DATE = agqvehicle:EFF_DATE
+    L_LIMIT = agsdefault_cap:rating_liability_limit
+
+    Include "casliability.pro"
+
+    L_MED_EXP_PREMIUM = (L_MOTOR_BUS_TOTAL + (L_CHARGE * l_liab_factors *
+                        l_motor_bus_liability * l_motor_bus_medical *
+                        L_MOTOR_BUS_prem *
+                        L_EXPERIENCE_3 * L_SCHEDULE_3 *
+                        L_DEV_OTHER * l_companion_discount))
+    End
+
+End
+
+Procedure TOWING
+Begin
+L_RECORD_KEY = "TW"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE = agqvehicle:EFF_DATE
+
+Include "castowing.pro"
+
+End
+
+Procedure DOC
+Begin
+L_RECORD_KEY = "DO"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE = agqvehicle:EFF_DATE
+L_DOC_MED_PAY_LIMIT = agqdoc:MEDICAL_PAYMENTS
+
+Include "casdoc.pro"
+
+End
+
+Procedure MISC_RATES
+Begin
+L_RECORD_KEY = "RA"
+L_COMPANY_ID = agqvehicle:COMPANY_ID
+L_STATE = agqvehicle:STATE
+L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+L_EFF_DATE = agqvehicle:EFF_DATE
+
+Include "casrate.pro"
+
+if l_companion_discount = 0 or
+   agqdev:companion_discount = 0 then
+    l_companion_discount = 1.00
+End
+
+procedure get_combined_deductible
+begin
+access agqend1, set agqend1:app_no   = agqvehicle:app_no,
+                    agqend1:vehicle_no = agqvehicle:vehicle_no, generic
+
+while agqend1:app_no = agqvehicle:app_no and
+      agqend1:vehicle_no = agqvehicle:vehicle_no
+        begin
+        if agqend1:code one of "CA0302", "CA0301" then
+            begin
+            l_code = agqend1:code
+            Access agqendorse2, Set agqendorse2:app_no   = agqvehicle:app_no,
+                                   agqendorse2:VEHICLE_NO = agqvehicle:VEHICLE_NO,
+                                   agqendorse2:CODE       = L_CODE, Generic
+
+            if agqendorse2:deductible[1] <> 0 then
+                l_deductible1 = agqendorse2:deductible[1]
+            else
+            if agqendorse2:deductible[2] <> 0 then
+                l_deductible1 = agqendorse2:deductible[2]
+            else
+            if agqendorse2:deductible[3] <> 0 then
+                l_deductible1 = agqendorse2:deductible[3]
+            else
+            if agqendorse2:deductible[4] <> 0 then
+                l_deductible1 = agqendorse2:deductible[4]
+
+            access casliabdeduct, set casliabdeduct:company_id       = agqvehicle:company_id,
+                                      casliabdeduct:state            = agqvehicle:state,
+                                      casliabdeduct:line_of_business = agqvehicle:line_of_business,
+                                      casliabdeduct:deductible1      = l_deductible1, generic
+
+            l_deductible_factor = 0
+            while casliabdeduct:company_id       = agqvehicle:company_id and
+                  casliabdeduct:state            = agqvehicle:state and
+                  casliabdeduct:line_of_business = agqvehicle:line_of_business and
+                  casliabdeduct:deductible1      = l_deductible1
+                begin
+                if (agqvehicle:eff_date >= casliabdeduct:eff_date and
+                   (agqvehicle:eff_date <= casliabdeduct:exp_date or
+                   casliabdeduct:exp_date = 0)) then
+                    begin
+                    if agqendorse2:deductible[1] = 0 and
+                       agqendorse2:deductible[2] = 0 and
+                       agqendorse2:deductible[3] = 0 and
+                       agqendorse2:deductible[4] <> 0 then
+                        begin
+                        if agqvehicle:zone_rated = 1 then
+                            l_deductible_factor = casliabdeduct:factor[4]
+                        else
+                            l_deductible_factor = casliabdeduct:factor[3]
+                        end
+                    else
+                        begin
+                        if agqvehicle:zone_rated = 1 then
+                            l_deductible_factor = casliabdeduct:factor[2]
+                        else
+                            l_deductible_factor = casliabdeduct:factor[1]
+                        end
+
+                    end
+
+                next casliabdeduct
+                end
+        end
+
+    next agqend1
+    end
+
+if l_deductible_factor = 0 then
+    l_deductible_factor = 1.00
+end
+
+Procedure RATE_ENDORSEMENTS
+Begin
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqvehicle:COMPANY_ID,
+                      SFSOPTEND:STATE = agqvehicle:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqvehicle:line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqvehicle:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqvehicle:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqvehicle:line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqvehicle:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqvehicle:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_END_FACTOR   = SFSOPTEND:PREMIUM_1[1]
+        L_END_LIMIT    = SFSOPTEND:LIMIT[1]
+        L_END_PREMIUM1 = SFSOPTEND:PREMIUM_1[1]
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_code = "CA9937" then
+    begin
+    l_rmf = L_EXPERIENCE_3 * L_SCHEDULE_3 * L_DEV_OTHER * l_loss_cost_1 * l_companion_discount
+    l_commandline = str(agqvehicle:app_no,8) + str(agqvehicle:vehicle_no,4) +
+                    str(l_rmf,6)
+    proc("cli csbatch agtup9937 %s",l_commandline)/noconsole
+    end
+
+if l_code one of "MCA104" then
+    begin
+    access agqaddlinsured, set agqaddlinsured:app_no     = agqvehicle:app_no, generic
+
+    if agqaddlinsured:vehicle_no <> 0 then
+        begin
+        access agqaddlinsured, set agqaddlinsured:app_no     = agqvehicle:app_no,
+                                   agqaddlinsured:vehicle_no   = agqvehicle:vehicle_no,
+                                   agqaddlinsured:code         = l_code, generic
+
+        l_update_sfpend_premium = 0
+        while agqaddlinsured:app_no     = agqvehicle:app_no and
+              agqaddlinsured:vehicle_no   = agqvehicle:vehicle_no and
+              agqaddlinsured:code         = l_code
+            begin
+            l_update_sfpend_premium = l_update_sfpend_premium +
+                                      l_end_premium1
+
+            next agqaddlinsured
+            end
+        end
+    else
+        begin
+        l_vehicle_no = 0
+        access agqaddlinsured, set agqaddlinsured:app_no     = agqvehicle:app_no,
+                                   agqaddlinsured:vehicle_no   = l_vehicle_no,
+                                   agqaddlinsured:code         = l_code, generic
+
+        l_update_sfpend_premium = 0
+        while agqaddlinsured:app_no     = agqvehicle:app_no and
+              agqaddlinsured:vehicle_no   = l_vehicle_no and
+              agqaddlinsured:code         = l_code
+            begin
+            l_update_sfpend_premium = l_update_sfpend_premium +
+                                      l_end_premium1
+
+            next agqaddlinsured
+            end
+        end
+
+    end
+
+-- audio, data and visual electronic equipment coverage
+If L_CODE = "MCA201" Then
+    Begin
+    Access agqendorse2, Set agqendorse2:app_no   = agqvehicle:app_no,
+                           agqendorse2:VEHICLE_NO = agqvehicle:VEHICLE_NO,
+                           agqendorse2:CODE       = L_CODE, Generic
+
+    If SFSCOMPANY:HIRED_NONOWNED_RATING = 1 Then
+        begin
+        L_UPDATE_SFPEND_PREMIUM  = ((agqendorse2:LIMIT Divide L_AUDIO_PER) *
+                                   L_AUDIO_RATE)
+        end
+    Else
+        L_UPDATE_SFPEND_PREMIUM = ((agqvehicle:ORIGINAL_COST Divide L_AUDIO_PER) *
+                                  L_AUDIO_RATE)
+
+    L_SOUND_TOTAL = L_SOUND_TOTAL + L_UPDATE_SFPEND_PREMIUM
+    End
+else
+If L_CODE = "MCA321" Then
+    Begin
+    Access agqendorse2, Set agqendorse2:app_no   = agqvehicle:app_no,
+                           agqendorse2:VEHICLE_NO = agqvehicle:VEHICLE_NO,
+                           agqendorse2:CODE       = L_CODE, Generic
+
+    L_UPDATE_SFPEND_PREMIUM = ((agqendorse2:LIMIT Divide
+                              L_MOTOR_HOME_CONTENTS_PER) *
+                              L_MOTOR_HOME_RATE)
+    End
+else
+If L_CODE one of "CA9930" Then
+    begin
+    L_UPDATE_SFPEND_PREMIUM = L_END_PREMIUM1
+    end
+
+if l_code = "MCA601" and
+   sfscompany:boiler_rating = 4 then
+    begin
+    access agqendorse2, set agqendorse2:app_no   = agqvehicle:app_no,
+                           agqendorse2:vehicle_no = agqvehicle:vehicle_no,
+                           agqendorse2:code       = l_code, generic
+
+    if agqendorse2:premium <> 0 then
+        begin
+        l_update_sfpend_premium = agqendorse2:premium
+        end
+    else
+        begin
+        L_AGE  = ((Year(agqvehicle:EFF_DATE) - (agqvehicle:YEAR)) + 1)
+        If Month(agqvehicle:EFF_DATE) >= 10 And
+           Month(agqvehicle:EFF_DATE) <= 12 Then
+            L_AGE = L_AGE + 1
+        If L_AGE = 0 Then
+            L_AGE = 1
+        If L_AGE > 6 Then
+            L_AGE = 6
+        l_company_id       = agqvehicle:company_id
+        l_state            = agqvehicle:state
+        l_line_of_business = agqvehicle:line_of_business
+        l_limit            = agqvehicle:original_cost
+        access casgapcov, set casgapcov:company_id       = l_company_id,
+                              casgapcov:state            = l_state,
+                              casgapcov:line_of_business = l_line_of_business,
+                              casgapcov:age              = l_age,
+                              casgapcov:limit            = l_limit, approximate
+
+        l_limit_1 = casgapcov:limit
+        while casgapcov:company_id       = l_company_id and
+              casgapcov:state            = l_state and
+              casgapcov:line_of_business = l_line_of_business and
+              casgapcov:age              = l_age and
+              casgapcov:limit            = l_limit_1
+            begin
+            if (agqvehicle:eff_date >= casgapcov:eff_date and
+               (agqvehicle:eff_date <= casgapcov:exp_date or
+               casgapcov:exp_date = 0)) then
+                begin
+                l_update_sfpend_premium = casgapcov:charge
+                end
+
+            next casgapcov
+            end
+        end
+    end
+else
+if l_code = "MCA601" and
+   sfscompany:boiler_rating <> 4 then
+    begin
+    l_update_sfpend_premium = l_end_premium1
+    end
+
+if l_code = "CA9928" then
+    begin
+    Access agqendorse2, Set agqendorse2:app_no   = agqvehicle:app_no,
+                           agqendorse2:VEHICLE_NO = agqvehicle:VEHICLE_NO,
+                           agqendorse2:CODE       = L_CODE, Generic
+
+    l_update_sfpend_premium = agqendorse2:premium
+    end
+
+End
+
+Procedure CALC_DEVIATION
+Begin
+L_EXPERIENCE_1 = 1.00
+L_EXPERIENCE_2 = 1.00
+L_EXPERIENCE_3 = 1.00
+L_SCHEDULE_1 = 1.00
+L_SCHEDULE_2 = 1.00
+L_SCHEDULE_3 = 1.00
+L_DEV_OTHER = 1.00
+L_ANOTHER_POLICY_CREDIT = 1.00
+
+Access agqdev, Set agqdev:app_no = agqvehicle:app_no, Exact
+
+If agqdev:ANOTHER_POLICY = 1 Then
+    Begin
+    L_RECORD_KEY = "RA"
+    L_COMPANY_ID = agqvehicle:COMPANY_ID
+    L_STATE = agqvehicle:STATE
+    L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+    L_EFF_DATE = agqvehicle:EFF_DATE
+
+    Include "casrate1.pro"
+
+    If L_ANOTHER_POLICY_CREDIT = 0 Then
+        L_ANOTHER_POLICY_CREDIT = 1.00
+
+    End
+
+If agqdev:EXPERIENCE[1] <> 0 Then
+    begin
+    if agsdefault_cap:deviation_number_not_factor = 1 then
+        l_experience_1 = (1 + (agqdev:experience[1] * 0.01))
+    else
+        L_EXPERIENCE_1 = agqdev:EXPERIENCE[1]
+    end
+
+If agqdev:EXPERIENCE[2] <> 0 Then
+    begin
+    if agsdefault_cap:deviation_number_not_factor = 1 then
+        l_experience_2 = (1 + (agqdev:experience[2] * 0.01))
+    else
+        L_EXPERIENCE_2 = agqdev:EXPERIENCE[2]
+    end
+
+If agqdev:EXPERIENCE[3] <> 0 Then
+    begin
+    if agsdefault_cap:deviation_number_not_factor = 1 then
+        l_experience_3 = (1 + (agqdev:experience[3] * 0.01))
+    else
+        L_EXPERIENCE_3 = agqdev:EXPERIENCE[3]
+    end
+
+If agqdev:SCHEDULE[1] <> 0 Then
+    begin
+    if agsdefault_cap:deviation_number_not_factor = 1 then
+        l_schedule_1 = (1 + (agqdev:schedule[1] * 0.01))
+    else
+        L_SCHEDULE_1 = agqdev:SCHEDULE[1]
+    end
+
+If agqdev:SCHEDULE[2] <> 0 Then
+    begin
+    if agsdefault_cap:deviation_number_not_factor = 1 then
+        l_schedule_2 = (1 + (agqdev:schedule[2] * 0.01))
+    else
+        L_SCHEDULE_2 = agqdev:SCHEDULE[2]
+    end
+
+If agqdev:SCHEDULE[3] <> 0 Then
+    begin
+    if agsdefault_cap:deviation_number_not_factor = 1 then
+        l_schedule_3 = (1 + (agqdev:schedule[3] * 0.01))
+    else
+        L_SCHEDULE_3 = agqdev:SCHEDULE[3]
+    end
+
+L_SUB = 0
+While L_SUB <= 4
+    Begin
+    L_SUB = L_SUB + 1
+    If agqdev:DEVIATION[L_SUB] <> 0 Then
+        L_DEV_OTHER = L_DEV_OTHER * agqdev:DEVIATION[L_SUB]
+    End
+
+End
+
+procedure get_short_term
+begin
+L_EFF_DATE_1 = Dateadd(agqvehicle:EFF_DATE,0,1)
+l_short_term_total = l_total1
+do short_term
+l_total1 = l_short_term_total
+
+l_short_term_total = l_hired_liab_total
+do short_term
+l_hired_liab_total = l_short_term_total
+
+l_short_term_total = l_hired_phys_dam_total
+do short_term
+l_hired_phys_dam_total = l_short_term_total
+
+l_short_term_total = l_liab_total
+do short_term
+l_liab_total = l_short_term_total
+
+l_short_term_total = l_med_pay_total
+do short_term
+l_med_pay_total = l_short_term_total
+
+l_short_term_total = l_doc_premium
+do short_term
+l_doc_premium = l_short_term_total
+
+l_short_term_total = l_um_uim_total
+do short_term
+l_um_uim_total = l_short_term_total
+
+l_short_term_total = l_comp_total
+do short_term
+l_comp_total = l_short_term_total
+
+l_short_term_total = l_coll_total
+do short_term
+l_coll_total = l_short_term_total
+
+l_short_term_total = l_rental_total
+do short_term
+l_rental_total = l_short_term_total
+
+l_short_term_total = l_towing_total
+do short_term
+l_towing_total = l_short_term_total
+
+l_short_term_total = l_nonowned_total
+do short_term
+l_nonowned_total = l_short_term_total
+
+l_short_term_total = l_misc_total
+do short_term
+l_misc_total = l_short_term_total
+
+l_short_term_total = l_end_total
+do short_term
+l_end_total = l_short_term_total
+
+l_short_term_total = l_doc_other_total
+do short_term
+l_doc_other_total = l_short_term_total
+
+l_short_term_total = l_doc_other_liab_total
+do short_term
+l_doc_other_liab_total = l_short_term_total
+
+l_short_term_total = l_hired_auto_liab_total
+do short_term
+l_hired_auto_liab_total = l_short_term_total
+
+l_short_term_total = l_hired_comp_total
+do short_term
+l_hired_comp_total = l_short_term_total
+
+l_short_term_total = l_nonowned_med_pay_total
+do short_term
+l_nonowned_med_pay_total = l_short_term_total
+
+l_short_term_total = l_nonowned_part_total
+do short_term
+l_nonowned_part_total = l_short_term_total
+
+l_short_term_total = l_basic_pip_total
+do short_term
+l_basic_pip_total = l_short_term_total
+
+l_short_term_total = l_broad_premium
+do short_term
+l_broad_premium = l_short_term_total
+
+l_short_term_total = l_addl_pip_total
+do short_term
+l_addl_pip_total = l_short_term_total
+
+l_short_term_total = l_ext_med_pip_total
+do short_term
+l_ext_med_pip_total = l_short_term_total
+
+l_short_term_total = l_ped_pip_total
+do short_term
+l_ped_pip_total = l_short_term_total
+
+l_short_term_total = l_med_exp_total
+do short_term
+l_med_exp_total = l_short_term_total
+
+l_short_term_total = l_gap_total
+do short_term
+l_gap_total = l_short_term_total
+
+l_short_term_total = l_sound_total
+do short_term
+l_sound_total = l_short_term_total
+
+l_short_term_total = l_underinsured_total
+do short_term
+l_underinsured_total = l_short_term_total
+
+l_short_term_total = l_package_premium
+do short_term
+l_package_premium = l_short_term_total
+
+l_short_term_policy_total = l_liab_total +
+                            l_med_pay_total +
+                            l_um_uim_total +
+                            l_comp_total +
+                            l_coll_total +
+                            l_rental_total +
+                            l_towing_total +
+                            l_nonowned_total +
+                            l_misc_total +
+                            l_end_total +
+                            l_doc_other_total +
+                            l_doc_other_liab_total +
+                            l_hired_auto_liab_total +
+                            l_hired_comp_total +
+                            l_nonowned_med_pay_total +
+                            l_nonowned_part_total +
+                            l_basic_pip_total +
+                            l_broad_premium +
+                            l_addl_pip_total +
+                            l_ext_med_pip_total +
+                            l_ped_pip_total +
+                            l_med_exp_total +
+                            l_gap_total +
+                            l_sound_total +
+                            l_underinsured_total +
+                            l_package_premium +
+                            l_doc_premium
+
+if l_short_term_policy_total <> l_total1 then
+    begin
+    l_liab_total = (l_liab_total + (l_total1 - l_short_term_policy_total))
+    end
+
+end
+
+Procedure UPDATE_TOTALS
+Begin
+access sfsline, set sfsline:company_id       = agqvehicle:company_id,
+                    sfsline:line_of_business = agqvehicle:line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+if sfsline:lob_code one of "CPORTFOLIO" then
+    begin
+    access agqamt, set agqamt:app_no = g_app_no, exact
+
+    if agqamt:app_no = g_app_no then
+        change agqamt
+            begin
+            agqamt:lob_totals[1]     = l_final_total - l_terrorism_premium
+            agqamt:lob_surcharge[1]  = l_surcharge
+            agqamt:lob_terrorism[1]  = l_terrorism_premium
+            end
+    else
+        add agqamt
+            begin
+            agqamt:app_no          = g_app_no
+            agqamt:lob_totals[1]     = l_final_total - l_terrorism_premium
+            agqamt:lob_surcharge[1]  = l_surcharge
+            agqamt:lob_terrorism[1]  = l_terrorism_premium
+            end
+
+    Access agqmastsupp, Set agqmastsupp:app_no = G_app_no,
+                            agqmastsupp:line_of_business = g_line_of_business, generic
+
+    Change agqmastsupp
+        Begin
+        agqmastsupp:TOTAL[1]          =       L_LIAB_TOTAL
+        agqmastsupp:TOTAL[2]          =       L_MED_PAY_TOTAL
+        agqmastsupp:TOTAL[3]          =       L_UM_UIM_TOTAL
+        agqmastsupp:TOTAL[4]          =       L_DOC_TOTAL
+        agqmastsupp:TOTAL[5]          =       L_PED_PIP_TOTAL +
+                                              L_BASIC_PIP_TOTAL +
+                                              L_EXT_MED_PIP_TOTAL +
+                                              L_MED_EXP_TOTAL
+        agqmastsupp:TOTAL[6]          =       L_ADDL_PIP_TOTAL
+        agqmastsupp:TOTAL[7]          =       L_COMP_TOTAL
+        agqmastsupp:TOTAL[8]          =       L_COLL_TOTAL
+        agqmastsupp:TOTAL[9]          =       L_RENTAL_TOTAL
+        agqmastsupp:TOTAL[10]         =       L_TOWING_TOTAL
+        agqmastsupp:TOTAL[11]         =       L_NONOWNED_TOTAL
+        agqmastsupp:TOTAL[12]         =       L_HIRED_LIAB_TOTAL +
+                                              L_HIRED_PHYS_DAM_TOTAL
+        agqmastsupp:TOTAL[13]         =       L_HIRED_NONOWNED_TOTAL
+        agqmastsupp:TOTAL[14]         =       L_END_TOTAL + L_TERRORISM_PREMIUM
+        agqmastsupp:TOTAL[15]         =       L_MISC_TOTAL
+        agqmastsupp:total[18]         =       l_end_total
+        If L_PACKAGE_TOTAL <> 0 Then
+            agqmastsupp:TOTAL[19]     =       L_PACKAGE_TOTAL
+        Else
+            agqmastsupp:TOTAL[19]     =       L_TOTAL1
+        agqmastsupp:SURCHARGE         =       L_SURCHARGE
+        write("%c%s",1005,"")
+        agqmastsupp:OTHER_TOTALS[1]   =       L_DOC_OTHER_TOTAL
+        agqmastsupp:OTHER_TOTALS[2]   =       L_DOC_OTHER_LIAB_TOTAL
+        agqmastsupp:OTHER_TOTALS[3]   =       L_HIRED_AUTO_LIAB_TOTAL
+        agqmastsupp:OTHER_TOTALS[4]   =       L_HIRED_COMP_TOTAL
+        agqmastsupp:OTHER_TOTALS[5]   =       L_NONOWNED_LIAB_TOTAL
+        agqmastsupp:OTHER_TOTALS[6]   =       L_NONOWNED_MED_PAY_TOTAL
+        agqmastsupp:OTHER_TOTALS[7]   =       L_NONOWNED_PART_TOTAL
+        agqmastsupp:OTHER_TOTALS[8]   =       L_BASIC_PIP_TOTAL
+        agqmastsupp:OTHER_TOTALS[9]   =       L_BROAD_PREMIUM
+        agqmastsupp:OTHER_TOTALS[10]  =       L_ADDL_PIP_TOTAL
+        agqmastsupp:OTHER_TOTALS[11]  =       L_EXT_MED_PIP_TOTAL
+        agqmastsupp:OTHER_TOTALS[12]  =       L_PED_PIP_TOTAL
+        agqmastsupp:OTHER_TOTALS[13]  =       L_MED_EXP_TOTAL
+        agqmastsupp:OTHER_TOTALS[14]  =       L_GAP_TOTAL
+        agqmastsupp:OTHER_TOTALS[15]  =       L_SOUND_TOTAL
+--      If agqpip:LIMITATION = "Y" Then
+--          agqmastsupp:OTHER_TOTALS[16] =    L_LIAB_TOTAL
+        agqmastsupp:OTHER_TOTALS[17]  =       L_FINAL_TOTAL
+        agqmastsupp:OTHER_TOTALS[18]  =       L_UNDERINSURED_TOTAL
+        agqmastsupp:OTHER_TOTALS[19]  =       L_FUNERAL_NONOWNED_HIRED_PREMIUM
+        agqmastsupp:OTHER_TOTALS[20]  =       L_PACKAGE_PREMIUM
+        If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+            Begin
+            agqmastsupp:TOTAL[20]     =       L_FINAL_TOTAL + L_SURCHARGE +
+                                              L_INSTALLMENT_CHARGE
+            agqmastsupp:AMT_DUE_TOTAL[20] =   L_FINAL_TOTAL + L_SURCHARGE +
+                                              L_INSTALLMENT_CHARGE
+            End
+        Else
+            Begin
+            agqmastsupp:TOTAL[20]     =       L_FINAL_TOTAL + L_SURCHARGE
+            agqmastsupp:AMT_DUE_TOTAL[20] =   L_FINAL_TOTAL + L_SURCHARGE
+            End
+        agqmastsupp:RAW_PREMIUM_AMT_DUE =     L_FINAL_TOTAL
+        agqmastsupp:terrorism_premium   = l_terrorism_premium
+        End
+    end
+else
+    begin
+    Access agqmaster, Set agqmaster:app_no = agqvehicle:app_no, Exact
+
+    Change agqmaster
+        Begin
+        agqmaster:TOTAL[1]          =       L_LIAB_TOTAL
+        agqmaster:TOTAL[2]          =       L_MED_PAY_TOTAL
+        agqmaster:TOTAL[3]          =       L_UM_UIM_TOTAL
+        agqmaster:TOTAL[4]          =       L_DOC_TOTAL
+        agqmaster:TOTAL[5]          =       L_PED_PIP_TOTAL +
+                                            L_BASIC_PIP_TOTAL +
+                                            L_EXT_MED_PIP_TOTAL +
+                                            L_MED_EXP_TOTAL
+        agqmaster:TOTAL[6]          =       L_ADDL_PIP_TOTAL
+        agqmaster:TOTAL[7]          =       L_COMP_TOTAL
+        agqmaster:TOTAL[8]          =       L_COLL_TOTAL
+        agqmaster:TOTAL[9]          =       L_RENTAL_TOTAL
+        agqmaster:TOTAL[10]         =       L_TOWING_TOTAL
+        agqmaster:TOTAL[11]         =       L_NONOWNED_TOTAL
+        agqmaster:TOTAL[12]         =       L_HIRED_LIAB_TOTAL +
+                                            L_HIRED_PHYS_DAM_TOTAL
+        agqmaster:TOTAL[13]         =       L_HIRED_NONOWNED_TOTAL
+        agqmaster:TOTAL[14]         =       L_END_TOTAL + L_TERRORISM_PREMIUM
+        agqmaster:TOTAL[15]         =       L_MISC_TOTAL
+        agqmaster:total[18]         =       l_end_total
+        If L_PACKAGE_TOTAL <> 0 Then
+            agqmaster:TOTAL[19]     =       L_PACKAGE_TOTAL
+        Else
+            agqmaster:TOTAL[19]     =       L_TOTAL1
+        agqmaster:INSTALLMENT_CHARGE =      L_INSTALLMENT_CHARGE
+        agqmaster:SURCHARGE         =       L_SURCHARGE
+        agqmaster:OTHER_TOTALS[1]   =       L_DOC_OTHER_TOTAL
+        agqmaster:OTHER_TOTALS[2]   =       L_DOC_OTHER_LIAB_TOTAL
+        agqmaster:OTHER_TOTALS[3]   =       L_HIRED_AUTO_LIAB_TOTAL
+        agqmaster:OTHER_TOTALS[4]   =       L_HIRED_COMP_TOTAL
+        agqmaster:OTHER_TOTALS[5]   =       L_NONOWNED_LIAB_TOTAL
+        agqmaster:OTHER_TOTALS[6]   =       L_NONOWNED_MED_PAY_TOTAL
+        agqmaster:OTHER_TOTALS[7]   =       L_NONOWNED_PART_TOTAL
+        agqmaster:OTHER_TOTALS[8]   =       L_BASIC_PIP_TOTAL
+        agqmaster:OTHER_TOTALS[9]   =       L_BROAD_PREMIUM
+        agqmaster:OTHER_TOTALS[10]  =       L_ADDL_PIP_TOTAL
+        agqmaster:OTHER_TOTALS[11]  =       L_EXT_MED_PIP_TOTAL
+        agqmaster:OTHER_TOTALS[12]  =       L_PED_PIP_TOTAL
+        agqmaster:OTHER_TOTALS[13]  =       L_MED_EXP_TOTAL
+        agqmaster:OTHER_TOTALS[14]  =       L_GAP_TOTAL
+        agqmaster:OTHER_TOTALS[15]  =       L_SOUND_TOTAL
+--      If agqpip:LIMITATION = "Y" Then
+--          agqmaster:OTHER_TOTALS[16] =    L_LIAB_TOTAL
+        agqmaster:OTHER_TOTALS[17]  =       L_FINAL_TOTAL
+        agqmaster:OTHER_TOTALS[18]  =       L_UNDERINSURED_TOTAL
+        agqmaster:OTHER_TOTALS[19]  =       L_FUNERAL_NONOWNED_HIRED_PREMIUM
+        agqmaster:OTHER_TOTALS[20]  =       L_PACKAGE_PREMIUM
+        If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+            Begin
+            agqmaster:TOTAL[20]     =       L_FINAL_TOTAL + L_SURCHARGE +
+                                            L_INSTALLMENT_CHARGE
+            agqmaster:AMT_DUE_TOTAL[20] =   L_FINAL_TOTAL + L_SURCHARGE +
+                                            L_INSTALLMENT_CHARGE
+            End
+        Else
+            Begin
+            agqmaster:TOTAL[20]     =       L_FINAL_TOTAL + L_SURCHARGE
+            agqmaster:AMT_DUE_TOTAL[20] =   L_FINAL_TOTAL + L_SURCHARGE
+            End
+        agqmaster:RAW_PREMIUM_AMT_DUE =     L_FINAL_TOTAL
+        agqmaster:terrorism_premium   = l_terrorism_premium
+        agqmaster:minimum_premium[1]  = l_minimum_applies
+        End
+
+    access agqvehicle_alias, set agqvehicle_alias:app_no = g_app_no, generic
+
+    while agqvehicle_alias:app_no = g_app_no
+        begin
+        access agqsymbol, set agqsymbol:app_no     = g_app_no,
+                              agqsymbol:vehicle_no = agqvehicle_alias:vehicle_no, generic
+
+        if agqsymbol:app_no     <> g_app_no or
+           agqsymbol:vehicle_no <> agqvehicle_alias:vehicle_no then
+            begin
+            add agqsymbol
+                begin
+                agqsymbol:app_no             = g_app_no
+                agqsymbol:vehicle_no         = agqvehicle_alias:vehicle_no
+                if agqmaster:total[1] <> 0 then
+                    agqsymbol:vehicle_symbol[1]  = "7"
+                else
+                    agqsymbol:vehicle_symbol[1]  = ""
+                if agqmaster:total[12] <> 0 then
+                    agqsymbol:vehicle_symbol[2]  = "8"
+                else
+                    agqsymbol:vehicle_symbol[2]  = ""
+                if agqmaster:total[11] <> 0 then
+                    agqsymbol:vehicle_symbol[3]  = "9"
+                else
+                    agqsymbol:vehicle_symbol[3]  = ""
+                if agqmaster:total[5] <> 0 then
+                    agqsymbol:vehicle_symbol[4]  = "5"
+                else
+                    agqsymbol:vehicle_symbol[4]  = ""
+                if agqmaster:total[6] <> 0 then
+                    agqsymbol:vehicle_symbol[5]  = "5"
+                else
+                    agqsymbol:vehicle_symbol[5]  = ""
+                if agqmaster:total[3] <> 0 then
+                    begin
+                    if agqvehicle_alias:state = 29 then
+                        begin
+                        agqsymbol:vehicle_symbol[6]  = "6"
+                        agqsymbol:vehicle_symbol[7]  = "6"
+                        end
+                    else
+                        begin
+                        agqsymbol:vehicle_symbol[6]  = "5"
+                        agqsymbol:vehicle_symbol[7]  = "5"
+                        end
+                    end
+                else
+                    begin
+                    agqsymbol:vehicle_symbol[6]  = ""
+                    agqsymbol:vehicle_symbol[7]  = ""
+                    end
+                if agqmaster:total[7] <> 0 then
+                    agqsymbol:vehicle_symbol[8]  = "7"
+                else
+                    agqsymbol:vehicle_symbol[8]  = ""
+                if agqmaster:total[8] <> 0 then
+                    agqsymbol:vehicle_symbol[9]  = "7"
+                else
+                    agqsymbol:vehicle_symbol[9]  = ""
+                if agqmaster:total[10] <> 0 then
+                    agqsymbol:vehicle_symbol[10] = "7"
+                else
+                    agqsymbol:vehicle_symbol[10]  = ""
+                if agqmaster:total[2] <> 0 then
+                    agqsymbol:vehicle_symbol[11] = "7"
+                else
+                    agqsymbol:vehicle_symbol[11]  = ""
+                if l_hired_phys_dam_total <> 0 then
+                    agqsymbol:vehicle_symbol[12] = "8"
+                else
+                    agqsymbol:vehicle_symbol[12]  = ""
+                end
+            end
+        else
+            begin
+            change agqsymbol
+                begin
+                if agqmaster:total[1] <> 0 then
+                    agqsymbol:vehicle_symbol[1]  = "7"
+                else
+                    agqsymbol:vehicle_symbol[1]  = ""
+                if agqmaster:total[12] <> 0 then
+                    agqsymbol:vehicle_symbol[2]  = "8"
+                else
+                    agqsymbol:vehicle_symbol[2]  = ""
+                if agqmaster:total[11] <> 0 then
+                    agqsymbol:vehicle_symbol[3]  = "9"
+                else
+                    agqsymbol:vehicle_symbol[3]  = ""
+                if agqmaster:total[5] <> 0 then
+                    agqsymbol:vehicle_symbol[4]  = "5"
+                else
+                    agqsymbol:vehicle_symbol[4]  = ""
+                if agqmaster:total[6] <> 0 then
+                    agqsymbol:vehicle_symbol[5]  = "5"
+                else
+                    agqsymbol:vehicle_symbol[5]  = ""
+                if agqmaster:total[3] <> 0 then
+                    begin
+                    if agqvehicle_alias:state = 29 then
+                        begin
+                        agqsymbol:vehicle_symbol[6]  = "6"
+                        agqsymbol:vehicle_symbol[7]  = "6"
+                        end
+                    else
+                        begin
+                        agqsymbol:vehicle_symbol[6]  = "5"
+                        agqsymbol:vehicle_symbol[7]  = "5"
+                        end
+                    end
+                else
+                    begin
+                    agqsymbol:vehicle_symbol[6]  = ""
+                    agqsymbol:vehicle_symbol[7]  = ""
+                    end
+                if agqmaster:total[7] <> 0 then
+                    agqsymbol:vehicle_symbol[8]  = "7"
+                else
+                    agqsymbol:vehicle_symbol[8]  = ""
+                if agqmaster:total[8] <> 0 then
+                    agqsymbol:vehicle_symbol[9]  = "7"
+                else
+                    agqsymbol:vehicle_symbol[9]  = ""
+                if agqmaster:total[10] <> 0 then
+                    agqsymbol:vehicle_symbol[10] = "7"
+                else
+                    agqsymbol:vehicle_symbol[10]  = ""
+                if agqmaster:total[2] <> 0 then
+                    agqsymbol:vehicle_symbol[11] = "7"
+                else
+                    agqsymbol:vehicle_symbol[11]  = ""
+                if l_hired_phys_dam_total <> 0 then
+                    agqsymbol:vehicle_symbol[12] = "8"
+                else
+                    agqsymbol:vehicle_symbol[12]  = ""
+                end
+            end
+
+        next agqvehicle_alias
+        end
+    end
+
+End
+
+procedure short_term
+begin
+If agqvehicle:EXP_DATE < L_EFF_DATE_1 Then
+    Begin
+    L_DAYS_RATE = l_short_term_total Divide 365
+    L_DAYS = agqvehicle:EXP_DATE - agqvehicle:EFF_DATE
+    L_PRO_RATA_PREMIUM = L_DAYS * L_DAYS_RATE
+    l_short_term_total = L_PRO_RATA_PREMIUM
+    End
+end
+
+Procedure MINIMUM_PREMIUMS
+Begin
+Access SFSCONTROL, Set SFSCONTROL:COMPANY_ID = agqvehicle:COMPANY_ID,
+                       SFSCONTROL:STATE = agqvehicle:STATE,
+                       SFSCONTROL:LINE_OF_BUSINESS = agqvehicle:line_of_business, Generic
+
+Repeat Begin
+    Exit If SFSCONTROL:COMPANY_ID <> agqvehicle:COMPANY_ID Or
+            SFSCONTROL:STATE <> agqvehicle:STATE Or
+            SFSCONTROL:LINE_OF_BUSINESS <> agqvehicle:line_of_business
+
+    If agqvehicle:EFF_DATE >= SFSCONTROL:EFF_DATE Then
+        L_MINIMUM = SFSCONTROL:MINIMUM_PREMIUM
+
+    Next SFSCONTROL
+    End
+
+L_MINIMUM_APPLIES = "N"
+If L_TOTAL1 < L_MINIMUM Then
+    Begin
+    l_minimum_difference = l_minimum - l_total1
+    L_TOTAL1 = L_MINIMUM
+    if sfsline:lob_code one of "CPORTFOLIO" then
+        begin
+        if agqmastsupp:extend_hired_nonowned = "Y" then
+            begin
+            if l_nonowned_total <> 0 then
+                begin
+                l_nonowned_total = l_nonowned_total +
+                                   l_minimum_difference
+                end
+            else
+            if l_hired_auto_liab_total <> 0 then
+                begin
+                l_hired_auto_liab_total = l_hired_auto_liab_total +
+                                          l_minimum_difference
+                end
+            end
+        else
+        if l_liab_total <> 0 then
+            begin
+            l_liab_total = l_liab_total +
+                           l_minimum_difference
+            end
+        else
+        if l_um_uim_total <> 0 then
+            begin
+            l_um_uim_total = l_um_uim_total +
+                             l_minimum_difference
+            end
+        end
+    else
+        begin
+        if agqmaster:extend_hired_nonowned = "Y" then
+            begin
+            if l_nonowned_total <> 0 then
+                begin
+                l_nonowned_total = l_nonowned_total +
+                                   l_minimum_difference
+                end
+            else
+            if l_hired_auto_liab_total <> 0 then
+                begin
+                l_hired_auto_liab_total = l_hired_auto_liab_total +
+                                          l_minimum_difference
+                end
+            end
+        else
+        if l_liab_total <> 0 then
+            begin
+            l_liab_total = l_liab_total +
+                           l_minimum_difference
+            end
+        else
+        if l_um_uim_total <> 0 then
+            begin
+            l_um_uim_total = l_um_uim_total +
+                             l_minimum_difference
+            end
+        end
+
+    L_MINIMUM_APPLIES = "Y"
+    End
+else
+    l_minimum_applies = "N"
+
+End
+
+End

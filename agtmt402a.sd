@@ -1,0 +1,421 @@
+%%                 
+Screen
+        Name = "agtmt402a";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqdev" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ,
+                                     g_vehicle_no[4] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ;
+
+        local tag l_tag[10] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_no_vehicles[4],
+                                    l_vehicle_no[4],
+                                    l_form[2],
+                                    l_limit[8],
+                                    l_mca301[1],
+                                    l_mca202[1],
+                                    l_mca301_prior[1],
+                                    l_mca202_prior[1],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[25],
+                     l_filler[25],
+                     l_um_uim[3],
+                     l_record_key[2],
+                     L_COMPANY_ID[10] ,
+                     l_description[75] ;
+
+        Access agqdev,
+           Set agqdev:app_NO     = G_app_NO  ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+        "calc" display "agtmt402" tagged calc_fn ;
+        "redisplay" display/noreturn "agtmt402a" ;
+--        forwardtab ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "cap"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqvehicle:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+disable(accept_fn)
+
+Access Validation
+If agqdev:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+    Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+Panel at 1,1 to 2,100
+    Properties
+        {
+        layouttype = screen
+        }
+{
+    components
+        guidetext at 1,1 to 2,40
+            properties
+                {
+                iconname = "qp_logo.gif"
+                }
+        guidetext at 1,35 to 2,100 tagged t_line_of_business
+            Properties
+                {
+                iconname = "title_bop.gif"
+                }
+}
+
+Panel/hidden
+    {
+    Fields
+    Function at 1,1 ;
+    }
+
+panel at 3,1 to 4,100
+    Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+    components
+        guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+            properties
+                {
+                text = "Deviations..."
+                fontsize = 18
+                fontstyle = BOLD
+                transparent = False
+                fontname = "arial"
+                backgroundcolor = "Grey"
+                }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+    Properties
+        {
+        LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     g_app_no/displayonly ;
+
+}
+
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+    Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+    Button at 1.5,1   tagged add_fn
+        Properties
+            {
+            Iconname = "btn_add.bmp"
+            }
+        Events
+            {
+            Action = add_fn
+            }
+    Button at 1.5,38    tagged change_fn
+        Properties
+            {
+            Iconname = "btn_edit.bmp"
+            }
+        Events
+            {
+            Action = change_fn
+            }
+    Button at 1.5, 70 tagged delete_fn
+        Properties
+            {
+            Iconname = "btn_delete.bmp"
+            }
+        Events
+            {
+            Action = delete_fn
+            }
+}
+
+Panel at 8,60 to 8,100
+    Properties
+        {
+        layouttype = row
+        }
+{
+    Components
+        Button at 1,55 tagged accept_fn
+            properties
+                {
+                Iconname = "btn_accept_edits.bmp"
+                }
+            Events
+                {
+                mouseclicked = accept
+                }
+}
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties
+        {
+        layouttype = column
+        }
+{
+    Components
+        Button to 1,1
+            properties
+                {
+                Iconname = "btn_print_screen.bmp"
+                }
+            events
+                {
+                action
+                    {
+                    function = "print"
+                    abort()
+                    }
+                }
+}
+
+Panel at 6.45,92
+    Properties
+        {
+        layouttype = column
+        }
+{
+    Components
+        guidetext to 1,1
+            properties
+                {
+                text = "agtmt402a.sd"
+                fontsize = 9
+                }
+}
+
+panel at 7,1 to 7,100 tagged line_panel_1
+{
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+}
+
+Panel at 9,5 to 13,100
+    Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+                       Physical
+                       Damage              Liability           Other
+
+  Experience:          ______              ______             ______
+  Schedule:            ______              ______             ______
+
+%%
+
+components
+
+Fields
+401     begin
+        access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+        Access agsdefault_cap, Set agsdefault_cap:COMPANY_ID       = agqvehicle:COMPANY_ID,
+                                   agsdefault_cap:state            = agqvehicle:state,
+                                   agsdefault_cap:agent_no         = agqvehicle:agent_no,
+                                   agsdefault_cap:LINE_OF_BUSINESS = agqvehicle:LINE_OF_BUSINESS, generic
+
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            disable(calc_fn)
+            enable(accept_fn)
+            agqdev:app_no = g_app_no
+            }
+        else
+            {
+            disable(accept_fn)
+            enable(calc_fn)
+            }
+
+        end
+        agqDEV:EXPERIENCE[1] ;
+402     agqDEV:EXPERIENCE[2];
+403     agqDEV:EXPERIENCE[3];
+501     agqDEV:SCHEDULE[1]
+        If (((agqDEV:SCHEDULE[1] < agsdefault_cap:SCHEDULE_RATING[1] and
+           agsdefault_cap:schedule_rating[1] <> 0) Or
+           (agqDEV:SCHEDULE[1] > agsdefault_cap:SCHEDULE_RATING[2] and
+           agsdefault_cap:schedule_rating[2] <> 0)) And
+           agqDEV:SCHEDULE[1] <> 0) Then
+            Error 1320 ;
+502     agqDEV:SCHEDULE[2]
+        If (((agqDEV:SCHEDULE[2] < agsdefault_cap:SCHEDULE_RATING[1] and
+           agsdefault_cap:schedule_rating[1] <> 0) Or
+           (agqDEV:SCHEDULE[2] > agsdefault_cap:SCHEDULE_RATING[2] and
+           agsdefault_cap:schedule_rating[2] <> 0)) And
+           agqDEV:SCHEDULE[2] <> 0) Then
+            Error 1320 ;
+503     agqDEV:SCHEDULE[3]
+        If (((agqDEV:SCHEDULE[3] < agsdefault_cap:SCHEDULE_RATING[1] and
+           agsdefault_cap:schedule_rating[1] <> 0) Or
+           (agqDEV:SCHEDULE[3] > agsdefault_cap:SCHEDULE_RATING[2] and
+           agsdefault_cap:schedule_rating[2] <> 0)) And
+           agqDEV:SCHEDULE[3] <> 0) Then
+            Error 1320 ;
+
+}
+
+panel at 24,1 to 24,100 tagged line_panel_1
+{
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+}
+
+Panel at 25,1 to 26,100 Tagged icon_line2_tg
+    Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+    Button at 1,75   tagged calc_fn
+        Properties
+            {
+            Iconname = "btn_view_summary_totals.bmp"
+            }
+        Events
+            {
+            Action = calc_fn
+            }
+}
+
+panel at 26,1 to 26,100 tagged line_panel_1
+{
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+}
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    enable(calc_fn)
+    disable(accept_fn)
+    end
+
+if abort = "YES" then
+    begin
+    enable(calc_fn)
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+End

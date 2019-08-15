@@ -1,0 +1,645 @@
+%%                                       
+Screen
+        Name = "agtmt8002b";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="agqliabdeduct" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_state[2] ;
+        global unsigned ascii number g_rate_type[2] ;
+
+        global string g_company_id[10] ,
+                      g_initial_screen[50] ,
+                      g_zipcode_change[1] ;
+
+        Local Unsigned Ascii Number l_prem_no[4],
+                                    l_build_no[4],
+                                    l_occurrence[8],
+                                    l_fire_legal[8],
+                                    l_abort_program[1],
+                                    l_count[3]=0,
+                                    l_symbol_no[2] ,
+                                    l_form[1] ,
+                                    l_building_form[1],
+                                    l_property_form[1],
+                                    l_symbol_number[2],
+                                    l_state[2],
+                                    l_construction[1],
+                                    l_csexec_number[12],
+                                    l_percent[4],
+                                    l_reinforced[1],
+                                    l_prior_class_code[5],
+                                    l_steel[1],
+                                    l_lob[4],
+                                    l_high[1],
+                                    l_line_of_business[4] ,
+                                    L_DEPENDENT_PROP[1],
+                                    L_AGREED_VALUE[1] ,
+                                    L_ELECTRONIC_MEDIA[1],
+                                    L_EXTENDED_PERIOD[1],
+                                    L_MONTHLY_RECOVERY[1],
+                                    L_LOSS_TUITION[1],
+                                    l_time_period[1] ,
+                                    L_PAYROLL[1],
+                                    L_OFF_PREM[1],
+                                    L_SEASONAL_LEASES[1],
+                                    l_utility[1],
+                                    L_ANTENNA_EXT[1] ,
+                                    l_sub_code[4]=0,
+                                    l_group_i[6]=0/dec=4,
+                                    l_territory_factor[6]=0/dec=4,
+                                    l_protection_factor[5]=0/dec=3,
+                                    l_coinsurance_factor[5]=0/dec=3,
+                                    l_deductible_factor[6]=0/dec=4,
+                                    l_inflation_factor[4]=0/dec=2,
+                                    l_loss_cost[6]=0/dec=4 ,
+                                    l_last_prem_no[4],
+                                    l_last_build_no[4],
+                                    l_first_prem_no[4],
+                                    l_first_build_no[4],
+                                    l_no_locations[2]=0 ;
+
+        local string l_first_str_location[8],
+                     l_last_str_location[8],
+                     l_str_location[8],
+                     l_first_location[1]="Y",
+                     l_system_id[15],
+                     L_FORM_EDITION[18],
+                     L_DESCRIPTION[55],
+                     l_code[7],
+                     L_ADD_ENDORSEMENT[1]="Y",
+                     l_continue_2[3]="",
+                     l_antenna_exists[1]="N",
+                     l_antenna_code[7]="",
+                     l_symbol[2],
+                     l_username[15] ,
+                     L_COMPANY_ID[10] ,
+                     l_desc[50] ,
+                     l_coverage[1] ,
+                     l_bceg_type[1] ,
+                     l_screen_1[10],
+                     l_screen[9],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_code_8[7],
+                     l_community[30] ,
+                     l_different_forms[1]="N",
+                     l_boiler[1]="N" ;
+
+        Access agqliabdeduct,
+           Set agqliabdeduct:app_no = G_app_no, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt8002b" ;
+
+        "add" sequence "new"      tagged add_fn ;
+        "new" add/hidden ;
+
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+
+        reaccess ;
+
+        include "stdfunc7b.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+disable(accept_fn)
+enable(back_fn)
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+g_initial_screen = ""
+l_username = username
+l_company_id = sfsdefault:company_id
+
+l_username = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = sfsemail:agent_no, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+Access SFSLINE_ALIAS, Set SFSLINE_alias:COMPANY_ID       = l_company_id,
+                          SFSLINE_alias:LINE_OF_BUSINESS = g_line_of_business,
+                          SFSLINE_alias:LOB_SUBLINE      = "00", Generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = l_company_id,
+                    SFSLINE:LINE_OF_BUSINESS = g_line_of_business,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access agqname, set agqname:app_no = g_app_no,generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(delete_fn)
+    disable(accept_fn)
+    end
+
+access validation
+if agqliabdeduct:app_no <> g_app_no then
+    error 1000
+
+screen at 1,1 to 30,100
+Properties
+        {
+          Layouttype = screen
+          transparent = False
+          fontstyle = BOLD
+          backgroundcolor = "#ADD8E6"
+          scrollbarpolicy = asneeded
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,70     tagged display_information_box
+                properties
+                  {
+                    text = "Liability Information - Deductible..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+Properties {
+           LayoutType = screen
+           }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     begin
+        if function one of "ADD", "NEW" then
+            begin
+            agqliabdeduct:app_no = g_app_no
+            agqliabdeduct:company_id = agqname:company_id
+            agqliabdeduct:rating_line_of_business = 0008
+            if g_state <> 0 then
+                agqliabdeduct:state = g_state
+            else
+                agqliabdeduct:STATE = agqLIABILITY:STATE
+
+            end
+        end
+        agqliabdeduct:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        Button at 1.5,1   tagged add_fn
+            Properties {
+                       Iconname = "btn_add_location.bmp"
+                       }
+            Events     {
+                       Action = add_fn
+                       }
+
+        Button at 1.5,38    tagged change_fn
+            Properties {
+                       Iconname = "btn_edit_location.bmp"
+                       }
+            Events     {
+                       Action = change_fn
+                       }
+
+        Button at 1.5, 70 tagged delete_fn
+            Properties {
+                       Iconname = "btn_delete_location.bmp"
+                       }
+            Events     {
+                       Action = delete_fn
+                       }
+    }
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        Button to 1,1
+            properties {
+                       Iconname = "btn_print_screen.bmp"
+                       }
+            events     {
+                       action {
+                              function = "print"
+                              abort()
+                              }
+                       }
+    }
+
+Panel at 6.45,92
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        guidetext to 1,1
+            properties {
+                       text = "agtmt8002b.sd"
+                       fontsize = 9
+                       }
+    }
+
+Panel at 8,70 to 8,100
+    Properties {
+               layouttype = row
+               }
+    {
+    Components
+        Button at 1,55 tagged accept_fn
+            properties {
+                       Iconname = "btn_accept_edits.bmp"
+                       }
+            Events     {
+                       mouseclicked = accept
+                       }
+
+    }
+
+Panel at 10,5 to 25,100
+Properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+%%
+           Property Damage Liability  _____ Per Claim
+                                      _____ Per Occurrence
+
+Description
+____________________________________________________________________________________
+
+
+
+
+
+%%
+
+components
+
+fields
+101     Begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            begin
+            disable(back_fn)
+            enable(accept_fn)
+            end
+        else
+            begin
+            enable(back_fn)
+            disable(accept_fn)
+            end
+        end
+        agqliabdeduct:DEDUCTIBLE[3]/default/tabstop ;
+201     agqliabdeduct:DEDUCTIBLE[4]/tabstop;
+501     agqliabdeduct:description/freetextlines=6/tabstop ;
+
+}
+
+-- draw a line
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+Properties {
+           LayoutType = screen
+           }
+{
+Components
+    Button at 1,75   tagged back_fn
+        Properties {
+                   Iconname = "btn_close.bmp"
+                   }
+        Events     {
+                   Action = "back"
+                   }
+
+    }
+
+-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+}
+
+Update
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(back_fn)
+    if function one of "ADD", "CHANGE", "NEW", "CHG" then
+        begin
+        Access CPSLIABTRIGGER, Set CPSLIABTRIGGER:COMPANY_ID = agqliabdeduct:COMPANY_ID,
+                                   CPSLIABTRIGGER:STATE = agqliabdeduct:STATE,
+                                   CPSLIABTRIGGER:LINE_OF_BUSINESS = agqliabdeduct:rating_LINE_OF_BUSINESS, Generic
+
+        While CPSLIABTRIGGER:COMPANY_ID       = agqliabdeduct:COMPANY_ID And
+              CPSLIABTRIGGER:STATE            = agqliabdeduct:STATE And
+              CPSLIABTRIGGER:LINE_OF_BUSINESS = agqliabdeduct:rating_LINE_OF_BUSINESS
+                Begin
+                If agqNAME:EFF_DATE >= CPSLIABTRIGGER:EFF_DATE Then
+                    Begin
+                    l_code_1 = cpsliabtrigger:trigger_endorsement[1]
+                    End
+                Next CPSLIABTRIGGER
+                End
+
+        If L_CODE_1 <> "" Then
+            Begin
+            L_CODE = L_CODE_1
+            Do ACCESS_agqEND_1
+            If (L_ADD_ENDORSEMENT = "Y" and
+               (agqliabdeduct:deductible[1] <> 0 or
+               agqliabdeduct:deductible[2] <> 0 or
+               agqliabdeduct:deductible[3] <> 0 or
+               agqliabdeduct:deductible[4] <> 0 or
+               agqliabdeduct:deductible[5] <> 0 or
+               agqliabdeduct:deductible[6] <> 0)) then
+                Do ADD_agqEND_1
+            If L_ADD_ENDORSEMENT = "N" And
+               agqliabdeduct:deductible[1] = 0 and
+               agqliabdeduct:deductible[2] = 0 and
+               agqliabdeduct:deductible[3] = 0 and
+               agqliabdeduct:deductible[4] = 0 and
+               agqliabdeduct:deductible[5] = 0 and
+               agqliabdeduct:deductible[6] = 0 then
+                Do DELETE_agqEND_1
+            End
+
+        end
+    else
+    if function = "DELETE" then
+        begin
+        Access CPSLIABTRIGGER, Set CPSLIABTRIGGER:COMPANY_ID = agqliabdeduct:COMPANY_ID,
+                                   CPSLIABTRIGGER:STATE = agqliabdeduct:STATE,
+                                   CPSLIABTRIGGER:LINE_OF_BUSINESS = agqliabdeduct:rating_LINE_OF_BUSINESS, Generic
+
+        While CPSLIABTRIGGER:COMPANY_ID       = agqliabdeduct:COMPANY_ID And
+              CPSLIABTRIGGER:STATE            = agqliabdeduct:STATE And
+              CPSLIABTRIGGER:LINE_OF_BUSINESS = agqliabdeduct:rating_LINE_OF_BUSINESS
+                Begin
+                If agqNAME:EFF_DATE >= CPSLIABTRIGGER:EFF_DATE Then
+                    Begin
+                    l_code_1 = cpsliabtrigger:trigger_endorsement[1]
+                    End
+                Next CPSLIABTRIGGER
+                End
+
+        If L_CODE_1 <> "" Then
+            Begin
+            L_CODE = L_CODE_1
+            Do delete_agqend_1
+            End
+        end
+    end
+
+Procedure Definition
+
+Procedure ACCESS_agqEND_1
+Begin
+l_prem_no = 0
+l_build_no = 0
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = l_prem_no,
+                   agqEND:BUILD_NO = l_build_no, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> l_prem_no Or
+            agqEND:BUILD_NO <> l_build_no
+
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND_1
+Begin
+l_prem_no = 0
+l_build_No = 0
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = L_PREM_NO,
+                   agqEND:BUILD_NO = L_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> L_PREM_NO Or
+            agqEND:BUILD_NO <> L_BUILD_NO
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqliabdeduct:COMPANY_ID,
+                      SFSOPTEND:STATE = agqliabdeduct:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqliabdeduct:rating_LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqliabdeduct:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqliabdeduct:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqliabdeduct:rating_LINE_OF_BUSINESS Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqNAME:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqname:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqEND
+    Begin
+    agqEND:app_no               =       G_app_no
+    agqEND:PREM_NO              =       L_PREM_NO
+    agqEND:BUILD_NO             =       L_BUILD_NO
+    agqEND:SUB_CODE             =       L_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:LOB_END_CODE         =       "L"
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+    agqEND:PREMIUM              =       0
+    agqend:policy_wide_form     =       1
+    End
+
+End
+
+Procedure DELETE_agqEND_1
+Begin
+l_prem_no = 0
+l_build_no = 0
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = L_PREM_NO,
+                   agqEND:BUILD_NO = L_BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> L_PREM_NO Or
+            agqEND:BUILD_NO <> L_BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+end
+
+End

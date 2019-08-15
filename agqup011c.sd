@@ -1,0 +1,266 @@
+%%
+Program
+        Name = "agqup011c" ;
+        Type = "File" ;
+        Padcharacter = Space ;
+        Domain = "Flat" ;
+
+        Global Unsigned Ascii Number G_app_no[11] ,
+                                     g_prem_no[4],
+                                     g_build_no[4] ;
+
+        local unsigned ascii number l_tier[2],
+                                    l_tier_1[2],
+                                    l_hurricane_deductible[5] ,
+                                    l_wind_deductible[5],
+                                    l_sub_code[4],
+                                    l_val_zipcode[9];
+
+        local string l_add_endorsement[1],
+                     l_hurricane_code[7],
+                     l_code[7],
+                     l_form_edition[25],
+                     l_description[75],
+                     l_str_zipcode[9] ;
+
+Initialisation
+g_app_no   = val(commandline[1,11])
+g_prem_no  = val(commandline[12,15])
+g_build_no = val(commandline[16,19])
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+access agqgeneral, set agqgeneral:app_no = g_app_no,
+                       agqgeneral:prem_no  = g_prem_no,
+                       agqgeneral:build_no = g_build_no, generic
+
+access agqgeneral2, set agqgeneral2:app_no = g_app_no,
+                        agqgeneral2:prem_no  = g_prem_no,
+                        agqgeneral2:build_no = g_build_no, generic
+
+l_val_zipcode = agqgeneral:zipcode
+l_str_zipcode = agqgeneral:str_zipcode[1,5] + "0000"
+access sfszipcode, set sfszipcode:company_id       = agqgeneral:company_id,
+                       sfszipcode:state            = agqgeneral:state,
+                       sfszipcode:line_of_business = agqgeneral:line_of_business,
+                       sfszipcode:str_zipcode      = l_str_zipcode, generic
+
+l_tier = 0
+while sfszipcode:company_Id       = agqgeneral:company_id and
+      sfszipcode:state            = agqgeneral:state and
+      sfszipcode:line_of_business = agqgeneral:line_of_business and
+      sfszipcode:str_zipcode      = l_str_zipcode
+        begin
+        if (agqgeneral:eff_date >= sfszipcode:eff_date and
+           (agqgeneral:eff_date <= sfszipcode:exp_date or
+           sfszipcode:exp_date = 0)) then
+            begin
+            l_tier            = sfszipcode:tier
+            end
+
+        next sfszipcode
+        end
+
+l_tier_1 = l_tier
+if l_tier_1 = 0 then
+    l_tier_1 = 3
+access sfstier, set sfstier:company_id       = agqgeneral:company_id,
+                    sfstier:state            = agqgeneral:state,
+                    sfstier:line_of_business = agqgeneral:line_of_business,
+                    sfstier:tier             = l_tier_1, generic
+
+l_hurricane_deductible = 0
+l_hurricane_code       = ""
+while sfstier:company_Id       = agqgeneral:company_id and
+      sfstier:state            = agqgeneral:state and
+      sfstier:line_of_business = agqgeneral:line_of_business and
+      sfstier:tier             = l_tier_1
+        begin
+        if (agqgeneral:eff_date >= sfstier:eff_date and
+           (agqgeneral:eff_date <= sfstier:exp_date or
+           sfstier:exp_date = 0)) then
+            begin
+            l_hurricane_deductible = sfstier:hurricane_deductible
+            l_hurricane_code       = sfstier:hurricane_code
+            l_wind_deductible      = sfstier:wind_deductible
+            end
+
+        next sfstier
+        end
+
+if l_hurricane_code <> "" and
+   agqgeneral:company_id = "FLEMINGTON" and
+   agqgeneral2:hurricane_changed = 0 then
+    begin
+    l_code = l_hurricane_code
+    do access_agqend
+    if l_add_endorsement = "Y" and
+       l_hurricane_deductible <> 0 then
+        do add_agqend
+    else
+    if l_add_endorsement = "N" and
+       l_hurricane_deductible = 0 then
+        do delete_agqend
+    end
+else
+if l_hurricane_code = "" and
+   agqgeneral:company_id = "FLEMINGTON" and
+   agqgeneral2:hurricane_changed = 0 then
+    do access_agqend
+
+access agqgeneral_alias, set agqgeneral_alias:app_no   = agqgeneral:app_no,
+                             agqgeneral_alias:prem_no  = agqgeneral:prem_no,
+                             agqgeneral_alias:build_no = agqgeneral:build_no, generic
+
+if agqgeneral_alias:app_no   = agqgeneral:app_no and
+   agqgeneral_alias:prem_no  = agqgeneral:prem_no and
+   agqgeneral_alias:build_no = agqgeneral:build_no then
+    begin
+    change agqgeneral_alias
+        begin
+        agqgeneral_alias:tier                 = l_tier
+        if l_wind_deductible <> 0 then
+            agqgeneral_alias:wind_deductible = l_wind_deductible
+        end
+    end
+
+access agqgeneral2_alias, set agqgeneral2_alias:app_no   = agqgeneral:app_no,
+                              agqgeneral2_alias:prem_no  = agqgeneral:prem_no,
+                              agqgeneral2_alias:build_no = agqgeneral:build_no, generic
+
+if agqgeneral2_alias:app_no   = agqgeneral:app_no and
+   agqgeneral2_alias:prem_no  = agqgeneral:prem_no and
+   agqgeneral2_alias:build_no = agqgeneral:build_no then
+    begin
+    change agqgeneral2_alias
+        begin
+        agqgeneral2_alias:tier                 = l_tier_1
+        agqgeneral2_alias:hurricane_deductible = l_hurricane_deductible
+        if agqgeneral2_alias:hurricane_changed = 0 then
+            agqgeneral2_alias:override_hurricane_deductible = l_hurricane_deductible
+        end
+    end
+else
+    begin
+    add agqgeneral2_alias
+        begin
+        agqgeneral2_alias:app_no               = g_app_no
+        agqgeneral2_alias:prem_no              = g_prem_no
+        agqgeneral2_alias:build_no             = g_build_no
+        agqgeneral2_alias:tier                 = l_tier_1
+        agqgeneral2_alias:hurricane_deductible = l_hurricane_deductible
+        agqgeneral2_alias:override_hurricane_deductible = l_hurricane_deductible
+        end
+    end
+
+
+update
+
+procedure definition
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = g_app_no ,
+                   agqEND:PREM_NO  = g_prem_no,
+                   agqEND:BUILD_NO = g_build_no, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqEND:app_no = g_app_no and
+      agqEND:PREM_NO  = g_prem_no and
+      agqEND:BUILD_NO = g_build_no
+    begin
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    if l_code = "FCL20" and
+       agqend:code = "FCL21" then
+        delete agqend
+
+    if l_code = "FCL21" and
+       agqend:code = "FCL20" then
+        delete agqend
+
+    if l_code = "" and
+       agqend:code one of "FCL20", "FCL21" then
+        delete agqend
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = g_app_no ,
+                   agqEND:PREM_NO  = g_prem_no,
+                   agqEND:BUILD_NO = g_build_no, Generic
+
+L_SUB_CODE = 0
+while agqEND:app_no = g_app_no and
+      agqEND:PREM_NO  = g_prem_no and
+      agqEND:BUILD_NO = g_build_no
+    begin
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqgeneral:company_id,
+                      SFSOPTEND:STATE            = agqgeneral:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral:line_of_business,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqgeneral:company_id and
+      SFSOPTEND:STATE            = agqgeneral:STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral:line_of_business and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqgeneral:eff_date >= SFSOPTEND:EFF_DATE and
+       (agqgeneral:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_form_edition <> "" then
+    begin
+    Add agqEND
+        Begin
+        agqEND:app_no               =       g_app_no
+        agqEND:PREM_NO              =       g_prem_no
+        agqEND:BUILD_NO             =       g_build_no
+        agqEND:SUB_CODE             =       L_SUB_CODE
+        agqEND:CODE                 =       L_CODE
+        agqEND:FORM_EDITION         =       L_FORM_EDITION
+        agqEND:DESCRIPTION          =       L_DESCRIPTION
+        agqEND:PREMIUM              =       0
+        agqend:lob_end_code         =       "X"
+        end
+    End
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = g_app_no ,
+                   agqEND:PREM_NO  = g_prem_no,
+                   agqEND:BUILD_NO = g_build_no, Generic
+
+while agqEND:app_no = g_app_no and
+      agqEND:PREM_NO  = g_prem_no and
+      agqEND:BUILD_NO = g_build_no
+    begin
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+End

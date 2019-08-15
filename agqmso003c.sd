@@ -1,0 +1,2486 @@
+%%                                                                
+/*
+Date Written: December 19, 2013
+
+Name: agqmso003c.sd                STARR - New Agent Rating System COMMERCIAL AUTO QUOTE LETTER For PA ONLY
+
+Copyright (c) 2013, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+12/19/2013            JLB         created PA Only quote letetr for STARR because of all the differences between PA and NJ/DE
+===========================
+*/
+
+Program
+  Name = "agqmso003c";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+  Array[120] Of STRING L_CODE_ARRAY[10];
+  String L_FILE_NAME[13] = "agqmso003c.cq" ;
+  String L_STATE;
+  String L_STATE_STR[2];
+  String L_agqNAME_ZIP="";
+  String L_agqvehicle_ZIP="";
+  String L_SFPSUPP1_ZIP[10];
+  String L_MORGAGE_ID[10];
+  String L_SIGNATURE_STRING[55];
+  String L_PREV_STRING;
+  String L_TYPE_STR[29];
+  String L_TRANS_EFF; --= Str(L_MM_1) + "/" + STR(L_DD_1) + "/" + STR(L_YY_1)
+  String L_AUDIT="";
+  String L_SYMBOL_STRING[5] ="";
+  String L_AGENT_TEL[13];
+  String L_COMPANY[10]="";
+  String L_SFQNAME_ZIP = "";
+  String L_FOB[75];
+  String L_ENTER;
+  String L_AGENT_ZIP;
+  String L_COPY_NAME[20];
+  String L_COMPANY_ZIP[10];
+  String L_INSURED_CITY_STATE[100];
+  String L_LOB_CODE[10];
+  String L_COMPANY_ID[10];
+  String L_FULL_CLASS_CODE[4];
+  String L_SFSMORT_ZIP[10];
+  String L_MORTAGE_TYPE_2[1];
+  String L_BILL_PLAN[2];
+  String L_TERROR_FORM[7];
+  String L_MORTGAGE_TYPE_1[1];
+  String L_TEST;
+  String L_CODE;
+  String L_PLEASED_WORDING[200];
+  String L_PRODUCER_LABEL;
+  String L_CHARACTER_STRING[1000]           = "";
+  String L_V_POSITION                       = "";
+  String L_H_POSITION                       = "";
+  String L_NEWPAGE_WORDING;
+
+  Number L_RENEWAL[9];
+  Number L_MM_1;
+  Number L_DD_1;
+  Number L_YY_1;
+  Number L_LOOP =0;   -- used to loop though the copies.
+  Number L_SWITCH_COL_COUNTER = 1;
+  Number L_TRANS_CODE;
+  Number L_PAGE_NUMBER = 1;
+
+  Ascii Number L_LENGTH;
+  Ascii Number L_WIDTH;
+  Ascii Number L_HORZ_LOC;
+  Ascii Number L_VERT_LOC;
+
+  Unsigned ascii number l_app_no[11];
+  Unsigned ascii number l_quote_no[11];
+  Unsigned Ascii Number L_COUNTER[3];
+  Unsigned Ascii Number L_MASTER_CODE[4];
+  Unsigned Ascii Number L_PAGENUMBER;
+  Unsigned Ascii Number L_LINE_PCOUNTER = 1;  --line counter per page
+  Unsigned Ascii Number L_LINE_TCOUNTER = 0;  --total line for dec
+  Unsigned Ascii Number L_LINE_TPCOUTER = 58; --total line on a page
+  Unsigned Ascii Number L_POL_YEAR[4];
+  Unsigned Ascii Number L_ENDORSEMENT_SEQ[4];
+  Unsigned Ascii Number L_S_LINE_FOR_AGENT = 0; --start line for agent
+  Unsigned Ascii Number L_E_LINE_FOR_ISSURED = 0;
+  Unsigned Ascii Number L_BIGGER_LINE =0;
+  Unsigned Ascii Number L_SCREEN_COR= 0;
+  Unsigned Ascii Number L_agqVEHICLE_STATE[2];
+  Unsigned Ascii Number L_agqVEHICLE_COUNTY[3];
+  Unsigned Ascii Number L_LINE_OF_BUSINESS[4];
+  Unsigned Ascii Number L_LESSOR_Y_N = 0;
+  Unsigned Ascii Number L_RENTAL_HEADING_PRINTED = 0;
+  Unsigned Ascii Number L_TWO_PLACER;
+  Unsigned Ascii Number L_STATE2[2];
+  Unsigned Ascii Number L_DECIPOINT;
+  Unsigned Ascii Number L_CHARACTER_PER_INCH;
+  Unsigned Ascii Number L_STATE_NO[2];
+  Unsigned Ascii Number L_PAGE_MIDDLE;
+  Unsigned Ascii Number L_HALF_MULTIPLIER;
+  Unsigned Ascii Number L_LEN_STRING;
+  Unsigned Ascii Number L_CHAR_MULTIPLIER;
+  Unsigned Ascii Number L_LINE_HEIGHT;
+  Unsigned Ascii Number L_SIZE_COUNTER;
+  Unsigned Ascii Number L_MAX_LINES;
+  Unsigned Ascii Number L_LOCATION_COUNTER;
+  Unsigned Ascii Number L_AGENT_COUNTER;
+  Unsigned Ascii Number L_INSURED_COUNTER;
+  Unsigned Ascii Number L_OPTIONAL_COVERAGE_TOTAL[9];
+  Unsigned Ascii Number L_START_PRINT[4]    = 0;   --point to start printing.
+  Unsigned Ascii Number L_END_PRINT[4]      = 0;
+  Unsigned Ascii Number L_CHARACTER_BREAK   = 0;
+  Unsigned Ascii Number L_CHARACTER_COUNTER = 0;
+  Unsigned Ascii Number L_MAX_CHAR          = 0;
+  Unsigned Ascii Number L_vertical_pos2[4];
+  Unsigned Ascii Number L_LINE_COUNTER/decimals=2;
+  Unsigned Ascii Number L_NUM_FORMS = 0;  -- number of forms to print on dec
+                                          -- done to make sure I can print them
+                                         -- all on the same page a the signature.
+  Wdate L_SFSEND_DATE;
+  Include "csfonts.inc"
+  Include "sfsrevname.var"
+  Include "swsut100.var"
+  Include "center2.var"
+
+Initialisation
+  Deletefile(L_FILE_NAME);   --house cleaning making sure file is removed be each run
+  L_APP_NO = val(COMMANDLINE[1,11])
+  L_QUOTE_NO = val(COMMANDLINE[1,11])
+  L_COPY_NAME = COMMANDLINE[1,20]
+
+  Access AGQNAME,
+     Set AGQNAME:APP_NO = L_APP_NO, Generic
+
+  Access SFSAGENT ,
+     Set SFSAGENT:COMPANY_ID = agqvehicle:COMPANY_ID,
+         SFSAGENT:AGENT_NO   = agqvehicle:AGENT_NO, Exact
+
+  Access SFSCOMPANY,
+     Set SFSCOMPANY:COMPANY_ID = agqvehicle:COMPANY_ID , Exact
+
+  Access SFSLINE,
+     Set SFSLINE:COMPANY_ID       = agqvehicle:COMPANY_ID ,
+         SFSLINE:LINE_OF_BUSINESS = agqvehicle:LINE_OF_BUSINESS,
+         SFSLINE:LOB_SUBLINE      = "00", Generic
+
+  Access agqMASTER,
+     Set agqMASTER:app_no = L_APP_NO, Generic
+
+  Access CASDEFAULT,
+     Set CASDEFAULT:COMPANY_ID       = agqvehicle:COMPANY_ID,
+         CASDEFAULT:LINE_OF_BUSINESS = agqvehicle:LINE_OF_BUSINESS, Exact
+
+  Access agqVEHICLE,
+     Set agqVEHICLE:app_NO = L_APP_NO,Generic
+
+  Access agqADDIN,
+     Set agqADDIN:APP_NO = L_APP_NO, Generic
+
+  Access agqPIP,
+     Set agqPIP:APP_NO = L_APP_NO, Generic
+
+  Access agqADDLPIP,
+     Set agqADDLPIP:APP_NO = L_APP_NO, Generic
+
+  Access agqNONOWNED,
+     Set agqNONOWNED:APP_NO = L_APP_NO, Generic
+
+  Access AGQSUPP,
+     Set AGQSUPP:APP_NO = L_APP_NO, Generic
+
+  Access CASTOWING,
+     Set CASTOWING:COMPANY_ID       = agqVEHICLE:COMPANY_ID,
+         CASTOWING:STATE            = agqVEHICLE:STATE,
+         CASTOWING:LINE_OF_BUSINESS = agqVEHICLE:LINE_OF_BUSINESS, Generic
+
+  L_TRANS_CODE        = agqMASTER:TRANS_CODE
+  L_AGENT_TEL         = SFSAGENT:TELEPHONE[1];
+  L_PAGE_NUMBER       = 1
+  L_COMPANY           = agqvehicle:COMPANY_ID
+  L_agqVEHICLE_STATE  = agqVEHICLE:STATE
+  L_agqVEHICLE_COUNTY = agqVEHICLE:COUNTY
+  L_LINE_OF_BUSINESS  = agqvehicle:LINE_OF_BUSINESS
+
+  L_COMPANY_ZIP =  If (Val(SFSCOMPANY:STR_ZIPCODE[6,9]) = 0) Then
+                         SFSCOMPANY:STR_ZIPCODE[1,5]
+                   Else
+                     SFSCOMPANY:STR_ZIPCODE[1,5] + "-" +
+                     SFSCOMPANY:STR_ZIPCODE[6,9]
+
+  Access SFSSTATE,
+     Set SFSSTATE:COMPANY_ID = L_COMPANY,
+         SFSSTATE:STATE      = L_agqVEHICLE_STATE,
+         SFSSTATE:COUNTY     = L_agqVEHICLE_COUNTY, Exact
+
+  Access CASHIRED,
+    Set  CASHIRED:COMPANY_ID       = L_COMPANY,
+         CASHIRED:STATE            = L_STATE,
+         CASHIRED:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS, Approximate
+
+  Access CASCOMPDEDUCT,
+    Set  CASCOMPDEDUCT:COMPANY_ID       = L_COMPANY,
+         CASCOMPDEDUCT:STATE            = L_agqvehicle_STATE,
+         CASCOMPDEDUCT:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS, Approximate
+
+  L_COMPANY_ID = agqvehicle:COMPANY_ID
+  L_LOB_CODE   = SFSLINE:LOB_CODE
+  I_STATE      = agqvehicle:state
+
+  Include "swsut101q.inc"
+
+  Access SCIPSCONTROL,
+     Set SCIPSCONTROL:COMPANY_ID = L_COMPANY_ID,
+         SCIPSCONTROL:STATE      = I_STATE,
+         SCIPSCONTROL:LOB_CODE   = L_LOB_CODE,Exact
+
+  L_agqname_ZIP =  If (Val(agqNAME:STR_ZIPCODE[6,9]) = 0) Then
+                    agqNAME:STR_ZIPCODE[1,5]
+                  Else
+                    agqNAME:STR_ZIPCODE[1,5] + "-" + agqNAME:STR_ZIPCODE[6,9]
+
+  L_AGENT_TEL = SFSAGENT:TELEPHONE[1];
+
+  L_AGENT_ZIP =  If (Val(SFSAGENT:STR_ZIPCODE[6,9]) = 0) Then
+                    SFSAGENT:STR_ZIPCODE[1,5]
+                  Else
+                    SFSAGENT:STR_ZIPCODE[1,5] + "-" + SFSAGENT:STR_ZIPCODE[6,9]
+
+  L_INSURED_CITY_STATE = Trun(agqNAME:CITY) + ", " + agqNAME:STR_STATE +
+                               "  " + L_agqNAME_ZIP
+  Switch(agqMASTER:FORM_OF_BUSINESS)
+    Case 'C' : L_FOB = "Corporation"
+    Case 'I' : L_FOB = "Individual"
+    Case 'J' : L_FOB = "Joint Venture"
+    Case 'O' : L_FOB = "Organization"
+    Case 'P' : L_FOB = "Partnership"
+    case 'L' : l_fob = "LLC"
+    Case 'T' : L_FOB = agqMASTER:FOB_DESCRIPTION
+  End
+
+  Switch(agqVEHICLE:STATE)
+    Case 29 : L_STATE = "NJ"
+    Case  7 : L_STATE = "DE"
+    Case 37 : L_STATE = "PA"
+    Case 19 : L_STATE = "MD"
+  End
+  L_TRANS_CODE = agqMASTER:TRANS_CODE
+  L_TRANS_EFF = Str(L_MM_1) + "/" + Str(L_DD_1) + "/" + Str(L_YY_1)
+  Include "swudeccs.inc"
+
+L_LINE_HEIGHT      = 250
+L_MAX_LINES        = 60
+L_SIZE_COUNTER     = 0
+L_LINE_PCOUNTER    = 1
+L_PAGE_NUMBER      = 1
+L_LOCATION_COUNTER = 1
+L_AGENT_COUNTER    = 0
+L_STATE_STR        = SFSCOMPANY:STR_STATE
+
+Writefile(L_FILE_NAME,"%s",L_LEDUP)
+Writefile(L_FILE_NAME,"%s",L_LEDUP)
+
+If SCIPSCONTROL:PRINT_BORDERS_ON_DEC_PAGE = 1 Then
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c10a3045b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a5585h0V<033>*c10a3045b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c5467h20v0P") --
+    Writefile(L_FILE_NAME,"%s","<033>&a140h7300V<033>*c5467h20v0P")
+  }
+
+L_vertical_pos2 = 0
+For l_loop = 1 to 10
+  {
+    If SCIPSCONTROL:VERITICAL_POSITION[l_loop]  <> 0 then
+      {
+        If l_vertical_pos2 < SCIPSCONTROL:VERITICAL_POSITION[l_loop] then
+          {
+            L_vertical_pos2 = SCIPSCONTROL:VERITICAL_POSITION[l_loop]
+          }
+      }
+  }
+If l_vertical_pos2 < SCIPSCONTROL:VERTICAL_POSITION_1 then  --check company phone
+  {
+    L_vertical_pos2 = SCIPSCONTROL:VERTICAL_POSITION_1
+  }
+L_line_counter = l_vertical_pos2 divide 120 + 1  --give you number of 1 inch lines created by the header
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Writefile(L_FILE_NAME,"%s","<033>&a0h0V")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+L_STRING     = trun(sfscompany:name[1])
+L_FONT       = L_ARIAL_BOLD_14
+L_PITCH_HALF = 8
+L_PITCH_FULL = 16
+L_VERTICAL_POS = "+240"
+Include "center2.pro"
+
+if scipscontrol:quotation_lob_wording_change = 1 then
+  begin
+    L_PLEASED_WORDING = trun(sfsline:description)
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+    L_STRING = L_PLEASED_WORDING
+    L_FONT = L_ARIAL_BOLD_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+160"
+    Include "center2.pro"
+
+    L_PLEASED_WORDING = "We are pleased to submit the following quotation to you."
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+    L_STRING = L_PLEASED_WORDING
+    L_FONT = L_ARIAL_BOLD_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+160"
+    Include "center2.pro"
+  end
+else
+begin
+  L_PLEASED_WORDING = "We are pleased to submit the following " +
+                       trun(sfsline:description) + " " + "quotation to you."
+
+  Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+  L_STRING       = L_PLEASED_WORDING
+  L_FONT         = L_ARIAL_BOLD_12
+  L_PITCH_HALF   = 6
+  L_PITCH_FULL   = 12
+  L_VERTICAL_POS = "+160"
+  Include "center2.pro"
+end
+
+  L_LOB_CODE         = SFSLINE:LOB_CODE
+  L_LINE_HEIGHT      = 250
+  L_MAX_LINES        = 60
+  L_SIZE_COUNTER     = 0
+  L_LINE_COUNTER     = 1
+  L_PAGENUMBER       = 1
+  L_LOCATION_COUNTER = 1
+  L_INSURED_COUNTER  = 0
+  L_AGENT_COUNTER    = 0
+
+  L_LINE_HEIGHT = L_LINE_HEIGHT + 240
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s","Application Number: ")
+
+Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD_12),"APP",trun(str(l_app_no)))
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s","Quote Number: ")
+
+L_LINE_COUNTER = L_LINE_COUNTER + 1.25
+
+If agqname:quote_no <> 0 then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD_12),"Q",trun(str(agqname:quote_no)))
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s%s",trun(L_ARIAL_BOLD_9),"NOT CONVERTED")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+Writefile(L_FILE_NAME,"%s","1.")
+Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+Writefile(L_FILE_NAME,"%s","Named Insured and Mailing Address")
+Writefile(L_FILE_NAME,"%s","<033>&a3000h+0V")
+Writefile(L_FILE_NAME,"%s","Agent -")
+Writefile(L_FILE_NAME,"%s","<033>&a3400h+0V")
+Writefile(L_FILE_NAME,"%n",SFSAGENT:AGENT_NO)
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Writefile(L_FILE_NAME,"%s",L_PUSH)   --push the cursor position on the stack
+Writefile(L_FILE_NAME,"%s",L_PUSH)   --used to see if agent or insured
+                                     --name/address has more lines
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+if agqname:name[1] = "" then
+    {
+    For L_LOOP = 1 To 3
+        {
+        I_NAME=agqvehicle:business_NAME[L_LOOP,1,40]
+        Include "sfsrevname7.pro"
+        If agqvehicle:business_NAME[L_LOOP] <> "" Then
+            {
+            Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",I_REV_NAME,"<NL>")
+            L_INSURED_COUNTER = L_INSURED_COUNTER +1
+            }
+        }
+    }
+else
+    {
+    For L_LOOP = 1 To 3
+        {
+        I_NAME=agqname:NAME[L_LOOP,1,40]
+        Include "sfsrevname7.pro"
+        if agqname:name[l_loop,1,40] <> "" then
+            {
+            Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",I_REV_NAME,"<NL>")
+            L_INSURED_COUNTER = L_INSURED_COUNTER +1
+            }
+        }
+    }
+
+For L_LOOP = 1 To 3
+  {
+    If (agqNAME:ADDRESS[L_LOOP] <> "") Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",agqNAME:ADDRESS[L_LOOP,1,40],"<NL>")
+        L_INSURED_COUNTER = L_INSURED_COUNTER +1
+      }
+  }
+if agqNAME:STR_STATE <> "" or
+   agqNAME:city <> "" then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",L_INSURED_CITY_STATE,"<NL>")
+    L_INSURED_COUNTER = L_INSURED_COUNTER +1
+  }
+--START OF AGENT PRINTING
+
+  Writefile(L_FILE_NAME,"%s",L_POP)  --pop agent cursor postion off stack
+
+If SCIPSCONTROL:PRODUCER_LABEL One Of 1 Then
+  {
+    Access SFSAGENT,
+       Set SFSAGENT:COMPANY_ID = agqvehicle:COMPANY_ID,
+           SFSAGENT:AGENT_NO   = agqvehicle:AGENT_NO, Exact
+
+    L_MASTER_CODE = SFSAGENT:AGENT_MASTER_CODE
+
+    Access SFSAGENT,
+       Set SFSAGENT:COMPANY_ID = agqvehicle:COMPANY_ID,
+           SFSAGENT:AGENT_NO   = L_MASTER_CODE, Exact
+
+    Writefile(L_FILE_NAME,"%s","<033>&a3000h+0V")
+    Writefile(L_FILE_NAME,"%s",SFSAGENT:NAME[1])  --prints master agent code
+    Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+    Writefile(L_FILE_NAME,"%s","<033>&a3000h+120V")
+    Writefile(L_FILE_NAME,"%s",L_PRODUCER_LABEL)
+    Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+    Writefile(L_FILE_NAME,"%s","<NL>")
+  }
+  --reaccessing producer agent
+Access SFSAGENT,
+   Set SFSAGENT:COMPANY_ID = agqvehicle:COMPANY_ID,
+       SFSAGENT:AGENT_NO   = agqvehicle:AGENT_NO, Exact
+
+For L_LOOP = 1 To 3
+  {
+    If SFSAGENT:NAME[L_LOOP] <> "" Then
+      {
+        Writefile(L_FILE_NAME,"%s%s","<033>&a3000h+0V",SFSAGENT:NAME[L_LOOP])
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        l_agent_counter = l_agent_counter + 1
+      }
+  }
+For L_LOOP = 1 To 3
+  {
+    If SFSAGENT:ADDRESS[L_LOOP] <> "" Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s","<033>&a3000h+0V",SFSAGENT:ADDRESS[L_LOOP],"<NL>")
+        l_agent_counter = l_agent_counter + 1
+      }
+  }
+
+Writefile(L_FILE_NAME,"%s%s, %s%s%s%s","<033>&a3000h+0V",Trun(SFSAGENT:CITY),
+                       SFSAGENT:STR_STATE," ",L_AGENT_ZIP,"<NL>")
+l_agent_counter = l_agent_counter + 1
+If SFSAGENT:TELEPHONE[1] <> "" then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s%s %s-%s","<033>&a3000h+0V",
+                          "(",L_AGENT_TEL[1,3],")",L_AGENT_TEL[4,6],
+                          L_AGENT_TEL[7,10])
+    l_agent_counter = l_agent_counter + 1
+  }
+Writefile(L_FILE_NAME,"%s",L_POP)  --pop agent cursor postion off stack
+If l_agent_counter > l_insured_counter Then
+  {
+    For l_loop = 1 to l_agent_counter
+      {
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+      }
+  }
+Else
+  {
+    For l_loop = 1 to l_insured_counter
+      {
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+      }
+  }
+L_LOOP = 0
+--Writefile(L_FILE_NAME,"%s","<033>&a140h+0V")
+--Writefile(L_FILE_NAME,"%s%s","<033>*c5455h20v0P","<NL>") --under name horizontal line to
+--L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+               --************BEGIN QUOTE TERM section***********
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD))
+Writefile(L_FILE_NAME,"%s","<033>&a220h+120V")
+Writefile(L_FILE_NAME,"%s%s", "Quoted Term: ",trun(L_ARIAL))
+Writefile(L_FILE_NAME,"%d%s%d",agqvehicle:EFF_DATE," to ",agqvehicle:EXP_DATE)
+
+Writefile(L_FILE_NAME,"%s","<033>&a220h+120V")
+Writefile(L_FILE_NAME,"%s%d","Quote Valid Until: ", todaysdate + 30)
+
+Writefile(L_FILE_NAME,"%s%s","<NL>","<NL>")
+
+Switch(agqMASTER:FORM_OF_BUSINESS)
+  Case 'C' : L_FOB = "Corporation"
+  Case 'I' : L_FOB = "Individual"
+  Case 'J' : L_FOB = "Joint Venture"
+  Case 'O' : L_FOB = "Organization"
+  Case 'P' : L_FOB = "Partnership"
+  case 'L' : l_fob = "LLC"
+  Case 'T' : L_FOB = agqMASTER:FOB_DESCRIPTION
+End
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+Writefile(L_FILE_NAME,"%s","You are ")
+If L_FOB one of "Individual", "Organization, LLC, Other" then
+  {
+    Writefile(L_FILE_NAME,"%s","an: ")
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s","a: ")
+  }
+
+  Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+  Writefile(L_FILE_NAME,"%s",Uppercase(L_FOB))
+
+  Writefile(L_FILE_NAME,"%s","<NL>")
+  L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+  Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+  Writefile(L_FILE_NAME,"%s","Your Business/Operation: ")
+  Writefile(L_FILE_NAME,"%s",trun(l_arial))
+  If agqVEHICLE:BUSINESS_DESC[1] <> "" Then
+    {
+      Writefile(L_FILE_NAME,"%s","<033>&a1500h+0V")
+      Writefile(L_FILE_NAME,"%s",TRUN(agqVEHICLE:BUSINESS_DESC[1]))
+      Writefile(L_FILE_NAME,"%s","<033>&a1500h+120V")
+      L_LINE_COUNTER = L_LINE_COUNTER + 1
+      Writefile(L_FILE_NAME,"%s",TRUN(agqVEHICLE:BUSINESS_DESC[2]))
+    }
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a140h+40V<033>*c5455h15v0P","<NL>")
+
+                     --****Start of Premium Totals****
+
+Do premium_totals_1
+
+
+                     --****Start of Coverages****
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a160h+40V<033>*c5455h15v0P","<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+80V")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+Writefile(L_FILE_NAME,"%s","2.")
+Writefile(L_FILE_NAME,"%s","<033>&a1400h+0V")
+Writefile(L_FILE_NAME,"%s","SCHEDULE OF COVERAGES AND COVERED AUTOS")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+80V<033>*c5275h5v0P")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s","This quote provides only those coverages where a charge is shown in the premium column below.  Each of these")
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s","coverages will apply only to those ")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_ITALIC))
+Writefile(L_FILE_NAME,"%s",'"Autos"')
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+Writefile(L_FILE_NAME,"%s"," shown as Covered")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_ITALIC))
+Writefile(L_FILE_NAME,"%s",' "Autos".  ')
+Writefile(L_FILE_NAME,"%s",'"Autos" ')
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+Writefile(L_FILE_NAME,"%s"," are shown as covered")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_ITALIC))
+Writefile(L_FILE_NAME,"%s",' "Autos" ')
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+Writefile(L_FILE_NAME,"%s"," for a ")
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+Writefile(L_FILE_NAME,"%s","particular coverage by entry of one or more of the symbols from the Covered Auto Section of the Commercial Auto")
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+Writefile(L_FILE_NAME,"%s","Coverage Form next to the name of the coverage.")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+Writefile(L_FILE_NAME,"%s","Coverages")
+Writefile(L_FILE_NAME,"%s","<033>&a1800h+0V")
+Writefile(L_FILE_NAME,"%s","Covered")
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+Writefile(L_FILE_NAME,"%s","Limit")
+Writefile(L_FILE_NAME,"%s","<033>&a4900h+0V")
+Writefile(L_FILE_NAME,"%s","Premium")
+Writefile(L_FILE_NAME,"%s","<033>&a1900h+120V")
+Writefile(L_FILE_NAME,"%s","Auto")
+Writefile(L_FILE_NAME,"%s","<033>&a1800h+120V")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+Writefile(L_FILE_NAME,"%s","Symbols")
+Writefile(L_FILE_NAME,"%s","<033>&a2450h+0V")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","(The most we will pay for any one accident or loss)")
+
+--Remember you are +40 here for the line counter need to subtract 40 OK
+--Because of the two lines
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+23V<033>*c5275h10v0P")   --doing first horizontal under heading
+Writefile(L_FILE_NAME,"%s","<033>&a195h+0V<033>*c5a790b0P")   --Left of Coverages vertical line
+Writefile(L_FILE_NAME,"%s","<033>&a1650h+0V<033>*c5a790b0P")  --Left of Coverd auto vertical line
+Writefile(L_FILE_NAME,"%s","<033>&a2400h+0V<033>*c5a790b0P")  --left of Limit vertical line
+Writefile(L_FILE_NAME,"%s","<033>&a4650h+0V<033>*c5a790b0P")  --left of Premium vertical line
+Writefile(L_FILE_NAME,"%s","<033>&a5475h+0V<033>*c5a790b0P")  --right of premium vertical line
+
+                  --*** A. Liability ***
+
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","<033>&a210h+240V")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER +2
+Writefile(L_FILE_NAME,"%s","A. Liability Insurance")
+
+--Checking hired and nonowned premium if > 0 then print the symbols
+
+--BOTH Hired & Non-Owned symbols on Policy
+If agqNONOWNED:HIRED_PREMIUM > 0 and
+   agqNONOWNED:NONOWNED_PREMIUM > 0 then
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a1850h-0V")
+    Writefile(L_FILE_NAME,"%s","7")
+
+    if CASDEFAULT:HIRED_VEHICLE_SYMBOL <> "" then
+      {
+        Writefile(L_FILE_NAME,"%s",", ")
+      }
+    Writefile(L_FILE_NAME,"%s",CASDEFAULT:HIRED_VEHICLE_SYMBOL)
+
+    if CASDEFAULT:NONOWNED_VEHICLE_SYMBOL <> "" then
+      {
+        Writefile(L_FILE_NAME,"%s",", ")
+      }
+    Writefile(L_FILE_NAME,"%s",CASDEFAULT:NONOWNED_VEHICLE_SYMBOL)
+  }
+Else
+  {
+    --Hired Symbol ONLY
+    If agqNONOWNED:HIRED_PREMIUM > 0 Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a1850h-0V")
+        Writefile(L_FILE_NAME,"%s","7")
+
+        if CASDEFAULT:HIRED_VEHICLE_SYMBOL <> "" then
+          {
+            Writefile(L_FILE_NAME,"%s",", ")
+          }
+        Writefile(L_FILE_NAME,"%s",CASDEFAULT:HIRED_VEHICLE_SYMBOL)
+      }
+
+    --Non-Owned Symbol ONLY
+    If agqNONOWNED:NONOWNED_PREMIUM > 0 then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a1850h-0V")
+        Writefile(L_FILE_NAME,"%s","7")
+
+        if CASDEFAULT:NONOWNED_VEHICLE_SYMBOL <> "" then
+          {
+            Writefile(L_FILE_NAME,"%s",", ")
+          }
+        Writefile(L_FILE_NAME,"%s",CASDEFAULT:NONOWNED_VEHICLE_SYMBOL)
+      }
+  }
+
+  If agqMASTER:LIABILITY > 0 Then
+    {
+      if agqNONOWNED:HIRED_PREMIUM = 0 and agqNONOWNED:NONOWNED_PREMIUM = 0 then
+        {
+          Writefile(L_FILE_NAME,"%s","<033>&a1850h-0V")
+          Writefile(L_FILE_NAME,"%s","7")
+        }
+      --Writefile(L_FILE_NAME,"%s",agqMASTER:VEHICLE_SYMBOL)
+    }
+  Else
+    {
+      Writefile(L_FILE_NAME,"%s","<033>&a1750h-0V")
+      Writefile(L_FILE_NAME,"%s","Not Covered")
+    }
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+Writefile(L_FILE_NAME,"%s","$")
+Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+Writefile(L_FILE_NAME,"%s",Str(agqMASTER:LIABILITY,"ZZ,ZZZ,ZZZ"))
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+Writefile(L_FILE_NAME,"%s"," each accident")
+If (agqMASTER:TOTAL[1] + agqMASTER:TOTAL[11] + agqMASTER:TOTAL[12] = 0) Then
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","Not Covered")
+    Writefile(L_FILE_NAME,"%s","<033>&a195h+85V<033>*c5275h10v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+0h-85V")
+    Writefile(L_FILE_NAME,"%s","<033>&a0h+240V")
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[1]
+                                 + agqMASTER:TOTAL[11]
+                                 + agqMASTER:TOTAL[12],"ZZ,ZZZ,ZZZ"))
+    Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+    Writefile(L_FILE_NAME,"%s","<033>&a195h+85V<033>*c5275h10v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+0h-85V")
+    Writefile(L_FILE_NAME,"%s","<033>&a0h+240V")
+  }
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+
+       --*** B. Medical Payments Section ***
+
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","<033>&a210h+0V")
+Writefile(L_FILE_NAME,"%s","B. Medical Payments")
+If agqMASTER:TOTAL[2] = 0 Then
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a1750h-0V")
+    Writefile(L_FILE_NAME,"%s","Not Covered")
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","$ ")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s","0")
+    Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+    Writefile(L_FILE_NAME,"%s"," each person")
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","Not Covered")
+    Writefile(L_FILE_NAME,"%s","<033>&a195h+85V<033>*c5275h10v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+0h-85V")
+    Writefile(L_FILE_NAME,"%s","<033>&a0h+240V")
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a1850h-0V")
+    if agqvehicle:company_id one of "FARMERS" then
+      {
+        Writefile(L_FILE_NAME,"%s","7")
+      }
+    Else
+      {
+        Writefile(L_FILE_NAME,"%s",agqMASTER:VEHICLE_SYMBOL)
+      }
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:MEDICAL_PAYMENTS,"ZZ,ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+    Writefile(L_FILE_NAME,"%s"," each person")
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$ ")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[2],"ZZ,ZZZ,ZZZ"))
+    Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+    Writefile(L_FILE_NAME,"%s","<033>&a195h+85V<033>*c5275h10v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+0h-85V")
+    Writefile(L_FILE_NAME,"%s","<033>&a0h+240V")
+  }
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+--agqmaster:total[5] is for the Personal Injury protection checking for zero her to print out Not Covered
+
+                   --*** C. Basic First Party Benefits***
+
+    Writefile(L_FILE_NAME,"%s","<033>&a210h+0V")
+    Writefile(L_FILE_NAME,"%s","C. Basic First Party")
+
+    If agqMASTER:TOTAL[5] = 0 Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a1750h-0V")
+        Writefile(L_FILE_NAME,"%s","Not Covered")
+        Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+        Writefile(L_FILE_NAME,"%s","Separately stated on")
+        Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+        Writefile(L_FILE_NAME,"%s","Not Covered")
+      }
+    Else
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a1850h+0V")
+        Writefile(L_FILE_NAME,"%s","5")
+        Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+        Writefile(L_FILE_NAME,"%s","Separately stated on")
+        Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+        Writefile(L_FILE_NAME,"%s","$")
+        Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+        Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[5],"ZZ,ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+      }
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","<033>&a210h+120V")
+    Writefile(L_FILE_NAME,"%s","Benefits")
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","Mandatory PA MCA 810")
+    Writefile(L_FILE_NAME,"%s","<033>&a195h+85V<033>*c5275h10v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+0h-85V")
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+240V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 4
+
+               --*** D. Added & Combined First Party Benefits ***
+
+    Writefile(L_FILE_NAME,"%s","<033>&a210h+0V")
+    Writefile(L_FILE_NAME,"%s","D. Additional And Combined")
+
+    If agqMASTER:TOTAL[6] = 0 Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a1750h-0V")
+        Writefile(L_FILE_NAME,"%s","Not Covered")
+        Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+        Writefile(L_FILE_NAME,"%s","Separately stated on additional and")
+        Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+        Writefile(L_FILE_NAME,"%s","Not Covered")
+      }
+    Else
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a1850h+0V")
+        Writefile(L_FILE_NAME,"%s","5")
+        Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+        Writefile(L_FILE_NAME,"%s","Separately stated on additional and")
+        Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+        Writefile(L_FILE_NAME,"%s","$")
+        Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+        Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[6],"ZZ,ZZZ,ZZZ"))
+        Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+      }
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","<033>&a335h+120V")
+    Writefile(L_FILE_NAME,"%s","First Party Benefits")
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","Combined First Party Benefits")
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+120V")
+    Writefile(L_FILE_NAME,"%s","See MCA811")
+    Writefile(L_FILE_NAME,"%s","<033>&a195h+85V<033>*c5275h10v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+0h-85V")
+    Writefile(L_FILE_NAME,"%s","<033>&a335h+240V")
+
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+
+--Putting in the line where uninsured and underinsured motorist -->total[3]
+
+               --*** E. Uninsured Motorist***
+
+Writefile(L_FILE_NAME,"%s","<033>&a210h+0V")
+Writefile(L_FILE_NAME,"%s","E. Uninsured Motorist")
+If agqMASTER:TOTAL[3] = 0 Then
+  {
+     Writefile(L_FILE_NAME,"%s","<033>&a1750h-0V")
+     Writefile(L_FILE_NAME,"%s","Not Covered")
+     Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+     Writefile(L_FILE_NAME,"%s","$")
+     Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+     Writefile(L_FILE_NAME,"%s",Str(agqMASTER:UM_UIM_LIMIT[1],"ZZ,ZZZ,ZZZ"))
+     Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+     Writefile(L_FILE_NAME,"%s"," each accident")
+     Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+     Writefile(L_FILE_NAME,"%s","Not Covered")
+     Writefile(L_FILE_NAME,"%s","<033>&a195h+85V<033>*c5275h10v0P")
+     Writefile(L_FILE_NAME,"%s","<033>&a+0h-85V")
+    Writefile(L_FILE_NAME,"%s","<033>&a335h+240V")
+  }
+Else
+  {  --other total[18] has the underinsured premium in it.  total[3] only has uninsured
+     Writefile(L_FILE_NAME,"%s","<033>&a1850h+0V")
+     Writefile(L_FILE_NAME,"%s","5")
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:UM_UIM_LIMIT[1],"ZZ,ZZZ,ZZZ"))
+    Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+    Writefile(L_FILE_NAME,"%s"," each accident")
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[3],"ZZ,ZZZ,ZZZ"))
+    Writefile(L_FILE_NAME,"%s","<033>&a195h+85V<033>*c5275h10v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+0h-85V")
+    Writefile(L_FILE_NAME,"%s","<033>&a335h+240V")
+  }
+
+               --*** F. Underinsured Motorists ***
+
+Writefile(L_FILE_NAME,"%s","<033>&a210h+0V")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+Writefile(L_FILE_NAME,"%s","F. Underinsured Motorists")
+If agqMASTER:other_TOTALS[18] = 0 Then
+  {
+     Writefile(L_FILE_NAME,"%s","<033>&a1750h-0V")
+     Writefile(L_FILE_NAME,"%s","Not Covered")
+     Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+     Writefile(L_FILE_NAME,"%s","$")
+     Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+     Writefile(L_FILE_NAME,"%s",Str(agqMASTER:UM_UIM_LIMIT[1],"ZZ,ZZZ,ZZZ"))
+     Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+     Writefile(L_FILE_NAME,"%s"," each accident")
+     Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+     Writefile(L_FILE_NAME,"%s","Not Covered")
+     Writefile(L_FILE_NAME,"%s","<033>&a195h+85V<033>*c5275h10v0P")
+     Writefile(L_FILE_NAME,"%s","<033>&a+0h-85V")
+  }
+Else
+  {  --other total[18] has the underinsured premium in it.  total[3] only has uninsured
+     Writefile(L_FILE_NAME,"%s","<033>&a1850h+0V")
+     Writefile(L_FILE_NAME,"%s","5")
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:UM_UIM_LIMIT[1],"ZZ,ZZZ,ZZZ"))
+    Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+    Writefile(L_FILE_NAME,"%s"," each accident")
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:OTHER_TOTALS[18],"ZZ,ZZZ,ZZZ"))
+    Writefile(L_FILE_NAME,"%s","<033>&a195h+85V<033>*c5275h10v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+0h-85V")
+  }
+Writefile(L_FILE_NAME,"%s","<033>&a335h+120V")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+Writefile(L_FILE_NAME,"%s","<033>&a2130h+200V")
+Writefile(L_FILE_NAME,"%s","THIS IS NOT A POLICY")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+--Do FRAUD_WARNING
+Do INSERT_NEWPAGE
+
+
+--Access agqDEV,
+--   Set agqDEV:app_no = agqNAME:app_no, Generic
+
+--L_PAGE_NUMBER = L_PAGE_NUMBER + 1
+
+
+L_LINE_PCOUNTER = 0  --reset it to zero for page 2
+
+--Writefile(L_FILE_NAME,"%s","<FF>")
+
+                            --****PAGE 2****
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+Writefile(L_FILE_NAME,"%s","<033>&a1000h+100V")
+Writefile(L_FILE_NAME,"%s","SCHEDULE OF COVERAGES AND COVERED AUTOS (Continued)")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+Writefile(L_FILE_NAME,"%s","Coverages")
+Writefile(L_FILE_NAME,"%s","<033>&a1700h+0V")
+Writefile(L_FILE_NAME,"%s","Covered Auto")
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+Writefile(L_FILE_NAME,"%s","Limit")
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+Writefile(L_FILE_NAME,"%s","Provided")
+Writefile(L_FILE_NAME,"%s","<033>&a1850h+0V")
+Writefile(L_FILE_NAME,"%s","Symbols")
+Writefile(L_FILE_NAME,"%s","<033>&a2500h+0V")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_8)
+Writefile(L_FILE_NAME,"%s","(The most we will pay for any one accident or loss)")
+Writefile(L_FILE_NAME,"%s","<033>&a4900h+0V")
+Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+Writefile(L_FILE_NAME,"%s","Premium")
+Writefile(L_FILE_NAME,"%s","<033>&a180h+23V<033>*c5375h5v0P")--doing first horizontal under heading
+Writefile(L_FILE_NAME,"%s","<033>&a180h+0V<033>*c5a730b0P") --Left of Coverages vertical line
+Writefile(L_FILE_NAME,"%s","<033>&a1650h+0V<033>*c5a730b0P")--Left of Coverd auto vertical line
+Writefile(L_FILE_NAME,"%s","<033>&a2400h+0V<033>*c5a730b0P")--left of Limit vertical line
+Writefile(L_FILE_NAME,"%s","<033>&a4650h+0V<033>*c5a730b0P")--left of Premium vertical line
+Writefile(L_FILE_NAME,"%s","<033>&a5550h+0V<033>*c5a730b0P")--right of premium vertical line
+
+                 --**** G. Physical Damage Other than Collision****
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","G. Physical Damage")
+If agqMASTER:TOTAL[7] = 0 Then
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a1750h-0V")
+    Writefile(L_FILE_NAME,"%s","Not Covered")
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","Actual Cash Value or cost of repair,")
+    Writefile(L_FILE_NAME,"%s","<033>&a4950h+0V")
+    Writefile(L_FILE_NAME,"%s","Not Covered")
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a1850h+0V")
+    Writefile(L_FILE_NAME,"%s",agqMASTER:VEHICLE_SYMBOL)
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","Actual Cash Value or cost of repair,")
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[7],"ZZ,ZZZ,ZZZ"))
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+  }
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","Other than Collision")
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+Writefile(L_FILE_NAME,"%s","whichever is less, for each covered")
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+120V")
+Writefile(L_FILE_NAME,"%s","auto minus the deductible.  But no")
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+120V")
+Writefile(L_FILE_NAME,"%s","deductible applies for loss caused by fire ")
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+120V")
+Writefile(L_FILE_NAME,"%s","or lightning.")
+Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+Writefile(L_FILE_NAME,"%s","  See Item Four ")
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","for hired or")
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+120V")
+Writefile(L_FILE_NAME,"%s","borrowed autos.")
+
+               --**** H. Physical Damage Collision Coverage****
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+Writefile(L_FILE_NAME,"%s"," H. Physical Damage")
+If agqMASTER:TOTAL[8] = 0 Then
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a1750h-0V")
+    Writefile(L_FILE_NAME,"%s","Not Covered")
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","Actual Cash Value or cost of repair,")
+    Writefile(L_FILE_NAME,"%s","<033>&a4950h+0V")
+    Writefile(L_FILE_NAME,"%s","Not Covered")
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a1850h+0V")
+    Writefile(L_FILE_NAME,"%s",agqMASTER:VEHICLE_SYMBOL)
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","Actual Cash Value or cost of repair,")
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[8],"ZZ,ZZZ,ZZZ"))
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+  }
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","Collision Coverage")
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+Writefile(L_FILE_NAME,"%s","whichever is less, minus the deductible")
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+120V")
+Writefile(L_FILE_NAME,"%s","for each covered auto.  See")
+Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+Writefile(L_FILE_NAME,"%s"," Item Four")
+Writefile( L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+120V")
+Writefile(L_FILE_NAME,"%s","for hired or borrowed autos")
+
+                      --**** I. Physical Damage Towing & Labor ****
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+Writefile(L_FILE_NAME,"%s","I. Physical Damage")
+If agqMASTER:TOTAL[10] = 0 Then
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a1750h-0V")
+    Writefile(L_FILE_NAME,"%s","Not Covered")
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","$ ")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s","0")
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+    Writefile(L_FILE_NAME,"%s"," each disablement of Private Passenger")
+    Writefile(L_FILE_NAME,"%s","<033>&a4950h+0V")
+    Writefile(L_FILE_NAME,"%s","Not Covered")
+  }
+
+Else
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a1850h+0V")
+    if agqvehicle:company_id one of "FARMERS" then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a1850h+0V")
+        Writefile(L_FILE_NAME,"%s","7")
+      }
+    Else
+      {
+        Writefile(L_FILE_NAME,"%s",agqMASTER:VEHICLE_SYMBOL)
+      }
+    Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",Trun(Str(Val(Str(CASTOWING:PER_DISABLEMENT,"ZZ,ZZZ")))))
+    Writefile(L_FILE_NAME,"%s"," each disablement of Private Passenger")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[10],"ZZ,ZZZ,ZZZ"))
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+  }
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s","Towing & Labor")
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+0V")
+Writefile(L_FILE_NAME,"%s","Auto")
+
+--Subtotal area
+
+Writefile(L_FILE_NAME,"%s","<033>&a180h+60V<033>*c5375h5v0P")
+Writefile(L_FILE_NAME,"%s","<033>&a2650h+240V")
+
+--DO FRAUD_WARNING
+DO INSERT_NEWPAGE
+
+
+Writefile(L_FILE_NAME,"%s","<033>&a5479h+120V<033>*c5a120b0P")   --right vertica
+Writefile(L_FILE_NAME,"%s","<033>&a200h+0V<033>*c5a120b0P")   --left vertical
+Writefile(L_FILE_NAME,"%s%s","<033>&a200h+0V<033>*c5289h5v0P","<NL>")  --HORZ
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+ L_STRING = "QUOTE PREMIUM BREAKDOWN"
+ L_FONT = L_ARIAL_BOLD_14
+ L_PITCH_HALF = 7
+ L_PITCH_FULL = 14
+ L_VERTICAL_POS = "+80"
+ Include "center2.pro"
+
+ Writefile(L_FILE_NAME,"%s","<033>&a200h-40V<033>*c5289h5v0P")
+ Writefile(L_FILE_NAME,"%s","<NL>")--HORZ LINE deductible section I coverage PG. 1
+ L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+
+      --Mandatory and Optional Endorsements
+Access SFSMSOTERROR,
+   Set SFSMSOTERROR:COMPANY_ID       = L_COMPANY_ID,
+       SFSMSOTERROR:STATE            = I_STATE,
+       SFSMSOTERROR:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS, Generic
+
+ While SFSMSOTERROR:COMPANY_ID       = L_COMPANY_ID And
+       SFSMSOTERROR:STATE            = I_STATE And
+       SFSMSOTERROR:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS
+   begin
+     if SFSMSOTERROR:EFF_DATE <= agqNAME:EFF_DATE then
+       {
+         L_TERROR_FORM = SFSMSOTERROR:TERRORISM_FORM_TO_ADD
+       }
+     Next SFSMSOTERROR
+   end
+
+                 --*****Forms & Endorsements Section*****
+
+Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+Writefile(L_FILE_NAME,"%s",trun(l_underline_start))
+Writefile(L_FILE_NAME,"%s","Forms Number & Edition")
+Writefile(L_FILE_NAME,"%s",trun(l_underline_end))
+Writefile(L_FILE_NAME,"%s","<033>&a1750h+0V")
+Writefile(L_FILE_NAME,"%s",trun(l_underline_start))
+Writefile(L_FILE_NAME,"%s","Form Title")
+Writefile(L_FILE_NAME,"%s",trun(l_underline_end))
+Writefile(L_FILE_NAME,"%s","<033>&a4850h+0V")
+Writefile(L_FILE_NAME,"%s",trun(l_underline_start))
+Writefile(L_FILE_NAME,"%s","Premium")
+Writefile(L_FILE_NAME,"%s",trun(l_underline_end))
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+ --prints optional endorsments with premium for each vehicle
+  Access agqend1,
+     Set agqend1:app_no = L_APP_NO,generic
+
+
+while agqend1:app_no = L_APP_NO
+  {
+    l_counter = 1
+    while l_code_array[l_counter] <> agqend1:code and
+          l_code_array[l_counter] <> "" and
+          l_counter < 120   --prevents out of arrary out off bounds
+      {
+        l_counter = l_counter + 1
+      }
+
+    --found position of where to put the next form in the loop
+
+    if l_code_array[l_counter] <> agqend1:code then
+      {
+        l_code_array[l_counter] = agqend1:code
+          Writefile(L_FILE_NAME,"%s",trun(l_arial))
+          Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+          Writefile(L_FILE_NAME,"%s",agqend1:FORM_EDITION)
+          Writefile(L_FILE_NAME,"%s","<033>&a1750h+0V")
+          Writefile(L_FILE_NAME,"%s",agqend1:DESCRIPTION)
+          If agqend1:PREMIUM > 0 Then
+            {
+              Writefile(L_FILE_NAME,"%s","<033>&a4850h+0V")
+              Writefile(L_FILE_NAME,"%s","$")
+              Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+              Writefile(L_FILE_NAME,"%s",Str(agqend1:PREMIUM,"ZZ,ZZZ,ZZZ"))
+            }
+          Writefile(L_FILE_NAME,"%s","<NL>")
+          L_OPTIONAL_COVERAGE_TOTAL = L_OPTIONAL_COVERAGE_TOTAL + agqend1:PREMIUM
+      }
+    Next agqend1
+  }
+
+-- This section is for the mandatory forms
+
+Access SFSEND,
+   Set SFSEND:COMPANY_ID       = L_COMPANY_ID,
+       SFSEND:STATE            = I_STATE,
+       SFSEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS, Approximate
+       --get to the beginning of the mandatory endorsements
+
+ While SFSEND:COMPANY_ID       = L_COMPANY_ID And
+       SFSEND:STATE            = I_STATE And
+       SFSEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS And
+       SFSEND:FORM             = agqMASTER:FORM   --agqmaster:form
+   {
+     if (agqvehicle:eff_date >= sfsend:eff_date and
+        (agqvehicle:eff_date < sfsend:exp_date or
+        sfsend:exp_date = 0)) then
+       begin
+         Writefile(L_FILE_NAME,"%s",trun(l_arial))
+         Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+         Writefile(L_FILE_NAME,"%s",SFSEND:FORM_EDITION)
+         Writefile(L_FILE_NAME,"%s","<033>&a1750h+0V")
+         Writefile(L_FILE_NAME,"%s",SFSEND:DESCRIPTION)
+         Writefile(L_FILE_NAME,"%s","<NL>")
+         L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+       end
+
+       Next SFSEND
+   }
+
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","<033>&a350h+120V")
+Writefile(L_FILE_NAME,"%s","*")
+Writefile(L_FILE_NAME,"%s",TRUN(L_STATE))
+Writefile(L_FILE_NAME,"%s"," Mandatory Endorsement")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+
+--Optional coverages
+/* agqmaster:total[4]  = the Drive other car. DOC
+   agqmaster:total[9]  = rental
+   agqmaster:total[14] = all endorsement
+   agqmaster:total[15] = misc which has a separte screen
+*/
+
+Writefile(L_FILE_NAME,"%s","<033>&a180h+0V<033>*c5375h5v0P")
+Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+
+Do Premium_totals_2
+
+
+ Writefile(L_FILE_NAME,"%s","<NL>")
+ Writefile(L_FILE_NAME,"%s","<NL>")
+ Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+ Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+ Writefile(L_FILE_NAME,"%s","Printed Date: ")
+ Writefile(L_FILE_NAME,"%s",Str(TODAYSDATE,"mm/dd/yyyy"))
+
+ /*
+Else
+  If Trun(SCIPSCONTROL:SURCHARGE_WORDING) <> "" Then
+    {
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+      Writefile(L_FILE_NAME,"%s","Total Premium")
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s",Str((agqMASTER:OTHER_TOTALS[17]
+                                    + agqMASTER:SURCHARGE),"ZZ,ZZZ,ZZZ"))
+    }
+ */
+--Do FRAUD_WARNING
+DO INSERT_NEWPAGE
+
+L_LINE_PCOUNTER = 0   -- reset it to 0 for start of the next page
+                      -- 58 line to a page
+
+--starting the schedule of vehicles
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+80V")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+Writefile(L_FILE_NAME,"%s","3.  SCHEDULE OF COVERED AUTOS YOU OWN")
+Writefile(L_FILE_NAME,"%s","<033>&a200h+140V")
+
+Access agqVEHICLE,
+   Set agqVEHICLE:APP_NO    = L_APP_NO, Generic
+
+While agqVEHICLE:APP_NO = L_APP_NO
+  {
+    If (L_LINE_TPCOUTER - L_LINE_PCOUNTER < 19) Then
+      {
+        -- insert new page and reset l_line_pcounter
+        L_LINE_PCOUNTER = 0  -- going to need page.
+        DO INSERT_NEWPAGE
+        L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+
+        Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+        Writefile(L_FILE_NAME,"%s","3. SCHEDULE OF VEHICLES YOU OWN (Continued)")
+        Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+        --setting screen position to last line on page an then
+        --forcing a new line to go to the next page.
+      }
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+  Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+  Writefile(L_FILE_NAME,"%s","Vehicle ")
+  Writefile(L_FILE_NAME,"%n",agqVEHICLE:VEHICLE_NO)
+  Writefile(L_FILE_NAME,"%s","<033>&a1000h+0V")
+  Writefile(L_FILE_NAME,"%s","Vehicle Description")
+  Writefile(L_FILE_NAME,"%s",trun(l_arial))
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+  Writefile(L_FILE_NAME,"%s","Year")
+  Writefile(L_FILE_NAME,"%s","<033>&a1000h+0V")
+  Writefile(L_FILE_NAME,"%s","Make")
+  Writefile(L_FILE_NAME,"%s","<033>&a2300h+0V")
+  Writefile(L_FILE_NAME,"%s","Model")
+  Writefile(L_FILE_NAME,"%s","<033>&a4000h+0V")
+  Writefile(L_FILE_NAME,"%s","Original Cost New")
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+  Writefile(L_FILE_NAME,"%n",agqVEHICLE:YEAR)
+  Writefile(L_FILE_NAME,"%s","<033>&a1000h+0V")
+  Writefile(L_FILE_NAME,"%s",agqVEHICLE:MAKE)
+  Writefile(L_FILE_NAME,"%s","<033>&a2300h+0V")
+  Writefile(L_FILE_NAME,"%s",agqVEHICLE:MODEL)
+  Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+  Writefile(L_FILE_NAME,"%s","$")
+  Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+  Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:ORIGINAL_COST,"ZZ,ZZZ,ZZZ"))
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+  Writefile(L_FILE_NAME,"%s",trun(l_arial))
+  Writefile(L_FILE_NAME,"%s","Vehicle Identification Number")
+  Writefile(L_FILE_NAME,"%s","<033>&a2100h+0V")
+  Writefile(L_FILE_NAME,"%s","Garaging Location")
+  Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+  Writefile(L_FILE_NAME,"%s","State")
+  Writefile(L_FILE_NAME,"%s","<033>&a3800h+0V")
+  Writefile(L_FILE_NAME,"%s","Rate Terr")
+  Writefile(L_FILE_NAME,"%s","<033>&a4600h+0V")
+  Writefile(L_FILE_NAME,"%s","Class Code")
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+  Writefile(L_FILE_NAME,"%s",agqVEHICLE:SERIAL_NO)
+  Writefile(L_FILE_NAME,"%s","<033>&a2100h+0V")
+  Writefile(L_FILE_NAME,"%s",agqvehicle:territory_DESCRIPTION)
+--  Writefile(L_FILE_NAME,"%s",SFSSTATE:DESCRIPTION)
+  Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+  Writefile(L_FILE_NAME,"%s",L_STATE)
+  Writefile(L_FILE_NAME,"%s","<033>&a4000h+0V")
+  Writefile(L_FILE_NAME,"%n",agqVEHICLE:TERRITORY)
+  If (agqVEHICLE:TYPE = 1) Then      --means it is truck or trailer class
+    {  -- I need concat the secondary class code to the primary class code
+      L_FULL_CLASS_CODE = Str(agqVEHICLE:CLASS_CODE,3)
+                        + Str(agqVEHICLE:SECONDARY_CLASS,1)
+      Writefile(L_FILE_NAME,"%s","<033>&a4850h+0V")
+      Writefile(L_FILE_NAME,"%s",L_FULL_CLASS_CODE)
+      if agqmaster:non_fleet = "F" and
+         agqvehicle:company_id = "FARMERS" then
+          begin
+          Writefile(L_FILE_NAME,"%s","<033>&a5100h+0V")
+          Writefile(L_FILE_NAME,"%s","FLEET")
+          end
+    }
+  Else
+    {
+      Writefile(L_FILE_NAME,"%s","<033>&a4850h+0V")
+      Writefile(L_FILE_NAME,"%n",agqVEHICLE:CLASS_CODE)
+    }
+  Writefile(L_FILE_NAME,"%s","<033>&a180h+20V<033>*c5375h5v0P")
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+  Writefile(L_FILE_NAME,"%s","<033>&a700h+240V")
+  Writefile(L_FILE_NAME,"%s","Coverages Purchased for Vehicle ")
+  Writefile(L_FILE_NAME,"%n",agqVEHICLE:VEHICLE_NO)
+  Writefile(L_FILE_NAME,"%s","<033>&a4200h+0V")
+  Writefile(L_FILE_NAME,"%s","Premiums")
+  Writefile(L_FILE_NAME,"%s","<033>&a700h+20V<033>*c1600h5v0P")
+  Writefile(L_FILE_NAME,"%s","<033>&a4200h+0V<033>*c450h5v0P")
+  Writefile(L_FILE_NAME,"%s","<NL>")
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+  If agqVEHICLE:VEHICLE_TOTALS[1] > 0 Then
+    {
+      Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+      Writefile(L_FILE_NAME,"%s","A. Liability")
+      Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[1],"ZZ,ZZZ,ZZZ"))
+      Writefile(L_FILE_NAME,"%s",trun(l_arial))
+    }
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+  If agqVEHICLE:VEHICLE_TOTALS[2] > 0 Then
+    {
+      Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+      Writefile(L_FILE_NAME,"%s","B. Medical Payments")
+      Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[2],"ZZ,ZZZ,ZZZ"))
+      Writefile(L_FILE_NAME,"%s",trun(l_arial))
+--      Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+    }
+
+--Do not print in the Schedule of autos if not covered
+/*
+  If agqVEHICLE:TYPE = 1 Then
+    {
+      If (agqVEHICLE:VEHICLE_TOTALS[5]
+        + agqVEHICLE:VEHICLE_TOTALS[6]
+        + agqVEHICLE:VEHICLE_TOTALS[4] = 0) Then --vehicle_totals[11] is for extended coverage
+        {
+          --Writefile(L_FILE_NAME,"%s","<033>&a0h+120V")
+        }
+    }
+
+  Else
+  if agqvehicle:type not one of 8 then
+    {
+      If (agqVEHICLE:VEHICLE_TOTALS[5]
+        + agqVEHICLE:VEHICLE_TOTALS[6]
+        + agqVEHICLE:VEHICLE_TOTALS[11] = 0) Then  --vehicle_totals[11] is for extended coverage
+        {
+          Writefile(L_FILE_NAME,"%n",agqVEHICLE:VEHICLE_TOTALS[11])
+          Writefile(L_FILE_NAME,"%n",agqVEHICLE:VEHICLE_NO)
+          Writefile(L_FILE_NAME,"%s","<033>&a0h+120V")
+        }
+    }
+*/
+  Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+  Writefile(L_FILE_NAME,"%s","C. Basic First Party Benefits")
+  Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+  Writefile(L_FILE_NAME,"%s","$")
+
+  if agqvehicle:type not one of 8 then
+    {
+      if agqPIP:OPTIONAL_MED_EXP_DEDUCTIBLE <> 0 then
+        {
+          Writefile(L_FILE_NAME,"%s"," - $")
+          Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+          Writefile(L_FILE_NAME,"%s",Trun(Str(Val(Str(agqPIP:OPTIONAL_MED_EXP_DEDUCTIBLE,"ZZZ,ZZ9")))))
+          Writefile(L_FILE_NAME,"%s",trun(l_arial))
+          Writefile(L_FILE_NAME,"%s"," Deductible")
+        }
+
+      Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+      Writefile(L_FILE_NAME,"%s","$")
+    }
+  If agqVEHICLE:TYPE = 1 Then
+    {
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s",Str((agqVEHICLE:VEHICLE_TOTALS[5]
+                                    + agqVEHICLE:VEHICLE_TOTALS[6]
+                                    + agqVEHICLE:VEHICLE_TOTALS[4]),"ZZ,ZZZ,ZZ9"))
+                                      --total[4] is pedestrian pip
+      Writefile(L_FILE_NAME,"%s","<NL>")
+    }
+  Else
+    {
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s",Str((agqVEHICLE:VEHICLE_TOTALS[5]
+                                    + agqVEHICLE:VEHICLE_TOTALS[6]
+                                    + agqVEHICLE:VEHICLE_TOTALS[11]),"ZZ,ZZZ,ZZ9"))
+                                      --total[11] is extended pip
+      Writefile(L_FILE_NAME,"%s","<NL>")
+    }
+
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+  If agqVEHICLE:VEHICLE_TOTALS[3]  > 0 then
+    { --   agqvehicle:total[17] underinsured total
+      -- + agqvehicle:total[3] unisured motorist total
+      Writefile(L_FILE_NAME,"%s",trun(l_arial))
+      Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+      Writefile(L_FILE_NAME,"%s","E. Uninsured Motorist")
+      Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[3],"ZZ,ZZZ,ZZZ"))
+      Writefile(L_FILE_NAME,"%s",trun(l_arial))
+      Writefile(L_FILE_NAME,"%s","<NL>")
+    }
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+  If agqVEHICLE:VEHICLE_TOTALS[17] > 0 Then
+    { --   agqvehicle:total[17] underinsured total
+      -- + agqvehicle:total[3] unisured motorist total
+      Writefile(L_FILE_NAME,"%s",trun(l_arial))
+      Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+      Writefile(L_FILE_NAME,"%s","F. Underinsured Motorist")
+      Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[17],"ZZ,ZZZ,ZZZ"))
+      Writefile(L_FILE_NAME,"%s",trun(l_arial))
+      Writefile(L_FILE_NAME,"%s","<NL>")
+    }
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+  If agqVEHICLE:VEHICLE_TOTALS[7] > 0 Then
+    {
+      Writefile(L_FILE_NAME,"%s",trun(l_arial))
+      Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+      Writefile(L_FILE_NAME,"%s","G. Physical Damage Other than Collision")
+      Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[7],"ZZ,ZZZ,ZZZ"))
+      Writefile(L_FILE_NAME,"%s","<NL>")
+    }
+
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+  If agqVEHICLE:VEHICLE_TOTALS[8] > 0 Then
+    {
+      Writefile(L_FILE_NAME,"%s",trun(l_arial))
+      Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+      Writefile(L_FILE_NAME,"%s","H. Physical Damage Collision Coverage")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[8],"ZZ,ZZZ,ZZZ"))
+      Writefile(L_FILE_NAME,"%s","<NL>")
+    }
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+  If agqVEHICLE:VEHICLE_TOTALS[10] > 0 Then
+    {
+      Writefile(L_FILE_NAME,"%s",trun(l_arial))
+      Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+      Writefile(L_FILE_NAME,"%s","I. Physical Damage Towing & Labor")
+      Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[10],"ZZ,ZZZ,ZZZ"))
+      Writefile(L_FILE_NAME,"%s","<NL>")
+    }
+
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+  If agqVEHICLE:VEHICLE_TOTALS[9] > 0 Then
+    {
+      Writefile(L_FILE_NAME,"%s",trun(l_arial))
+      Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+      Writefile(L_FILE_NAME,"%s","Rental Reimbursement")
+      Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+      Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[9],"ZZ,ZZZ,ZZZ"))
+      Writefile(L_FILE_NAME,"%s","<NL>")
+    }
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+  L_OPTIONAL_COVERAGE_TOTAL = 0
+
+ --Removed Endorsements section and moved under Quote Premium Breakdown
+
+  Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+  Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+  Writefile(L_FILE_NAME,"%s","Total Premium - Vehicle ")
+  Writefile(L_FILE_NAME,"%n",agqVEHICLE:VEHICLE_NO)
+  Writefile(L_FILE_NAME,"%s",trun(l_arial))
+  Writefile(L_FILE_NAME,"%s","<033>&a4100h+0V")
+  Writefile(L_FILE_NAME,"%s","$")
+  Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+  Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[19]
+                             + L_OPTIONAL_COVERAGE_TOTAL,"ZZ,ZZZ,ZZZ"))
+  Writefile(L_FILE_NAME,"%s",trun(l_arial))
+  Writefile(L_FILE_NAME,"%s","<033>&a180h+20V<033>*c5375h15v0P")
+  Writefile(L_FILE_NAME,"%s","<033>&a4100h-40V")
+  Writefile(L_FILE_NAME,"%s","<NL>")
+  Writefile(L_FILE_NAME,"%s","<NL>")
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+
+  Next agqVEHICLE
+  If L_MAX_LINES - L_LINE_PCOUNTER < 10 Then
+    {
+      --DO FRAUD_WARNING
+      DO INSERT_NEWPAGE
+      L_LINE_PCOUNTER = 0
+    }
+}
+
+--CHECKS TO SEE IF THERE IS A PREMIUM FOR HIRED OR BORROWNED AUTO AND THEN ALSO
+--MAKES SURE THAT THERE IS ENOUGH ROOM ON THE CURRENT PAGE TO PRINT.
+
+If (agqNONOWNED:HIRED_PREMIUM > 0) Then
+  {
+    If (L_LINE_TPCOUTER - L_LINE_PCOUNTER < 12) Then  -- We have hired nonowned
+      { --inserted newpage and then put header on the new page
+        L_LINE_PCOUNTER = 0  -- going to need page.
+        --DO FRAUD_WARNING
+        DO INSERT_NEWPAGE
+      }
+    Access agqVEHICLE,
+       Set agqVEHICLE:APP_NO = L_APP_NO, Generic
+
+    Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+    Writefile(L_FILE_NAME,"%s","4.  Hired Or Borrowed Automobiles Coverage")
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+    Writefile(L_FILE_NAME,"%s",'Cost of hire means the total amount you incur for the hire of "autos" you do not own (not including "autos" you')
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+    Writefile(L_FILE_NAME,"%s","borrow or rent from your partners or employees or their family members).  Cost of hire does not include charges for")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+    Writefile(L_FILE_NAME,"%s","services performed by motor carriers of property or passengers.")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+240V")
+    Writefile(L_FILE_NAME,"%s","Coverage")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    Writefile(L_FILE_NAME,"%s","Liability")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+    Writefile(L_FILE_NAME,"%s","State:")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    Writefile(L_FILE_NAME,"%s",L_STATE)
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","Estimated Cost of Hire:")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    If (Uppercase(agqNONOWNED:IF_ANY) <> "Y") Then
+      {
+        Writefile(L_FILE_NAME,"%n",agqNONOWNED:COST_OF_HIRE)
+      }
+    Else
+      {
+        Writefile(L_FILE_NAME,"%s","If any")
+      }
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","Rate Per ")
+    Writefile(L_FILE_NAME,"%n",CASHIRED:LIABILITY_PER)
+--    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V")
+    Writefile(L_FILE_NAME,"%s"," Cost of hire")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    Writefile(L_FILE_NAME,"%n",agqNONOWNED:COST_OF_HIRE)
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","Coverage Premium")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    Writefile(L_FILE_NAME,"%n",agqNONOWNED:HIRED_PREMIUM)
+    Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","Total Estimated Premium")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    Writefile(L_FILE_NAME,"%n",agqNONOWNED:HIRED_PREMIUM)
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V")
+    Writefile(L_FILE_NAME,"%s","Comprehesive Deductible")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    Writefile(L_FILE_NAME,"%s","Collision Deductible")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+    Writefile(L_FILE_NAME,"%s",trun(L_arial))
+
+    if agqNONOWNED:COMP = "Y" then
+      {
+        if agqNONOWNED:COMP_DEDUCTIBLE = 1 then
+          {
+            Writefile(L_FILE_NAME,"%s","FULL")
+          }
+        else
+          {
+            Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+            Writefile(L_FILE_NAME,"%s","<033>&a700h+0V")
+            Writefile(L_FILE_NAME,"%s","$")
+            Writefile(L_FILE_NAME,"%n",agqNONOWNED:COMP_DEDUCTIBLE)
+            Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+          }
+      }
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    if agqNONOWNED:coll = "Y" then
+      {
+        Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+        Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+        Writefile(L_FILE_NAME,"%s","$")
+        Writefile(L_FILE_NAME,"%n",agqNONOWNED:COLL_DEDUCTIBLE)
+        Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+      }
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+240V")
+  }
+Else
+  {  --There will be no Hired Or Borrowed automobiles Coverage But need to
+     --insert blank headings
+    If (L_LINE_TPCOUTER - L_LINE_PCOUNTER < 4) Then   --check if can be printed on current page.
+      {
+        --DO FRAUD_WARNING
+        DO INSERT_NEWPAGE
+        L_PAGE_NUMBER = L_PAGE_NUMBER + 1 --increment to next  page
+        --setting screen position to last line on page an then
+        --forceing a new line to go to the next page.
+      }
+
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+    Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+    Writefile(L_FILE_NAME,"%s","4.  Hired Or Borrowed Automobiles Coverage")
+    Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+    Writefile(L_FILE_NAME,"%s","Not Applicable")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+  }
+
+-- Section 5 of the commercial auto quote letter
+
+If (agqNONOWNED:NONOWNED_PREMIUM > 0) Then  -- there non-Owned Automobile auto
+  {
+    If (L_LINE_TPCOUTER - L_LINE_PCOUNTER < 8) Then --check if can be printed
+                                                    --on current page.
+      {  -- inserting a new page and putting the  header across top
+        L_LINE_PCOUNTER = 0  -- going to need page.
+        --DO FRAUD_WARNING
+        DO INSERT_NEWPAGE
+        L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+        --setting screen position to last line on page an then
+        --forcing a new line to go to the next page.
+      }
+    --writing the section out to the correct postion on the dec page
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+    Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD_12))
+    Writefile(L_FILE_NAME,"%s","5.  Non-Owned Automobile Coverage")
+    Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+240V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+    Writefile(L_FILE_NAME,"%s","Coverage:")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    Writefile(L_FILE_NAME,"%s","Liability")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","Number Of Employees:")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    Writefile(L_FILE_NAME,"%n",agqNONOWNED:NO_EMPLOYEES)
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","Coverage Premium:")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    Writefile(L_FILE_NAME,"%n",agqNONOWNED:NONOWNED_PREMIUM)
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+    Writefile(L_FILE_NAME,"%s","Total Estimated Premium:")
+    Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+    Writefile(L_FILE_NAME,"%n",agqNONOWNED:NONOWNED_PREMIUM)
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+  }
+Else
+  {   -- No NON-Owned automobile Coverage Just need to insert its blank header
+    If (L_LINE_TPCOUTER - L_LINE_PCOUNTER < 2) Then   --check if can be printed on current page.
+      {
+        L_LINE_PCOUNTER = 0  -- going to need page.
+        --DO FRAUD_WARNING
+        DO INSERT_NEWPAGE
+        --setting screen position to last line on page an then
+        --forcing a new line to go to the next page.
+      }
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+    Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD_12))
+    Writefile(L_FILE_NAME,"%s","5.  Non-Owned Automobile Coverage")
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+    Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","Not Applicable")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+  }
+--
+--  Section 6.  Optional coverages
+--  If (L_LINE_TPCOUTER - L_LINE_PCOUNTER > 8) Then is to make sure there is
+--  enough lines to print at least the first vehicle.  (it takes 8 lines to do)
+--  then
+
+/*If (L_LINE_TPCOUTER - L_LINE_PCOUNTER < 8) Then   --check if can be printed on current page.
+  {
+    L_LINE_PCOUNTER = 0
+    Writefile(L_FILE_NAME,"%s%s%n%s","<033>&a4950h7100V","Page ", L_PAGE_NUMBER,  "<FF>") --forced newpage
+    L_PAGE_NUMBER = L_PAGE_NUMBER + 1
+    Writefile(L_FILE_NAME,"%s%s%n%s%s","<033>&a200h+0V","Quote Number: ",
+                          agqNAME:app_no,"<NL>","<NL>")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+    Writefile(L_FILE_NAME,"%s%s%s","<033>&a180h+20V<033>*c5375h5v0P",
+                         "<NL>","<NL>")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+  }                --insert newpage and print heading for next rental vehicle
+  Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s","<NL>","<033>&a200h+0V",L_ARIAL_BOLD_12,
+                       "6. Optional Coverage -",L_ARIAL,
+                       " Coverage is provided as described below","<NL>","<NL>")
+  L_LINE_PCOUNTER = L_LINE_PCOUNTER + 3
+*/
+     --need to reaccess file because the vehicle section already went by this information
+/*
+  L_RENTAL_HEADING_PRINTED = 0
+  Access agqVEHICLE,
+     Set agqVEHICLE:APP_no    = L_APP_NO,
+         agqVEHICLE:POL_YEAR     = L_POL_YEAR,
+         agqVEHICLE:END_SEQUENCE = L_END_SEQUENCE,Generic
+        --looping though for rental rental reinbursement
+        While (agqVEHICLE:APP_no = L_APP_NO And
+               agqVEHICLE:POL_YEAR = L_POL_YEAR And
+               agqVEHICLE:END_SEQUENCE = L_END_SEQUENCE)
+          {             --checking to see if there is enough line to print the next vehicle
+            If (L_LINE_PCOUNTER >= L_LINE_TPCOUTER) Then
+              {
+                L_LINE_PCOUNTER = 0
+                Writefile(L_FILE_NAME,"%s%s%n%s","<033>&a4950h7100V","Page ", L_PAGE_NUMBER,  "<FF>") --forced newpage
+                L_PAGE_NUMBER = L_PAGE_NUMBER + 1
+                Writefile(L_FILE_NAME,"%s%s%n%s%s","<033>&a200h+0V","Quote Number: ",
+                                      agqNAME:app_no,"<NL>","<NL>")
+                L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+                Writefile(L_FILE_NAME,"%s%s%s","<033>&a180h+20V<033>*c5375h5v0P","<NL>","<NL>")
+                L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+
+                --insert newpage and print heading for next rental vehicle
+                Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s","<NL>","<033>&a200h+0V",L_ARIAL_BOLD_12,
+                          "6. Optional Coverage (Continued) -",L_ARIAL,
+                          " Coverage is provided as described below","<NL>","<NL>")
+                          L_LINE_PCOUNTER = L_LINE_PCOUNTER + 3
+              }
+   --            Writefile (L_FILE_NAME,"%s%s%n%s","<033>&a200h+0V","Just printing",agqVEHICLE:RENTAL_AMOUNT,"<NL>")
+            If (agqVEHICLE:RENTAL_AMOUNT > 0) Then
+              {
+                If L_RENTAL_HEADING_PRINTED = 0 Then
+                  {
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+                    "<033>&a200h+0V",L_ARIAL_BOLD,"Rental Reimbursement","<NL>","<NL>",L_ARIAL,"<033>&a200h+0V","Vehicle Number",L_ARIAL,"<033>&a1800h+0V",
+                    "Limit Per Day","<033>&a3200h+0V","Number of Days","<033>&a4600h+0V",
+                    "Total Limit")
+                    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<033>&a200h+20V<033>*c700h5v0P","<033>&a1800h+0V<033>*c600h5v0P","<033>&a3200h+0V<033>*c710h5v0P","<033>&a4600h+0V<033>*c475h5v0P","<NL>","<NL>")
+                    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+                    L_RENTAL_HEADING_PRINTED = 1
+                  }
+                Writefile(L_FILE_NAME,"%s%n%s$%n%s%n%s$%n%s","<033>&a400h+0V",
+                               agqVEHICLE:VEHICLE_NO,"<033>&a2000h+0V",
+                               agqVEHICLE:RENTAL_AMOUNT,"<033>&a3400h+0V",
+                               agqVEHICLE:RENTAL_DAYS,"<033>&a4800h+0V",
+                               agqVEHICLE:RENTAL_DAYS*RENTAL_AMOUNT,"<NL>")
+                L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+              }
+            Next agqVEHICLE
+          }
+*/
+
+If agqADDLPIP:FAMILY_MEMBERS <> "" Then
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+    Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+    Writefile(L_FILE_NAME,"%s","Broadened Coverge For Named Individuals:")
+    Writefile(L_FILE_NAME,"%s","<033>&a800h+240V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","Coverages/Limits Provideed For All Named Indivuals")
+    Writefile(L_FILE_NAME,"%s","<033>&a800h+20V<033>*c2800h5v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a900h+120V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+    Writefile(L_FILE_NAME,"%s","Personal Injury Protection")
+    Writefile(L_FILE_NAME,"%s","<033>&a800h+240V")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+    Writefile(L_FILE_NAME,"%s","Named Individuals")
+    Writefile(L_FILE_NAME,"%s","<033>&a800h+20V<033>*c800h5v0P")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+
+    -- l_switch_col is set to 1 at start of program
+
+    While agqADDLPIP:APP_NO = L_APP_NO
+      {
+        If (L_SWITCH_COL_COUNTER = 1) Then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+            Writefile(L_FILE_NAME,"%s",agqADDLPIP:FAMILY_MEMBERS)
+            L_SWITCH_COL_COUNTER = 2
+          }
+        Else
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a3800h+0V")
+            Writefile(L_FILE_NAME,"%s",agqADDLPIP:FAMILY_MEMBERS)
+            L_SWITCH_COL_COUNTER =1
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+            If (L_LINE_PCOUNTER > L_LINE_TPCOUTER) Then
+              {
+                L_LINE_PCOUNTER = 0
+                --DO FRAUD_WARNING
+                DO INSERT_NEWPAGE
+                L_PAGE_NUMBER = L_PAGE_NUMBER + 1
+
+                Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+                Writefile(L_FILE_NAME,"%s","Named Individuals (Continued)")
+                Writefile(L_FILE_NAME,"%s","<033>&a800h+20V<033>*c800h5v0P")
+                Writefile(L_FILE_NAME,"%s","<NL>")
+                L_LINE_PCOUNTER = L_LINE_PCOUNTER + 1
+              }
+          }
+        Next agqADDLPIP
+      }
+}
+
+/*
+printing the loss payee(mortage company) for the autos
+supsupp1
+*/
+
+--Loan information
+Access agqSUPP1,
+   Set agqSUPP1:app_no    = L_APP_NO, Generic
+
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<033>&a140h+0V<033>*c5467h20v0P")
+Writefile(L_FILE_NAME,"%s","<NL>") --top horizontal line to
+
+While agqSUPP1:app_no = L_APP_NO
+  {
+    If agqSUPP1:MORTGAGE_ID <> "" Then
+      {
+        L_MORGAGE_ID = agqSUPP1:MORTGAGE_ID
+        Access SFSMORT,
+           Set SFSMORT:COMPANY_ID  = agqNAME:COMPANY_ID,
+               SFSMORT:MORTGAGE_ID = L_MORGAGE_ID, Exact
+
+        L_SFSMORT_ZIP = If (Val(SFSMORT:STR_ZIPCODE[6,9]) = 0) Then
+                            SFSMORT:STR_ZIPCODE[1,5]
+                        Else
+                            SFSMORT:STR_ZIPCODE[1,5] + "-" +
+                            SFSMORT:STR_ZIPCODE[6,9]
+        --accesses the paytype file to print the description on the dec page
+
+        L_COMPANY_ID     = agqNAME:COMPANY_ID
+        L_MORTAGE_TYPE_2 = agqSUPP1:MORTGAGE_TYPE_2
+        Access SFSMORTTYPE,
+           Set SFSMORTTYPE:COMPANY_ID    = L_COMPANY_ID,
+               SFSMORTTYPE:MORTGAGE_CODE = L_MORTAGE_TYPE_2, Exact
+
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+    If ((L_LINE_TPCOUTER - L_LINE_PCOUNTER) < 9) Then
+      {
+        L_LINE_PCOUNTER = 0
+        --DO FRAUD_WARNING
+        DO INSERT_NEWPAGE
+        L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+      }  -- there will be enought space for the forms and heading
+
+        Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+        Writefile(L_FILE_NAME,"%s","6.  Loss Payee")
+        Writefile(L_FILE_NAME,"%s",trun(l_arial))
+        Writefile(L_FILE_NAME,"%s","<033>&a400h+200V")
+        Writefile(L_FILE_NAME,"%s",Trun(SFSMORTTYPE:DESCRIPTION))
+        Writefile(L_FILE_NAME,"%s"," for Vehicle # ")
+        Writefile(L_FILE_NAME,"%n",agqSUPP1:VEHICLE_NO)
+
+        L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+        Writefile(L_FILE_NAME,"%s","<033>&a600h-0V")
+        Writefile(L_FILE_NAME,"%s","Name")
+        Writefile(L_FILE_NAME,"%s",trun(l_arial))
+        For L_LOOP = 1 To 3
+          {
+            If (SFSMORT:NAME[L_LOOP] <> "" ) Then
+              {
+                Writefile(L_FILE_NAME,"%s","<033>&a1200h+0V")
+                Writefile(L_FILE_NAME,"%s",SFSMORT:NAME[L_LOOP])
+                Writefile(L_FILE_NAME,"%s","<NL>")
+                L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+              }
+          }
+        If (agqSUPP1:SUCCESSOR = "Y") Then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a1200h+0V")
+            Writefile(L_FILE_NAME,"%s",Uppercase("It's Successors/Assigns"))
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+          }
+        If (agqSUPP1:ATIMA = "Y") Then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a1200h+0V")
+            Writefile(L_FILE_NAME,"%s","ATIMA")
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+          }
+        If (agqSUPP1:ACCOUNT_NO <> "") Then
+          {
+            Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+            Writefile(L_FILE_NAME,"%s","<033>&a600h+0V")
+            Writefile(L_FILE_NAME,"%s","Loan #")
+            Writefile(L_FILE_NAME,"%s",trun(l_arial))
+            Writefile(L_FILE_NAME,"%s","<033>&a1200h+0V")
+            Writefile(L_FILE_NAME,"%s",agqSUPP1:ACCOUNT_NO)
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+          }
+        For L_LOOP = 1 To 3
+          {
+            If (SFSMORT:ADDRESS[L_LOOP] <> "") Then
+              {
+                Writefile(L_FILE_NAME,"%s","<033>&a1200h-0V")
+                Writefile(L_FILE_NAME,"%s",SFSMORT:ADDRESS[L_LOOP])
+                Writefile(L_FILE_NAME,"%s","<NL>")
+                L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+              }
+          }
+        Writefile(L_FILE_NAME,"%s","<033>&a1200h+0V")
+        Writefile(L_FILE_NAME,"%s",Trun(SFSMORT:CITY))
+        Writefile(L_FILE_NAME,"%s",", ")
+        Writefile(L_FILE_NAME,"%s",SFSMORT:STR_STATE)
+        Writefile(L_FILE_NAME,"%s","  ")
+        Writefile(L_FILE_NAME,"%s",L_SFSMORT_ZIP)
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+      }
+    Else
+      {
+        L_SFPSUPP1_ZIP = If (Val(agqSUPP1:STR_ZIPCODE[6,9]) = 0) Then
+                             agqSUPP1:STR_ZIPCODE[1,5]
+                         Else
+                             agqSUPP1:STR_ZIPCODE[1,5] + "-" +
+                             agqSUPP1:STR_ZIPCODE[6,9]
+
+        L_MORTAGE_TYPE_2 = agqSUPP1:MORTGAGE_TYPE_2
+        Access SFSMORTTYPE,
+           Set SFSMORTTYPE:COMPANY_ID    = L_COMPANY_ID,
+               SFSMORTTYPE:MORTGAGE_CODE = L_MORTAGE_TYPE_2, Exact
+
+        Writefile(L_FILE_NAME,"%s",trun(l_arial))
+        Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+        Writefile(L_FILE_NAME,"%s",Trun(SFSMORTTYPE:DESCRIPTION))
+        Writefile(L_FILE_NAME,"%s"," for Vehicle # ")
+        Writefile(L_FILE_NAME,"%n",agqSUPP1:VEHICLE_NO)
+
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+        Writefile(L_FILE_NAME,"%s","<033>&a600h-0V")
+        Writefile(L_FILE_NAME,"%s","Name")
+        Writefile(L_FILE_NAME,"%s",trun(l_arial))
+        For L_LOOP = 1 To 3
+          {
+            If (agqSUPP1:NAME[L_LOOP] <> "" ) Then
+              {
+                Writefile(L_FILE_NAME,"%s","<033>&a1200h+0V")
+                Writefile(L_FILE_NAME,"%s",agqSUPP1:NAME[L_LOOP])
+                Writefile(L_FILE_NAME,"%s","<NL>")
+                L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+              }
+          }
+        If (agqSUPP1:SUCCESSOR = "Y") Then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a1200h+0V")
+            Writefile(L_FILE_NAME,"%s",Uppercase("It's Successors/Assigns"))
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+          }
+        If (agqSUPP1:ATIMA = "Y") Then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a1200h+0V")
+            Writefile(L_FILE_NAME,"%s","ATIMA")
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+          }
+        If (agqSUPP1:ACCOUNT_NO <> "") Then
+          {
+            Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+            Writefile(L_FILE_NAME,"%s","<033>&a600h+0V")
+            Writefile(L_FILE_NAME,"%s","Loan #")
+            Writefile(L_FILE_NAME,"%s",trun(l_arial))
+            Writefile(L_FILE_NAME,"%s","<033>&a1200h+0V")
+            Writefile(L_FILE_NAME,"%s",agqSUPP1:ACCOUNT_NO)
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+          }
+        For L_LOOP = 1 To 3
+          {
+            If (agqSUPP1:ADDRESS[L_LOOP] <> "") Then
+              {
+                Writefile(L_FILE_NAME,"%s","<033>&a1200h-0V")
+                Writefile(L_FILE_NAME,"%s",agqSUPP1:ADDRESS[L_LOOP])
+                Writefile(L_FILE_NAME,"%s","<NL>")
+                L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+              }
+          }
+        Writefile(L_FILE_NAME,"%s","<033>&a1200h+0V")
+        Writefile(L_FILE_NAME,"%s",Trun(agqSUPP1:CITY))
+        Writefile(L_FILE_NAME,"%s",", ")
+        Writefile(L_FILE_NAME,"%s",agqSUPP1:STR_STATE)
+        Writefile(L_FILE_NAME,"%s","  ")
+        Writefile(L_FILE_NAME,"%s",L_SFPSUPP1_ZIP)
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+      }
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_PCOUNTER = L_LINE_PCOUNTER +1
+    If ((L_LINE_TPCOUTER - L_LINE_PCOUNTER) < 9) Then
+      {
+        L_LINE_PCOUNTER = 0
+  --      DO FRAUD_WARNING
+        DO INSERT_NEWPAGE
+        L_LINE_PCOUNTER = L_LINE_PCOUNTER + 2
+      }  -- there will be enought space for the forms and heading
+
+    Next agqSUPP1
+  }
+
+If (L_LINE_PCOUNTER > L_LINE_TPCOUTER) Then
+  {
+    L_LINE_PCOUNTER = 0
+--    DO FRAUD_WARNING
+    DO INSERT_NEWPAGE
+    L_PAGE_NUMBER = L_PAGE_NUMBER + 1
+  }
+Else
+  {
+    --DO FRAUD_WARNING
+  }
+--end of mortagee/loan information
+/*
+If (SFSLINE:OPTION = "S") Then
+  {
+    Writefile(L_FILE_NAME,"%s",L_ARIAL_8)
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+    Writefile(L_FILE_NAME,"%s","Issue Date:")
+    Writefile(L_FILE_NAME,"%s","1-")
+    Writefile(L_FILE_NAME,"%D",agqMASTER:TRANS_DATE)
+  }
+Else
+  If (SFSLINE:OPTION = "P") Then
+   {
+     Writefile(L_FILE_NAME,"%s",L_ARIAL_8)
+     Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+     Writefile(L_FILE_NAME,"%s","Issue Date:")
+     Writefile(L_FILE_NAME,"%s","2-")
+     Writefile(L_FILE_NAME,"%d",agqMASTER:TRANS_DATE)
+   }
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","<033>&a4950h7100V")
+Writefile(L_FILE_NAME,"%s","Page ")
+Writefile(L_FILE_NAME,"%n",L_PAGE_NUMBER)
+Writefile(L_FILE_NAME,"%s","<FF>")
+*/
+L_LOOP = L_LOOP + 1
+If (L_PAGE_NUMBER Mod 2 = 1) Then
+  {
+    --insert newpage so following copies are
+    Writefile(L_FILE_NAME,"%s","<FF>")
+  }
+
+Update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+
+Procedure Definition
+
+procedure fraud_warning
+Begin
+  Access SCIPSFRAUD,
+     Set SCIPSFRAUD:COMPANY_ID = L_COMPANY_ID, approximate
+
+  Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+  Writefile(L_FILE_NAME,"%s","<033>&a200h6800V")
+  Writefile(L_FILE_NAME,"%s","FRAUD WARNING")
+  Writefile(L_FILE_NAME,"%s",l_arial_bold_7)
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+  L_FONT             = l_arial_8
+  L_V_POSITION       = "+0"
+  L_H_POSITION       = "200"
+  L_CHARACTER_STRING = trun(SCIPSFRAUD:FRAUD_WARNING)
+  L_MAX_CHAR         = 75
+  include "line_spacing.inc"
+
+  Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+  Writefile(L_FILE_NAME,"%s","<033>&a5000h7100V")
+  Writefile(L_FILE_NAME,"%s","Page ")
+  Writefile(L_FILE_NAME,"%n",L_PAGE_NUMBER)
+
+End --End of Fraud Warning Procedure
+
+
+Procedure INSERT_NEWPAGE
+begin
+  Writefile(L_FILE_NAME,"%s","<FF>")
+  L_LINE_COUNTER = 0
+  If SCIPSCONTROL:PRINT_BORDERS_ON_DEC_PAGE = 1 Then
+    begin
+      Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c10a3045b0P")   --left vertical li
+      Writefile(L_FILE_NAME,"%s","<033>&a5585h0V<033>*c10a3045b0P")   --right vertical
+      Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c5460h20v0P") --top horizontal line to
+      Writefile(L_FILE_NAME,"%s","<033>&a140h7300V<033>*c5460h20v0P") --bottom horizontal line
+    end
+
+  L_PAGE_NUMBER = L_PAGE_NUMBER + 1
+
+  Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD_9))
+  Writefile(L_FILE_NAME,"%s","<033>&a200h120V")
+  Writefile(L_FILE_NAME,"%s",uppercase(trun(sfsline:description)))
+  Writefile(L_FILE_NAME,"%s"," QUOTE LETTER")
+  Writefile(L_FILE_NAME,"%s","<033>&a4200h+0V")
+  Writefile(L_FILE_NAME,"%s","Application No. APP")
+  Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+  Writefile(L_FILE_NAME,"%n",L_APP_NO)
+
+  Writefile(L_FILE_NAME,"%s%s","<033>&a150h+40V<033>*c5460h5v0P","<NL>")  --HORZ LINE deductible section I coverage PG. 1
+  L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+end --Procedure insert_newpage
+
+Procedure premium_totals_1 --this is the front of dec where endorsement premium is not included
+Begin
+
+--Total premium here
+Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+Writefile(L_FILE_NAME,"%s","TOTAL")
+Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+Writefile(L_FILE_NAME,"%s","$")
+Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+
+Writefile(L_FILE_NAME,"%s",Str((agqMASTER:TOTAL[1]
+                              + agqMASTER:TOTAL[2]
+                              + agqMASTER:TOTAL[3]
+                              + agqMASTER:TOTAL[4]
+                              + agqMASTER:TOTAL[5]
+                              + agqMASTER:TOTAL[6]
+                              + agqMASTER:TOTAL[7]
+                              + agqMASTER:TOTAL[8]
+                              + agqMASTER:TOTAL[9]
+                              + agqMASTER:TOTAL[10]
+                              + agqMASTER:TOTAL[11]
+                              + agqMASTER:TOTAL[12]
+                              + agqMASTER:TOTAL[14]
+                              + agqMASTER:TOTAL[15]
+                              + agqMASTER:SURCHARGE
+                              + agqmaster:OTHER_TOTALS[9]
+                              + agqMASTER:OTHER_TOTALS[18]
+                              - agqmaster:surcharge
+                              - agqMASTER:OTHER_TOTALS[20]),"(ZZ,ZZZ,ZZZ)"))
+
+If agqMASTER:OTHER_TOTALS[20] <> 0 Then
+  {
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+    Writefile(L_FILE_NAME,"%s","PACKAGE CREDIT")
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:OTHER_TOTALS[20],"(ZZ,ZZZ,ZZZ)"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+  }
+
+If Trun(SCIPSCONTROL:SURCHARGE_WORDING) <> "" Then
+  {
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+    Writefile(L_FILE_NAME,"%s",Trun(SCIPSCONTROL:SURCHARGE_WORDING))
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:SURCHARGE,"(ZZ,ZZZ,ZZZ)"))
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER +2
+
+If (agqMASTER:OTHER_TOTALS[20] <> 0) Then --if a package modifier was
+                                          --used on the quote
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+    Writefile(L_FILE_NAME,"%s","TOTAL SURCHARGE & PACKAGE")
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[20]
+                                 + agqMASTER:SURCHARGE,"(ZZ,ZZZ,ZZZ)"))
+  }
+Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+Writefile(L_FILE_NAME,"%s","TOTAL AMOUNT DUE")
+Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+Writefile(L_FILE_NAME,"%s","$")
+Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+
+Writefile(L_FILE_NAME,"%s",Str((agqMASTER:TOTAL[1]
+                              + agqMASTER:TOTAL[2]
+                              + agqMASTER:TOTAL[3]
+                              + agqMASTER:TOTAL[4]
+                              + agqMASTER:TOTAL[5]
+                              + agqMASTER:TOTAL[6]
+                              + agqMASTER:TOTAL[7]
+                              + agqMASTER:TOTAL[8]
+                              + agqMASTER:TOTAL[9]
+                              + agqMASTER:TOTAL[10]
+                              + agqMASTER:TOTAL[11]
+                              + agqMASTER:TOTAL[12]
+                              + agqMASTER:TOTAL[14]
+                              + agqMASTER:TOTAL[15]
+                              + agqMASTER:SURCHARGE
+                              + agqmaster:OTHER_TOTALS[9]
+                              + agqMASTER:OTHER_TOTALS[18]
+                              - agqMASTER:OTHER_TOTALS[20]),"(ZZ,ZZZ,ZZZ)"))
+
+End--End of Premium_totals_1 procedure
+
+Procedure premium_totals_2 --this is premuim total on back of dec where endorsement premium is included
+Begin
+
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+Writefile(L_FILE_NAME,"%s","PREMIUM FOR ENDORSEMENTS")
+Writefile(L_FILE_NAME,"%s","<033>&a1750h+0V")
+If agqMASTER:TOTAL[4]  + agqMASTER:TOTAL[9] +
+   agqMASTER:TOTAL[14] + agqMASTER:TOTAL[15] = 0 Then
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a4850h+0V")
+    Writefile(L_FILE_NAME,"%s","Not Applicable")
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[4]
+                                 + agqMASTER:TOTAL[14]
+                                 + agqmaster:other_totals[9]
+                                 + agqMASTER:TOTAL[15],"(ZZ,ZZZ,ZZZ)"))
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+  }
+
+--Total premium here
+Writefile(L_FILE_NAME,"%s","<033>&a350h+120V")
+Writefile(L_FILE_NAME,"%s","TOTAL")
+Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+Writefile(L_FILE_NAME,"%s","$")
+Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+
+Writefile(L_FILE_NAME,"%s",Str((agqMASTER:TOTAL[1]
+                              + agqMASTER:TOTAL[2]
+                              + agqMASTER:TOTAL[3]
+                              + agqMASTER:TOTAL[4]
+                              + agqMASTER:TOTAL[5]
+                              + agqMASTER:TOTAL[6]
+                              + agqMASTER:TOTAL[7]
+                              + agqMASTER:TOTAL[8]
+                              + agqMASTER:TOTAL[9]
+                              + agqMASTER:TOTAL[10]
+                              + agqMASTER:TOTAL[11]
+                              + agqMASTER:TOTAL[12]
+                              + agqMASTER:TOTAL[14]
+                              + agqMASTER:TOTAL[15]
+                              + agqMASTER:SURCHARGE
+                              + agqmaster:OTHER_TOTALS[9]
+                              + agqMASTER:OTHER_TOTALS[18]
+                              - agqmaster:surcharge
+                              - agqMASTER:OTHER_TOTALS[20]),"(ZZ,ZZZ,ZZZ)"))
+/*
+Writefile(L_FILE_NAME,"%s",Str((agqMASTER:TOTAL[1]
+                              + agqMASTER:TOTAL[2]
+                              + agqMASTER:TOTAL[3]
+                              + agqMASTER:TOTAL[4]
+                              + agqMASTER:TOTAL[5]
+                              + agqMASTER:TOTAL[6]
+                              + agqMASTER:TOTAL[7]
+                              + agqMASTER:TOTAL[8]
+                              + agqMASTER:TOTAL[9]
+                              + agqMASTER:TOTAL[10]
+                              + agqMASTER:TOTAL[11]
+                              + agqMASTER:TOTAL[12]
+                              + agqMASTER:TOTAL[14]
+                              + agqMASTER:TOTAL[15]
+                              + agqMASTER:OTHER_TOTALS[18]),"(ZZ,ZZZ,ZZZ)"))
+*/
+If agqMASTER:OTHER_TOTALS[20] <> 0 Then
+  {
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+    Writefile(L_FILE_NAME,"%s","<033>&a350h+120V")
+    Writefile(L_FILE_NAME,"%s","PACKAGE CREDIT")
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:OTHER_TOTALS[20],"(ZZ,ZZZ,ZZZ)"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+  }
+
+If Trun(SCIPSCONTROL:SURCHARGE_WORDING) <> "" Then
+  {
+    Writefile(L_FILE_NAME,"%s",trun(l_arial))
+    Writefile(L_FILE_NAME,"%s","<033>&a350h+120V")
+    Writefile(L_FILE_NAME,"%s",Trun(SCIPSCONTROL:SURCHARGE_WORDING))
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:SURCHARGE,"(ZZ,ZZZ,ZZZ)"))
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(l_arial))
+Writefile(L_FILE_NAME,"%s","<033>&a350h+120V")
+L_LINE_PCOUNTER = L_LINE_PCOUNTER +2
+
+If (agqMASTER:OTHER_TOTALS[20] <> 0) Then --if a package modifier was
+                                          --used on the quote
+  {
+    Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+    Writefile(L_FILE_NAME,"%s","TOTAL SURCHARGE & PACKAGE")
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s","$")
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(agqMASTER:TOTAL[20]
+                                 + agqMASTER:SURCHARGE,"(ZZ,ZZZ,ZZZ)"))
+  }
+Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+Writefile(L_FILE_NAME,"%s","TOTAL AMOUNT DUE")
+Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+Writefile(L_FILE_NAME,"%s","$")
+Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+
+Writefile(L_FILE_NAME,"%s",Str((agqMASTER:TOTAL[1]
+                              + agqMASTER:TOTAL[2]
+                              + agqMASTER:TOTAL[3]
+                              + agqMASTER:TOTAL[4]
+                              + agqMASTER:TOTAL[5]
+                              + agqMASTER:TOTAL[6]
+                              + agqMASTER:TOTAL[7]
+                              + agqMASTER:TOTAL[8]
+                              + agqMASTER:TOTAL[9]
+                              + agqMASTER:TOTAL[10]
+                              + agqMASTER:TOTAL[11]
+                              + agqMASTER:TOTAL[12]
+                              + agqMASTER:TOTAL[14]
+                              + agqMASTER:TOTAL[15]
+                              + agqMASTER:SURCHARGE
+                              + agqmaster:OTHER_TOTALS[9]
+                              + agqMASTER:OTHER_TOTALS[18]
+                              - agqMASTER:OTHER_TOTALS[20]),"(ZZ,ZZZ,ZZZ)"))
+
+/*
+
+Writefile(L_FILE_NAME,"%s",Str((agqMASTER:TOTAL[1]
+                              + agqMASTER:TOTAL[2]
+                              + agqMASTER:TOTAL[3]
+                              + agqMASTER:TOTAL[5]
+                              + agqMASTER:TOTAL[6]
+                              + agqMASTER:TOTAL[7]
+                              + agqMASTER:TOTAL[8]
+                              + agqMASTER:TOTAL[9]
+                              + agqMASTER:TOTAL[10]
+                              + agqMASTER:TOTAL[11]
+                              + agqMASTER:TOTAL[12]
+                              + agqMASTER:TOTAL[14]
+                              + agqMASTER:TOTAL[15]
+                              + agqMASTER:SURCHARGE
+                              + agqMASTER:OTHER_TOTALS[9]
+                              + agqMASTER:OTHER_TOTALS[18]
+                              - agqMASTER:OTHER_TOTALS[20]),"(ZZ,ZZZ,ZZZ)"))
+*/
+End--End of Premium_totals_2 procedure
+
+END -- End of agqmso003c program

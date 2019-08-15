@@ -1,0 +1,620 @@
+%%                 
+Screen
+        Name = "agtmt921";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqendorse5" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4],
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_rate_type[2],
+                                    l_class[1],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_rmf[6]=0/dec=4,
+                                    l_rate[8]=0/dec=4,
+                                    l_per[8],
+                                    l_premium[8],
+                                    l_limit[8],
+                                    l_line_of_business[4],
+                                    l_deductible[5],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_system_id[15],
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ;
+
+        Access agqendorse5,
+           Set agqendorse5:app_NO   = G_app_NO ,
+               agqendorse5:prem_no  = g_prem_no,
+               agqendorse5:build_no = g_build_no,
+               agqendorse5:code     = g_code ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqvehicle:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(farmers_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if agqendorse5:app_no <> g_app_no or
+   agqendorse5:prem_no <> g_prem_no or
+   agqendorse5:build_no <> g_build_no or
+   agqendorse5:code <> g_code then
+    function = "ADD"
+
+access agqend, set agqend:app_no   = g_app_no,
+                   agqend:prem_no  = g_prem_no,
+                   agqend:build_no = g_build_no,
+                   agqend:sub_code = g_sub_code, generic
+
+l_limit = agqend:limit
+l_deductible = agqend:deductible
+l_rate = agqend:rate
+l_premium = agqend:premium
+
+Access Validation
+If agqendorse5:app_NO <> G_app_NO or
+   agqendorse5:prem_no <> g_prem_no or
+   agqendorse5:build_no <> g_build_no or
+   agqendorse5:code <> g_code Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,75     tagged display_information_box
+                properties
+                  {
+                    text = "Outside Signs"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     begin
+        if function one of "ADD" then
+            begin
+            agqendorse5:app_no = g_app_no
+            agqendorse5:prem_no = g_prem_no
+            agqendorse5:build_no = g_build_no
+            agqendorse5:code = g_code
+            do subcode
+            agqendorse5:sub_code = l_sub_code
+            end
+        end
+        agqendorse5:app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt921.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,5 to 24,100
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+Construction of Sign:    Entirely Metal:~~_   Other:~~_
+Limit:                 ________
+Cause of Loss:         ________
+Coinsurance %:         ___
+Additional Premium:    ________
+
+%%
+
+Components
+
+Fields
+101     agqendorse5:Coverages[1]/checkbox/tabstop ;
+102     agqendorse5:coverages[2]/checkbox/tabstop ;
+201     agqendorse5:limit[1]/tabstop ;
+301     agqendorse5:cause_loss_option/tabstop/uppercase ;
+401     agqendorse5:coinsurance/tabstop ;
+501     agqendorse5:other_premium/tabstop ;
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 27,35 to 27,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 28,1 to 28,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+Update
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    access agqgeneral1, set agqgeneral1:app_no = g_app_no, generic
+
+    Access CPSPROPEND, Set CPSPROPEND:COMPANY_ID = agqgeneral1:company_id,
+                           CPSPROPEND:STATE = agqgeneral1:state,
+                           CPSPROPEND:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business, Generic
+
+    While CPSPROPEND:COMPANY_ID = agqgeneral1:company_id And
+          CPSPROPEND:STATE = agqgeneral1:state And
+          CPSPROPEND:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business
+            Begin
+            If agqname:EFF_DATE >= CPSPROPEND:EFF_DATE Then
+                Begin
+                L_CODE_1 = CPSPROPEND:CODE[6]  -- mcp221
+                L_CODE_2 = CPSPROPEND:CODE[7]  -- mcp225
+                L_CODE_3 = CPSPROPEND:CODE[8]  -- mcp223
+                L_CODE_4 = CPSPROPEND:CODE[9]  -- mcp227
+                End
+            Next CPSPROPEND
+            End
+
+    If L_CODE_1 <> "" Then
+        Begin
+        L_CODE = L_CODE_1
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqendorse5:VACANT[1] = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqendorse5:VACANT[1] = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_2 <> "" Then
+        Begin
+        L_CODE = L_CODE_2
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqendorse5:UNOCCUPIED[1] = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqendorse5:UNOCCUPIED[1] = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_3 <> "" Then
+        Begin
+        L_CODE = L_CODE_3
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqendorse5:VACANT[2] = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqendorse5:VACANT[2] = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_4 <> "" Then
+        Begin
+        L_CODE = L_CODE_4
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqendorse5:UNOCCUPIED[2] = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqendorse5:UNOCCUPIED[2] = 0 Then
+            Do DELETE_agqEND
+        End
+
+    End
+
+procedure definition
+
+procedure subcode
+begin
+access agqendorse5_alias, set agqendorse5_alias:app_NO   = G_app_NO ,
+                              agqendorse5_alias:prem_no  = g_prem_no,
+                              agqendorse5_alias:build_no = g_build_no,
+                              agqendorse5_alias:code     = g_code, generic
+
+l_sub_code = 0
+while agqendorse5_alias:app_NO   = G_app_NO and
+      agqendorse5_alias:prem_no  = g_prem_no and
+      agqendorse5_alias:build_no = g_build_no and
+      agqendorse5_alias:code     = g_code
+    begin
+    l_sub_code = agqendorse5_alias:sub_code
+
+    next agqendorse5_alias
+    end
+
+l_sub_code = l_sub_code + 10
+end
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqgeneral1:company_id,
+                      SFSOPTEND:STATE = agqgeneral1:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqgeneral1:company_id Or
+            SFSOPTEND:STATE <> agqgeneral1:state Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqgeneral1:rating_line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqname:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqname:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqEND
+    Begin
+    agqEND:app_no               =       G_app_no
+    agqEND:PREM_NO              =       G_PREM_NO
+    agqEND:BUILD_NO             =       G_BUILD_NO
+    agqEND:SUB_CODE             =       L_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+    agqEND:PREMIUM              =       0
+    agqEND:LOB_END_CODE         =       "P"
+    End
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+End

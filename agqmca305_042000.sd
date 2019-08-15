@@ -1,0 +1,244 @@
+%%
+/*
+Date Written: July 18, 2006
+
+Name: agqmca305_042000.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+07/18/2006            DWR     new form Version with New naming convention
+===========================
+*/
+
+Program
+  Name = "agqmca305_042000";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[19] = "agqmca305_042000.cq";
+ String L_COPY_NAME[20] ;
+ String L_FORM_PRINT[15] ;
+ String L_EDITION_PRINT[10] ;
+ String L_INFILE[15]="casmca305.in";
+ String L_READ_INFILE[25];
+ unsigned ascii number l_app_no[11] ;
+ unsigned ascii number l_vehicle_no[4] ;
+ Unsigned ascii number l_max_lines;
+ Unsigned Ascii Number L_YEAR[4];
+ Unsigned Ascii number L_LINE_OF_BUSINESS[4];
+ Unsigned ascii number l_found[1];
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_STATE[2]=0;
+ Unsigned Ascii Number L_LOOP;
+ wdate L_EFF_DATE;
+ Unsigned Ascii Number L_TOTAL_VEHICLE_PER_PAGE = 54;
+ Unsigned Ascii Number L_FIRST_PAGE_TOTAL_VEHICLE = 12;
+ Unsigned Ascii Number L_TOTAL_VEHICLE;
+ Unsigned Ascii Number L_LINE_COUNTER;
+ Unsigned Ascii Number L_MAX_LINE = 55;
+ Unsigned Ascii Number L_PAGE_NUMER = 1;
+ Unsigned Ascii Number L_PRINTED_VEHICLE_ON_PAGE = 0;
+ Number L_PAGE_NUMBER = 1;
+ Unsigned Ascii Number L_SECOND_COLUMN_LOC;
+ String L_READ;
+
+   Include "csfonts.inc"
+   Include "swsut100.var"
+   Include "swsut200.var"
+   Include "swsut300.var"
+   Include "line_spacing.var"
+
+Initialization
+l_app_no = val(commandline[1,11])
+l_vehicle_no = val(commandline[12,15])
+Deletefile (L_FILE_NAME);
+
+Access agqNAME,
+   Set agqNAME:app_no    = l_app_no , generic
+
+Access agqEND1,
+   Set agqEND1:app_no    = l_app_no , generic
+
+Access agqvehicle,
+   Set agqvehicle:app_no    = l_app_no , generic
+
+Access agqMASTER,
+   Set agqMASTER:app_no    = l_app_no, generic
+
+   Include "swsut100.inc"
+   I_CODE = "MCA305"
+   Include "swsut200.inc"
+
+While agqEND1:app_no    = l_app_no
+{
+  If agqEND1:CODE = I_CODE Then
+    {
+      L_STATE            = agqvehicle:STATE
+      L_COMPANY_ID       = agqvehicle:COMPANY_ID
+      L_LINE_OF_BUSINESS = agqvehicle:LINE_OF_BUSINESS
+
+      Access SFSOPTEND,
+         Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+             SFSOPTEND:STATE            = L_STATE,
+             SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+             SFSOPTEND:CODE             = I_CODE, generic
+
+       While SFSOPTEND:COMPANY_ID       = L_COMPANY_ID and
+             SFSOPTEND:STATE            = L_STATE and
+             SFSOPTEND:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS and
+             SFSOPTEND:CODE             = I_CODE
+
+         {  --start of sfsoptend check
+           If (agqvehicle:eff_date >= sfsoptend:eff_date and
+              (agqvehicle:eff_date < sfsoptend:exp_date or
+               sfsoptend:exp_date = 0)) then
+             {
+               l_eff_date = sfsoptend:eff_date
+             }
+           next sfsoptend
+         }
+
+      Access SFSOPTEND,
+         Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+             SFSOPTEND:STATE            = L_STATE,
+             SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+             SFSOPTEND:CODE             = I_CODE,
+             SFSOPTEND:EFF_DATE         = L_EFF_DATE, exact
+
+      If sfsoptend:edition <> 0 then
+        {
+          Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+          Writefile(L_FILE_NAME,"%s","<033>&a420h7080V")
+          Writefile(L_FILE_NAME,"%s","Ed. ")
+          Writefile(L_FILE_NAME,"%n",sfsoptend:edition)
+        }
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a420h7200V")
+      Writefile(L_FILE_NAME,"%s",l_copyright_6)
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s",sfsoptend:COPYRIGHT)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+      Writefile(L_FILE_NAME,"%s","<033>&a4300h120V")
+      Writefile(L_FILE_NAME,"%s",Trun(SFSOPTEND:FORM_PRINT))
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s",SFSOPTEND:EDITION_PRINT)
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","COVERED ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","AUTO ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","SYMBOL 11 DESCRIPTION - REGISTRATION PLATES")
+      L_LINE_COUNTER =L_LINE_COUNTER +1
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","This endorsement extends the Covered Auto Symbols to include Symbols 11.")
+      L_LINE_COUNTER =L_LINE_COUNTER +1
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+140V")
+      Writefile(L_FILE_NAME,"%s","The provisions of this endorsement apply only when the endorsement number is listed in the Declarations. ")
+      L_LINE_COUNTER =L_LINE_COUNTER +1
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","Except as provided below, all other provisions in this policy remain unchanged.")
+      L_LINE_COUNTER =L_LINE_COUNTER +1
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+100V")
+      Writefile(L_FILE_NAME,"%s","<033>&a90h-60V<033>*c5400h5v0P")--Horizontal line
+      L_LINE_COUNTER =L_LINE_COUNTER +2
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+180V")
+      Writefile(L_FILE_NAME,"%s","Policy # ")
+      Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+      Writefile(L_FILE_NAME,"%n",agqVEHICLE:app_no)
+      L_LINE_COUNTER =L_LINE_COUNTER +2
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+360V")
+      Writefile(L_FILE_NAME,"%s","SYMBOL ")
+      Writefile(L_FILE_NAME,"%s","<033>&a2000h+0V")
+      Writefile(L_FILE_NAME,"%s","DESCRIPTION OF REGISTRATION PLATES")
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+240V")
+      Writefile(L_FILE_NAME,"%s","11.")
+
+      While agqVEHICLE:app_no    = l_app_no
+
+        {
+          While agqEND1:app_no    = agqVEHICLE:app_no And
+                 agqEND1:VEHICLE_NO   = agqVEHICLE:VEHICLE_NO
+            {
+               If agqEND1:CODE = I_CODE Then
+                  {    --check the number of vehicle printed and make sure that
+                       --the form fields are inserted when needed
+                       If ((L_PRINTED_VEHICLE_ON_PAGE = L_FIRST_PAGE_TOTAL_VEHICLE) And
+                       (L_PAGE_NUMER = 1)) Or
+                       ((L_PRINTED_VEHICLE_ON_PAGE = L_TOTAL_VEHICLE_PER_PAGE) And
+                       (L_PAGE_NUMER > 1)) Then
+                      {
+                         Writefile(L_FILE_NAME,"%s","<FF>")
+                         L_PAGE_NUMER = L_PAGE_NUMER + 1
+                         L_PRINTED_VEHICLE_ON_PAGE = 0
+                         L_LINE_COUNTER = 0
+                      }
+                  Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+                  Writefile(L_FILE_NAME,"%s","<033>&a2100h+0V")
+                  Writefile(L_FILE_NAME,"%s",agqVEHICLE:SERIAL_NO)
+                  L_LINE_COUNTER = L_LINE_COUNTER +1
+                  L_PRINTED_VEHICLE_ON_PAGE = L_PRINTED_VEHICLE_ON_PAGE + 1
+             }
+            Next agqEND1
+         }
+          Next agqVEHICLE
+        }
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h2500V")
+      Writefile(L_FILE_NAME,"%s","PART I - COVERED ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","AUTO ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","DESCRIPTIONS MODIFICATION")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1000h+240V")
+      Writefile(L_FILE_NAME,"%s","When Symbol 11 is shown in the Declarations, ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","autos ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","while used with the registration plates described")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1000h+120V")
+      Writefile(L_FILE_NAME,"%s","in this endorsement are covered ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","autos ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","for those coverages provided in this policy for which that")
+
+      Writefile(L_FILE_NAME,"%s","<033>&a1000h+120V")
+      Writefile(L_FILE_NAME,"%s","symbol is shown.")
+      Writefile(L_FILE_NAME,"%s","<FF>")
+    }
+  next agqend1
+}
+
+update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+end

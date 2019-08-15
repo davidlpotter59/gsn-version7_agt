@@ -1,0 +1,1482 @@
+%%                      
+Screen
+        Name = "agtmt4000a";
+        Type = "Multiline" ;
+        repeat LINE_ITEMS, 10 times down ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="agqclass" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_state[2] ;
+        global unsigned ascii number g_sub_class[5] ;
+        global unsigned ascii number g_sub_code[4] ;
+        global unsigned ascii number g_class_code[5] ;
+
+        global string g_company_id[10] ,
+                      g_initial_screen[50] ,
+                      g_zipcode_change[1] ;
+
+        rwdate l_agqclass_eff_date;
+        wdate  l_rich_date;
+
+        array[10] of string l_view_desc[85] ;
+        array[10] of tag l_the_tag[15] ;
+
+        Local Unsigned Ascii Number L_SUB_CODE[4] ,
+                                    l_rate[6]=0/dec=2,
+                                    l_old_rate[6]=0/dec=3,
+                                    l_old_minimum[6]=0,
+                                    l_old_premium[9]=0,
+                                    l_new_premium[9]=0,
+                                    l_new_exposure[10]=0,
+                                    l_old_exposure[10]=0,
+                                    l_loss_cost[4]/dec=3,
+                                    l_minimum_premium[6]=0/dec=0,
+                                    l_short_rate[4]=0/dec=2,
+                                    l_display_screen[1]=0 ,
+                                    L_STATE[2],
+                                    l_first_prem_no[4],
+                                    l_first_build_no[4],
+                                    l_last_prem_no[4],
+                                    l_length[70],
+                                    l_possible_class_code[2],
+                                    l_last_build_no[4],
+                                    l_agent_no[4],
+                                    l_county[3],
+                                    l_app_no[11],
+                                    l_loop[4],
+                                    l_prem_no[4]=0,
+                                    l_no_locations[2]=0,
+                                    l_build_no[4]=0,
+                                    l_yyyy[4],
+                                    l_sub[2],
+                                    l_sub_1[5],
+                                    L_CLASS_CODE[5],
+                                    l_year[4],
+                                    l_end_sequence[4],
+                                    L_LINE_OF_BUSINESS[2] ,
+                                    l_csexec_number[12],
+                                    i_csexec_number[12],
+                                    l_abort_program[1],
+                                    l_mm[2],
+                                    l_dd[2],
+                                    l_yy[4],
+                                    L_FORM[1] ,
+                                    l_Form_1[1] ;
+
+        local signed ascii number l_irpm[4]=0/dec=2 ;
+
+        Local String l_string_date[8],
+                     l_desc[70] ,
+                     l_str_eff_date[8],
+                     l_lob_code[10],
+                     l_sub_line[2],
+                     l_screen_name[15],
+                     l_agent_wording[9]="Agent No:",
+                     l_fob[1],
+                     l_fob_desc[50],
+                     l_fob_description[50],
+                     l_fob_description1[75],
+                     l_form_of_business[1],
+                     l_username[15],
+                     l_text_1[85],
+                     l_text_2[85],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_first_str_location[8],
+                     l_last_str_location[8],
+                     l_str_location[8],
+                     i_csexec_application[25] ,
+                     l_first_location[1]="Y",
+                     l_string_view[15],
+                     l_second_time[1],
+                     l_first[1],
+                     l_enter[1],
+                     l_continue_1[3]="",
+                     l_continue_2[3]="",
+                     l_continue_3[3]="",
+                     L_CODE[7],
+                     L_CODE_1[7],
+                     L_CODE_2[7],
+                     L_CODE_3[7],
+                     L_CODE_4[7],
+                     L_CODE_5[7],
+                     L_CODE_6[7],
+                     L_CODE_7[7],
+                     L_CODE_8[7],
+                     l_code_9[7],
+                     l_code_10[7],
+                     l_code_11[7],
+                     l_code_12[7],
+                     l_code_13[7],
+                     l_code_14[7],
+                     l_csexec_application[25],
+                     l_processing_system[30],
+                     l_system_id[15],
+                     L_SCREEN[15] ,
+                     l_screen_1[9],
+                     L_FORM_EDITION[18],
+                     L_DESCRIPTION[55],
+                     L_ADD_ENDORSEMENT[1]="Y",
+                     L_COMPANY_ID[10] ;
+
+        local wdate l_eff_date ,
+                    l_exp_date ,
+                    i_eff_date,
+                    i_exp_date,
+                    i_trans_eff ,
+                    l_current_rate_date ;
+
+        local date l_agqworkerscomp1_eff_date[8] ;
+
+        include "prorata.var"
+
+        Access agqclass,
+           Set agqclass:app_no   = G_app_no,
+               agqclass:prem_no  = g_prem_no,
+               agqclass:build_no = g_build_no, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt4000a" ;
+
+        "add" sequence "new"  tagged add_fn ;
+         "new" continue begin
+                        access agqclass_alias, set agqclass_alias:app_no = g_app_no,
+                                                   agqclass_alias:prem_no = g_prem_no,
+                                                   agqclass_alias:build_no = g_build_no, generic
+
+                        if agqclass_alias:app_no   <> g_app_no or
+                           agqclass_alias:PREM_NO  <> G_PREM_NO or
+                           agqclass_alias:BUILD_NO <> G_BUILD_NO
+                           then
+                            function = "addnew|append"
+                        else
+                            function = "append"
+                        end;
+        "addnew" add/autoupdate ;
+        append    tagged append_fn;
+
+        "func1" display "agtmt4001" tagged calc_fn ;
+
+        reaccess ;
+
+        include "stdfunc7.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+access agqworkerscomp1, set agqworkerscomp1:app_no   = g_app_no,
+                            agqworkerscomp1:prem_no  = g_prem_no,
+                            agqworkerscomp1:build_no = g_build_no, generic
+
+disable(accept_fn)
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+g_initial_screen = ""
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER                            --"http://192.168.1.197/"
+
+l_username = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = sfsemail:agent_no, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+setproperty(t_line_of_business,iconname,"title_workers_comp.bmp")
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+Access SFSLINE_ALIAS, Set SFSLINE_alias:COMPANY_ID       = l_company_id,
+                          SFSLINE_alias:LINE_OF_BUSINESS = g_line_of_business,
+                          SFSLINE_alias:LOB_SUBLINE      = "00", Generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = l_company_id,
+                    SFSLINE:LINE_OF_BUSINESS = g_line_of_business,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    if agqclass:app_no = 0 then
+        {
+        l_current_web_page = "webhelp_scr_bop_rating_no_proposal_num.htm"
+        do change_current_browser(l_server_name,l_current_web_page)
+        }
+    else
+        {
+        l_current_web_page = "webhelp_scr_bop_rating_yes_proposal_num.htm"
+        do change_current_browser(l_server_name,l_current_web_page)
+        }
+    end
+
+if agqclass:app_no   <> g_app_no or
+   agqclass:prem_no  <> g_prem_no or
+   agqclass:build_no <> g_build_no then
+    function = "ADD"
+
+access agqname, set agqname:app_no = g_app_no,generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(delete_fn)
+    disable(accept_fn)
+    end
+
+if agqclass:app_no = 0 then
+    begin
+    disable(previous_fn)
+    disable(next_fn)
+    end
+
+access sfscompany, set sfscompany:company_id = l_company_id, generic
+
+l_screen_name = "agtmt4000a"
+
+access validation
+if agqclass:app_no <> g_app_no or
+   agqclass:prem_no <> g_prem_no or
+   agqclass:build_no <> g_build_no then
+    error 1000
+
+access agqclass_alias, set agqclass_alias:app_no = agqclass:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqclass_alias:app_no = agqclass:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqclass_alias:prem_no) +
+                               str(agqclass_alias:build_no)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqclass_alias:prem_no) +
+                           str(agqclass_alias:build_no)
+    l_no_locations  = l_no_locations + 1
+
+    next agqclass_alias
+    end
+
+l_str_location = str(agqclass:prem_no) +
+                 str(agqclass:build_no)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+    Properties {
+               Layouttype = screen
+               transparent = False
+               backgroundcolor = "#ADD8E6"
+               scrollbarpolicy = always
+               }
+{
+
+Panel at 1,1 to 2,100
+    Properties {
+               layouttype = screen
+               }
+{
+components
+    guidetext at 1,1 to 2,40
+        properties {
+                   iconname = "qp_logo.gif"
+                   }
+
+    guidetext at 1,83 to 2,100 tagged ficof_fn
+        properties {
+                   iconname = "ficof_logo.gif"
+                   }
+
+    guidetext at 1,83 to 2,100 tagged farmers_fn
+        properties {
+                   iconname = "salem_logo.gif"
+                   }
+
+    guidetext at 1,83 to 2,100 tagged lebins_fn
+        properties {
+                   iconname = ""
+                   }
+
+    guidetext at 1,30 to 2,100 tagged t_line_of_business
+        Properties {
+                   iconname = ""
+                   }
+
+}
+
+panel at 3,1 to 4,100
+    Properties {
+               LayoutType = screen
+               backgroundcolor = "Grey"
+               transparent = False
+               }
+{
+components
+    guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+        properties {
+                   text = "Class Code..."
+                   fontsize = 18
+                   fontstyle = BOLD
+                   fontname = "arial"
+                   transparent = False
+                   backgroundcolor = "Grey"
+                   }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+    Properties {
+               LayoutType = screen
+               }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     begin
+        if function one of "ADD", "NEW", "APPEND", "ADDNEW" then
+            begin
+            agqclass:app_no   = g_app_no
+            agqclass:prem_no  = g_prem_no
+            agqclass:build_no = g_build_no
+            agqclass:state    = agqworkerscomp1:state
+            if agqworkerscomp1:line_of_business = 99 then
+                agqclass:line_of_business = agqamt:line_of_business[3]
+            else
+                agqclass:line_of_business = agqworkerscomp1:line_of_business
+            end
+
+        l_line_of_business = agqclass:line_of_business
+        if l_line_of_business = 0 then
+            l_line_of_business = agqworkerscomp1:line_of_business
+        end
+        agqclass:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+    Properties {
+               LayoutType = screen
+               }
+{
+Components
+    Button at 1.5,3   tagged add_fn
+        Properties {
+                   Iconname = "btn_add.bmp"
+                   }
+        Events     {
+                   Action = add_fn
+                   }
+
+    Button at 1.5,38    tagged change_fn
+        Properties {
+                   Iconname = "btn_edit.bmp"
+                   }
+        Events     {
+                   Action = change_fn
+                   }
+
+    Button at 1.5, 70 tagged delete_fn
+        Properties {
+                   Iconname = "btn_delete.bmp"
+                   }
+        Events     {
+                   Action = delete_fn
+                   }
+
+}
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = column
+               }
+{
+Components
+    Button to 1,1
+        properties {
+                   Iconname = "btn_print_screen.bmp"
+                   }
+        events     {
+                   action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                   }
+
+}
+
+Panel at 6.45,92
+    Properties {
+               layouttype = column
+               }
+{
+Components
+    guidetext to 1,1
+        properties {
+                   text = "agtmt4000a.sd"
+                   fontsize = 9
+                   }
+
+}
+
+Panel at 7,1 to 9,100 Tagged location
+    Properties {
+               LayoutType = screen
+               }
+{
+Components
+    guidetext at 1.5,24 to 2.5,36
+        properties {
+                   text = "Location No:"
+                   fontsize = 12
+                   fontname = "arial"
+                   }
+
+    guidetext at 1.5,44 to 2.5,56
+        properties {
+                   text = "Building No:"
+                   fontsize = 12
+                   fontname = "arial"
+                   }
+
+}
+
+Panel at 7.5,33 to 9,60 Tagged rating_pl
+{
+%%
+____                ____
+%%
+
+components
+
+fields
+101   agqclass:prem_no/displayonly ;
+102   agqclass:build_no/displayonly ;
+
+}
+
+Panel at 8,70 to 8,100
+Properties {
+           layouttype = row
+           }
+{
+Components
+    Button at 1,55 tagged accept_fn
+        properties {
+                   Iconname = "btn_accept_edits.bmp"
+                   }
+        Events    {
+                  mouseclicked = accept
+                  }
+
+}
+
+Panel at 10,5 to 23, 100
+{
+%%
+                               No                         Estimated    Minimum
+     Description     Class  Employees  Exposure    Rate   Annual Prem  Premium
+____________________ _____   _____   ____________ _______ __________   ________
+
+
+
+
+
+
+
+
+
+
+
+
+%%
+
+components
+
+fields
+301     Begin
+        if function one of "ADD", "NEW", "APPEND", "ADDNEW", "CHANGE", "CHG" then
+            enable(accept_fn)
+        if function = "APPEND" then
+            begin
+            l_desc = ""
+            end
+        l_agqworkerscomp1_eff_date = agqworkerscomp1:eff_date
+        L_CLASS_CODE = agqclass:CLASS_CODE
+        Access wcsclass, Set wcsclass:COMPANY_ID       = agqworkerscomp1:COMPANY_ID,
+                             wcsclass:STATE            = agqworkerscomp1:state,
+                             wcsclass:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS,
+                             wcsclass:WC_CLASS_CODE    = agqclass:CLASS_CODE,
+                             wcsclass:WC_SUB_CLASS     = agqclass:SUB_CLASS, Generic
+
+        While wcsclass:COMPANY_ID       = agqworkerscomp1:COMPANY_ID And
+              wcsclass:STATE            = agqworkerscomp1:state And
+              wcsclass:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS And
+              wcsclass:WC_CLASS_CODE    = agqclass:CLASS_CODE And
+              wcsclass:WC_SUB_CLASS     = agqclass:SUB_CLASS
+                Begin
+                If agqworkerscomp1:EFF_DATE >= wcsclass:rate_DATE Then
+                    begin
+                    L_DESC = wcsclass:DESCRIPTION_1
+                    l_display_screen = wcsclass:display_screen
+                   end
+
+                Next wcsclass
+                End
+        End
+        L_DESC/displayonly/uppercase tagged LINE_ITEMS;
+301     Begin
+        Access wcsclass_ALIAS, Set wcsclass_ALIAS:COMPANY_ID       = agqworkerscomp1:COMPANY_ID,
+                                   wcsclass_ALIAS:STATE            = agqworkerscomp1:state,
+                                   wcsclass_ALIAS:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                                   wcsclass_ALIAS:description_1    = L_DESC, Approximate
+
+        End
+        L_DESC/uppercase/tabstop  tagged LINE_ITEMS
+        l_length = len(trun(l_desc))
+        Access wcsclass_alt, Set wcsclass_alt:COMPANY_ID       = agqworkerscomp1:COMPANY_ID,
+                                 wcsclass_alt:STATE            = agqworkerscomp1:state,
+                                 wcsclass_alt:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                                 wcsclass_alt:description_1    = L_DESC, Approximate
+
+        l_possible_class_code = 0
+        while wcsclass_alt:COMPANY_ID       = agqworkerscomp1:COMPANY_ID and
+              wcsclass_alt:STATE            = agqworkerscomp1:state and
+              wcsclass_alt:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS
+                begin
+                if wcsclass_alt:description_1[1,l_length] = l_desc[1,l_length] then
+                    l_possible_class_code = l_possible_class_code + 1
+
+                next wcsclass_alt
+                end
+
+        if l_desc <> agqclass:description and
+           l_desc <> "" then
+            begin
+            if l_possible_class_code = 1 or
+               l_second_time = "Y" then
+                begin
+                Access wcsclass_alt, Set wcsclass_alt:COMPANY_ID       = agqworkerscomp1:COMPANY_ID,
+                                         wcsclass_alt:STATE            = agqworkerscomp1:state,
+                                         wcsclass_alt:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                                         wcsclass_alt:description_1    = L_DESC, Approximate
+
+                agqclass:class_code  = wcsclass_alt:wc_class_code
+                agqclass:SUB_CLASS   = wcsclass_ALt:WC_SUB_CLASS
+                agqclass:description = wcsclass_alt:description_1
+                l_display_screen     = wcsclass_alt:display_screen
+                l_desc               = wcsclass_alt:description_1
+                end
+            else
+                begin
+                Access wcsclass_alt, Set wcsclass_alt:COMPANY_ID       = agqworkerscomp1:COMPANY_ID,
+                                         wcsclass_alt:STATE            = agqworkerscomp1:state,
+                                         wcsclass_alt:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                                         wcsclass_alt:description_1    = L_DESC, Approximate
+
+                l_second_time        = "Y"
+                activehelp()
+                l_desc               = wcsclass_alt:description_1
+                agqclass:class_code  = wcsclass_alt:wc_class_code
+                agqclass:SUB_CLASS   = wcsclass_alt:WC_SUB_CLASS
+                agqclass:description = wcsclass_alt:description_1
+                l_display_screen     = wcsclass_alt:display_screen
+                end
+            end
+
+        if agqclass:class_code = 0 and
+           l_desc <> "" then
+            error "Invalid Description Entered"
+
+        Activehelp if (l_agqworkerscomp1_eff_date >= wcsclass_alias:rate_date and
+                      (l_agqworkerscomp1_eff_date <= wcsclass_alias:exp_date or
+                      wcsclass_alias:exp_date = 0)) then
+                        wcsclass_ALIAS:description_1
+                   else
+                       null/width=70,
+                   if (l_agqworkerscomp1_eff_date >= wcsclass_alias:rate_date and
+                      (l_agqworkerscomp1_eff_date <= wcsclass_alias:exp_date or
+                      wcsclass_alias:exp_date = 0)) then
+                       wcsclass_ALIAS:WC_CLASS_CODE
+                   else
+                       null,
+                   if (l_agqworkerscomp1_eff_date >= wcsclass_alias:rate_date and
+                      (l_agqworkerscomp1_eff_date <= wcsclass_alias:exp_date or
+                      wcsclass_alias:exp_date = 0)) then
+                       wcsclass_alias:WC_SUB_CLASS
+                   else
+                       null ;
+
+302     agqclass:CLASS_CODE/displayonly  tagged LINE_ITEMS
+        hide if l_desc = "" ;
+301     l_desc/displayonly tagged LINE_ITEMS;
+302     begin
+        Access wcsclass_alt, Set wcsclass_alt:COMPANY_ID       = agqworkerscomp1:COMPANY_ID,
+                                 wcsclass_alt:STATE            = agqworkerscomp1:state,
+                                 wcsclass_alt:LINE_OF_BUSINESS = agqworkerscomp1:line_of_business,
+                                 wcsclass_alt:wc_class_code    = agqclass:class_code, approximate
+        end
+        agqclass:class_code/tabstop            tagged LINE_ITEMS
+        hide if l_desc <> ""
+        agqclass:sub_class = wcsclass_alt:wc_sub_class
+        Access wcsclass, Set wcsclass:COMPANY_ID       = agqworkerscomp1:COMPANY_ID,
+                             wcsclass:STATE            = agqworkerscomp1:state,
+                             wcsclass:LINE_OF_BUSINESS = agqworkerscomp1:line_of_business,
+                             wcsclass:WC_CLASS_CODE    = agqclass:CLASS_CODE,
+                             wcsclass:wc_sub_class     = agqclass:sub_class, Generic
+
+        while wcsclass:COMPANY_ID       = agqworkerscomp1:COMPANY_ID and
+              wcsclass:STATE            = agqworkerscomp1:state and
+              wcsclass:LINE_OF_BUSINESS = agqworkerscomp1:line_of_business and
+              wcsclass:WC_CLASS_CODE    = agqclass:CLASS_CODE and
+              wcsclass:wc_sub_class     = agqclass:sub_class
+            begin
+            If (l_agqworkerscomp1_EFF_DATE >= wcsclass:rate_DATE and
+               (l_agqworkerscomp1_eff_date <= wcsclass:exp_date or
+               wcsclass:exp_date = 0)) Then
+                begin
+                agqclass:SUB_CLASS = wcsclass:WC_SUB_CLASS
+                l_desc             = wcsclass:description_1
+                l_display_screen   = wcsclass:display_screen
+                end
+
+             next wcsclass
+            end
+
+        if l_desc = "" and
+           agqclass:class_code <> 0 then
+            begin
+            error "Invalid Class Code Entered"
+            end
+
+        activehelp if (l_agqworkerscomp1_eff_date >= wcsclass_alt:rate_date and
+                      (l_agqworkerscomp1_eff_date <= wcsclass_alt:exp_date or
+                      wcsclass_alt:exp_date = 0)) then
+                       wcsclass_alt:wc_class_code
+                   else
+                       null,
+                   if (l_agqworkerscomp1_eff_date >= wcsclass_alt:rate_date and
+                      (l_agqworkerscomp1_eff_date <= wcsclass_alt:exp_date or
+                      wcsclass_alt:exp_date = 0)) then
+                       wcsclass_alt:wc_sub_class
+                   else
+                       null,
+                   if (l_agqworkerscomp1_eff_date >= wcsclass_alt:rate_date and
+                      (l_agqworkerscomp1_eff_date <= wcsclass_alt:exp_date or
+                      wcsclass_alt:exp_date = 0)) then
+                       wcsclass_alt:description_1
+                   else
+                       null/width=50 ;
+301     L_DESC/displayonly/uppercase  tagged LINE_ITEMS;
+303     begin
+        if l_desc = "" and
+           function one of "NEW", "ADDNEW", "ADD", "APPEND" then
+            begin
+            abort()
+            function = "redisplay"
+            end
+        if function one of "NEW", "ADDNEW", "ADD", "APPEND" then
+            begin
+            do subcode
+            agqclass:sub_code = l_sub_code + 10
+            end
+        end
+        agqclass:NO_EMPLOYEES/mask="ZZ,ZZZ"/tabstop  tagged LINE_ITEMS mandatory;
+304     agqclass:EXPOSURE[1]/mask="ZZ,ZZZ,ZZZ"/tabstop tagged LINE_ITEMS;
+305     begin
+        if function one of "NEW", "ADDNEW", "ADD", "APPEND", "CHANGE"  then
+            begin
+            if agqclass:description <> l_desc then
+                agqclass:description = l_desc
+            if agqworkerscomp1:anniversary_exp_date <> 0 then
+                begin
+                do get_new_rate
+                do get_old_rate
+                end
+            else
+                do get_rate
+
+            if agqclass:rate[1] = 0 then
+                l_minimum_premium = 0
+            end
+        end
+        agqclass:RATE[1]/default/tabstop   tagged LINE_ITEMS;
+306     begin
+        if function one of "NEW", "ADDNEW", "ADD", "APPEND", "CHANGE" then
+            begin
+            l_second_time = "N"
+            if agqworkerscomp1:exp_mod_factor[1] <> 0 and
+               agqworkerscomp1:exp_mod_factor[2] <> 0 then
+                agqclass:split_mod = 1
+            else
+                agqclass:split_mod = 0
+            agqclass:wc_premium[1] = ((agqclass:exposure[1] divide 100) * agqclass:rate[1])
+            end
+        end
+        agqclass:wc_PREMIUM[1]/displayonly tagged LINE_ITEMS;
+307     begin
+        if function one of "NEW", "ADDNEW", "ADD", "APPEND", "CHANGE" then
+            begin
+            agqclass:minimum_premium[1] = l_minimum_premium
+            end
+        end
+        agqclass:minimum_PREMIUM[1]/default/tabstop tagged LINE_ITEMS;
+
+
+}
+
+
+Panel at 25,3 to 25,120 Tagged icon_line2_tg
+Properties {
+           LayoutType = screen
+           }
+{
+Components
+    Button at 1,1   tagged back_fn
+        Properties {
+                   Iconname = "btn_back_to_main_screen.bmp"
+                   }
+        Events     {
+                   Action = back_fn
+                    }
+
+    Button at 1,32    tagged previous_fn
+        Properties {
+                   Iconname = "btn_previous.bmp"
+                   }
+        Events     {
+                   Action = previous_fn
+                   }
+
+    Button at 1, 48 tagged next_fn
+        Properties {
+                   Iconname = "btn_next.bmp"
+                   }
+        Events     {
+                   Action = next_fn
+                   }
+
+
+    Button at 1,70   tagged calc_fn
+        Properties {
+                   Iconname = "btn_view_summary_totals.bmp"
+                   }
+        Events     {
+                   Action = calc_fn
+                   }
+
+}
+
+panel at 26,1 to 26,120 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,120
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+panel at 27,1 to 32,100  tagged ficof_fn
+Properties {
+           LayoutType = screen
+           backgroundcolor = "white"
+           }
+{
+Components
+    browser at 1,1 to 7,100  tagged helper_tg
+        properties {
+                   url = ""
+                   }
+}
+
+}
+
+Update
+if abort = "YES" and
+   agqclass:app_no <> 0 then
+    function = "redisplay"
+
+if UPDATEOK = "NO" then
+    begin
+    enable (calc_fn)
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    enable(calc_fn)
+    disable(accept_fn)
+    if function one of "NEW", "ADDNEW", "ADD", "APPEND" then
+        begin
+        access agqclass_alias,
+           set agqclass_alias:app_no   = agqclass:app_no,
+               agqclass_alias:prem_no    = agqclass:prem_no,
+               agqclass_alias:build_no   = agqclass:build_no,
+               agqclass_alias:class_code = agqclass:class_code,
+               agqclass_alias:sub_class  = agqclass:sub_class,
+               agqclass_alias:sub_code   = agqclass:sub_code, generic
+
+        if agqworkerscomp1:exp_mod_factor[1] <> 0 then
+            begin
+            i_eff_date = dateadd(agqworkerscomp1:exp_mod_exp_date[1],0,-1)
+            i_exp_date = agqworkerscomp1:exp_mod_exp_date[1]
+            i_trans_eff = agqworkerscomp1:exp_mod_eff_date[1]
+            do pro_rata
+            change agqclass_alias
+                begin
+                if i_pro_rata <> 0 then
+                    begin
+                    agqclass_alias:exposure[2] = agqclass_alias:exposure[1] *
+                                                 i_pro_rata
+                    agqclass_alias:pro_rata[2] = i_pro_rata
+                    agqclass_alias:exposure[3] = agqclass_alias:exposure[1] -
+                                                 agqclass_alias:exposure[2]
+                    end
+                else
+                    begin
+                    agqclass_alias:exposure[2] = agqclass_alias:exposure[1]
+                    agqclass_alias:exposure[3] = 0
+                    end
+              end
+            end
+        else
+            begin
+            change agqclass_alias
+              begin
+                agqclass_alias:exposure[2] = agqclass_alias:exposure[1]
+                agqclass_alias:exposure[3] = 0
+              end
+            end
+
+        if agqworkerscomp1:anniversary_exp_date <> 0 then
+            begin
+            do get_exposure_premium
+            access agqclass_alias,
+               set agqclass_alias:app_no     = agqclass:app_no,
+                   agqclass_alias:prem_no    = agqclass:prem_no,
+                   agqclass_alias:build_no   = agqclass:build_no,
+                   agqclass_alias:class_code = agqclass:class_code,
+                   agqclass_alias:sub_class  = agqclass:sub_class,
+                   agqclass_alias:sub_code   = agqclass:sub_code, generic
+
+            change agqclass_alias
+                begin
+                agqclass_alias:exposure[3]          = agqclass_alias:exposure[1]
+                agqclass_alias:exposure[1]          = l_new_exposure
+                agqclass_alias:wc_premium[1]        = l_new_premium
+                agqclass_alias:pro_rata[1]          = 1.00 - i_pro_rata
+                agqclass_alias:anniversary_rating   = 1
+                agqclass_alias:ard_eff_date         = agqworkerscomp1:anniversary_eff_date
+                end
+
+            do subcode
+            add agqclass_alias
+                begin
+                agqclass_alias:app_no               =       agqclass:app_no
+                agqclass_alias:prem_no              =       agqclass:prem_no
+                agqclass_alias:build_no             =       agqclass:build_no
+                agqclass_alias:class_code           =       agqclass:class_code
+                agqclass_alias:sub_class            =       agqclass:sub_class
+                agqclass_alias:sub_code             =       l_sub_code - 1
+                agqclass_alias:record_rdf           =       agqclass:record_rdf/raw
+                agqclass_alias:rate[1]              =       l_old_rate
+                agqclass_alias:exposure[1]          =       l_old_exposure
+                agqclass_alias:anniversary_rating   =       1
+                agqclass_alias:pro_rata[1]          =       i_pro_rata
+                agqclass_alias:split_mod            =       0
+                agqclass_alias:no_employees         =       agqclass:no_employees
+                agqclass_alias:wc_premium[1]        =       l_old_premium
+                agqclass_alias:state                =       agqworkerscomp1:state
+                agqclass_alias:minimum_premium[1]   =       l_old_minimum
+                agqclass_alias:ard_eff_date         =       agqworkerscomp1:eff_date
+                end
+            end
+         end
+
+    if function one of "NEW", "ADDNEW", "ADD", "APPEND" and
+       l_display_screen one of 1 then
+        begin
+        g_prem_no    = agqclass:prem_no
+        g_build_no   = agqclass:build_no
+        g_class_code = agqclass:class_code
+        g_sub_class  = agqclass:sub_class
+        g_sub_code   = agqclass:sub_code
+        display modal screen "wcqmt100e"
+        with initial function "CHANGE"
+        end
+
+    if function one of "ADD", "NEW", "CHANGE", "CHG" then
+        begin
+        access agqworkerscomp1, set agqworkerscomp1:app_no = g_app_no, generic
+
+        l_state = agqworkerscomp1:state
+        l_line_of_business = agqworkerscomp1:line_of_business
+        if l_line_of_business = 0 then
+            l_line_of_business = agqworkerscomp1:line_of_business
+        Access wcstrigger, Set wcstrigger:COMPANY_ID = agqworkerscomp1:COMPANY_ID,
+                               wcstrigger:STATE = L_STATE,
+                               wcstrigger:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS, Generic
+
+        Repeat Begin
+            Exit If wcstrigger:COMPANY_ID <> agqworkerscomp1:COMPANY_ID Or
+                    wcstrigger:STATE <> L_STATE Or
+                    wcstrigger:LINE_OF_BUSINESS <> L_LINE_OF_BUSINESS
+
+            If agqworkerscomp1:EFF_DATE >= wcstrigger:EFF_DATE Then
+                Begin
+                L_CODE_1 = wcstrigger:code[7] -- construction credit
+                End
+
+            Next wcstrigger
+            End
+
+        If L_CODE_1 <> "" Then
+            Begin
+            L_CODE = L_CODE_1
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqclass:class_code >= 600 and
+               agqclass:class_code <= 699 Then
+                Do ADD_agqend
+            If ((L_ADD_ENDORSEMENT = "N" And
+               agqclass:class_code < 600) or
+               (l_add_endorsement = "N" and
+               agqclass:class_code > 699)) Then
+                Do DELETE_agqend
+            end
+
+        End
+
+    end
+
+Procedure Definition
+
+procedure get_exposure_premium
+begin
+  access agqclass_alias,
+     set agqclass_alias:app_no   = agqclass:app_no,
+         agqclass_alias:prem_no    = agqclass:prem_no,
+         agqclass_alias:build_no   = agqclass:build_no,
+         agqclass_alias:class_code = agqclass:class_code,
+         agqclass_alias:sub_class  = agqclass:sub_class,
+         agqclass_alias:sub_code   = agqclass:sub_code, generic
+
+  i_eff_date  = agqworkerscomp1:anniversary_eff_date--dateadd(agqworkerscomp1:anniversary_exp_date,0,-1)
+  i_exp_date  = agqworkerscomp1:anniversary_exp_date
+  i_trans_eff = agqworkerscomp1:eff_date
+  do pro_rata
+  l_old_exposure = agqclass_alias:exposure[1] *
+                   i_pro_rata
+  l_new_exposure = agqclass_alias:exposure[1] -
+                   l_old_exposure
+  l_old_premium = ((l_old_exposure divide 100) * l_old_rate)
+  l_new_premium = ((l_new_exposure divide 100) * agqclass_alias:rate[1])
+
+end
+
+procedure subcode
+begin
+access agqclass_alias, set agqclass_alias:app_no   = agqclass:app_no,
+                           agqclass_alias:prem_no    = agqclass:prem_no,
+                           agqclass_alias:build_no   = agqclass:build_no,
+                           agqclass_alias:class_code = agqclass:class_code,
+                           agqclass_alias:sub_class  = agqclass:sub_class, generic
+
+l_sub_code = 0
+while agqclass_alias:app_no = agqclass:app_no and
+      agqclass_alias:prem_no = agqclass:prem_no and
+      agqclass_alias:build_no = agqclass:build_no and
+      agqclass_alias:class_code = agqclass:class_code and
+      agqclass_alias:sub_class = agqclass:sub_class
+        begin
+        l_sub_code = agqclass_alias:sub_code
+
+        next agqclass_alias
+        end
+
+end
+
+procedure get_loss_cost_factor
+Begin
+access sfslosscost, set sfslosscost:company_id       = agqworkerscomp1:company_id,
+                        sfslosscost:state            = l_state,
+                        sfslosscost:line_of_business = agqworkerscomp1:line_of_business, generic
+
+While sfslosscost:company_id       = agqworkerscomp1:company_id and
+      sfslosscost:state            = l_state and
+      sfslosscost:line_of_business = agqworkerscomp1:line_of_business
+        begin
+        if sfslosscost:eff_date <= l_eff_date then
+            begin
+            l_loss_cost = sfslosscost:rate
+            end
+
+        next sfslosscost
+        end
+
+if l_loss_cost = 0.00 then
+    l_loss_cost = 1
+
+End
+
+procedure get_rate
+begin
+l_state           = agqworkerscomp1:state
+l_minimum_premium = 0
+l_eff_date        = agqworkerscomp1:eff_date
+
+do get_loss_cost_factor
+
+access wcsrate,
+   set wcsrate:company_id       = agqworkerscomp1:company_id,
+       wcsrate:state            = l_state,
+       wcsrate:line_of_business = agqworkerscomp1:line_of_business,
+       wcsrate:wc_class_code    = agqclass:class_code, generic
+
+while wcsrate:company_id       = agqworkerscomp1:company_id and
+      wcsrate:state            = l_state and
+      wcsrate:line_of_business = agqworkerscomp1:line_of_business and
+      wcsrate:wc_class_code    = agqclass:class_code
+      begin
+      if l_eff_date >= wcsrate:rate_date then
+          begin
+          l_rate = wcsrate:rate * l_loss_cost
+          agqclass:rate[1] = l_rate
+          agqclass:hazard_group = wcsrate:hazard_group_code
+          l_minimum_premium = wcsrate:minimum_premium
+          end
+      next wcsrate
+      end
+
+end
+
+procedure get_old_rate
+begin
+l_state = agqworkerscomp1:state
+l_old_minimum = 0
+l_old_rate = 0
+do get_current_rate_date
+if agqworkerscomp1:company_id one of "LEBINS", "DELOS" then
+    begin
+    l_eff_date = agqworkerscomp1:exp_mod_eff_date[1]
+--    l_eff_date = dateadd(agqworkerscomp1:anniversary_exp_date,0,-1)
+--    if agqworkerscomp1:eff_date >= l_current_rate_date then
+--        l_eff_date = agqworkerscomp1:eff_date
+--    else
+--        l_eff_date = dateadd(l_current_rate_date,0,-1)
+    end
+else
+    begin
+    if year(agqworkerscomp1:eff_date) < year(agqworkerscomp1:anniversary_exp_date) then
+        l_eff_date = dateadd(agqworkerscomp1:anniversary_exp_date,0,-1)
+    else
+        l_eff_date = dateadd(agqworkerscomp1:eff_date,0,-1)
+    end
+
+do get_loss_cost_factor
+access wcsrate,
+     set wcsrate:company_id       = agqworkerscomp1:company_id,
+         wcsrate:state            = l_state,
+         wcsrate:line_of_business = agqworkerscomp1:line_of_business,
+         wcsrate:wc_class_code    = agqclass:class_code, generic
+
+while wcsrate:company_id       = agqworkerscomp1:company_id and
+      wcsrate:state            = l_state and
+      wcsrate:line_of_business = agqworkerscomp1:line_of_business and
+      wcsrate:wc_class_code    = agqclass:class_code
+      begin
+      if l_eff_date >= wcsrate:rate_date then
+          begin
+          l_rate = wcsrate:rate * l_loss_cost
+          l_old_rate = l_rate
+          l_old_minimum = wcsrate:minimum_premium
+          end
+      next wcsrate
+      end
+
+end
+
+procedure get_new_rate
+begin
+l_state = agqworkerscomp1:state
+l_minimum_premium = 0
+if agqworkerscomp1:company_id = "LEBINS" then
+    begin
+    do get_current_rate_date
+/*    if agqworkerscomp1:eff_date < l_current_rate_date then
+        l_eff_date = agqworkerscomp1:anniversary_exp_date
+    else
+        l_eff_date = agqworkerscomp1:eff_date*/
+    l_eff_date = agqworkerscomp1:exp_mod_eff_date[2]
+--    l_eff_date = agqworkerscomp1:anniversary_exp_date
+    end
+else
+    begin
+    if year(agqworkerscomp1:eff_date) < year(agqworkerscomp1:anniversary_exp_date) then
+        l_eff_date = agqworkerscomp1:anniversary_exp_date
+    else
+        l_eff_date = agqworkerscomp1:eff_date
+    end
+--    l_eff_date = agqworkerscomp1:eff_date
+
+do get_loss_cost_factor
+
+access wcsrate,
+     set wcsrate:company_id       = agqworkerscomp1:company_id,
+         wcsrate:state            = l_state,
+         wcsrate:line_of_business = agqworkerscomp1:line_of_business,
+         wcsrate:wc_class_code    = agqclass:class_code, generic
+
+while wcsrate:company_id       = agqworkerscomp1:company_id and
+      wcsrate:state            = l_state and
+      wcsrate:line_of_business = agqworkerscomp1:line_of_business and
+      wcsrate:wc_class_code    = agqclass:class_code
+    begin
+    if l_eff_date >= wcsrate:rate_date then
+        begin
+        l_rate = wcsrate:rate * l_loss_cost
+        agqclass:rate[1] = l_rate
+        agqclass:hazard_group = wcsrate:hazard_group_code
+        l_minimum_premium = wcsrate:minimum_premium
+        end
+    next wcsrate
+    end
+
+end
+
+procedure get_current_rate_date
+begin
+access wcsrate, set wcsrate:company_id       = agqworkerscomp1:company_id,
+                    wcsrate:state            = l_state,
+                    wcsrate:line_of_business = agqworkerscomp1:line_of_business,
+                    wcsrate:wc_class_code    = agqclass:class_code, generic
+
+l_current_rate_date = 0
+while wcsrate:company_id       = agqworkerscomp1:company_id and
+      wcsrate:state            = l_state and
+      wcsrate:line_of_business = agqworkerscomp1:line_of_business and
+      wcsrate:wc_class_code    = agqclass:class_code
+    begin
+--    if agqworkerscomp1:eff_date >= wcsrate:rate_date then
+        l_current_rate_date = wcsrate:rate_date
+
+    next wcsrate
+    end
+
+end
+
+Procedure PRO_RATA
+Begin
+i_TOTAL_DAYS = i_EFF_DATE - i_exp_date
+i_CX_DAYS = i_EFF_DATE - i_TRANS_EFF
+if i_cx_days > 0 then
+    i_cx_days = i_cx_days * -1
+
+Include "prorata.pro"
+
+End
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+Procedure ACCESS_agqEND_1
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = 0,
+                   agqEND:BUILD_NO = 0, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = 0 and
+      agqEND:BUILD_NO = 0
+    begin
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND_1
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = 0,
+                   agqEND:BUILD_NO = 0, Generic
+
+L_SUB_CODE = 0
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = 0 and
+      agqEND:BUILD_NO = 0
+    begin
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqworkerscomp1:company_id,
+                      SFSOPTEND:STATE            = agqworkerscomp1:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqworkerscomp1:line_of_business,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqworkerscomp1:company_id and
+      SFSOPTEND:STATE            = agqworkerscomp1:state and
+      SFSOPTEND:LINE_OF_BUSINESS = agqworkerscomp1:line_of_business and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqworkerscomp1:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqworkerscomp1:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_form_edition <> "" then
+    begin
+    Add agqEND
+        Begin
+        agqEND:app_no               =       G_app_no
+        agqEND:PREM_NO              =       0
+        agqEND:BUILD_NO             =       0
+        agqEND:SUB_CODE             =       L_SUB_CODE
+        agqEND:CODE                 =       L_CODE
+        agqEND:FORM_EDITION         =       L_FORM_EDITION
+        agqEND:DESCRIPTION          =       L_DESCRIPTION
+        agqEND:PREMIUM              =       0
+        agqend:lob_end_code         =       "W"
+        end
+    End
+
+End
+
+Procedure DELETE_agqEND_1
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = 0,
+                   agqEND:BUILD_NO = 0, Generic
+
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = 0 and
+      agqEND:BUILD_NO = 0
+    begin
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = agqclass:PREM_NO,
+                   agqEND:BUILD_NO = agqclass:BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = agqclass:PREM_NO and
+      agqEND:BUILD_NO = agqclass:BUILD_NO
+    begin
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = agqclass:PREM_NO,
+                   agqEND:BUILD_NO = agqclass:BUILD_NO, Generic
+
+L_SUB_CODE = 0
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = agqclass:PREM_NO and
+      agqEND:BUILD_NO = agqclass:BUILD_NO
+    begin
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqworkerscomp1:company_id,
+                      SFSOPTEND:STATE            = agqworkerscomp1:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqworkerscomp1:line_of_business,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqworkerscomp1:company_id and
+      SFSOPTEND:STATE            = agqworkerscomp1:state and
+      SFSOPTEND:LINE_OF_BUSINESS = agqworkerscomp1:line_of_business and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqworkerscomp1:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqworkerscomp1:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_form_edition <> "" then
+    begin
+    Add agqEND
+        Begin
+        agqEND:app_no               =       G_app_no
+        agqEND:PREM_NO              =       agqclass:PREM_NO
+        agqEND:BUILD_NO             =       agqclass:BUILD_NO
+        agqEND:SUB_CODE             =       L_SUB_CODE
+        agqEND:CODE                 =       L_CODE
+        agqEND:FORM_EDITION         =       L_FORM_EDITION
+        agqEND:DESCRIPTION          =       L_DESCRIPTION
+        agqEND:PREMIUM              =       0
+        agqend:lob_end_code         =       "W"
+        end
+    End
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = agqclass:PREM_NO,
+                   agqEND:BUILD_NO = agqclass:BUILD_NO, Generic
+
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = agqclass:PREM_NO and
+      agqEND:BUILD_NO = agqclass:BUILD_NO
+    begin
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+End

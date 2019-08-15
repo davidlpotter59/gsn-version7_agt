@@ -1,0 +1,349 @@
+%% 
+Screen
+        Name = "agtmt001g"
+        Type = "Multiline"
+        Domain = "sfsagtreports"
+--        Resizeable = True
+--        ScreenSize = "80x24"
+        Repeat T_REPEATED,100 times down, wrap across ;
+        Iconline = 0
+        Statusbar = false
+        HighLightRecord = True
+        HighlightField = False
+        ShowUnusedRecords = False
+        Scrollprompt = ""
+        Autoscroll = True
+
+        global unsigned ascii number g_policy_no[9] ;
+
+        global string g_password[8] ;
+
+        Local UNSIGNED ASCII Number l_state[2] ,
+                                    l_agent_no[4] ,
+                                    l_csexec_number[12] ;
+
+        local string l_company_id[10],
+                     l_user_id[15] ,
+                     l_parameter[15],
+                     l_enter,
+                     l_csexec_application[25],
+                     l_macro[15] ;
+
+Style Definition
+
+        Include "styles.inc"
+
+        Style {
+                ContentAlignment = Left
+                BackgroundColor = "#ffffff"
+                BorderStyle = None
+                Transparent = False
+        } Tagged T_LISTBOX_FIELD_STYLE
+
+Functions
+
+        change   tagged change_fn ;
+        print    tagged print_fn ;
+
+        "func1" display/noreturn "agtmt001" tagged back_fn ;
+
+        ReAccess ;
+
+        "DISPLAY_REPORT"
+                ReAccess/KeepSelection {
+                                       if sfsagtreports:password_security = 1 then
+                                           begin
+                                           g_password = ""
+                                           display modal screen "agtmt001i"
+                                           with initial function "ADD|BACK"
+                                           end
+                                       if ((g_password = sfsagtreports:password and
+                                          sfsagtreports:password_security = 1) or
+                                          sfsagtreports:password_security = 0) then
+                                           begin
+
+                                             if uppercase(sfsagtreports:report_name) = "COMMISSIONS" then
+                                                {
+                                                  display modal screen "agtmt001k"
+                                                }
+                                             else
+                                             {
+                                           do create_macro
+                                           proc ("cq -enhanced %s",trun(l_macro))/noconsole
+                                           proc ("cqview /reportdir %s /reportname %s.cqe",currentdir,trun(sfsagtreports:report_name))
+
+                                           }
+                                           end
+
+
+                                       else
+                                       if g_password <> sfsagtreports:password and
+                                          sfsagtreports:password_security = 1 then
+                                           begin
+                                           error "You do not have permission to run this report"
+                                           end
+                                       } ;
+
+Event Definition
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+l_company_id = sfsdefault:company_id
+l_user_id    = username/spacefill
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_user_id, generic
+
+l_agent_no = sfsemail:agent_no
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = l_agent_no, generic
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = 29
+
+access sfsagtreports, set sfsagtreports:company_id = l_company_id,
+                          sfsagtreports:state      = l_state, approximate
+
+function = "reaccess"
+
+Access Validation
+skip if sfsagtreports:agent_no <> l_agent_no
+
+
+screen at 1,1 to 30,100
+    Properties
+          {
+          Layouttype = screen
+          transparent = False
+          backgroundcolor = "#ADD8E6"
+--          scrollbarpolicy = always
+          fontstyle = BOLD
+          }
+    {
+
+panel at 3,1 to 4,100
+    Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+    {
+    components
+        guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+            properties
+                {
+                text = "Reports"
+                fontsize = 18
+                fontstyle = BOLD
+                fontname = "arial"
+                transparent = False
+                backgroundcolor = "Grey"
+                }
+
+    }
+
+
+/*Panel/Hidden
+    Properties {
+               LayoutType = Row
+               }
+
+    {
+    Fields
+        Function
+            Properties {
+                       Editable = False
+                       }
+            Events {
+                   !SPACE {
+                          EVENT.CONSUMED = TRUE
+                          Abort()
+                          }
+                   } ;
+
+    sfsagtreports:COMPANY_ID ;
+    sfsagtreports:STATE ;
+    }*/
+
+Panel at 1,1 to 2,100 Tagged T_HEADING_PANEL
+    Properties {
+               Layouttype = Row
+               }
+    {
+    Components
+        Guidetext at 1,1 to 2,40
+            Properties {
+                       Iconname = "qp_logo.gif"
+                       }
+    }
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = row
+               layoutalignment = right
+               }
+    {
+    Components
+        Button to 1,1
+            properties {
+                       Iconname = "btn_print_screen.bmp"
+                       }
+            events {
+                   action {
+                          function = "print"
+                          abort()
+                          }
+                   }
+    }
+
+Panel at 7,91
+    Properties {
+               layouttype = row
+               layoutalignment = right
+               }
+    {
+    Components
+        guidetext to 1,1
+            properties {
+                       text = "agtmt001g.sd"
+                       fontsize = 9
+                       }
+    }
+
+/*SplitPanel
+    Properties {
+               LayoutType = Column
+               LayoutConstraints = STRETCH
+               LayoutGap = 5
+               }
+    {
+
+    Panel
+        Properties {
+                   LayoutType = Border
+                   LayoutConstraints = STRETCH
+                   ScrollbarPolicy = AsNeeded
+                   BorderStyle = Plain
+                   }
+        {*/
+
+        Panel at 8,5 tagged T_REPEATED--to 1,75 Tagged T_REPEATED
+            Properties {
+                       Layouttype = row
+                       Transparent = True
+                       }
+            {
+            Fields
+                trun(sfsagtreports:description[1,35])/button to 1,35 Tagged REPEATED_LINES
+                    Properties {
+                               Transparent = true
+                               contentalignment=middle
+                               Fontsize = 14
+                               Fontstyle = BOLD
+                               Fontname = "arial"
+                               ForeGroundColor = "black"
+                               }
+                    Events {
+                           action {
+                                        CurrentRecord = EVENT.LINE
+                                        Function = "DISPLAY_REPORT"
+                                        Abort()
+                                        }
+                            } ;
+            }
+--        }
+
+--    }
+
+Panel at 27,1 to 27,100
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        Button at 1,40
+            Properties {
+                       Iconname = "btn_close.bmp"
+                       }
+            Events  {
+                    Action = back_fn
+                    }
+
+    }
+
+}
+
+screen exit
+g_policy_no = 0
+
+procedure definition
+
+procedure create_macro
+begin
+access agqreport, set agqreport:company_id = sfsdefault:company_id, generic
+
+add agqreport
+    begin
+    agqreport:company_id  = sfsdefault:company_id/raw
+    agqreport:agent_no    = sfsemail:agent_no
+    agqreport:report_name = sfsagtreports:report_name/raw
+    agqreport:run_date    = systemdate
+    agqreport:run_time     = systemtime
+    end
+
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_macro = "agq"+str(l_csexec_number)+".mf"
+l_parameter = "agq"+str(l_csexec_number)+".par"
+
+if sfsagtreports:display_policy_screen = 1 then
+    begin
+     g_policy_no = 0
+       display modal screen "agtmt001h"
+       with initial function "ADD|BACK"
+       deletefile(l_parameter)
+       writefile (l_parameter,"%n<nl>",sfsemail:agent_no)
+       writefile (l_parameter,"%n<nl>",g_policy_no)
+       closefile (l_parameter)
+
+    end
+else
+    begin
+    deletefile(l_parameter)
+    writefile (l_parameter,"%n<nl>",sfsemail:agent_no)
+    closefile (l_parameter)
+    end
+
+deletefile(l_macro)
+writefile (l_macro,"clear list<nl>")
+writefile (l_macro,"clear sum<nl>")
+writefile (l_macro,"clear find<nl>")
+writefile (l_macro,"run/param=%s %s<nl>",trun(l_parameter),trun(sfsagtreports:report_name))
+writefile (l_macro,"rreplace %s<nl>",trun(sfsagtreports:report_name))
+closefile (l_macro)
+
+end
+
+End

@@ -1,0 +1,642 @@
+%%                 
+Screen
+        Name = "agtmt3015";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqendorse1" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_form[1];
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_article[20],
+                      g_answer[1],
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    l_rate[6]=0/dec=3,
+                                    l_per[5]=0,
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ,
+                                    l_limit[8],
+                                    l_option_1,
+                                    l_option_2,
+                                    l_option_3,
+                                    l_option_4,
+                                    l_option_5,
+                                    l_option_6,
+                                    l_option_7,
+                                    l_option_8,
+                                    l_option_9,
+                                    l_option_10,
+                                    l_agqend_sub_code[4] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_mpl49[1],
+                     l_system_id[15],
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_screen[10],
+                     l_valid[1]="N",
+                     l_description[55] ;
+
+        Access agqendorse1,
+           Set agqendorse1:app_NO   = G_app_NO ,
+               agqendorse1:prem_no  = g_prem_no,
+               agqendorse1:build_no = g_build_no,
+               agqendorse1:code     = g_code ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : switch(g_form)
+                  case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                  case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                  case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                  default : begin
+                            setproperty(t_mho3,iconname,"")
+                            setproperty(t_mho4,iconname,"")
+                            setproperty(t_mho6,iconname,"")
+                            end
+                  end
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if agqendorse1:app_no <> g_app_no or
+   agqendorse1:prem_no <> g_prem_no or
+   agqendorse1:build_no <> g_build_no or
+   agqendorse1:code <> g_code then
+    function = "ADD"
+
+Access Validation
+If agqendorse1:app_NO <> G_app_NO or
+   agqendorse1:prem_no <> g_prem_no or
+   agqendorse1:build_no <> g_build_no or
+   agqendorse1:code <> g_code Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "MPL 58 - Special Business Coverage"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt3015.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 25,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,21
+             properties
+               {
+                 text = "Business Description:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,1 to 2,21
+             properties
+               {
+                 text = "Coverage Limit:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 3,1 to 3,21
+             properties
+               {
+                 text = "Premium:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 4,1 to 4,21
+             properties
+               {
+                 text = "Prod/Comp Ops Exclusion:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 5,1 to 5,21
+             properties
+               {
+                 text = "Year 2000 Exclusion:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,23 to 25, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+___________________________________________________________________________
+__________
+_____________
+~~_ (MPL 58)
+~~_
+
+%%
+
+components
+
+Fields
+101     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqendorse1:app_no   = G_app_no
+            agqendorse1:PREM_NO  = G_PREM_NO
+            agqendorse1:BUILD_NO = G_BUILD_NO
+            agqendorse1:CODE     = G_CODE
+            agqendorse1:SUB_CODE = 10
+            End
+        End
+        agqendorse1:BUSINESS_DESCRIPTION/tabstop;
+201     agqendorse1:LIMIT[1]/tabstop;
+301     agqendorse1:PREMIUM[1]/tabstop;
+401     agqendorse1:MPL58_EXCLUSION/checkbox/values="0,1"/tabstop ;
+501     agqendorse1:YEAR_2000_EXCLUSION/checkbox/values="0,1"/tabstop ;
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 27,35 to 27,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 28,1 to 28,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+Update
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    Access PLSPREPRINTED, Set PLSPREPRINTED:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                              PLSPREPRINTED:STATE            = agqpersonal:STATE,
+                              PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS, Generic
+
+    while PLSPREPRINTED:COMPANY_ID       = agqpersonal:COMPANY_ID and
+          PLSPREPRINTED:STATE            = agqpersonal:STATE and
+          PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+        begin
+        If agqpersonal:EFF_DATE >= PLSPREPRINTED:REFF_DATE Then
+            Begin
+            L_CODE_1 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[9] -- mpl57
+            L_CODE_2 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[13] -- mpl98
+            End
+
+        Next PLSPREPRINTED
+        End
+
+    If L_CODE_1 <> "" Then
+        Begin
+        L_CODE = L_CODE_1
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqendorse1:MPL58_EXCLUSION = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqendorse1:MPL58_EXCLUSION = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_2 <> "" Then
+        Begin
+        L_CODE = L_CODE_2
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqendorse1:YEAR_2000_EXCLUSION = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqendorse1:YEAR_2000_EXCLUSION = 0 Then
+            Do DELETE_agqEND
+        End
+
+    End
+
+procedure definition
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = G_PREM_NO and
+      agqEND:BUILD_NO = G_BUILD_NO
+        begin
+        If agqEND:CODE = L_CODE Then
+            L_ADD_ENDORSEMENT = "N"
+
+        Next agqEND
+        End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_agqEND_SUB_CODE = 0
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = G_PREM_NO and
+      agqEND:BUILD_NO = G_BUILD_NO
+        begin
+        L_agqEND_SUB_CODE = agqEND:SUB_CODE
+
+        Next agqEND
+        End
+
+If L_agqEND_SUB_CODE <= G_SUB_CODE Then
+    L_agqEND_SUB_CODE = L_agqEND_SUB_CODE + 20
+Else
+    L_agqEND_SUB_CODE = L_agqEND_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqpersonal:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID and
+      SFSOPTEND:STATE            = agqpersonal:STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+        begin
+        If agqpersonal:EFF_DATE >= SFSOPTEND:EFF_DATE Then
+            Begin
+            L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+            L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+            End
+
+        Next SFSOPTEND
+        End
+
+Add agqEND
+    Begin
+    agqEND:app_no               =       G_app_no
+    agqEND:PREM_NO              =       G_PREM_NO
+    agqEND:BUILD_NO             =       G_BUILD_NO
+    agqEND:SUB_CODE             =       L_agqEND_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+    agqEND:PREMIUM              =       0
+    End
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = G_PREM_NO and
+      agqEND:BUILD_NO = G_BUILD_NO
+        begin
+        If agqEND:CODE = L_CODE Then
+            Delete agqEND
+
+        Next agqEND
+        End
+
+End
+
+End

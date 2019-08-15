@@ -1,0 +1,1112 @@
+%%                 
+Screen
+        Name = "agtmt401f";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqdoc" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_vehicle_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local tag l_tag[10] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_vehicle_no[4],
+                                    l_form[2],
+                                    l_named_individuals[1],
+                                    l_limit[8],
+                                    l_mca104[1],
+                                    l_no_names[4],
+                                    l_mca201[1],
+                                    l_mca104_prior[1],
+                                    l_mca201_prior[1],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_additional_pip_option[2],
+                                    l_prior_additional_pip_option[2],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_name[50],
+                     l_code_2[7],
+                     l_server_name[100],
+                     l_current_web_page[100],
+                     l_web_site_address[150],
+                     l_system_id[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[25],
+                     l_hide_pip[1],
+                     l_filler[25],
+                     l_um_uim[3],
+                     l_record_key[2],
+                     l_first_str_name[50],
+                     l_last_str_name[50],
+                     l_str_name[50],
+                     l_first_name[1]="Y",
+                     L_COMPANY_ID[10] ,
+                     l_screen[9],
+                     l_description[75] ;
+
+        Access agqdoc,
+           Set agqdoc:app_NO = G_app_NO ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+        add   tagged add_fn ;
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+        "redisplay" display/noreturn "agtmt401f" ;
+        "popup" display l_screen ;
+--        forwardtab ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    disable(add_fn)
+    end
+
+access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+access agqvehicle_alias, set agqvehicle_alias:app_no = g_app_no, generic
+
+l_hide_pip = "Y"
+while agqvehicle_alias:app_no = g_app_no
+     begin
+     if agqvehicle_alias:type = 2 then
+         l_hide_pip = "N"
+
+     next agqvehicle_alias
+     end
+
+--if l_hide_pip = "Y" then
+--    hide(additional_pip)
+
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "cap"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqvehicle:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER                            --"http://192.168.1.197/"
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "034webhelp_agtmt401f_scr_broad_pip_doc.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+Access Validation
+If agqdoc:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+access agqdoc_alias, set agqdoc_alias:app_no = agqdoc:app_no, generic
+
+l_first_str_name = ""
+l_first_name = "Y"
+l_last_str_name = ""
+l_no_names = 0
+while agqdoc_alias:app_no = agqdoc:app_no
+    begin
+    if l_first_name = "Y" then
+        begin
+        l_first_str_name  = str(agqdoc_alias:name)
+        l_first_name = "N"
+        end
+    l_last_str_name  = str(agqdoc_alias:name)
+    l_no_names  = l_no_names + 1
+
+    next agqdoc_alias
+    end
+
+l_str_name = agqdoc:name
+
+if l_no_names one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_name = l_first_str_name and
+   l_no_names > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_name <> l_first_str_name and
+   l_str_name <> l_last_str_name and
+   l_no_names > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_name = l_last_str_name and
+   l_no_names > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+        }
+
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,100     tagged display_information_box
+                properties
+                  {
+                    text = "Broadened PIP and Drive Other Car Coverage..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,1 to 6,80 tagged button_panel
+      Properties
+         {
+           layouttype = screen
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,15
+          properties
+            {
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+        Button at 1,50 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt401f.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 9,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5
+          properties
+            {
+              Iconname = "btn_add.bmp"
+            }
+          Events  {
+                    Action = add_fn
+                  }
+        Button at 1,30   tagged previous_fn
+        Properties {
+                Iconname = "btn_previous.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+        Button at 1,48   tagged next_fn
+        Properties {
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+        Button at 1,70   tagged delete_fn
+        Properties {
+                Iconname = "btn_delete.bmp"
+                }
+        Events  {
+                Action = delete_fn
+                }
+
+}
+
+-- draw a line
+panel at 9,1 to 9,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+panel at 10,1 to 11,100
+Properties
+        {
+        LayoutType = screen
+--        backgroundcolor = "Grey"
+--        transparent = False
+        }
+{
+components
+          guidetext at 1,33 to 1,100     tagged display_information_box
+                properties
+                  {
+                    text = "Broadened PIP"
+                    fontsize = 18
+                    fontstyle = BOLD
+--                    transparent = True
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 11,5 to 14,100 Tagged additional_pip
+{
+%%
+_~~Broadened~PIP
+_~~Include~Additional~PIP
+
+%%
+
+components
+
+Fields
+101     begin
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            enable(accept_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            end
+
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "035webhelp_agtmt401f_scr_broad_pip_doc_cbx_broad_pip.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+
+        if function one of "ADD", "NEW" then
+            begin
+            agqdoc:app_no = g_app_no
+            end
+        end
+        agqdoc:broadened_pip/checkbox/values="0,1"/tabstop ;
+201     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "036webhelp_agtmt401f_scr_broad_pip_doc_cbx_incl_addl_pip.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        end
+        agqdoc:broadened_addl_pip/checkbox/values="0,1"/tabstop ;
+/*401     Begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "037webhelp_agtmt401f_scr_broad_pip_doc_dbx_incl_addl_pip_limit.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+
+        access casaddldesc_alias, set casaddldesc_alias:company_id       = agqvehicle:company_id,
+                                      casaddldesc_alias:state            = agqvehicle:state,
+                                      casaddldesc_alias:line_of_business = agqvehicle:line_of_business, generic
+
+        Access agqPIP_ALIAS, Set agqPIP_ALIAS:app_no = g_app_no, generic
+
+        while agqpip_alias:app_no = g_app_no
+            begin
+            if agqpip_alias:additional_pip_option <> 0 then
+                l_additional_pip_option = agqpip_alias:additional_pip_option
+
+            next agqpip_alias
+            end
+
+        l_prior_additional_pip_option = l_additional_pip_option
+        End
+        L_ADDITIONAL_PIP_OPTION/default
+        hide if agqdoc:broadened_addl_pip = 0
+        if l_additional_pip_option = 0 then
+            error "You must enter an option"
+
+        if l_prior_additional_pip_option <> l_additional_pip_option and
+           l_additional_pip_option <> 0 then
+            do update_agqpip
+
+        activehelp casaddldesc_alias:option,
+                   casaddldesc_alias:description ;
+402     begin
+        access casaddldesc, set casaddldesc:company_id       = agqvehicle:company_id,
+                                casaddldesc:state            = agqvehicle:state,
+                                casaddldesc:line_of_business = agqvehicle:line_of_business,
+                                casaddldesc:option           = l_additional_pip_option, generic
+
+        end
+        casaddldesc:description ;*/
+
+}
+
+-- draw a line
+panel at 15,1 to 15,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+
+panel at 16,1 to 17,100
+Properties
+        {
+        LayoutType = screen
+--        backgroundcolor = "Grey"
+--        transparent = False
+        }
+{
+components
+          guidetext at 1,33 to 1,100     tagged display_information_box
+                properties
+                  {
+                    text = "Drive Other Car"
+                    fontsize = 18
+                    fontstyle = BOLD
+--                    transparent = True
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 17,5 to 20,100 Tagged doc
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_~~Drive~Other~Car
+   ________ Medical Payments           __________ Liability
+   _~~Comprehensive~Deductible         __________ Uninsured Limit
+   _~~Collision~Deductible             __________ Underinsured Limit
+%%
+
+components
+
+Fields
+101     begin
+        access sfsline, set sfsline:company_id = agqname:company_id,
+                            sfsline:line_of_business = agqname:line_of_business,
+                            sfsline:lob_subline = "00", generic
+
+        access agqmastsupp, set agqmastsupp:app_no           = g_app_no,
+                                agqmastsupp:line_of_business = agqvehicle:line_of_business, generic
+
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "038webhelp_agtmt401f_scr_broad_pip_doc_cbx_mca302.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        end
+        agqdoc:include_doc/checkbox/values="0,1"/tabstop
+        hide if agqmaster:form_of_business one of "I"
+        if agqdoc:include_doc = 0 then
+            begin
+            agqdoc:liability = 0
+            agqdoc:um_uim_limit = 0
+            agqdoc:um_uim_limit_2 = 0
+            agqdoc:medical_payments = 0
+            agqdoc:comp = "N"
+            agqdoc:coll = "N"
+            end;
+101     begin
+        if agqmaster:form_of_business one of "I" then
+            begin
+            agqdoc:include_doc = 0
+            agqdoc:liability = 0
+            agqdoc:um_uim_limit = 0
+            agqdoc:um_uim_limit_2 = 0
+            agqdoc:medical_payments = 0
+            agqdoc:comp = "N"
+            agqdoc:coll = "N"
+            end
+        end
+        agqdoc:include_doc/checkbox/values="0,1"/displayonly ;
+201     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "039webhelp_agtmt401f_scr_broad_pip_doc_dbx_mca302_med_pay.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+        if function one of "ADD", "NEW" then
+            agqdoc:medical_payments = casdefault:doc_med_pay
+
+        access casmedical_alias, set casmedical_alias:company_id = agqvehicle:company_id,
+                                     casmedical_alias:state = agqvehicle:state,
+                                     casmedical_alias:line_of_business = agqvehicle:line_of_business, generic
+
+        end
+        agqdoc:medical_payments/default/tabstop
+        access casmedical, set casmedical:company_id = agqvehicle:company_id,
+                               casmedical:state = agqvehicle:state,
+                               casmedical:line_of_business = agqvehicle:line_of_business,
+                               casmedical:medical_payments = agqdoc:medical_payments, generic
+        hide if agqdoc:include_doc = 0
+--        hide if agqvehicle:state one of 19, 29
+--        hide if agqmaster:form_of_business one of "I"
+        if agqdoc:medical_payments <> casmedical:medical_payments then
+            error "Invalid Medical Payments Entered"
+
+        activehelp casmedical_alias:medical_payments ;
+301     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "040webhelp_agtmt401f_scr_broad_pip_doc_cbx_mca302_comp_deduct.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        if function one of "ADD", "NEW" then
+            agqdoc:comp = casdefault:doc_comp
+        end
+        agqdoc:comp/checkbox/values="N,Y"/default/tabstop
+        hide if agqmaster:form_of_business one of "I"
+        hide if agqdoc:include_doc = 0 ;
+401     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "041webhelp_agtmt401f_scr_broad_pip_doc_cbx_mca302_collision_deduct.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        if function one of "ADD", "NEW" then
+            agqdoc:coll = casdefault:doc_coll
+        end
+        agqdoc:coll/checkbox/values="N,Y"/default/tabstop
+        hide if agqmaster:form_of_business one of "I"
+        hide if agqdoc:include_doc = 0 ;
+202     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            begin
+            if sfsline:lob_code = "CPORTFOLIO" then
+                begin
+                agqdoc:liability = agqmastsupp:liability
+                agqdoc:um_uim_limit = agqmastsupp:um_uim_limit[1]
+                agqdoc:um_uim_limit_2 = agqmastsupp:um_uim_limit[1]
+                end
+            else
+                begin
+                agqdoc:liability = agqmaster:liability
+                agqdoc:um_uim_limit = agqmaster:um_uim_limit[1]
+                agqdoc:um_uim_limit_2 = agqmaster:um_uim_limit[1]
+                end
+            end
+        end
+        agqdoc:liability/displayonly
+        hide if agqmaster:form_of_business one of "I"
+        hide if agqdoc:include_doc = 0;
+302     agqdoc:um_uim_limit/displayonly
+        hide if agqmaster:form_of_business one of "I"
+        hide if agqdoc:include_doc = 0 ;
+402     agqdoc:um_uim_limit_2/displayonly
+        hide if agqmaster:form_of_business one of "I"
+        hide if agqdoc:include_doc = 0 ;
+
+}
+
+-- draw a line
+panel at 21,1 to 21,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 22,5 to 22,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+Named Individual(s): __________________________________________________
+%%
+
+components
+
+Fields
+101     begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "042webhelp_agtmt401f_scr_broad_pip_doc_tbx_named_individual.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        end
+        agqdoc:name/tabstop
+        if agqdoc:name = "" then
+            error "You must identify the Named Individual to which these coverage(s) will apply.";
+
+}
+
+-- draw a line
+panel at 23,1 to 23,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+Panel at 24,1 to 24,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,75   tagged back_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+panel at 25,1 to 25,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+panel at 26,1 to 32,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    disable(accept_fn)
+    end
+
+if abort = "YES" then
+    begin
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    disable(accept_fn)
+    access casdoc, set casdoc:company_id = agqvehicle:company_id,
+                       casdoc:state      = agqvehicle:state,
+                       casdoc:line_of_business = agqvehicle:line_of_business, generic
+
+    If agqDOC:COMP = "Y" Then
+        agqDOC:COMP_DEDUCTIBLE = CASDOC:COMP_DEDUCTIBLE
+    If agqDOC:COLL = "Y" Then
+        agqDOC:COLL_DEDUCTIBLE = CASDOC:COLL_DEDUCTIBLE
+
+    if function one of "ADD", "CHANGE", "CHG", "NEW" then
+        begin
+        if casdoc:code <> "" then
+            begin
+            L_CODE = CASDOC:CODE
+            Do ACCESS_AGQEND1
+            If L_ADD_ENDORSEMENT = "Y" and
+               agqdoc:include_doc = 1 Then
+                Do ADD_AGQEND1
+            if l_add_endorsement = "N" and
+               agqdoc:include_doc = 0 then
+                do delete_AGQend1
+            End
+
+        if casdoc:broadened_code <> "" then
+            begin
+            L_CODE = CASDOC:broadened_code
+            Do ACCESS_AGQEND1
+            If L_ADD_ENDORSEMENT = "Y" and
+               agqdoc:broadened_pip = 1 Then
+                Do ADD_AGQEND1
+            if l_add_endorsement = "N" and
+               agqdoc:broadened_pip = 0 then
+                do delete_AGQend1
+            End
+        end
+
+    If FUNCTION = "DELETE" Then
+        Begin
+        if casdoc:code <> "" then
+            begin
+            L_CODE = CASDOC:CODE
+            Do ACCESS_AGQEND1
+            If L_ADD_ENDORSEMENT = "N" Then
+                Do DELETE_AGQEND1
+            End
+
+        if casdoc:broadened_code <> "" then
+            begin
+            L_CODE = CASDOC:broadened_CODE
+            Do ACCESS_AGQEND1
+            If L_ADD_ENDORSEMENT = "N" Then
+                Do DELETE_AGQEND1
+            End
+
+        End
+
+    end
+--    function = "redisplay"
+
+
+Procedure Definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END
+
+procedure update_agqdoc
+begin
+access agqdoc_alias, set agqdoc_alias:app_no = g_app_no, generic
+
+while agqdoc_alias:app_no = g_app_no
+    begin
+    delete agqdoc_alias
+
+    next agqdoc_alias
+    end
+
+end
+
+procedure display_popup
+begin
+display modal screen l_screen
+
+end
+
+procedure update_agqpip
+begin
+access agqpip, set agqpip:app_no = g_app_no, generic
+
+while agqpip:app_no = g_app_no
+    begin
+    access agqvehicle_alias, set agqvehicle_alias:app_no     = agqpip:app_no,
+                                 agqvehicle_alias:vehicle_no = agqpip:vehicle_no, generic
+
+    if agqvehicle_alias:type one of 2 then
+        begin
+        access casaddlpip, set casaddlpip:company_id       = agqvehicle:company_id,
+                               casaddlpip:state            = agqvehicle:state,
+                               casaddlpip:line_of_business = agqvehicle:line_of_business,
+                               casaddlpip:option           = l_additional_pip_option, generic
+
+        while casaddlpip:record_key       = "AP" and
+              casaddlpip:company_id       = agqvehicle:company_id and
+              casaddlpip:state            = agqvehicle:state and
+              casaddlpip:line_of_business = agqvehicle:line_of_business and
+              casaddlpip:option           = l_additional_pip_option
+            begin
+            if agqvehicle:eff_date >= casaddlpip:eff_date then
+                begin
+                change agqpip
+                    begin
+                    agqpip:additional_pip        = "Y"
+                    agqpip:additional_pip_option = l_additional_pip_option
+                    agqPIP:INCOME_WEEKLY_OPTION  = CASADDLPIP:INCOME_WEEKLY
+                    If CASADDLPIP:INCOME_AGGREGATE = 0 Then
+                        agqPIP:ADDITIONAL_UNLIMITED = "Y"
+                    Else
+                        begin
+                        agqPIP:INCOME_MAXIMUM = CASADDLPIP:INCOME_AGGREGATE
+                        agqpip:additional_unlimited = "N"
+                        end
+                    agqPIP:ESSENTIAL_PER_DAY = CASADDLPIP:ESSENTIAL_PER_DAY
+                    agqPIP:ESSENTIAL_MAXIMUM = CASADDLPIP:ESSENTIAL_AGGREGATE
+                    end
+                end
+
+            next casaddlpip
+            end
+
+        end
+
+    next agqpip
+    end
+
+end
+
+Procedure ACCESS_agqend1
+Begin
+l_vehicle_no = 0
+Access agqend1, Set agqend1:app_no     = G_app_no,
+                    agqend1:vehicle_no = l_vehicle_no, generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqend1:app_no     = G_app_no and
+      agqend1:vehicle_no = l_vehicle_no
+    begin
+    If agqend1:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend1
+    End
+
+End
+
+Procedure ADD_agqend1
+Begin
+l_vehicle_no = 0
+Access agqend1, Set agqend1:app_no     = G_app_no ,
+                    agqend1:VEHICLE_NO = L_VEHICLE_NO, Generic
+
+L_SUB_CODE = 0
+while agqend1:app_no     = g_app_no and
+      agqend1:VEHICLE_NO = L_VEHICLE_NO
+    begin
+    L_SUB_CODE = agqend1:SUB_CODE
+
+    Next agqend1
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqvehicle:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqvehicle:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqvehicle:line_of_business,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqvehicle:COMPANY_ID and
+      SFSOPTEND:STATE            = agqvehicle:state and
+      SFSOPTEND:LINE_OF_BUSINESS = agqvehicle:line_of_business and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqvehicle:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqvehicle:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_form_edition <> "" then
+    begin
+    Add agqend1
+        Begin
+        agqend1:app_no             =       g_app_no
+        agqend1:VEHICLE_NO           =       L_VEHICLE_NO
+        agqend1:SUB_CODE             =       L_SUB_CODE
+        agqend1:CODE                 =       L_CODE
+        agqend1:FORM_EDITION         =       L_FORM_EDITION
+        agqend1:DESCRIPTION          =       L_DESCRIPTION
+        agqend1:PREMIUM              =       0
+        End
+    end
+
+End
+
+Procedure DELETE_agqend1
+Begin
+l_vehicle_no = 0
+Access agqend1, Set agqend1:app_no     = g_app_no ,
+                    agqend1:VEHICLE_NO = L_VEHICLE_NO, Generic
+
+while agqend1:app_no     = g_app_no and
+      agqend1:VEHICLE_NO = L_VEHICLE_NO
+    begin
+    If agqend1:CODE = L_CODE Then
+        Delete agqend1
+
+    Next agqend1
+    End
+
+if l_code = "MCA104" then
+    begin
+    access agqaddlinsured, set agqaddlinsured:app_no     = g_app_no,
+                               agqaddlinsured:vehicle_no = l_vehicle_no,
+                               agqaddlinsured:code       = l_code, generic
+
+    while agqaddlinsured:app_no     = g_app_no and
+          agqaddlinsured:vehicle_no = l_vehicle_no and
+          agqaddlinsured:code       = l_code
+        begin
+        delete agqaddlinsured
+
+        next agqaddlinsured
+        end
+
+    end
+
+if l_code = "MCA201" then
+    begin
+    access agqendorse2, set agqendorse2:app_no     = g_app_no,
+                            agqendorse2:vehicle_no = l_vehicle_no,
+                            agqendorse2:code       = l_code, generic
+
+    while agqendorse2:app_no     = g_app_no and
+          agqendorse2:vehicle_no = l_vehicle_no and
+          agqendorse2:code       = l_code
+        begin
+        delete agqendorse2
+
+        next agqendorse2
+        end
+
+    end
+
+End
+
+procedure read_agqend1
+begin
+access agqend1, set agqend1:app_no = g_app_no, generic
+
+l_mca104 = 0
+l_mca201 = 0
+while agqend1:app_no = g_app_no
+    begin
+    if agqend1:code = "MCA104" then
+        l_mca104 = 1
+    if agqend1:code = "MCA201" then
+        l_mca201 = 1
+
+    next agqend1
+    end
+
+end
+
+End

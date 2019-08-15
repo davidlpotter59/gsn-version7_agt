@@ -1,0 +1,1047 @@
+%%                      
+Screen
+        Name = "agtmt7000";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="agqumbrella1" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_state[2] ;
+
+        global string g_company_id[10] ,
+                      g_initial_screen[50] ,
+                      g_zipcode_change[1] ,
+                      g_portfolio[1] ;
+
+        Local Unsigned Ascii Number L_TYPE[1]=0 ,
+                                    L_FACTOR[4]=0/dec=2,
+                                    l_app_no[11],
+                                    l_line_of_business[4]=0,
+                                    l_occurrence[8]=0,
+                                    i_csexec_number[12],
+                                    l_csexec_number[12],
+                                    l_prem_no[4]=0,
+                                    l_build_no[4]=0,
+                                    l_sub_code[4]=0,
+                                    l_state[2]=0,
+                                    l_per_room[4]=0,
+                                    L_UM_UIM_SURCHARGE[3]=0,
+                                    l_abort_program[1],
+                                    L_LIMIT_1[8]=0,
+                                    L_LIMIT_2[8]=0,
+                                    l_agent_no[4],
+                                    l_minimum_premium[4]=0 ,
+                                    l_no_vehicles[3]=0,
+                                    l_sub[1]=0,
+                                    l_stories[1]=0,
+                                    l_repeat[1]=0,
+                                    l_hotel_total[6]=0,
+                                    l_apt_charge[3]=0,
+                                    l_hotel_charge[3]=0,
+                                    l_increased_total[6]=0,
+                                    l_hotel_each_addl[4]=0/dec=2,
+                                    l_directors_charge[4]=0,
+                                    l_motel_maximum[3]=0,
+                                    l_motel_stories[2]=0,
+                                    l_apt_stories[2]=0,
+                                    l_apt_per[1]=0,
+                                    l_directors_per[1]=0,
+                                    l_hotel_increase[4]=0/dec=2,
+                                    l_each_addl_minimum[4]=0,
+                                    l_increase_million[1]=0,
+                                    l_irpm[4]=0/dec=2,
+                                    l_increased_factor[4]=0/dec=2 ;
+
+        Local String L_TABLE[1]="" ,
+                     L_FORM_EDITION[25],
+                     i_csexec_application[25],
+                     l_company_id[10],
+                     l_continue_2[3],
+                     l_add_endorsement[1],
+                     L_DESCRIPTION[75],
+                     L_CODE[7],
+                     l_system_id[15],
+                     l_csexec_application[25],
+                     l_screen_1[9],
+                     l_continue_1[3]="",
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_dec[15]="",
+                     l_app[3]="cuq" ;
+
+        local signed ascii number l_irpm_total[6]=0;
+
+        include "print.var"
+
+        include "virtualdecs.var"
+
+        Access agqumbrella1,
+           Set agqumbrella1:app_no = G_app_no, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt7000" ;
+
+        "add" sequence "new"      tagged add_fn ;
+        "new" add/hidden ;
+
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+
+        "func1" display "agtmt7001" tagged calc_fn ;
+        "back" sequence "goto" tagged back_fn ;
+        "goto" continue begin
+                        if g_portfolio not one of "Y" then
+                            l_screen_1 = "agtmt001"
+                        else
+                            l_screen_1 = "agtmt9999"
+                        function = "popup"
+                        end ;
+        "popup" display/noreturn l_screen_1 ;
+
+        reaccess ;
+
+        include "stdfunc7b.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+if g_line_of_business = 99 then
+    l_line_of_business = 7
+else
+    l_line_of_business = g_line_of_business
+disable(accept_fn)
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+g_initial_screen = ""
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_username = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = sfsemail:agent_no, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+Access SFSLINE_ALIAS, Set SFSLINE_alias:COMPANY_ID       = l_company_id,
+                          SFSLINE_alias:LINE_OF_BUSINESS = l_line_of_business,
+                          SFSLINE_alias:LOB_SUBLINE      = "00", Generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = l_company_id,
+                    SFSLINE:LINE_OF_BUSINESS = l_line_of_business,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access agqumbrella1,
+   set agqumbrella1:app_no = g_app_no, generic
+
+access agqname, set agqname:app_no = g_app_no,generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(delete_fn)
+    disable(accept_fn)
+    end
+
+if agqumbrella1:app_no = 0 then
+    begin
+    disable(previous_fn)
+    disable(next_fn)
+    end
+
+access validation
+if agqumbrella1:app_no <> g_app_no then
+    error 1000
+
+screen at 1,1 to 27,100
+Properties
+        {
+          Layouttype = screen
+          transparent = False
+          backgroundcolor = "#ADD8E6"
+          scrollbarpolicy = asneeded
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100
+                properties
+                    {
+                    iconname = ""
+                    }
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Rating Information..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101   begin
+        l_agent_no   = sfsemail:agent_no
+        if l_agent_no = 0 then
+            {
+            l_agent_no = 9999
+            }
+        l_company_id = sfsdefault:company_id
+        access sfsagent, set sfsagent:company_id = l_company_id,
+                             sfsagent:agent_no   = l_agent_no, generic
+
+        l_state      = sfsagent:state
+        Access agsdefault_umc, Set agsdefault_umc:COMPANY_ID       = L_COMPANY_ID,
+                                   agsdefault_umc:state            = l_state,
+                                   agsdefault_umc:agent_no         = l_agent_no,
+                                   agsdefault_umc:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS, generic
+
+        if function one of "ADD", "NEW" then
+            begin
+            if g_portfolio not one of "Y" then
+                begin
+                do access_sfscsexec
+                agqumbrella1:app_no           = i_csexec_number
+                g_app_no                      = i_csexec_number
+                l_app_no                      = i_csexec_number
+                agqumbrella1:agent_no         = l_agent_no
+                end
+            else
+                begin
+                agqumbrella1:app_no           = g_app_no
+                l_app_no                      = g_app_no
+                agqumbrella1:agent_no         = l_agent_no
+                end
+
+            agqumbrella1:entry_date           = todaysdate
+            if agqumbrella1:state = 0 then
+                agqumbrella1:state            = agsdefault_umc:state
+            if agqumbrella1:county = 0 and
+               agqumbrella1:company_id <> "LEBINS" then
+                agqumbrella1:COUNTY           = agsdefault_umc:COUNTY
+            if agqumbrella1:company_id = "" then
+                agqumbrella1:company_id       = agsdefault_umc:company_id
+            if agqumbrella1:line_of_business  = 0 then
+                agqumbrella1:line_of_business = l_line_of_business
+            if agqumbrella1:line_of_business  = 99 then
+                agqumbrella1:line_of_business = 7
+            end
+
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        if agqmaster:app_no <> g_app_no then
+            begin
+            add agqmaster
+                begin
+                agqmaster:app_no = g_app_no
+                agqmaster:extend_hired_nonowned = "N"
+                agqmaster:delete_hired_nonowned = "N"
+                end
+            end
+
+        access agqmastsupp, set agqmastsupp:app_no = g_app_no,
+                                agqmastsupp:line_of_business = agqumbrella1:line_of_business, generic
+
+        if agqmastsupp:app_no <> g_app_no or
+           agqmastsupp:line_of_business <> agqumbrella1:line_of_business then
+            begin
+            add agqmastsupp
+                begin
+                agqmastsupp:app_no                = g_app_no
+                agqmastsupp:line_of_business      = agqumbrella1:line_of_business
+                agqmastsupp:extend_hired_nonowned = "N"
+                agqmastsupp:delete_hired_nonowned = "N"
+                end
+            end
+        end
+        agqumbrella1:APP_NO/displayonly ;
+
+}
+-- top button bar
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+
+        Button at 1.5,1   tagged add_fn
+        Properties {
+                Iconname = "btn_add_location.bmp"
+                }
+        Events  {
+                Action = add_fn
+                }
+
+        Button at 1.5,38    tagged change_fn
+        Properties {
+                Iconname = "btn_edit_location.bmp"
+                }
+        Events  {
+                Action = change_fn
+                }
+
+        Button at 1.5, 70 tagged delete_fn
+        Properties {
+                Iconname = "btn_delete_location.bmp"
+                }
+        Events  {
+                Action = delete_fn
+                }
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt7000.sd"
+                      fontsize = 9
+                    }
+      }
+
+Panel at 8,70 to 8,100
+      Properties
+         {
+           layouttype = row
+         }
+    {
+      Components
+        Button at 1,55 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+
+    }
+
+panel at 10,1 to 20,100
+Properties
+        {
+        LayoutType = screen
+        }
+{
+%%
+                       County:  ___  ________________________________________
+
+              Each Occurrence:  __________      Receipts:  ___________
+  Personal/Advertising Injury:  __________       Payroll:  ___________
+Products/Completed Operations:  __________   No Vehicles:  ____
+      General Aggregate Limit:  __________        Office:~~_
+                                                  Liquor:~~_
+%%
+
+components
+
+fields
+101     Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            agqumbrella1:COUNTY = agsdefault_umc:county
+        End
+        agqumbrella1:COUNTY/default
+        Include "countyhlp.inc"
+102     SFSSTATE_ALIAS:DESCRIPTION;
+
+301     Begin
+        agqumbrella1:territory = cpsumterritory:territory
+        l_occurrence = agqumbrella1:occurrence
+        If FUNCTION one of "ADD", "NEW" Then
+            begin
+            agqumbrella1:remove_terrorism_form = agsdefault_umc:excluded_terrorism
+            agqumbrella1:OCCURRENCE = agsdefault_umc:OCCURRENCE
+            end
+        End
+        agqumbrella1:OCCURRENCE/default/mask="ZZZ,ZZZ,ZZZ"
+        If agqumbrella1:OCCURRENCE <> CPSUMLIMITS:LIMIT Then
+            Error 1238
+
+        Activehelp CPSUMLIMITS_ALIAS:LIMIT ;
+401     Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            agqumbrella1:PERSONAL_ADD_INJURY = agqumbrella1:OCCURRENCE
+            agqumbrella1:PRODUCTS            = agqumbrella1:OCCURRENCE
+            agqumbrella1:GENERAL_AGGREGATE   = agqumbrella1:OCCURRENCE
+            End
+        if function one of "CHANGE", "CHG" and
+           agqumbrella1:occurrence <> l_occurrence then
+            begin
+            agqumbrella1:PERSONAL_ADD_INJURY = agqumbrella1:OCCURRENCE
+            agqumbrella1:PRODUCTS            = agqumbrella1:OCCURRENCE
+            agqumbrella1:GENERAL_AGGREGATE   = agqumbrella1:OCCURRENCE
+            End
+        End
+        agqumbrella1:PERSONAL_ADD_INJURY/default/mask="ZZZ,ZZZ,ZZZ"
+        Activehelp CPSUMLIMITS_ALIAS:LIMIT ;
+501     agqumbrella1:PRODUCTS/default/mask="ZZZ,ZZZ,ZZZ"
+        Activehelp CPSUMLIMITS_ALIAS:LIMIT ;
+601     agqumbrella1:GENERAL_AGGREGATE/default/mask="ZZZ,ZZZ,ZZZ"
+        Activehelp CPSUMLIMITS_ALIAS:LIMIT ;
+
+302     agqumbrella1:RECEIPTS/mask="ZZZ,ZZZ,ZZZ" ;
+402     agqumbrella1:PAYROLL/mask="ZZZ,ZZZ,ZZZ" ;
+502     agqumbrella1:no_vehicles ;
+602     agqumbrella1:office/checkbox/values="0,1" ;
+701     agqumbrella1:liquor/checkbox/values="0,1" ;
+
+}
+
+Panel at 25,1 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                       if g_portfolio <> "Y" then
+                           begin
+                           l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                           if l_continue_2 = "Yes" then
+                               begin
+                               function = "back"
+                               abort()
+                               end
+                           end
+                       else
+                           begin
+                           function = "back"
+                           abort()
+                           end
+                       }
+                }
+
+        Button at 1,75   tagged calc_fn
+        Properties {
+                Iconname = "btn_view_summary_totals.bmp"
+                }
+        Events  {
+                Action {
+                          function = "func1"
+                          abort()
+                       }
+                }
+
+}
+
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+--                backgroundcolor = "#ADD8E6"
+              }
+    }
+
+}
+
+Update
+if UPDATEOK = "NO" then
+    begin
+    access agqumbrella1_alias, set agqumbrella1_alias:app_no = g_app_no, generic
+
+    if agqumbrella1_alias:app_no <> g_app_no and
+       g_portfolio <> "Y" then
+        g_app_no = 0
+
+    enable (calc_fn)
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    enable(calc_fn)
+    disable(accept_fn)
+    access sfsline, set sfsline:company_id       = agqname:company_id,
+                        sfsline:line_of_business = agqname:line_of_business,
+                        sfsline:lob_subline      = "00", exact
+
+    if function one of "delete", "DELETE" then
+        begin
+        access agqend, set agqend:app_no   = agqumbrella1:app_no, generic
+
+        while agqend:app_no = agqumbrella1:app_no and
+              agqend:lob_end_code = "U"
+            begin
+            delete agqend
+
+            next agqend
+            end
+
+        access agqumunderlying, set agqumunderlying:app_no = agqumbrella1:app_no, generic
+
+        while agqumunderlying:app_no = agqumbrella1:app_no
+            begin
+            delete agqumunderlying
+
+            next agqumunderlying
+            end
+
+        access agqumdetail1, set agqumdetail1:app_no = agqumbrella1:app_no, generic
+
+        while agqumdetail1:app_no = agqumbrella1:app_no
+            begin
+            delete agqumdetail1
+
+            next agqumdetail1
+            end
+        end
+
+    if function one of "ADD", "NEW" then
+        begin
+        g_state = agqumbrella1:state
+        display modal screen "agtmt7000a"
+
+        display modal screen "agtmt7000b"
+
+        display modal screen "agtmt7000c"
+        end
+
+    if function one of "ADD", "NEW", "CHANGE", "CHG" then
+        begin
+        access cpsumrates, set cpsumrates:company_id       = agqumbrella1:company_id,
+                               cpsumrates:state            = agqumbrella1:state,
+                               cpsumrates:line_of_business = agqumbrella1:line_of_business, generic
+
+        while cpsumrates:company_id       = agqumbrella1:company_id and
+              cpsumrates:state            = agqumbrella1:state and
+              cpsumrates:line_of_business = agqumbrella1:line_of_business
+                begin
+                if agqname:eff_date => cpsumrates:eff_date then
+                    begin
+                    l_code_1 = cpsumrates:trigger_codes[5] -- MCL722
+                    l_code_2 = cpsumrates:trigger_codes[6] -- MCL723
+                    l_code_3 = cpsumrates:trigger_codes[7] -- MCL724
+                    l_code_4 = cpsumrates:trigger_codes[8] -- MCL725
+                    l_code_5 = cpsumrates:trigger_codes[10] -- LMIC802
+                    l_code_6 = cpsumrates:trigger_codes[12] -- MCL753
+                    end
+
+                next cpsumrates
+                end
+
+        if l_code_1 <> "" then
+            begin
+            L_CODE = L_CODE_1
+            Do ACCESS_agqend
+            If l_add_endorsement = "Y" and
+               agqumbrella1:personal_add_injury <> 0 Then
+                Do ADD_agqend
+            end
+
+        if l_code_2 <> "" then
+            begin
+            L_CODE = L_CODE_2
+            Do ACCESS_agqend
+            If l_add_endorsement = "Y" and
+               agqumbrella1:personal_add_injury = 0 Then
+                Do ADD_agqend
+            end
+
+        if l_code_3 <> "" then
+            begin
+            L_CODE = L_CODE_3
+            Do ACCESS_agqend
+            If l_add_endorsement = "Y" and
+               agqumbrella1:products <> 0 Then
+                Do ADD_agqend
+            end
+
+        if l_code_4 <> "" then
+            begin
+            L_CODE = L_CODE_4
+            Do ACCESS_agqend
+            If l_add_endorsement = "Y" and
+               agqumbrella1:products = 0 Then
+                Do ADD_agqend
+            end
+
+        if l_code_5 <> "" then
+            begin
+            L_CODE = L_CODE_5
+            Do ACCESS_agqend
+            If l_add_endorsement = "Y" and
+               agqname:bill_plan = "DB" Then
+                Do ADD_agqend
+            else
+            if l_add_endorsement = "N" and
+               agqname:bill_plan <> "DB" then
+                do delete_agqend
+            end
+
+        if l_code_6 <> "" then
+            begin
+            L_CODE = L_CODE_6
+            Do ACCESS_agqend
+            If l_add_endorsement = "Y" and
+               agqumbrella1:liquor = 1 Then
+                Do ADD_agqend
+            else
+            if l_add_endorsement = "N" and
+               agqumbrella1:liquor = 0 then
+                do delete_agqend
+            end
+
+        if agqumbrella1:personal_add_injury = 0 then
+            begin
+            if l_code_1 <> "" then
+                begin
+                L_CODE = L_CODE_1
+                do delete_agqend
+                end
+            end
+        else
+            begin
+            if l_code_2 <> "" then
+                begin
+                l_code = l_code_2
+                do delete_agqend
+                end
+            end
+
+        if agqumbrella1:products = 0 then
+            begin
+            if l_code_3 <> "" then
+                begin
+                L_CODE = L_CODE_3
+                do delete_endorsement
+                end
+            end
+        else
+            begin
+            if l_code_4 <> "" then
+                begin
+                l_code = l_code_4
+                do delete_endorsement
+                end
+            end
+
+        end
+    End
+
+Procedure Definition
+
+procedure access_sfscsexec
+begin
+i_csexec_application = "APQQUOTE                 "
+
+access sfscsexec, set sfscsexec:application = i_csexec_application, generic
+
+change sfscsexec
+    begin
+    i_csexec_number = sfscsexec:application_number + 1
+    sfscsexec:application_number = i_csexec_number
+    end
+
+end
+
+Procedure ACCESS_agqEND
+Begin
+g_prem_no  = 1
+g_build_no = 1
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+l_add_endorsement = "Y"
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = G_PREM_NO and
+      agqEND:BUILD_NO = G_BUILD_NO
+        begin
+        If agqEND:CODE = L_CODE and
+           agqend:lob_end_code = "U" Then
+            l_add_Endorsement = "N"
+
+        Next agqEND
+        End
+
+End
+
+Procedure ADD_agqEND
+Begin
+g_prem_no  = 1
+g_build_no = 1
+Access agqEND, Set agqEND:app_no   = G_app_no ,
+                   agqEND:PREM_NO  = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+while agqEND:app_no   = G_app_no and
+      agqEND:PREM_NO  = G_PREM_NO and
+      agqEND:BUILD_NO = G_BUILD_NO
+        begin
+        L_SUB_CODE = agqEND:SUB_CODE
+
+        Next agqEND
+        End
+
+L_SUB_CODE = L_SUB_CODE + 10
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqumbrella1:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqumbrella1:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+While SFSOPTEND:COMPANY_ID       = agqumbrella1:COMPANY_ID and
+      SFSOPTEND:STATE            = agqumbrella1:STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+        begin
+        If (agqNAME:EFF_DATE >= SFSOPTEND:EFF_DATE and
+           (agqname:eff_date <= sfsoptend:exp_date or
+           sfsoptend:exp_date = 0)) Then
+            Begin
+            L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+            L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+            End
+
+        Next SFSOPTEND
+        End
+
+if l_form_edition <> "" then
+    begin
+    add agqEND
+        Begin
+        agqend:app_no               =       agqumbrella1:app_no
+        agqend:prem_no              =       1
+        agqend:build_no             =       1
+        agqend:sub_code             =       l_sub_code
+        agqEND:CODE                 =       L_CODE
+        agqEND:FORM_EDITION         =       L_FORM_EDITION
+        agqEND:DESCRIPTION          =       L_DESCRIPTION
+        agqEND:PREMIUM              =       0
+        agqend:lob_end_code         =       "U"
+        agqend:terrorism_Form       =       0
+        end
+    end
+
+End
+
+Procedure DELETE_agqEND
+Begin
+l_prem_no  = 1
+l_build_no = 1
+Access agqEND_alt, Set agqEND_alt:app_no   = agqumbrella1:app_no ,
+                       agqEND_alt:PREM_NO  = L_PREM_NO,
+                       agqEND_alt:BUILD_NO = L_BUILD_NO, Generic
+
+while agqEND_alt:app_no   = agqumbrella1:app_no and
+      agqEND_alt:PREM_NO  = L_PREM_NO and
+      agqEND_alt:BUILD_NO = L_BUILD_NO
+        begin
+        If agqEND_alt:CODE = L_CODE Then
+            Delete agqEND_alt
+
+        Next agqEND_alt
+        End
+
+End
+
+Procedure DELETE_ENDORSEMENT
+Begin
+l_prem_no  = 1
+l_build_no = 1
+Access agqEND_alias, Set agqEND_alias:app_no   = agqumbrella1:app_no ,
+                         agqEND_alias:PREM_NO  = L_PREM_NO,
+                         agqEND_alias:BUILD_NO = L_BUILD_NO, Generic
+
+while agqEND_alias:app_no   = agqumbrella1:app_no and
+      agqEND_alias:PREM_NO  = L_PREM_NO and
+      agqEND_alias:BUILD_NO = L_BUILD_NO
+        begin
+        If agqEND_alias:CODE = L_CODE Then
+            Delete agqEND_alias
+
+        Next agqEND_alias
+        End
+
+End
+
+procedure apt_charge
+begin
+access cpsumrates, set cpsumrates:company_id       = agqumbrella1:company_id,
+                       cpsumrates:state            = agqumbrella1:state,
+                       cpsumrates:line_of_business = agqumbrella1:line_of_business, generic
+
+while cpsumrates:company_id       = agqumbrella1:company_id and
+      cpsumrates:state            = agqumbrella1:state and
+      cpsumrates:line_of_business = agqumbrella1:line_of_business
+        begin
+        if agqname:eff_date >= cpsumrates:eff_date then
+            begin
+            if agqumbrella1:state = 19 then
+                l_apt_charge = cpsumrates:apt_rate[1]
+            else
+                begin
+                if agqumbrella1:stories[2] <= cpsumrates:apt_stories[1] then
+                    l_apt_charge = cpsumrates:apt_rate[1]
+                else
+                if agqumbrella1:stories[2] > cpsumrates:apt_stories[1] and
+                   agqumbrella1:stories[2] <= cpsumrates:apt_stories[2] then
+                    l_apt_charge = cpsumrates:apt_rate[2]
+                else
+                if agqumbrella1:stories[2] > cpsumrates:apt_stories[2] then
+                    l_apt_charge = cpsumrates:apt_rate[3]
+                end
+            end
+
+        next cpsumrates
+        end
+
+end
+
+procedure apt_charge_1
+begin
+access cpsumrates, set cpsumrates:company_id       = agqumbrella1:company_id,
+                       cpsumrates:state            = agqumbrella1:state,
+                       cpsumrates:line_of_business = agqumbrella1:line_of_business, generic
+
+while cpsumrates:company_id       = agqumbrella1:company_id and
+      cpsumrates:state            = agqumbrella1:state and
+      cpsumrates:line_of_business = agqumbrella1:line_of_business
+        begin
+        if agqname:eff_date >= cpsumrates:eff_date then
+            begin
+            if agqumbrella1:state = 19 then
+                l_apt_charge = cpsumrates:apt_rate[2]
+            else
+                begin
+                if agqumbrella1:stories_1[1] <= cpsumrates:apt_stories[1] then
+                    l_apt_charge = cpsumrates:apt_rate[1]
+                else
+                if agqumbrella1:stories_1[1] > cpsumrates:apt_stories[1] and
+                   agqumbrella1:stories_1[1] <= cpsumrates:apt_stories[2] then
+                    l_apt_charge = cpsumrates:apt_rate[2]
+                else
+                if agqumbrella1:stories_1[1] > cpsumrates:apt_stories[2] then
+                    l_apt_charge = cpsumrates:apt_rate[3]
+                end
+            end
+
+        next cpsumrates
+        end
+
+end
+
+procedure apt_charge_2
+begin
+access cpsumrates, set cpsumrates:company_id = agqumbrella1:company_id,
+                       cpsumrates:state = agqumbrella1:state,
+                       cpsumrates:line_of_business = agqumbrella1:line_of_business, generic
+
+while cpsumrates:company_id = agqumbrella1:company_id and
+      cpsumrates:state = agqumbrella1:state and
+      cpsumrates:line_of_business = agqumbrella1:line_of_business
+        begin
+        if agqname:eff_date >= cpsumrates:eff_date then
+            begin
+            if agqumbrella1:state = 19 then
+                l_apt_charge = cpsumrates:apt_rate[3]
+            else
+                begin
+                if agqumbrella1:stories_1[2] <= cpsumrates:apt_stories[1] then
+                    l_apt_charge = cpsumrates:apt_rate[1]
+                else
+                if agqumbrella1:stories_1[2] > cpsumrates:apt_stories[1] and
+                   agqumbrella1:stories_1[2] <= cpsumrates:apt_stories[2] then
+                    l_apt_charge = cpsumrates:apt_rate[2]
+                else
+                if agqumbrella1:stories_1[2] > cpsumrates:apt_stories[2] then
+                    l_apt_charge = cpsumrates:apt_rate[3]
+                end
+            end
+
+        next cpsumrates
+        end
+
+end
+
+procedure umbrella_maximums
+begin
+access cpsumrates, set cpsumrates:company_id = agqumbrella1:company_id,
+                       cpsumrates:state = agqumbrella1:state,
+                       cpsumrates:line_of_business = agqumbrella1:line_of_business, generic
+
+while cpsumrates:company_id = agqumbrella1:company_id and
+      cpsumrates:state = agqumbrella1:state and
+      cpsumrates:line_of_business = agqumbrella1:line_of_business
+        begin
+        if agqname:eff_date >= cpsumrates:eff_date then
+            begin
+            l_motel_maximum = cpsumrates:motel_maximum
+            l_motel_stories = cpsumrates:motel_stories
+            l_apt_stories = cpsumrates:apt_stories[3]
+            end
+
+        next cpsumrates
+        end
+
+end
+
+procedure umbrella_rates
+begin
+access cpsumrates, set cpsumrates:company_id = agqumbrella1:company_id,
+                       cpsumrates:state = agqumbrella1:state,
+                       cpsumrates:line_of_business = agqumbrella1:line_of_business, generic
+
+while cpsumrates:company_id = agqumbrella1:company_id and
+      cpsumrates:state = agqumbrella1:state and
+      cpsumrates:line_of_business = agqumbrella1:line_of_business
+        begin
+        if agqname:eff_date >= cpsumrates:eff_date then
+            begin
+            switch(agqumbrella1:pool[1])
+              case 0  : switch(agqumbrella1:territory)
+                          case 1  : l_hotel_charge = cpsumrates:hotel_no_pool[1]
+                          default : l_hotel_charge = cpsumrates:hotel_no_pool[2]
+                          end
+              default : switch(agqumbrella1:territory)
+                          case 1  : l_hotel_charge = cpsumrates:hotel_pool[1]
+                          default : l_hotel_charge = cpsumrates:hotel_pool[2]
+                          end
+              end
+
+            l_hotel_increase = cpsumrates:hotel_each_addl
+            l_directors_charge = cpsumrates:directors_surcharge
+            l_directors_per = cpsumrates:directors_per
+            l_apt_per = cpsumrates:apt_per
+            end
+
+        next cpsumrates
+        end
+
+end
+
+End

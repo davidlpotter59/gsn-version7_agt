@@ -1,0 +1,326 @@
+%%
+Screen
+        Name = "agtmt9997b" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "agqstatusnotes" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+
+        Local Unsigned Ascii Number L_sub_code[4] ;
+
+        local string l_username[15] ,
+                     l_email[50],
+                     l_commandline[23],
+                     l_app_str[11],
+                     l_subject[100] ;
+
+        local wdate l_trans_date ;
+
+        Access agqstatusnotes,
+           Set agqstatusnotes:app_NO = G_app_NO, generic ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+                include "styles.inc"
+                Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "func1" sequence "send" tagged email_fn ;
+        "send" continue begin
+                        do send_email
+                        end ;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_username = username
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+Access Validation
+If agqstatusnotes:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        scrollbarpolicy = always
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Add Notes..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100 Tagged quote_no
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101     begin
+        if function = "ADD" then
+            begin
+            agqstatusnotes:app_no = g_app_no
+            agqstatusnotes:trans_date = todaysdate
+            do subcode
+            agqstatusnotes:sub_code = l_sub_code
+            agqstatusnotes:note_created_by = username/raw
+            end
+        end
+        agqstatusnotes:APP_NO/displayonly ;
+}
+
+Panel at 5.45,91
+Properties
+  {
+    layouttype = column
+  }
+{
+  Components
+    guidetext to 1,1
+       properties
+         {
+           text = "agtmt9997b.sd"
+           fontsize = 9
+         }
+}
+
+Panel at 6,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+        Button at 1,10   tagged back_fn
+        Properties {
+                Iconname = "btn_back.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+        Button at 1,40   tagged email_fn
+        Properties {
+                Iconname = "email.bmp"
+                }
+        Events  {
+                Action = email_fn
+                }
+
+        Button at 1,70   tagged add_fn
+        Properties {
+                Iconname = "btn_add.bmp"
+                }
+        Events  {
+                Action = add_fn
+                }
+
+}
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+
+Panel at 10,1 to 25,100 Tagged rater_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        fontstyle = bold
+        }
+{
+%%
+                                   Trans Date: __________
+
+                                           NOTES
+     ___________________________________________________________________________________________
+
+
+
+
+
+
+%%
+
+components
+
+Fields
+101     agqstatusnotes:trans_date/displayonly ;
+401     agqstatusnotes:notes/freetextlines=7 ;
+
+}
+
+Panel at 26,1 to 27,100
+    Properties
+        {
+        LayoutType = screen
+        }
+    {
+    Components
+        Button at 1,35
+        Properties
+            {
+            Iconname = "btn_previous.bmp"
+            }
+        Events
+            {
+            Action = previous_fn
+            }
+        Button at 1,55
+        Properties
+            {
+            Iconname = "btn_next.bmp"
+            }
+        Events
+            {
+            Action = next_fn
+            }
+    }
+
+}
+
+
+procedure definition
+
+procedure subcode
+begin
+l_trans_date = todaysdate
+access agqstatusnotes_alias, set agqstatusnotes_alias:app_no     = g_app_no,
+                                 agqstatusnotes_alias:trans_date = l_trans_date, generic
+
+l_sub_code = 0
+while agqstatusnotes_alias:app_no     = g_app_no and
+      agqstatusnotes_alias:trans_date = l_trans_date
+    begin
+    l_sub_code = agqstatusnotes_alias:sub_code
+
+    next agqstatusnotes_alias
+    end
+
+l_sub_code = l_sub_code + 10
+end
+
+procedure send_email
+begin
+access sfsagent, set sfsagent:company_id = agqpersonal:company_id,
+                     sfsagent:agent_no   = agqpersonal:agent_no, generic
+
+access sfsperun, set sfsperun:company_id           = sfsagent:company_id,
+                     sfsperun:personal_underwriter = sfsagent:personal_underwriter, generic
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+L_EMAIL   = trun(sfsperun:email_1)
+l_app_str = str(g_app_no)
+L_SUBJECT = "Response from Agent " + trun(str(agqpersonal:agent_no,"ZZZZ")) + " for App " + trun(l_app_str)
+
+l_commandline = str(agqstatusnotes:app_no,11) + str(agqstatusnotes:trans_date,"MMDDYYYY") + str(agqstatusnotes:sub_code,4)
+deletefile("agqpr9997b.mf")
+writefile ("agqpr9997b.mf","cli csbatch agqpr9997b %s<nl>",l_commandline)
+writefile ("agqpr9997b.mf","cli pcl2pdf response.cq response.pdf<nl>")
+closefile ("agqpr9997b.mf")
+
+proc("cli cq agqpr9997b")/noconsole
+
+deletefile("response.mf")
+Writefile ("response.mf","cli mail -s '%s' -a response.pdf %s < /dev/null",trun(l_subject),Trun(L_EMAIL))
+Closefile ("response.mf")
+
+Proc("cli chmod 777 response.mf")/noconsole
+Proc("cli cq response")/noconsole
+end
+
+end

@@ -1,0 +1,364 @@
+%%
+Program
+        Name = "agqcv100a" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+        Global Unsigned Ascii Number G_QUOTE_NO[8] ;
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+
+        Local String L_PROCEDURE[20] ,
+                     L_POLICY_NO[9] ,
+                     l_supporting_policy[15],
+                     L_QUOTE_NO[8] ;
+
+Initialisation
+G_APP_NO      = val(COMMANDLINE[1,11])
+G_QUOTE_NO    = val(COMMANDLINE[12,19])
+
+Access agqNAME, Set agqNAME:app_NO = G_app_NO, Exact
+
+L_PROCEDURE = "caqvehicle FILE UPDATE"
+
+Access agqVEHICLE, Set agqVEHICLE:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqVEHICLE:app_no <> G_app_no
+
+    Add caqVEHICLE
+        Begin
+        caqVEHICLE:quote_no                = G_quote_no
+        caqVEHICLE:VEHICLE_NO               = agqVEHICLE:VEHICLE_NO
+        caqVEHICLE:RECORD_RDF               = agqVEHICLE:RECORD_RDF/raw
+        caqVEHICLE:COMPANY_ID               = agqVEHICLE:COMPANY_ID/raw
+        caqVEHICLE:LINE_OF_BUSINESS         = agqVEHICLE:LINE_OF_BUSINESS
+        caqvehicle:zipcode                  = agqname:zipcode
+        End
+
+    Next agqVEHICLE
+    End
+
+L_PROCEDURE = "agqaddin2 FILE UPDATE"
+
+Access agqaddin2, Set agqaddin2:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqaddin2:app_no <> G_app_no
+
+    Add caqADDIN
+        Begin
+        caqADDIN:quote_no               = G_quote_no
+        caqADDIN:VEHICLE_NO             = agqaddin2:VEHICLE_NO
+        caqADDIN:RECORD_RDF             = agqaddin2:RECORD_RDF/raw
+        End
+
+    Next agqaddin2
+    End
+
+L_PROCEDURE = "caqaddlpip FILE UPDATE"
+
+Access agqADDLPIP, Set agqADDLPIP:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqADDLPIP:app_no <> G_app_no
+
+    access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+    while agqvehicle:app_no = g_app_no
+        begin
+        Add caqADDLPIP
+            Begin
+            caqADDLPIP:quote_no              = G_quote_no
+            caqADDLPIP:VEHICLE_NO             = agqvehicle:VEHICLE_NO
+            caqADDLPIP:CODE                   = agqADDLPIP:CODE/raw
+            caqADDLPIP:SUB_CODE               = agqADDLPIP:SUB_CODE
+            caqADDLPIP:RECORD_RDF             = agqADDLPIP:RECORD_RDF/raw
+            end
+
+        next agqvehicle
+        End
+
+    Next agqADDLPIP
+    End
+
+l_supporting_policy = ""
+do access_agqapplication
+L_PROCEDURE = "caqdev FILE UPDATE"
+
+Access agqDEV, Set agqDEV:app_no = G_app_no, Approximate
+
+if agqDEV:app_no = G_app_no or
+   l_supporting_policy <> "" then
+    begin
+    Add caqDEV
+        Begin
+        caqDEV:quote_no              = G_quote_no
+        caqDEV:RECORD_RDF            = agqDEV:RECORD_RDF/raw
+        if l_supporting_policy <> "" then
+            begin
+            caqdev:another_policy    = 1
+            caqdev:package_policy_no = l_supporting_policy
+            end
+        End
+
+    End
+
+L_PROCEDURE = "caqbroadened FILE UPDATE"
+
+Access agqBROADENED, Set agqBROADENED:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqBROADENED:app_no <> G_app_no
+
+    Add caqBROADENED
+        Begin
+        caqBROADENED:quote_no              = G_quote_no
+        caqBROADENED:SUB_CODE               = agqBROADENED:SUB_CODE
+        caqBROADENED:RECORD_RDF             = agqBROADENED:RECORD_RDF/raw
+        End
+
+    Next agqBROADENED
+    End
+
+L_PROCEDURE = "caqdoc FILE UPDATE"
+
+Access agqDOC, Set agqDOC:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqDOC:app_no <> G_app_no
+
+    Add caqDOC
+        Begin
+        caqDOC:quote_no              = G_quote_no
+        caqDOC:NAME                   = agqDOC:NAME/raw
+        caqDOC:RECORD_RDF             = agqDOC:RECORD_RDF/raw
+        End
+
+    Next agqDOC
+    End
+
+L_PROCEDURE = "caqdriver FILE UPDATE"
+
+Access agqDRIVER, Set agqDRIVER:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqDRIVER:app_no <> G_app_no
+
+    Add caqDRIVER
+        Begin
+        caqDRIVER:quote_no              = G_quote_no
+        caqDRIVER:SUB_CODE               = agqDRIVER:SUB_CODE
+        caqDRIVER:RECORD_RDF             = agqDRIVER:RECORD_RDF/raw
+        End
+
+    Next agqDRIVER
+    End
+
+L_PROCEDURE = "caqendorse FILE UPDATE"
+
+Access agqendorse2, Set agqendorse2:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqendorse2:app_no <> G_app_no
+
+    access agqvehicle, set agqvehicle:app_no     = agqendorse2:app_no,
+                           agqvehicle:vehicle_no = agqendorse2:vehicle_no, generic
+
+    Add caqENDORSE
+        Begin
+        caqENDORSE:quote_no               = G_quote_no
+        caqENDORSE:VEHICLE_NO             = agqendorse2:VEHICLE_NO
+        caqENDORSE:CODE                   = agqendorse2:CODE/raw
+        caqENDORSE:SUB_CODE               = agqendorse2:SUB_CODE
+        caqENDORSE:RECORD_RDF             = agqendorse2:RECORD_RDF/raw
+        if agqendorse2:code = "MCA201" then
+            caqendorse:description = str(agqendorse2:vehicle_no) + "-" +
+                                     str(agqvehicle:year) + "-" +
+                                     trun(agqvehicle:make) + "-" +
+                                     trun(agqvehicle:model) + "-" +
+                                     trun(agqvehicle:serial_no)
+        End
+
+    Next agqendorse2
+    End
+
+L_PROCEDURE = "caqaddlinsured FILE UPDATE"
+
+Access agqaddlinsured, Set agqaddlinsured:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqaddlinsured:app_no <> G_app_no
+
+    Add caqaddlinsured
+        Begin
+        caqaddlinsured:quote_no               = G_quote_no
+        caqaddlinsured:VEHICLE_NO             = agqaddlinsured:VEHICLE_NO
+        caqaddlinsured:CODE                   = agqaddlinsured:CODE/raw
+        caqaddlinsured:SUB_CODE               = agqaddlinsured:SUB_CODE
+        caqaddlinsured:RECORD_RDF             = agqaddlinsured:RECORD_RDF/raw
+        End
+
+    Next agqaddlinsured
+    End
+
+L_PROCEDURE = "caqfinancial FILE UPDATE"
+
+Access agqFINANCIAL, Set agqFINANCIAL:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqFINANCIAL:app_no <> G_app_no
+
+    Add caqFINANCIAL
+        Begin
+        caqFINANCIAL:quote_no              = G_quote_no
+        caqFINANCIAL:TRANS_DATE             = agqFINANCIAL:TRANS_DATE
+        caqFINANCIAL:RECORD_RDF             = agqFINANCIAL:RECORD_RDF/raw
+        End
+
+    Next agqFINANCIAL
+    End
+
+L_PROCEDURE = "caqnonowned FILE UPDATE"
+
+Access agqNONOWNED, Set agqNONOWNED:app_no = G_app_no, Approximate
+
+if agqNONOWNED:app_no = G_app_no then
+    begin
+    Add caqnonowned
+        Begin
+        caqNONOWNED:quote_no              = G_quote_no
+        caqNONOWNED:cost_of_hire          = agqnonowned:cost_of_hire
+        caqnonowned:comp                  = agqnonowned:comp
+        caqnonowned:coll                  = agqnonowned:coll
+        caqnonowned:comp_deductible       = agqnonowned:comp_deductible
+        caqnonowned:coll_deductible       = agqnonowned:coll_deductible
+        caqnonowned:additional_insured    = agqnonowned:additional_insured
+        caqnonowned:percent_use_own_autos = agqnonowned:percent_use_own_autos
+        caqnonowned:no_employees          = agqnonowned:no_employees
+        caqnonowned:employees_as_insureds = agqnonowned:employees_as_insureds
+        caqnonowned:nonowned_premium      = agqnonowned:nonowned_premium
+        caqnonowned:hired_premium         = agqnonowned:hired_premium
+        caqnonowned:if_any                = agqnonowned:if_any
+        caqnonowned:funeral_medical_payments = agqnonowned:funeral_medical_payments
+        caqnonowned:state                 = agqnonowned:state
+        caqnonowned:liability             = agqnonowned:liability
+        caqnonowned:mp[1]                 = agqnonowned:mp[1]
+        caqnonowned:mp[2]                 = agqnonowned:mp[2]
+        caqnonowned:hired_factor          = agqnonowned:hired_factor
+        caqnonowned:nonowned_auto_applicable = agqnonowned:nonowned_auto_applicable
+        caqnonowned:nonowned_partnership  = agqnonowned:nonowned_partnership
+        caqnonowned:nonowned_auto_service = agqnonowned:nonowned_auto_service
+        caqnonowned:cost_of_hire_1        = agqnonowned:cost_of_hire_1
+        caqnonowned:if_any_1              = agqnonowned:if_any_1
+        caqnonowned:expansion             = agqnonowned:expansion/raw
+        End
+
+    End
+
+L_PROCEDURE = "caqpip FILE UPDATE"
+
+Access agqPIP, Set agqPIP:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqPIP:app_no <> G_app_no
+
+    Add caqPIP
+        Begin
+        caqPIP:quote_no              = G_quote_no
+        caqPIP:VEHICLE_NO             = agqPIP:VEHICLE_NO
+        caqPIP:RECORD_RDF             = agqPIP:RECORD_RDF/raw
+        End
+
+    Next agqPIP
+    End
+
+L_PROCEDURE = "caqpanofault FILE UPDATE"
+
+Access agqPANOFAULT, Set agqPANOFAULT:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqPANOFAULT:app_no <> G_app_no
+
+    Add caqPANOFAULT
+        Begin
+        caqPANOFAULT:quote_no              = G_quote_no
+        caqPANOFAULT:VEHICLE_NO             = agqPANOFAULT:VEHICLE_NO
+        caqPANOFAULT:RECORD_RDF             = agqPANOFAULT:RECORD_RDF/raw
+        End
+
+    Next agqPANOFAULT
+    End
+
+/*L_PROCEDURE = "caqgaragekeepers FILE UPDATE"
+
+Access agqgaragekeepers, Set agqgaragekeepers:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqgaragekeepers:app_no <> G_app_no
+
+    Add caqgaragekeepers
+        Begin
+        caqgaragekeepers:quote_no              = G_quote_no
+        caqgaragekeepers:VEHICLE_NO             = agqgaragekeepers:VEHICLE_NO
+        caqgaragekeepers:RECORD_RDF             = agqgaragekeepers:RECORD_RDF/raw
+        End
+
+    Next agqgaragekeepers
+    End*/
+
+L_PROCEDURE = "caqsymbol FILE UPDATE"
+
+Access agqsymbol, Set agqsymbol:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqsymbol:app_no <> G_app_no
+
+    Add caqsymbol
+        Begin
+        caqsymbol:quote_no               = G_quote_no
+        caqsymbol:VEHICLE_NO             = agqsymbol:VEHICLE_NO
+        caqsymbol:RECORD_RDF             = agqsymbol:RECORD_RDF/raw
+        End
+
+    Next agqsymbol
+    End
+
+L_PROCEDURE = "caqautoquestions FILE UPDATE"
+
+Access agqautoquestions, Set agqautoquestions:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqautoquestions:app_no <> G_app_no
+
+    Add caqautoquestions
+        Begin
+        caqautoquestions:quote_no               = G_quote_no
+        caqautoquestions:RECORD_RDF             = agqautoquestions:RECORD_RDF/raw
+        End
+
+    Next agqautoquestions
+    End
+
+Update
+
+Errors
+Writefile("agqcv100a.err","<NL>")
+Writefile("agqcv100a.err","%S",L_PROCEDURE)
+Writefile("agqcv100a.err","<NL>")
+Writefile("agqcv100a.err","%N%S agqcv100.err",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv100a.err","<NL>")
+Writefile("agqcv100a.err","<NL>")
+
+procedure definition
+
+procedure access_agqapplication
+begin
+access agqapplication, set agqapplication:app_no   = g_app_no,
+                           agqapplication:sub_code = 5, generic
+
+l_supporting_policy = agqapplication:str_policy_no[1]
+end
+
+
+End

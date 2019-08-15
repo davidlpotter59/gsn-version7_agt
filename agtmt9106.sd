@@ -1,0 +1,795 @@
+%%
+Screen
+        Name = "agtmt9106" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "AGQlocation" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4],
+                                     g_state[2],
+                                     g_form[1] ;
+
+        global string g_zipcode_change[1] ;
+
+
+        Local Unsigned Ascii Number L_LINE_OF_BUSINESS[4]=0,
+                                    l_val_zipcode[5],
+                                    l_zipcode_5[5],
+                                    l_restricted[1]=0,
+                                    l_state[2],
+                                    l_restricted_distance[5]=0/dec=2,
+                                    l_tier[2]=0 ;
+
+        local string l_zipcode[9],
+                     l_username[15],
+                     l_business_desc_1[30],
+                     l_business_desc_2[30],
+                     l_continue_1[2],
+                     l_continue_2[3],
+                     l_str_zipcode[9],
+                     l_str_state[2],
+                     l_screen_1[9],
+                     l_sub_line[2],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_server_name[100],
+                     l_lob_code[10],
+                     L_COMPANY_ID[10] ;
+
+        include "swsut100.var"
+
+        Access agqlocation,
+           Set agqlocation:app_NO = G_app_NO, generic
+
+        Include "stdkeys7.inc"
+
+Style definition
+                include "styles.inc"
+                Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "finalchecklist" display "agtmt9110"   tagged final_checklist_fn ;
+        "back" display/noreturn "agtmt001" tagged back_fn ;
+         "nextscreen" sequence "mtg" tagged nextscreen_fn ;
+         "mtg" continue begin
+                        access agqsupp, set agqsupp:app_no = g_app_no, generic
+
+                        if agqsupp:app_no <> g_app_no then
+                            begin
+                            l_continue_2 = dialog("MORTGAGEE","question.bmp","Add Mortgagee/Loss Payee ","Yes","No")
+                            if l_continue_2 = "Yes" then
+                                begin
+                                l_screen_1 = "agtmt9107"
+                                end
+                            else
+                                l_screen_1 = "agtmt9108"
+                            end
+                        else
+                            l_screen_1 = "agtmt9107"
+                        function = "popup"
+                        end ;
+        "popup" display/noreturn l_screen_1 ;
+        "previousscreen" display/noreturn "agtmt9105" tagged previousscreen_fn ;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+disable(accept_fn)
+  l_username = username
+  access sfsemail,
+     set sfsemail:company_id = agqpersonal:company_id,
+         sfsemail:user_id    = l_username, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : switch(g_form)
+                  case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                  case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                  case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                  default : begin
+                            setproperty(t_mho3,iconname,"")
+                            setproperty(t_mho4,iconname,"")
+                            setproperty(t_mho6,iconname,"")
+                            end
+                  end
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+l_username = username
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER
+
+if agqpersonal:company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "17webhelp_agtmt9106_scr_loc_address.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+Access Validation
+If agqlocation:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        scrollbarpolicy = asneeded
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Applicant Information: Location Address..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100 Tagged quote_no
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101     begin
+        if function = "ADD" then
+            agqlocation:app_no = g_app_no
+        end
+        agqlocation:APP_NO/displayonly ;
+
+}
+
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1.5,10    tagged change_fn
+        Properties {
+                Iconname = "btn_edit_entries.bmp"
+                }
+        Events  {
+                Action = change_fn
+                }
+
+        Button at 1.5,35   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+        Button at 1.5,60 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+    }
+
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt9106.sd"
+                      fontsize = 9
+                    }
+      }
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties
+        {
+        layouttype = column
+        }
+    {
+    Components
+        Button to 1,1
+            properties
+                {
+                Iconname = "btn_print_screen.bmp"
+                }
+            events
+                {
+                action
+                    {
+                    function = "print"
+                    abort()
+                    }
+                }
+    }
+
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+                }
+    }
+
+Panel at 8,10 to 21, 95 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+  Number    Direction             Street                Type
+ ________   ______     ______________________________  _______
+
+                            Address
+   _________________________________________________________
+   _________________________________________________________
+   _________________________________________________________
+   _________________________________________________________
+
+            City                  State          Zip Code
+ ______________________________   _____       ______________
+
+%%
+
+components
+
+Fields
+
+201     begin
+          if function one of "ADD","NEW","CHG","CHANGE" then
+            {
+              enable(accept_fn)
+            }
+          else
+            {
+              disable(accept_fn)
+            }
+
+  --      access agqpersonal, set agqpersonal:app_no = g_app_no,
+  --                              agqpersonal:prem_no = agqlocation:prem_no,
+  --                              agqpersonal:build_no = agqlocation:build_no, generic
+
+        end
+        agqLOCATION:ST_NUMBER/default/tabstop ;
+202     begin
+        access sfsdirection_alias, set sfsdirection_alias:company_id = agqpersonal:company_id, generic
+
+        end
+        agqLOCATION:ST_DIRECTION/default/tabstop
+        access sfsdirection, set sfsdirection:company_id = agqpersonal:company_id,
+                                 sfsdirection:direction  = agqlocation:st_direction, generic
+        If agqLOCATION:ST_DIRECTION <> SFSDIRECTION:DIRECTION Then
+            Error 1404
+
+        Activehelp SFSDIRECTION_ALIAS:DIRECTION ,
+                   SFSDIRECTION_ALIAS:DESCRIPTION ;
+203     agqLOCATION:STREET/default/tabstop ;
+204     begin
+        access sfsstrtype_alias, set sfsstrtype_alias:company_id = agqpersonal:company_id, generic
+
+        end
+        agqLOCATION:ST_TYPE/default/tabstop
+        access sfsstrtype, set sfsstrtype:company_id = agqpersonal:company_id,
+                               sfsstrtype:st_type    = agqlocation:st_type, generic
+
+        If agqLOCATION:ST_TYPE <> SFSSTRTYPE:ST_TYPE Then
+            Error 1307
+
+        Activehelp SFSSTRTYPE_ALIAS:ST_TYPE,
+                   SFSSTRTYPE_ALIAS:DESCRIPTION ;
+501    Begin
+        If FUNCTION One Of "CHANGE", "ADD", "NEW" Then
+          {
+            If agqLOCATION:ST_NUMBER = 0 Then  --if street left blank
+              {
+                If Len(Trun(SFSDIRECTION:DESCRIPTION)) = 0 Then -- If DIRECTION left blank
+                  {
+                  agqLOCATION:ADDRESS = Trun(agqLOCATION:STREET) + " " +
+                                  Trun(SFSSTRTYPE:DESCRIPTION)
+                  }
+                Else
+                  {          --concatinate all the remaining fields that are not blank
+                    agqLOCATION:ADDRESS = Trun(SFSDIRECTION:DESCRIPTION) + " " +
+                                  Trun(agqLOCATION:STREET) + " " +
+                                  Trun(SFSSTRTYPE:DESCRIPTION)
+                  }
+              }
+            Else
+              {
+                If Len(Trun(SFSDIRECTION:DESCRIPTION)) = 0 Then --if direction is left blank
+                  {
+                    agqLOCATION:ADDRESS = Trun(Str(agqLOCATION:ST_NUMBER)) + " " +
+                                          Trun(agqLOCATION:STREET) + " " +
+                                          Trun(SFSSTRTYPE:DESCRIPTION)
+                  }
+                Else             --concat all remaining fields that are not blank
+                  {
+                    agqLOCATION:ADDRESS = Trun(Str(agqLOCATION:ST_NUMBER)) + " " +
+                                  Trun(SFSDIRECTION:DESCRIPTION) + " " +
+                                  Trun(agqLOCATION:STREET) + " " +
+                                  Trun(SFSSTRTYPE:DESCRIPTION)
+                  }
+              }
+          }
+        End
+        agqLOCATION:ADDRESS/default/tabstop ;
+601    agqLOCATION:ADDRESS1[1]/default/tabstop;
+701    agqLOCATION:ADDRESS1[2]/default/tabstop
+       Hide If agqLOCATION:ADDRESS1[1] = "" ;
+801     agqLOCATION:ADDRESS1[3]/default/tabstop
+       Hide If agqLOCATION:ADDRESS1[2] = "" ;
+1101    agqLOCATION:CITY/default/tabstop ;
+1102    Begin
+        access sfsline, set sfsline:company_id = agqpersonal:company_id,
+                            sfsline:line_of_business = agqpersonal:line_of_business,
+                            sfsline:lob_subline = "00", generic
+
+        access sfsstatecode_alias, set sfsstatecode_alias:company_id = agqpersonal:company_id,
+                                       sfsstatecode_alias:line_of_business = agqpersonal:line_of_business, generic
+
+--        l_line_of_business = sfsline:rating_line_of_business
+        If agqlocation:str_state = "" Then
+            begin
+            if agqpersonal:company_id = "DELOS" then
+                agqlocation:str_state = sfsdefault:str_state
+            else
+                agqLOCATION:STR_STATE = SFSSTATECODE_ALIAS:STATE_STR
+            end
+        End
+        agqLOCATION:STR_STATE/default/tabstop mandatory
+        l_str_state = agqlocation:str_state
+        access sfsstatecode,
+           set sfsstatecode:company_id       = agqpersonal:company_id,
+               sfsstatecode:line_of_business = agqpersonal:line_of_business,
+               sfsstatecode:state_str        = l_str_state, generic
+
+        If Val(agqLOCATION:STR_STATE) > 0 And
+           Val(agqLOCATION:STR_STATE) < 99 then
+            Error "State must be Characters Only "
+        if agqlocation:str_state <> sfsstatecode:state_str or
+           agqlocation:str_state = "" then
+            error "Not a valid state entered" ;
+1103    begin
+            l_zipcode_5 = agqlocation:zipcode[1,5]
+        end
+        agqLOCATION:STR_ZIPCODE/default/tabstop    mandatory
+        access sfscompany,
+           set sfscompany:company_id = agqpersonal:company_id, exact
+
+        switch(agqlocation:str_state)
+          case "NJ" : l_state = 29
+          case "MD" : l_state = 19
+          default   : l_state = 29
+          end
+
+        l_str_zipcode = agqlocation:str_zipcode[1,5] + "0000"
+        access sfszipcode, set sfszipcode:company_id       = agqname:company_id,
+                               sfszipcode:state            = l_state,
+                               sfszipcode:line_of_business = agqname:line_of_business,
+                               sfszipcode:str_zipcode      = l_str_zipcode, generic
+
+        if l_str_zipcode <> sfszipcode:str_zipcode and
+           l_state = 29 then
+            error "Invalid Zip Code Entered"
+
+        if sfszipcode:po_box_only = 1 then
+            error "This is a PO Box only zipcode you must enter a valid location zip code"
+
+        if sfscompany:TERRITORY_ZIPCODE  = 1 and
+           sfsline:lob_code one of "HOME" then
+          begin
+            l_val_zipcode = val(agqlocation:str_zipcode[1,5])
+            l_sub_line = "00"
+            access sfsline, set sfsline:company_id       = agqpersonal:company_id,
+                                sfsline:line_of_business = agqpersonal:line_of_business,
+                                sfsline:lob_subline      = l_sub_line, exact
+
+            L_LOB_CODE         = SFSLINE:LOB_CODE
+            l_company_id       = agqpersonal:company_id
+            l_line_of_business = agqpersonal:line_of_business
+            I_STR_STATE        = SFSCOMPANY:STR_STATE
+            Include "swsut102.inc"
+            access sfsterritory1,
+               set sfsterritory1:company_id       = agqpersonal:company_id,
+                   sfsterritory1:state            = i_state,
+                   sfsterritory1:line_of_business = agqpersonal:line_of_business,
+                   sfsterritory1:zipcode          = l_val_zipcode,generic
+
+            if agqlocation:str_zipcode[1,5] <> sfsterritory1:str_zipcode[1,5] then
+                error "MUST enter a valid zipcode"
+          end
+
+        If agqLOCATION:ZIPCODE = 0 and
+           sfsemail:agent_no = 0 Then
+            Error "Must enter a zip code"
+
+        if sfsemail:agent_no <> 0 and
+           agqpersonal:company_id = "FARMERS" then
+          begin
+            do get_sfszipcode
+            if l_restricted = 1 then
+                begin
+                l_continue_1 = dialog("Warning","warning.bmp","This risk is located in a coastal restrictive zip code and cannot be bound or quoted","OK")
+                end
+            else
+            if l_restricted_distance <> 0 then
+                begin
+                l_continue_1 = dialog("Warning","warning.bmp","You have entered a Zip Code which includes distance to coast eligibility. Please verify distance meets our coastal eligibility before continuing with quote.","OK")
+                end
+          end
+        if agqlocation:zipcode[1,5] <> l_zipcode_5 then
+            g_zipcode_change = "Y" ;
+1103    Begin
+        If agqLOCATION:STR_ZIPCODE[6,9] = "" Then
+             agqLOCATION:STR_ZIPCODE[6,9] = "0000"
+        End
+        agqLOCATION:STR_ZIPCODE/displayonly;
+}
+
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+                }
+    }
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+    Properties
+        {
+        LayoutType = screen
+        }
+    {
+    Components
+        Button at 1,5  tagged previousscreen_fn
+        Properties {
+                Iconname = "previous_screen.bmp"
+                }
+        Events  {
+                Action {
+                       function = "previousscreen"
+                       abort()
+                       }
+                }
+
+        Button at 1,40   tagged final_checklist_fn
+        Properties {
+                Iconname = "final_checklist.bmp"
+                }
+        Events  {
+                Action {
+                       function = "finalchecklist"
+                       abort()
+                       }
+                }
+
+        Button at 1,75   tagged nextscreen_fn
+            Properties
+                {
+                Iconname = "next_screen.bmp"
+                }
+            Events
+                {
+                Action
+                    {
+                    function = "nextscreen"
+                    abort()
+                    }
+                }
+
+}
+
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+                }
+    }
+
+
+panel at 25,1 to 32,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+}
+
+Update
+  if UPDATEOK = "NO" Then
+      disable(accept_fn)
+
+if abort = "YES" then
+    disable(accept_fn)
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+      disable(accept_fn)
+
+screen exit
+g_prem_no = agqlocation:prem_no
+g_build_no = agqlocation:build_no
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END
+
+procedure get_heading(string l_display_heading)
+
+begin
+  postevent("agtmt010b","set_info_box",l_display_heading)
+end
+
+
+procedure back_a_screen
+
+begin
+  postevent("menutree","REMOVE_SCREEN","Display_Main")
+end
+
+procedure get_sfszipcode
+begin
+l_val_zipcode = agqlocation:zipcode
+l_str_zipcode = agqlocation:str_zipcode[1,5] + "0000"
+access sfszipcode, set sfszipcode:company_id       = agqpersonal:company_id,
+                       sfszipcode:state            = g_state,
+                       sfszipcode:line_of_business = agqpersonal:line_of_business,
+                       sfszipcode:str_zipcode      = l_str_zipcode, generic
+
+l_tier = 0
+while sfszipcode:company_Id       = agqpersonal:company_id and
+      sfszipcode:state            = g_state and
+      sfszipcode:line_of_business = agqpersonal:line_of_business and
+      sfszipcode:str_zipcode      = l_str_zipcode
+        begin
+        if (agqname:eff_date >= sfszipcode:eff_date and
+           (agqname:eff_date <= sfszipcode:exp_date or
+           sfszipcode:exp_date = 0)) then
+            begin
+            l_restricted = sfszipcode:restricted
+            l_restricted_distance = sfszipcode:restricted_distance
+            end
+
+        next sfszipcode
+        end
+
+end
+
+procedure add_blank_agqlocation
+BEGIN
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+while agqpersonal:app_no = g_app_no
+    {
+    access agqlocation_alias, set agqlocation_alias:app_no   = agqpersonal:app_no,
+                                  agqlocation_alias:prem_no  = agqpersonal:prem_no,
+                                  agqlocation_alias:build_no = agqpersonal:build_no, generic
+
+    if agqlocation_alias:app_no   <> agqpersonal:app_no or
+       agqlocation_alias:prem_no  <> agqpersonal:prem_no or
+       agqlocation_alias:build_no <> agqpersonal:build_no then
+        {
+        access agqname, set agqname:app_no = g_app_no, generic
+
+        add agqlocation_alias
+            {
+            agqlocation_alias:app_no           = agqpersonal:app_no
+            agqlocation_alias:prem_no          = agqpersonal:prem_no
+            agqlocation_alias:build_no         = agqpersonal:build_no
+            agqlocation_alias:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+            agqlocation_alias:STATE            = agqpersonal:STATE
+            agqlocation_alias:COUNTY           = agqpersonal:COUNTY
+            agqlocation_alias:TRANS_DATE       = agqNAME:TRANS_DATE
+            agqlocation_alias:TRANS_CODE       = agqname:trans_code   --changed it from 10
+            agqlocation_alias:EFF_DATE         = agqNAME:EFF_DATE
+            agqlocation_alias:EXP_DATE         = agqNAME:EXP_DATE
+            }
+        }
+
+    next agqpersonal
+    }
+
+END
+
+end

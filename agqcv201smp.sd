@@ -1,0 +1,145 @@
+%%
+Program
+        Name = "agqcv201smp" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+         Global Unsigned Ascii Number G_OLD_QUOTE[8] ,
+                                      G_QUOTE_NO[8] ,
+                                      g_app_no[11],
+                                      g_new_app_no[11];
+
+         String L_PROCEDURE[20] ,
+                L_QUOTE_NO[8] ,
+                l_app_no[11],
+                l_code[7],
+                l_enter,
+                L_NEW_QUOTE_NO[8] ;
+
+        unsigned ascii number l_prem_no[4],
+                              l_build_no[4],
+                              l_sub_code[4] ;
+
+Initialisation
+g_app_no     = val(commandline[1,11])
+g_new_app_no = val(COMMANDLINE[12,22])
+
+Access agqname, set agqname:app_no = g_app_no, generic
+
+L_PROCEDURE = "agqartdeduct FILE UPDATE"
+
+Access agqartdeduct_alias, Set agqartdeduct_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqartdeduct_alias:app_no <> g_app_no
+
+    Add agqartdeduct
+        Begin
+        agqartdeduct:app_no                 = g_new_app_no
+        agqartdeduct:RECORD_RDF             = agqartdeduct_alias:RECORD_RDF/raw
+        End
+
+    Next agqartdeduct_alias
+    End
+
+L_PROCEDURE = "agqartisan FILE UPDATE"
+
+Access agqartisan_alias, Set agqartisan_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqartisan_alias:app_no <> g_app_no
+
+    Add agqartisan
+        Begin
+        agqartisan:app_no               = g_new_app_no
+        agqartisan:PREM_NO                = agqartisan_alias:PREM_NO
+        agqartisan:BUILD_NO               = agqartisan_alias:BUILD_NO
+        agqartisan:CLASS_CODE             = agqartisan_alias:CLASS_CODE
+        agqartisan:RECORD_RDF             = agqartisan_alias:RECORD_RDF/raw
+        End
+
+    Next agqartisan_alias
+    End
+
+L_PROCEDURE = "agqartlimits FILE UPDATE"
+
+Access agqartlimits_alias, Set agqartlimits_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqartlimits_alias:app_no <> g_app_no
+
+    Add agqartlimits
+        Begin
+        agqartlimits:app_no               = g_new_app_no
+        agqartlimits:RECORD_RDF             = agqartlimits_alias:RECORD_RDF/raw
+        End
+
+    Next agqartlimits_alias
+    End
+
+L_PROCEDURE = "agqartdeviation FILE UPDATE"
+
+Access agqartdeviation_alias, Set agqartdeviation_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqartdeviation_alias:app_no <> g_app_no
+
+    Add agqartdeviation
+        Begin
+        agqartdeviation:app_no               = g_new_app_no
+        agqartdeviation:RECORD_RDF             = agqartdeviation_alias:RECORD_RDF/raw
+        End
+
+    Next agqartdeviation_alias
+    End
+
+L_PROCEDURE = "agqisocrime FILE UPDATE"
+
+Access agqisocrime_alias, Set agqisocrime_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqisocrime_alias:app_no <> g_app_no
+
+    Add agqisocrime
+        Begin
+        agqisocrime:app_no               = g_new_app_no
+        agqisocrime:PREM_NO                = agqisocrime_alias:PREM_NO
+        agqisocrime:BUILD_NO               = agqisocrime_alias:BUILD_NO
+        agqisocrime:crime_form             = agqisocrime_alias:crime_form
+        agqisocrime:RECORD_RDF             = agqisocrime_alias:RECORD_RDF/raw
+        End
+
+    Next agqisocrime_alias
+    End
+
+L_PROCEDURE = "agqisoblanket FILE UPDATE"
+
+Access agqisoblanket_alias, Set agqisoblanket_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqisoblanket_alias:app_no <> g_app_no
+
+    Add agqisoblanket
+        Begin
+        agqisoblanket:app_no               = g_new_app_no
+        agqisoblanket:PREM_NO                = agqisoblanket_alias:PREM_NO
+        agqisoblanket:BUILD_NO               = agqisoblanket_alias:BUILD_NO
+        agqisoblanket:rate_type              = agqisoblanket_alias:rate_type
+        agqisoblanket:RECORD_RDF             = agqisoblanket_alias:RECORD_RDF/raw
+        End
+
+    Next agqisoblanket_alias
+    End
+
+Update
+
+Errors
+Writefile("agqcv201smp.err","<NL>")
+Writefile("agqcv201smp.err","%S",L_PROCEDURE)
+Writefile("agqcv201smp.err","<NL>")
+Writefile("agqcv201smp.err","%N%S agqcv201smp errors ",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv201smp.err","<NL>")
+Writefile("agqcv201smp.err","<NL>")
+
+End

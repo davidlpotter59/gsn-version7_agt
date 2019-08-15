@@ -1,0 +1,352 @@
+%%                                                                
+/*
+Date Written: December 29, 2009
+
+Name: agqmso003b.sd   - schedule rating worksheet
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+12/29/2009            DWR          Initial setup of New Agent Rating System CA Quote Letter
+===========================
+*/
+
+Program
+  Name = "agqmso003b";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+  Array[120] Of STRING L_CODE_ARRAY[10];
+  String L_FILE_NAME[13] = "agqmso003b.cq" ;
+  String L_STATE;
+  String L_STATE_STR[2];
+  String L_agqNAME_ZIP="";
+  String L_agqvehicle_ZIP="";
+  String L_SFPSUPP1_ZIP[10];
+  String L_MORGAGE_ID[10];
+  String L_SIGNATURE_STRING[55];
+  String L_PREV_STRING;
+  String L_TYPE_STR[29];
+  String L_TRANS_EFF; --= Str(L_MM_1) + "/" + STR(L_DD_1) + "/" + STR(L_YY_1)
+  String L_AUDIT="";
+  String L_SYMBOL_STRING[5] ="";
+  String L_AGENT_TEL[13];
+  String L_COMPANY[10]="";
+  String L_SFQNAME_ZIP = "";
+  String L_FOB[75];
+  String L_ENTER;
+  String L_AGENT_ZIP;
+  String L_COPY_NAME[20];
+  string l_user_id[15];
+  --String L_STRING[150];
+  --String L_FONT[35];
+  String L_COMPANY_ZIP[10];
+  --String L_VERTICAL_POS;
+  String L_INSURED_CITY_STATE[100];
+  String L_LOB_CODE[10];
+  String L_COMPANY_ID[10];
+  String L_FULL_CLASS_CODE[4];
+  String L_SFSMORT_ZIP[10];
+  String L_MORTAGE_TYPE_2[1];
+  String L_BILL_PLAN[2];
+  String L_TERROR_FORM[7];
+  String L_MORTGAGE_TYPE_1[1];
+  String L_TEST;
+  String L_CODE;
+  String L_PLEASED_WORDING[200];
+  String L_PRODUCER_LABEL;
+  String L_CHARACTER_STRING[1000]           = "";
+  String L_V_POSITION                       = "";
+  String L_H_POSITION                       = "";
+  String L_NEWPAGE_WORDING;
+  string l_wording[100] ;
+
+  Number L_RENEWAL[9];
+  Number L_MM_1;
+  Number L_DD_1;
+  Number L_YY_1;
+  Number L_LOOP =0;   -- used to loop though the copies.
+  Number L_SWITCH_COL_COUNTER = 1;
+  Number L_TRANS_CODE;
+  Number L_PAGE_NUMBER = 1;
+
+  Ascii Number L_LENGTH;
+  Ascii Number L_WIDTH;
+  Ascii Number L_HORZ_LOC;
+  Ascii Number L_VERT_LOC;
+
+  Unsigned ascii number l_app_no[11];
+  Unsigned ascii number l_quote_no[11];
+  Unsigned Ascii Number L_COUNTER[3];
+  Unsigned Ascii Number L_MASTER_CODE[4];
+  Unsigned Ascii Number L_PAGENUMBER;
+  Unsigned Ascii Number L_LINE_PCOUNTER = 1;  --line counter per page
+  Unsigned Ascii Number L_LINE_TCOUNTER = 0;  --total line for dec
+  Unsigned Ascii Number L_LINE_TPCOUTER = 58; --total line on a page
+  Unsigned Ascii Number L_POL_YEAR[4];
+  Unsigned Ascii Number L_ENDORSEMENT_SEQ[4];
+  Unsigned Ascii Number L_S_LINE_FOR_AGENT = 0; --start line for agent
+  Unsigned Ascii Number L_E_LINE_FOR_ISSURED = 0;
+  Unsigned Ascii Number L_BIGGER_LINE =0;
+  Unsigned Ascii Number L_SCREEN_COR= 0;
+  Unsigned Ascii Number L_agqVEHICLE_STATE[2];
+  Unsigned Ascii Number L_agqVEHICLE_COUNTY[3];
+  Unsigned Ascii Number L_LINE_OF_BUSINESS[4];
+  Unsigned Ascii Number L_LESSOR_Y_N = 0;
+  Unsigned Ascii Number L_RENTAL_HEADING_PRINTED = 0;
+  Unsigned Ascii Number L_TWO_PLACER;
+  Unsigned Ascii Number L_STATE2[2];
+  Unsigned Ascii Number L_DECIPOINT;
+  Unsigned Ascii Number L_CHARACTER_PER_INCH;
+  Unsigned Ascii Number L_STATE_NO[2];
+  Unsigned Ascii Number L_PAGE_MIDDLE;
+  Unsigned Ascii Number L_HALF_MULTIPLIER;
+  Unsigned Ascii Number L_LEN_STRING;
+  Unsigned Ascii Number L_CHAR_MULTIPLIER;
+  Unsigned Ascii Number L_LINE_HEIGHT;
+  Unsigned Ascii Number L_SIZE_COUNTER;
+  Unsigned Ascii Number L_MAX_LINES;
+  Unsigned Ascii Number L_LOCATION_COUNTER;
+  Unsigned Ascii Number L_AGENT_COUNTER;
+  Unsigned Ascii Number L_INSURED_COUNTER;
+  Unsigned Ascii Number L_OPTIONAL_COVERAGE_TOTAL[9];
+  Unsigned Ascii Number L_START_PRINT[4]    = 0;   --point to start printing.
+  Unsigned Ascii Number L_END_PRINT[4]      = 0;
+  Unsigned Ascii Number L_CHARACTER_BREAK   = 0;
+  Unsigned Ascii Number L_CHARACTER_COUNTER = 0;
+  Unsigned Ascii Number L_MAX_CHAR          = 0;
+  Unsigned Ascii Number L_vertical_pos2[4];
+  Unsigned Ascii Number L_LINE_COUNTER/decimals=2;
+  Unsigned Ascii Number L_NUM_FORMS = 0;  -- number of forms to print on dec
+                                          -- done to make sure I can print them
+                                         -- all on the same page a the signature.
+  Wdate L_SFSEND_DATE;
+  Include "csfonts.inc"
+  Include "sfsrevname.var"
+  Include "swsut100.var"
+  Include "center2.var"
+
+Initialisation
+Deletefile(L_FILE_NAME);   --house cleaning making sure file is removed be each run
+L_APP_NO = val(COMMANDLINE[1,11])
+
+access agqvehicle, set agqvehicle:app_no = l_app_no, generic
+
+access agqcreditdebit, set agqcreditdebit:app_no = l_app_no, generic
+
+Access SFSCOMPANY, Set SFSCOMPANY:COMPANY_ID = agqvehicle:COMPANY_ID , Exact
+
+access sfsline, set sfsline:company_id       = agqvehicle:company_id,
+                    sfsline:line_of_business = agqvehicle:line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+l_user_id = username
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = l_user_id, generic
+
+l_lob_code = sfsline:lob_code
+access scipscontrol, set scipscontrol:company_id = agqvehicle:company_id,
+                         scipscontrol:state      = agqvehicle:state,
+                         scipscontrol:lob_code   = l_lob_code, generic
+
+Writefile(L_FILE_NAME,"%s",L_LEDUP)
+Writefile(L_FILE_NAME,"%s",l_landscape)
+
+If SCIPSCONTROL:PRINT_BORDERS_ON_DEC_PAGE = 1 Then
+    {
+    Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c10a3045b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a5585h0V<033>*c10a3045b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c5467h20v0P") --
+    Writefile(L_FILE_NAME,"%s","<033>&a140h7300V<033>*c5467h20v0P")
+    }
+
+L_vertical_pos2 = 0
+For l_loop = 1 to 10
+    {
+    If SCIPSCONTROL:VERITICAL_POSITION[l_loop]  <> 0 then
+        {
+        If l_vertical_pos2 < SCIPSCONTROL:VERITICAL_POSITION[l_loop] then
+            {
+            L_vertical_pos2 = SCIPSCONTROL:VERITICAL_POSITION[l_loop]
+            }
+        }
+    }
+If l_vertical_pos2 < SCIPSCONTROL:VERTICAL_POSITION_1 then  --check company phone
+    {
+    L_vertical_pos2 = SCIPSCONTROL:VERTICAL_POSITION_1
+    }
+
+Writefile(L_FILE_NAME,"%s","<033>&a0h0V")
+
+Writefile(L_FILE_NAME,"%s%s%s%s",trun(L_ARIAL_BOLD_14),"<033>&a2000h+0V",trun(sfscompany:name[1]),"<NL>")
+writefile(l_file_name,"<NL>")
+Writefile(L_FILE_NAME,"%s%s%s%s",trun(L_ARIAL_BOLD_14),"<033>&a2300h+0V","COMMERCIAL AUTO SCHEDULE RATING","<NL>")
+writefile(l_file_name,"<NL>")
+Writefile(L_FILE_NAME,"%s%s%s%s%s",trun(L_ARIAL_12),"<033>&a200h+0V","Application Number: ",trun(str(l_app_no))," - ")
+
+I_NAME = agqvehicle:business_NAME[1]
+Include "sfsrevname7.pro"
+Writefile(L_FILE_NAME,"%s%s%s","<033>&a1700h+0V",toggle(I_REV_NAME),"<NL>")
+
+Writefile(L_FILE_NAME,"%s%s%s%s%s",trun(L_ARIAL_12),"<033>&a200h+0V","Effective Date:   ",str(agqvehicle:eff_date,"MM/DD/YYYY"),"<NL>")
+Writefile(L_FILE_NAME,"%s%s%s%s%s",trun(L_ARIAL_12),"<033>&a200h+0V","Expiration Date: ",str(agqvehicle:exp_date,"MM/DD/YYYY"),"<NL>")
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_bold_9))
+writefile(l_file_name,"%s%s","<033>&a200h+0V","Category")
+writefile(l_file_name,"%s%s","<033>&a1500h+0V","Considerations")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Details")
+writefile(l_file_name,"%s%s","<033>&a5500h+0V","Levels")
+writefile(l_file_name,"%s%s","<033>&a6000h+0V","Credit/Debit")
+writefile(l_file_name,"%s%s","<033>&a7000h+0V","Total")
+Writefile(L_FILE_NAME,"%s","<033>&a200h+80V<033>*c7500h5v0P")
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_9))
+writefile(l_file_name,"%s%s","<033>&a200h+0V","Management/Company")
+writefile(l_file_name,"%s%s","<033>&a1500h+0V","Owners' Experience")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of owners' years of experience")
+switch(agqcreditdebit:owners_experience)
+  case 0           : l_wording = "<1"
+  case 1, 2, 3     : l_wording = "1-3"
+  case 4, 5, 6     : l_wording = "4-6"
+  case 7, 8, 9, 10 : l_wording = "7-10"
+  default          : l_wording = "11+"
+  end
+writefile(l_file_name,"%s%s","<033>&a5600h+0V",trun(l_wording))
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:owners_experience_score,"-9.99"))
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:owners_experience_score,"-9.99"))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+80V<033>*c7500h5v0P")
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_9))
+writefile(l_file_name,"%s%s","<033>&a200h+0V","Equipment")
+writefile(l_file_name,"%s%s","<033>&a1500h+0V","Maintenance")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Is there a vehicle maintenance program in place?")
+switch(agqcreditdebit:vehicle_maintenance)
+  case "Y" : l_wording = "Yes"
+  default  : l_wording = "No"
+  end
+writefile(l_file_name,"%s%s","<033>&a5600h+0V",l_wording)
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:vehicle_maintenance_score,"-9.99"))
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:vehicle_maintenance_score,"-9.99"))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+80V<033>*c7500h5v0P")
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_9))
+writefile(l_file_name,"%s%s","<033>&a200h+0V","Safety Organization")
+writefile(l_file_name,"%s%s","<033>&a1500h+0V","Georgraphic Peculiarities")
+writefile(l_file_name,"%s%s%s","<033>&a2800h+0V","Garaging City - ",trun(agqvehicle:territory_description))
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:geographic_peculiarities_score,"-9.99"))
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:geographic_peculiarities_score,"-9.99"))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+80V<033>*c7500h5v0P")
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_9))
+writefile(l_file_name,"%s%s","<033>&a200h+0V","Financial")
+writefile(l_file_name,"%s%s","<033>&a1500h+0V","Business Owners Credit Score")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","What is the business owners' credit score?")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:credit_score)
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:businessowner_credit_score,"-9.99"))
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:businessowner_credit_score,"-9.99"))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+80V<033>*c7500h5v0P")
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_9))
+writefile(l_file_name,"%s%s%s","<033>&a200h+0V","Driver - ",str(agqcreditdebit:no_drivers))
+writefile(l_file_name,"%s%s","<033>&a1500h+0V","Driver Experience")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers less than 1 year driving experience")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:driver_experience[1])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:driver_experience_score[1],"-9.99"))
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:driver_experience_total,"-9.99"))
+writefile(l_file_name,"%s","<NL>")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers 1 to 5 years driving experience")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:driver_experience[2])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:driver_experience_score[2],"-9.99"))
+writefile(l_file_name,"%s","<NL>")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers 6 or more years driving experience")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:driver_experience[3])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:driver_experience_score[3],"-9.99"))
+Writefile(L_FILE_NAME,"%s","<033>&a1500h+80V<033>*c7500h5v0P")
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_9))
+writefile(l_file_name,"%s%s","<033>&a1500h+0V","Driver Age")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers less than age 21")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:drivers_age[1])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:drivers_age_score[1],"-9.99"))
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:drivers_age_total,"-9.99"))
+writefile(l_file_name,"%s","<NL>")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers age 21 to 24")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:drivers_age[2])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:drivers_age_score[2],"-9.99"))
+writefile(l_file_name,"%s","<NL>")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers age 25 to 29")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:drivers_age[3])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:drivers_age_score[3],"-9.99"))
+writefile(l_file_name,"%s","<NL>")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers age 30 to 50")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:drivers_age[4])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:drivers_age_score[4],"-9.99"))
+writefile(l_file_name,"%s","<NL>")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers age 51 to 64")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:drivers_age[5])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:drivers_age_score[5],"-9.99"))
+writefile(l_file_name,"%s","<NL>")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers over age 64")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:drivers_age[6])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:drivers_age_score[6],"-9.99"))
+Writefile(L_FILE_NAME,"%s","<033>&a1500h+80V<033>*c7500h5v0P")
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_9))
+writefile(l_file_name,"%s%s","<033>&a1500h+0V","Accidents per Driver")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers with zero accidents in the last three years")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:no_accidents[1])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:accidents_score[1],"-9.99"))
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:accidents_total,"-9.99"))
+writefile(l_file_name,"%s","<NL>")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers with 1 accident in the last three years")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:no_accidents[2])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:accidents_score[2],"-9.99"))
+writefile(l_file_name,"%s","<NL>")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers with 2 accidents in the last three years")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:no_accidents[3])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:accidents_score[3],"-9.99"))
+writefile(l_file_name,"%s","<NL>")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Number of drivers with 3 or more accidents in the last three years")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:no_accidents[4])
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:accidents_score[4],"-9.99"))
+Writefile(L_FILE_NAME,"%s","<033>&a1500h+80V<033>*c7500h5v0P")
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_9))
+writefile(l_file_name,"%s%s","<033>&a1500h+0V","Moving Violations per Driver")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Total number of violations")
+writefile(l_file_name,"%s%n","<033>&a5600h+0V",agqcreditdebit:no_violations)
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:violations_score,"-9.99"))
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:violations_score,"-9.99"))
+Writefile(L_FILE_NAME,"%s","<033>&a1500h+80V<033>*c7500h5v0P")
+
+/*writefile(l_file_name,"%s%s","<NL>",trun(l_arial_9))
+writefile(l_file_name,"%s%s","<033>&a1500h+0V","Defensive Driving Course")
+writefile(l_file_name,"%s%s","<033>&a2800h+0V","Have all of your drivers taken a defensive driving course?")
+switch(agqcreditdebit:driving_course)
+  case "Y" : l_wording = "Yes"
+  default  : l_wording = "No"
+  end
+writefile(l_file_name,"%s%s","<033>&a5600h+0V",l_wording)
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:driving_course_score,"-9.99"))
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:driving_course_score,"-9.99"))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+80V<033>*c7500h5v0P")*/
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_9))
+writefile(l_file_name,"%s%s","<033>&a200h+0V","Management Cooperation")
+writefile(l_file_name,"%s%s","<033>&a6200h+0V",str(agqcreditdebit:uw_schedule_rating_adj,"-9.99"))
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:uw_schedule_rating_adj,"-9.99"))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+80V<033>*c7500h5v0P")
+
+writefile(l_file_name,"%s%s","<NL>",trun(l_arial_bold_9))
+writefile(l_file_name,"%s%s","<033>&a6000h+0V","Sum Total")
+writefile(l_file_name,"%s%s","<033>&a7000h+0V",str(agqcreditdebit:credit_debit,"-ZZ.99"))
+update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+
+END

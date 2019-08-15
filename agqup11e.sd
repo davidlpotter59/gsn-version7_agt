@@ -1,0 +1,141 @@
+%%
+Program
+        Name = "agqup11e" ;
+        Type = "File" ;
+        Padcharacter = Space ;
+        Domain = "FLAT" ;
+
+        Global Unsigned Ascii Number g_app_no[11] ;
+
+        local string l_company_id[10] ;
+
+        Local Signed Ascii Number l_epl_premium[8]=0;
+
+        local unsigned ascii number l_epl_percent[4]=0/dec=2,
+                                    l_epl_mp[4]=0,
+                                    l_epl_prem[8]=0,
+                                    l_state[2],
+                                    l_line_of_business[4] ,
+                                    l_class_code[5],
+                                    l_sub_code[4],
+                                    l_third_party_percent[4]=0/dec=2,
+                                    l_third_party_prem[8] ;
+
+
+initialisation
+g_app_no      = val(commandline[1,11])
+l_epl_premium = val(commandline[12,19])
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+do epl
+
+update
+
+Procedure Definition
+
+procedure epl
+begin
+access agqepl, set agqepl:app_no = g_app_no, generic
+
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+l_company_id       = agqgeneral:company_id
+l_state            = agqgeneral:state
+l_line_of_business = agqgeneral:line_of_business
+l_class_code       = agqgeneral:class_code
+l_sub_code         = agqgeneral:bpsclass_sub_code
+Access BPSEPL, Set BPSEPL:COMPANY_ID       = l_company_id,
+                   BPSEPL:STATE            = l_STATE,
+                   BPSEPL:LINE_OF_BUSINESS = l_line_of_business,
+                   bpsepl:limit            = agqepl:epl_limit,
+                   bpsepl:deductible       = agqepl:epl_deductible, Generic
+
+while BPSEPL:COMPANY_ID       = l_company_id and
+      BPSEPL:STATE            = l_STATE and
+      BPSEPL:LINE_OF_BUSINESS = l_line_of_business and
+      bpsepl:limit            = agqepl:epl_limit and
+      bpsepl:deductible       = agqepl:epl_deductible
+    begin
+    If agqgeneral:EFF_DATE >= BPSEPL:EFF_DATE Then
+        Begin
+        l_epl_percent = bpsepl:percent
+        l_epl_mp      = bpsepl:minimum_premium
+        End
+
+    Next BPSEPL
+    End
+
+access bpsclass, set bpsclass:company_id       = l_company_id,
+                     bpsclass:state            = l_state ,
+                     bpsclass:line_of_business = l_line_of_business,
+                     bpsclass:class_code       = l_class_code,
+                     bpsclass:sub_code         = l_sub_code, generic
+
+l_third_party_percent = 0
+while bpsclass:company_id       = l_company_id and
+      bpsclass:state            = l_state and
+      bpsclass:line_of_business = l_line_of_business and
+      bpsclass:class_code       = l_class_code and
+      bpsclass:sub_code         = l_sub_code
+        begin
+        if agqgeneral:eff_date >= bpsclass:eff_date then
+            l_third_party_percent = bpsclass:third_party_percent
+
+        next bpsclass
+        end
+
+if agqepl:epl_limit <> 0 then
+    begin
+    if agqmaster:override_epl = 0 then
+        begin
+        l_epl_prem = (l_epl_premium * (l_epl_percent divide 100))
+
+        if l_epl_prem < l_epl_mp then
+            l_epl_prem = l_epl_mp
+        end
+    else
+        l_epl_prem = agqepl:epl_premium
+
+    if agqepl:third_party = 1 then
+        begin
+        l_third_party_percent = (1 + (l_third_party_percent divide 100))
+        l_third_party_prem = ((l_epl_prem * l_third_party_percent) -
+                             l_epl_prem)
+        end
+    else
+        l_third_party_prem = 0
+    end
+else
+    l_epl_prem = 0
+
+access agqepl_alias, set agqepl_alias:app_no = g_app_no, generic
+
+while agqepl_alias:app_no = g_app_no
+    begin
+    change agqepl_alias
+        begin
+        agqepl_alias:epl_percent         = l_epl_percent
+        agqepl_alias:epl_limit           = agqepl:epl_limit
+        agqepl_alias:epl_deductible      = agqepl:epl_deductible
+        agqepl_alias:epl_premium         = l_epl_prem
+        agqepl_alias:third_party_premium = l_third_party_prem
+        end
+
+    next agqepl_alias
+    end
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+if agqmaster:app_no = g_app_no then
+    begin
+    change agqmaster
+        begin
+        agqmaster:total[9] = l_epl_prem + l_third_party_prem
+        end
+    end
+
+End
+
+
+End

@@ -1,0 +1,785 @@
+%%
+Screen
+        Name = "agtmt614" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "agqname" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+        Global Unsigned Ascii Number g_sub_code[4] ;
+        Global Unsigned Ascii Number g_enhancement[1] ;
+
+        global string g_literal[100] ,
+                      g_ok_to_add[1] ;
+
+        local array[39] of tag l_the_tag[15] ;
+
+        local array[39] of string l_literal[100] ,
+                                  l_screen_name[9] ,
+                                  l_answer[1],
+                                  l_prior_answer[1],
+                                  l_view_1[4],
+                                  l_value[1] ,
+                                  l_old_answer[1],
+                                  l_screen_name_2[9] ;
+
+        local array[39] of unsigned ascii number l_view[1],
+                                                 l_highlight[1],
+                                                 l_print_special_edit[1],
+                                                 l_card_dialog[2] ,
+                                                 l_mandatory[1] ;
+
+        Local String L_SCREEN[9],
+                     L_USER_ID[15] ,
+                     l_enter,
+                     l_mvrs[1],
+                     l_prior_mvrs[1],
+                     l_vehicle_maintenance[1],
+                     l_prior_vehicle_maintenance[1],
+                     L_NAME[50] ,
+                     l_line_of_business_1[10],
+                     l_phone_number[15],
+                     l_social_security_number[15],
+                     l_marital_status[15],
+                     l_occupation[50],
+                     l_screen_1[9],
+                     l_occupation_1[50],
+                     l_occupation_2[50],
+                     l_employers_name[50],
+                     l_employers_name_1[50],
+                     l_employers_name_2[50],
+                     l_employers_address_1[50],
+                     l_employers_address_2[50] ,
+                     l_employers_address_3[50],
+                     l_employers_address_4[50] ,
+                     l_ss_1[15],
+                     l_ss_2[15],
+                     l_cr_1[15],
+                     l_cr_2[15],
+                     l_entity[50],
+                     l_busop[50],
+                     l_cooking_equipment[1],
+                     l_contact[50],
+                     l_owner[15],
+                     l_continue[100],
+                     l_rev_name_1[90],
+                     l_first_name_1[50],
+                     l_last_name_1[50],
+                     l_rev_name_2[90],
+                     l_first_name_2[50],
+                     l_continue_1[2],
+                     l_continue_2[3],
+                     l_last_name_2[50],
+                     l_rev_name_3[90],
+                     l_first_name_3[50],
+                     l_last_name_3[50],
+                     l_name_1[50],
+                     l_name_2[50],
+                     l_name_3[50],
+                     l_prev_quote_str[18]="Previous Quote No:",
+                     l_csexec_application[25] ,
+                     L_CHECK_RECEIVED[1] ,
+                     l_username[15],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_company_id[10],
+                     l_system_id[15] ;
+
+        local date l_eff_date[8] ;
+
+        Local Unsigned Ascii Number L_NO_DAYS[3] ,
+                                    l_special_flag_1[3] ,
+                                    l_line_of_business[4],
+                                    l_year[4],
+                                    l_no_years[3],
+                                    l_prior_years[3],
+                                    l_end_sequence[4],
+                                    l_popup_complete[1],
+                                    l_show_coverage_bound[1],
+                                    l_print_special_edit_wording[1],
+                                    l_sub[2],
+                                    l_app_type[2],
+                                    l_sub_code[4],
+                                    l_count[3],
+                                    l_age[3],
+                                    l_loop[3],
+                                    l_sales[8],
+                                    l_special_flag_2[3],
+                                    l_special_flag_3[3] ,
+                                    l_address_line_1[1],
+                                    l_address_line_2[1],
+                                    l_address_line_3[1],
+                                    l_release[1],
+                                    l_state[2],
+                                    l_csexec_number[12],
+                                    l_sub_code_1[4],
+                                    l_inquiry[1],
+                                    l_dont_continue[1],
+                                    l_abort_program[1] ;
+
+        Access agqname,
+           Set agqname:app_NO = g_app_no, generic ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+        include "styles.inc"
+
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "back" display/noreturn "agtmt001" tagged back_fn ;
+        "nextscreen" display/noreturn "agtmt614a" tagged nextscreen_fn ;
+        "previousscreen" display/noreturn "agtmt613" tagged previousscreen_fn ;
+
+        "redisplay" display/noreturn "agtmt614" ;
+        "change" sequence "chg|redisplay" tagged change_fn ;
+        "chg" change/hidden ;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+screen entry
+g_ok_to_add = "Y"
+l_user_id = username
+l_username = username
+l_line_of_business = g_line_of_business
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_app_quest3.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+access sfscompany, set sfscompany:company_id = l_company_Id, generic
+
+access sfsline, set sfsline:company_id       = l_company_Id,
+                    sfsline:line_of_business = g_line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+l_username = username
+access sfsemail, set sfsemail:company_id = l_company_Id,
+                     sfsemail:user_id    = l_username, generic
+
+do access_agsapplication
+access agqautoquestions, set agqautoquestions:app_no = g_app_no, generic
+
+do update_agqautoquestions
+do access_agqautoquestions
+
+if l_no_years = 0 then
+    function = "CHANGE"
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+l_company_id = sfsdefault:company_id
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(ggund_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ggund_fn)
+    hide(ficof_fn)
+    end
+else
+if sfsdefault:company_id one of "GGUND" then
+    begin
+    hide(farmers_fn)
+    hide(ficof_fn)
+    end
+
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+Access Validation
+If agqname:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen -- column
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        scrollbarpolicy = asneeded
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ggund_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1.30,32 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Schedule Rating Questions..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101  g_app_NO/displayonly ;
+
+}
+Panel at 6,25 to 6,40 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_edit_entries.bmp"
+              }
+          Events
+              {
+              Action = change_fn
+              }
+
+    }
+
+Panel at 6,60 to 6,75 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35        tagged accept_fn
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt614.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+--                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 7,5 to 24, 90 Tagged rating_pl
+{
+%%
+*--------------------------------------------------------------------------------*
+| ________________________________________________________________       ___     |
+*------------------------------------------------------------------*------*------*
+|                                                                  |  NO  |  YES |
+*------------------------------------------------------------------*------*------*
+| ________________________________________________________________~|[R~_~~|~~~_R]|
+| ________________________________________________________________~|[R~_~~|~~~_R]|
+*------------------------------------------------------------------*------*------*
+
+%%
+
+components
+
+Fields
+201     l_literal[1]/displayonly   tagged t_view1
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(1)
+                                     }
+                       };
+601     l_literal[2]/displayonly    tagged t_view2
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(2)
+                                     }
+                       };
+701     l_literal[3]/displayonly      tagged t_view3
+                properties {
+                        fontsize = 12
+                        fontstyle = BOLD
+                        fontname = "arial"
+--                        foregroundcolor = "black"
+                        }
+                events {
+                        mouseclicked {
+                                        do display_view(3)
+                                     }
+                       };
+
+202     begin
+        if function one of "CHANGE", "CHG" then
+            begin
+            disable(previousscreen_fn)
+            disable(back_fn)
+            disable(nextscreen_fn)
+            enable(accept_fn)
+            end
+        else
+            begin
+            enable(previousscreen_fn)
+            enable(nextscreen_fn)
+            enable(back_fn)
+            disable(accept_fn)
+            end
+        l_sub_code_1 = 1
+        l_prior_years = l_no_years
+        end
+        l_no_years/tabstop
+        hide if l_literal[1] = ""
+
+        if l_prior_years <> l_no_years then
+            do update_answer ;
+
+602     begin
+        l_sub_code_1 = 2
+        l_prior_vehicle_maintenance = l_vehicle_maintenance
+        end
+        l_vehicle_maintenance/values="N,Y"/tabstop
+        hide if l_literal[2] = ""
+
+        if (l_prior_vehicle_maintenance <> l_vehicle_maintenance or
+           (l_mandatory[2] = 1 and
+           l_prior_vehicle_maintenance = "N")) then
+            do update_answer ;
+
+702     begin
+        l_sub_code_1 = 3
+        l_prior_mvrs = l_mvrs
+        if l_mvrs = "Y" then
+            begin
+            do check_popup(3)
+            l_sub_code_1 = 3
+            l_the_tag[3] = tag("t_view3")
+            if l_popup_complete = 1 then
+                setproperty(l_the_tag[3],foregroundcolor,"blue")
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_mvrs[l_sub_code_1],l_screen_name[l_sub_code_1])
+            end
+        if l_mvrs = "Y" and
+           l_highlight[3] = 1 then
+            do display_background_red(l_the_tag[l_sub_code_1],"red",l_answer[l_sub_code_1],l_screen_name[l_sub_code_1])
+        end
+        l_mvrs/values="N,Y"/tabstop
+        hide if l_literal[3] = ""
+
+        if (l_prior_mvrs <> l_mvrs or
+           (l_mandatory[3] = 1 and
+           l_prior_mvrs = "N")) then
+            do update_answer ;
+
+}
+
+-- draw a line
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1.25,1 to 1.25,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5  tagged previousscreen_fn
+        Properties {
+                Iconname = "previous_screen.bmp"
+                }
+        Events  {
+                Action {
+                       function = "previousscreen"
+                       abort()
+                       }
+                }
+
+        Button at 1,37   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+
+        Button at 1,75   tagged nextscreen_fn
+            Properties
+                {
+                Iconname = "next_screen.bmp"
+                }
+            Events
+                {
+                Action
+                    {
+                    function = "nextscreen"
+                    abort()
+                    }
+                }
+
+}
+
+panel at 29,1 to 30,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+
+}
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+procedure check_popup(number l_sub_code_1)
+begin
+l_popup_complete = 0
+access agqdriver, set agqdriver:app_no = g_app_no, generic
+
+if agqdriver:app_no = g_app_no then
+    l_popup_complete = 1
+
+end
+
+/*procedure display_blue(tag l_tag, string l_color)
+begin
+setproperty(l_tag,foregroundcolor,l_color)
+end*/
+
+procedure display_red(tag l_tag, string l_color, string l_position, string l_display_screen)
+begin
+if l_position = "Y" and
+   l_display_screen <> "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure display_background_red(tag l_tag, string l_color, string l_position, string l_display_screen)
+begin
+if l_position = "Y" then
+    begin
+    setproperty(l_tag,backgroundcolor,l_color)
+    end
+end
+
+procedure remove_blue(tag l_tag, string l_color, string l_position, string l_display_screen)
+begin
+if l_position = "N" or
+   l_display_screen = "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure remove_red(tag l_tag, string l_color, string l_position, string l_display_screen)
+begin
+if l_position = "N" or
+   l_display_screen = "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure clear_popup_information
+begin
+access agqautoquestions_alias, set agqautoquestions_alias:app_no = g_app_no, generic
+
+end
+
+procedure access_agsapplication
+begin
+l_company_id = agqname:company_id
+l_line_of_business = g_line_of_business
+access agsapplication2, set agsapplication2:company_id         = l_company_Id,
+                            agsapplication2:line_of_business   = g_line_of_business,
+                            agsapplication2:form               = 9, generic
+
+while agsapplication2:company_id         = l_company_Id and
+      agsapplication2:line_of_business   = g_line_of_business and
+      agsapplication2:form               = 9
+        begin
+        l_sub_code_1                  = agsapplication2:sub_code
+        l_screen_name[l_sub_code_1]   = agsapplication2:screen_name[1]
+        l_literal[l_sub_code_1]       = agsapplication2:literal
+
+        next agsapplication2
+        end
+
+end
+
+procedure access_agqautoquestions
+begin
+access agqautoquestions_alias, set agqautoquestions_alias:app_no = g_app_no, generic
+
+if agqautoquestions_alias:app_no = g_app_no then
+    begin
+    l_no_years            = agqautoquestions_alias:years_business
+    l_vehicle_maintenance = agqautoquestions_alias:vehicle_maintenance
+    l_mvrs                = agqautoquestions_alias:run_mvrs
+    end
+
+end
+
+procedure update_agqautoquestions
+begin
+l_company_id = agqname:company_id
+l_line_of_business = g_line_of_business
+access agsapplication2, set agsapplication2:company_id         = l_company_Id,
+                            agsapplication2:line_of_business   = l_line_of_business,
+                            agsapplication2:form               = 9, generic
+
+while agsapplication2:company_id         = l_company_Id and
+      agsapplication2:line_of_business   = l_line_of_business and
+      agsapplication2:form               = 9
+        begin
+        access agqautoquestions_alias, set agqautoquestions_alias:app_no  = g_app_no, generic
+
+        if agsapplication2:literal <> "" then
+            begin
+            if agqautoquestions_alias:app_no <> g_app_no then
+                begin
+                l_sub_code_1 = agsapplication2:sub_code
+                add agqautoquestions_alias
+                    begin
+                    agqautoquestions_alias:app_no                 = g_app_no
+                    agqautoquestions_alias:question[l_sub_code_1] = agsapplication2:literal
+                    end
+                end
+            else
+                begin
+                l_sub_code_1 = agsapplication2:sub_code
+                change agqautoquestions_alias
+                    begin
+                    agqautoquestions_alias:question[l_sub_code_1] = agsapplication2:literal
+                    end
+                end
+            end
+
+        next agsapplication2
+        end
+
+end
+
+procedure update_answer
+begin
+access agqautoquestions_alias, set agqautoquestions_alias:app_no = g_app_no, generic
+
+if agqautoquestions_alias:app_no = g_app_no then
+    begin
+    change agqautoquestions_alias
+        begin
+        agqautoquestions_alias:years_business = l_no_years
+        agqautoquestions_alias:vehicle_maintenance = l_vehicle_maintenance
+        agqautoquestions_alias:run_mvrs = l_mvrs
+        end
+
+    if l_mvrs = "Y" then
+        begin
+        if l_screen_name[l_sub_code_1] <> "" then
+            begin
+            g_sub_code = l_sub_code_1
+            l_screen = trun(l_screen_name[l_sub_code_1])
+            g_literal = trun(l_literal[l_sub_code_1])
+            display modal screen l_screen
+            end
+        end
+    end
+
+if l_mvrs = "N" then
+    begin
+    do remove_blue(l_the_tag[l_sub_code_1],"black",l_mvrs[l_sub_code_1],l_screen_name[l_sub_code_1])
+    do remove_red(l_the_tag[l_sub_code_1],"black",l_mvrs[l_sub_code_1],l_screen_name[l_sub_code_1])
+    do clear_popup_information
+    end
+
+end
+
+procedure display_view (number l_sub)
+begin
+if l_screen_name[l_sub] <> "" then
+    begin
+    l_screen = l_screen_name[l_sub]
+    g_sub_code = l_sub
+    g_literal  = trun(l_literal[l_sub])
+    display modal screen l_screen
+    end
+
+end
+
+End

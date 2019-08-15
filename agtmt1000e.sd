@@ -1,0 +1,2543 @@
+%%                 
+Screen
+        Name = "agtmt1000e";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Domain="agqpersonal" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_form[1] ;
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_no_families[1],
+                                    l_line_of_business[4],
+                                    l_remove_form[1],
+                                    l_table[1],
+                                    l_nonowned_factor[5]=0/dec=3,
+                                    l_fpl01_form[1],
+                                    l_increase_cov_c[8]=0/dec=4,
+                                    l_structures_limit[8]=0,
+                                    l_limit[8],
+                                    l_dwelling_limit[8],
+                                    l_contents_limit[8],
+                                    l_allow_agent_to_view[1],
+                                    l_no_units[2],
+                                    L_STATE[2],
+                                    l_hurricane[5],
+                                    l_agent_no[4],
+                                    l_default_loss_limit[8],
+                                    l_default_contents_limit[8],
+                                    l_new_home_discount_factor[4]=0/dec=3,
+                                    l_plspreprinted_alarm_factor[8]=0/dec=4,
+                                    l_new_home_year[4],
+                                    l_new_year_2[2],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_continue_3[2]="",
+                     l_owner_occupied[1]="",
+                     l_ok_to_add_sal01[1]="Y",
+                     l_continue_4[2]="",
+                     l_new_home_discount[1],
+                     l_mpl13[1],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_server_name[100],
+                     l_record_key[2],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_code_8[7],
+                     l_code_9[7],
+                     l_code_10[7],
+                     l_code_11[7],
+                     l_code_12[7],
+                     l_code_13[7],
+                     l_code_14[7],
+                     l_code_15[7],
+                     l_code_16[7],
+                     l_code_17[7],
+                     l_code_18[7],
+                     l_code_19[7],
+                     l_code_20[7],
+                     l_code_21[7],
+                     l_code_22[7],
+                     l_code_23[7],
+                     l_code_24[7],
+                     l_code_25[7],
+                     l_code_26[7],
+                     l_code_27[7],
+                     l_code_28[7],
+                     l_code_29[7],
+                     l_code_30[7],
+                     l_mho45[1],
+                     l_included[8]="Included",
+                     l_mpl49[1],
+                     l_mpl47[1],
+                     l_system_id[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ,
+                     l_updated[1] ;
+
+        local date l_sal_eff_date[8] ,
+                   l_eff_date[8] ,
+                   l_companion_discount_date[8] ;
+
+        Access agqpersonal,
+           Set agqpersonal:app_NO = G_app_NO ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden/autoupdate ;
+        "calc" display "agtmt1200" tagged calc_fn ;
+        "redisplay" display/noreturn "agtmt1000e" ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+disable(accept_fn)
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(delete_fn)
+    disable(accept_fn)
+    end
+
+access sfsline, set sfsline:company_id       = agqpersonal:company_id,
+                    sfsline:line_of_business = agqpersonal:line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+l_username = username
+access sfsemail, set sfsemail:company_id = agqpersonal:company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if sfsemail:agent_no <> 0 or
+   agqpersonal:company_id <> "FLEMINGTON" or
+   sfsline:lob_code not one of "DWELLING" then
+    hide(df_seasonal_surcharge)
+
+if sfsemail:agent_no <> 0 then
+    hide(df_seasonal_surcharge)
+
+l_username  = username
+l_system_id = "plp"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqpersonal:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : switch(g_form)
+                  case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                  case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                  case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                  default : begin
+                            setproperty(t_mho3,iconname,"")
+                            setproperty(t_mho4,iconname,"")
+                            setproperty(t_mho6,iconname,"")
+                            end
+                  end
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+access agsdefault_plp, set agsdefault_plp:company_id       = agqpersonal:company_id,
+                           agsdefault_plp:state            = agqpersonal:state,
+                           agsdefault_plp:agent_no         = agqpersonal:agent_no,
+                           agsdefault_plp:line_of_business = agqpersonal:line_of_business,
+                           agsdefault_plp:form             = agqpersonal:form, generic
+
+if agqpersonal:state <> 19 then
+    begin
+    hide(md_exclusion)
+    end
+
+l_username = username
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER
+
+if agqpersonal:company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "13webhelp_agtmt1000e_scr_supple_coverages.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+Access Validation
+If agqpersonal:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+    {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+    scrollbarpolicy = asneeded
+    }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "Supplemental Coverages..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged change_fn
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_edit_entries.bmp"
+                }
+            Events
+                {
+                Action = change_fn
+                }
+
+    }
+
+Panel at 6,55 to 6,70
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35 tagged accept_fn
+            properties
+                {
+                Iconname = "btn_accept_edits.bmp"
+                }
+            Events
+                {
+                mouseclicked=accept
+                }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt1000e.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 23,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,21
+             properties
+               {
+                 text = "Deductible:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,1 to 2,21
+             properties
+               {
+                 text = "Hurricane Deductible:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 3,1 to 3,21
+             properties
+               {
+                 text = "Wind Deductible:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 4,1 to 4,21
+             properties
+               {
+                 text = "No Of Families:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+         }
+
+Panel at 8,1 to 42,100  tagged ficof_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,40 to 1,65
+             properties
+               {
+                 text = "Seasonal:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,40 to 2,65
+             properties
+               {
+                 text = "Townhome:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 3,40 to 3,65
+             properties
+               {
+                 text = "Units Between Firewalls:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 4,40 to 4,65
+             properties
+               {
+                 text = "Square Footage:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 5,40 to 5,65   tagged farmers_fn
+             properties
+               {
+                 text = "Actual Cash Value:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,1 to 42,100  tagged farmers_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,40 to 1,65
+             properties
+               {
+                 text = "Seasonal:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,40 to 2,65
+             properties
+               {
+                 text = "Square Footage:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 3,40 to 3,65  tagged ficof_fn
+             properties
+               {
+                 text = "Actual Cash Value:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,22 to 14,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+ _____
+ _____
+ _____
+ _____
+
+%%
+
+components
+
+Fields
+101     Begin
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            enable(accept_fn)
+            disable(calc_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            enable(calc_fn)
+            end
+
+        access sfsdeductible_alias, set sfsdeductible_alias:company_id = agqpersonal:company_id,
+                                        sfsdeductible_alias:state      = agqpersonal:state,
+                                        sfsdeductible_alias:line_of_business = agqpersonal:line_of_business, generic
+
+        End
+
+        agqpersonal:DEDUCTIBLE/default/tabstop
+        access sfsdeductible, set sfsdeductible:company_id       = agqpersonal:company_id,
+                                  sfsdeductible:state            = agqpersonal:state,
+                                  sfsdeductible:line_of_business = agqpersonal:line_of_business,
+                                  sfsdeductible:deductible       = agqpersonal:deductible, generic
+
+        if agqpersonal:deductible <> sfsdeductible:deductible or
+           sfsdeductible:show_in_activehelp = 0  then
+            error 1207
+
+        activehelp if sfsdeductible_alias:show_in_activehelp = 1 then
+                       sfsdeductible_alias:deductible
+                   else
+                        null ;
+201     begin
+            l_hurricane = agqpersonal:hurricane_deductible
+        end
+        agqPERSONAL:hurricane_deductible/default/tabstop
+        if agqpersonal:hurricane_deductible = 0 and
+           agqpersonal:tier not one of 0, 3 then
+            error "Hurricane Deductible is mandatory"
+
+        hide if agqpersonal:eff_date < agsdefault_plp:hurricane_deductible_eff or
+                agsdefault_plp:hurricane_deductible_eff = 0
+
+        If agqPERSONAL:hurricane_deductible <> sfshurricane:hurricane_deductible then
+            Error 1207
+
+        if agqpersonal:hurricane_deductible <> 0 and
+           agqpersonal:company_id <> "FLEMINGTON" then
+            agqpersonal:wind_deductible = 0
+
+        if agqpersonal:hurricane_deductible <> l_hurricane then
+            agqpersonal:hurricane_changed = 1
+
+        Activehelp sfshurricane_alias:hurricane_deductible ;
+301     begin
+        if sfssecurity_rating:auto_activehelp = 1 and
+           function one of "ADD", "NEW" then
+            activehelp()
+        end
+        agqPERSONAL:WIND_DEDUCTIBLE/default/tabstop
+        hide if agqpersonal:hurricane_deductible <> 0 and
+                agqpersonal:company_id <> "FLEMINGTON"
+
+        If agqPERSONAL:WIND_DEDUCTIBLE <> SFSWINDDEDUCT:WIND_DEDUCTIBLE Then
+            Error 1207
+
+        Activehelp SFSWINDDEDUCT_ALIAS:WIND_DEDUCTIBLE ;
+401     Begin
+        If FUNCTION one of "ADD", "NEW" and
+           agqpersonal:no_families = 0 Then
+            agqPERSONAL:NO_FAMILIES = 1
+        End
+        agqPERSONAL:NO_FAMILIES/default/tabstop
+        if agqpersonal:company_id = "FLEMINGTON" then
+            begin
+            if agqpersonal:no_families > 2 then
+                begin
+                agqpersonal:no_families = 2
+                l_continue_3 = dialog("Warning","warning.bmp","Only 1 or 2-Family Dwellings are eligible for Dwelling Program","OK")
+                end
+            end
+        if agqpersonal:no_families = 0 then
+            agqpersonal:no_families = 1;
+401     agqpersonal:no_families/displayonly ;
+
+}
+
+Panel at 8,67 to 14,100 Tagged ficof_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_
+~~_
+_____
+_____
+~~_
+
+%%
+
+components
+
+Fields
+101     agqPERSONAL:SEASONAL/checkbox/values="N,Y"/tabstop
+        Hide If agqPERSONAL:FORM = 4 and
+                agqpersonal:company_id = "FLEMINGTON"
+
+        Hide If agqPERSONAL:FORM one of 4, 6 and
+                agqpersonal:company_id = "FARMERS"
+
+        if sfsemail:agent_no <> 0 and
+           agqpersonal:seasonal = "Y" and
+           agqname:company_id = "FARMERS" then
+            l_continue_3 = dialog("Warning","warning.bmp","Select the MPL 03 Common Provisions Form","OK")
+
+        if agqpersonal:protection = 4 and
+           agqpersonal:seasonal = "Y" then
+            error "The dwelling can not be seasonal for the Suburban Rating Plan" ;
+
+101     agqPERSONAL:SEASONAL/displayonly/checkbox/values="N,Y" ;
+201     agqpersonal:townhouse/checkbox/values="0,1"/tabstop
+        hide if ((agqpersonal:form not one of 3 and
+                sfsline:lob_code one of "HOME") or
+                (agqpersonal:form not one of 1, 2, 3 and
+                sfsline:lob_code one of "DWELLING")) ;
+301     begin
+            l_no_units = agqpersonal:townhouse_units
+        end
+        agqpersonal:townhouse_units/tabstop
+        hide if agqpersonal:townhouse = 0
+        if agqpersonal:townhouse_units = 0 and
+           agqpersonal:townhouse = 1 then
+            error "Must enter number of units"
+        if agqpersonal:townhouse_units > 8 and
+           agqpersonal:state = 19 then
+            begin
+            l_continue_4 = dialog("CONTACT UNDERWRITER","warning.bmp","Refer to Underwriter","OK")
+            end
+        if (agqpersonal:state one of 19 and
+           (agqpersonal:townhouse_units > 8 and
+           function one of "ADD", "NEW") or
+           (agqpersonal:townhouse_units > 8 and
+           function one of "CHANGE", "CHG" and
+           l_no_units <= 8)) then
+            begin
+            g_code     = "MPL69"
+            g_prem_no  = agqpersonal:prem_no
+            g_build_no = agqpersonal:build_no
+            display modal screen "agqmt264"
+            with initial function "ADD|BACK"
+            end;
+301     agqpersonal:townhouse/checkbox/values="0,1"/displayonly/style=Java_Hyperlink_Red/tabstop
+        hide if agqpersonal:townhouse_units < 9
+        hide if agqpersonal:state not one of 19 ;
+301     agqpersonal:townhouse_units/displayonly/style=Java_Hyperlink_Red/tabstop
+        hide if agqpersonal:townhouse_units < 9
+        hide if agqpersonal:state not one of 19 ;
+401     agqpersonal:square_footage/default/tabstop ;
+501     agqpersonal:replacement_acv/checkbox/values="R,A" tagged farmers_fn
+        hide if agqpersonal:company_id <> "FARMERS" ;
+
+}
+
+Panel at 8,67 to 14,100 Tagged farmers_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_
+_____
+
+
+%%
+
+components
+
+Fields
+101     agqPERSONAL:SEASONAL/checkbox/values="N,Y"/tabstop
+        Hide If agqPERSONAL:FORM = 4 Or
+                agqPERSONAL:FORM = 6
+
+        if sfsemail:agent_no <> 0 and
+           agqpersonal:seasonal = "Y" and
+           agqname:company_id = "FARMERS" then
+            l_continue_3 = dialog("Warning","warning.bmp","Select the MPL 03 Common Provisions Form","OK")
+
+        if agqpersonal:protection = 4 and
+           agqpersonal:seasonal = "Y" then
+            error "The dwelling can not be seasonal for the Suburban Rating Plan" ;
+
+101     agqPERSONAL:SEASONAL/displayonly/checkbox/values="N,Y" ;
+/*201     agqpersonal:townhouse/checkbox/values="0,1"/tabstop
+        hide if ((agqpersonal:form not one of 3 and
+                sfsline:lob_code one of "HOME") or
+                (agqpersonal:form not one of 1, 2, 3 and
+                sfsline:lob_code one of "DWELLING")) ;
+301     begin
+            l_no_units = agqpersonal:townhouse_units
+        end
+        agqpersonal:townhouse_units/tabstop
+        hide if agqpersonal:townhouse = 0
+        if agqpersonal:townhouse_units = 0 and
+           agqpersonal:townhouse = 1 then
+            error "Must enter number of units"
+        if agqpersonal:townhouse_units > 8 and
+           agqpersonal:state = 19 then
+            begin
+            l_continue_4 = dialog("CONTACT UNDERWRITER","warning.bmp","Refer to Underwriter","OK")
+            end
+        if (agqpersonal:state one of 19 and
+           (agqpersonal:townhouse_units > 8 and
+           function one of "ADD", "NEW") or
+           (agqpersonal:townhouse_units > 8 and
+           function one of "CHANGE", "CHG" and
+           l_no_units <= 8)) then
+            begin
+            g_code     = "MPL69"
+            g_prem_no  = agqpersonal:prem_no
+            g_build_no = agqpersonal:build_no
+            display modal screen "agqmt264"
+            with initial function "ADD|BACK"
+            end;
+301     agqpersonal:townhouse/checkbox/values="0,1"/displayonly/style=Java_Hyperlink_Red/tabstop
+        hide if agqpersonal:townhouse_units < 9
+        hide if agqpersonal:state not one of 19 ;
+301     agqpersonal:townhouse_units/displayonly/style=Java_Hyperlink_Red/tabstop
+        hide if agqpersonal:townhouse_units < 9
+        hide if agqpersonal:state not one of 19 ;*/
+201     agqpersonal:square_footage/default/tabstop ;
+--301     agqpersonal:replacement_acv/checkbox/values="R,A" tagged farmers_fn
+--        hide if agqpersonal:company_id <> "FARMERS" ;
+
+}
+
+Panel at 14,1 to 23,100  tagged df_limits
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,21
+             properties
+               {
+                 text = "Other Structures:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,1 to 2,21
+             properties
+               {
+                 text = "Loss of Use:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+         }
+
+Panel at 14,1 to 42,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,40 to 1,65
+             properties
+               {
+                 text = "Personal Liability:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,40 to 2,65
+             properties
+               {
+                 text = "Medical Payments:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 14,22 to 17,100 Tagged df_limits
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+ ___________
+ ___________
+
+%%
+
+components
+
+Fields
+101     Begin
+        L_STRUCTURES_LIMIT              = (agqPERSONAL:LIMIT *
+                                          (agsdefault_plp:COVERAGE_B_PERCENT
+                                          Divide 100))
+        End
+        agqPERSONAL:STRUCTURES_LIMIT[1]/default/tabstop
+        if agqpersonal:structures_limit[1] < l_structures_limit and
+           agqpersonal:company_id = "FLEMINGTON" then
+            begin
+            agqPERSONAL:STRUCTURES_LIMIT[1] = (agqPERSONAL:DWELLING_LIMIT *
+                                              (agsdefault_plp:COVERAGE_B_PERCENT
+                                              Divide 100))
+            error "This coverage can not be reduced, the minimum coverage is 10% of the Dwelling Limit"
+            end ;
+
+201     Begin
+        If agqPERSONAL:DWELLING_LIMIT <> 0 Then
+            begin
+            L_DEFAULT_LOSS_LIMIT = (agqPERSONAL:DWELLING_LIMIT *
+                                   (agsdefault_plp:COVERAGE_D_PERCENT
+                                   Divide 100))
+            end
+        Else
+        If agqPERSONAL:DWELLING_LIMIT = 0 And
+           agqPERSONAL:CONTENTS_LIMIT <> 0 Then
+            begin
+            L_DEFAULT_LOSS_LIMIT = (agqPERSONAL:CONTENTS_LIMIT *
+                                   (agsdefault_plp:COVERAGE_D_PERCENT
+                                   Divide 100))
+            end
+        End
+        agqPERSONAL:LOSS_RENTS_LIMIT/default/tabstop
+        If agqPERSONAL:LOSS_RENTS_LIMIT < L_DEFAULT_LOSS_LIMIT or
+           agqpersonal:loss_rents_limit = 0 Then
+            begin
+            agqpersonal:loss_rents_limit = l_default_loss_limit
+            Error "Limit may not be decreased or removed"
+            abort()
+            end;
+201     agqpersonal:loss_rents_limit/displayonly ;
+
+
+}
+
+Panel at 14,67 to 17,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+___________
+___________
+
+%%
+
+components
+
+Fields
+101     Begin
+            l_allow_agent_to_view = sfsliability1:allow_agent_to_view
+        End
+        agqPERSONAL:LIABILITY_LIMIT/default/tabstop
+        Hide If agqPERSONAL:SEASONAL = "Y"
+        If agqPERSONAL:LIABILITY_LIMIT <> SFSLIABILITY1:LIMIT or
+           sfsliability1:allow_agent_to_view = 1 Then
+            Error "Invalid Limit Entered"
+
+        if agqpersonal:liability_limit = 0 then
+            agqpersonal:liability_form = 0
+
+        if agqpersonal:liability_limit = 0 and
+           sfsline:lob_code one of "HOME" then
+            error 1238
+
+        If agqPERSONAL:LIABILITY_LIMIT = 0 And
+           agqPERSONAL:SEASONAL = "N" And
+           agqPERSONAL:FORM <> 6 And
+           SFSLINE:LOB_CODE <> "DWELLING" Then
+            error 1238
+
+        Activehelp if sfsliability1_alias:allow_agent_to_view = 0 then
+                       SFSLIABILITY1_ALIAS:LIMIT
+                   else
+                       null ;
+101     agqPERSONAL:LIABILITY_LIMIT/default/tabstop
+        Hide If agqPERSONAL:SEASONAL = "N"
+        If (agqPERSONAL:LIABILITY_LIMIT <> SFSLIABILITY1:LIMIT or
+           (agqpersonal:liability_limit = 0 and
+           sfsline:lob_code one of "HOME")) Then
+            Error "Invalid Limit Entered"
+
+        if agqpersonal:liability_limit <> sfsliability1:limit or
+           sfsliability1:allow_agent_to_view = 1 then
+            error "Invalid Limit Entered"
+
+        Activehelp if sfsliability1_alias:allow_agent_to_view = 0 then
+                       SFSLIABILITY1_ALIAS:LIMIT
+                   else
+                       null ;
+101     Begin
+        If agqPERSONAL:LIABILITY_LIMIT = 0 Then
+            agqPERSONAL:MEDICAL_LIMIT = 0
+        End
+        agqPERSONAL:LIABILITY_LIMIT/displayonly
+        Hide If SFSLINE:LOB_CODE = "DWELLING" ;
+101     Begin
+        If agqPERSONAL:LIABILITY_LIMIT <> 0 And
+           SFSLINE:LOB_CODE = "DWELLING" and
+           agqpersonal:company_id = "FLEMINGTON" Then
+            agqPERSONAL:LIABILITY_FORM = 1
+        End
+        agqPERSONAL:LIABILITY_LIMIT/displayonly
+        Hide If SFSLINE:LOB_CODE <> "DWELLING" ;
+
+201     agqPERSONAL:MEDICAL_LIMIT/default/tabstop
+        Hide If agqPERSONAL:LIABILITY_LIMIT = 0
+        If agqPERSONAL:MEDICAL_LIMIT <> SFSMEDICAL:LIMIT Or
+           agqPERSONAL:MEDICAL_LIMIT = 0 Then
+            Error 1238
+
+        Activehelp SFSMEDICAL_ALIAS:LIMIT  ;
+201     Begin
+        If agqPERSONAL:LIABILITY_LIMIT = 0 Then
+            agqPERSONAL:MEDICAL_LIMIT = 0
+        End
+        agqPERSONAL:MEDICAL_LIMIT/displayonly ;
+
+}
+
+Panel at 19,1 to 20,100  tagged df_liability_form
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,27
+             properties
+               {
+                 text = "MDW 74 Limit Coverage - Fire:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 1,40 to 1,65
+             properties
+               {
+                 text = "MDW 75 Delete Vandalism:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,1 to 2,27 tagged farmers_fn
+             properties
+               {
+                 text = "Theft Coverage on Contents:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,1 to 2,27 tagged ficof_fn
+             properties
+               {
+                 text = "Theft Coverage on Contents (MDW30):"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 19,28 to 20,100 Tagged df_liability_form
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+ ~~_                                    ~~_
+ ~~_
+
+%%
+
+components
+
+Fields
+0101    Begin
+        if function one of "CHANGE" then
+            begin
+            If agqPERSONAL:OWNER_OCCUPIED = "Y" and
+               agqpersonal:no_families < 2 Then
+                agqPERSONAL:LIABILITY_FORM = 2
+            Else
+                agqPERSONAL:LIABILITY_FORM = 1
+            end
+        If FUNCTION one of "CHANGE" and
+           agqpersonal:ec = "" Then
+            agqPERSONAL:EC = "N"
+        End
+        agqPERSONAL:EC/default/upper/checkbox/values="N,Y"/tabstop
+        Hide If agqPERSONAL:FORM <> 1
+        hide if agqpersonal:vmm = "Y"
+        hide if sfsline:lob_code not one of "DWELLING" ;
+0102    Begin
+        If FUNCTION one of "CHANGE", "CHG" and
+           agqpersonal:vmm = "" Then
+            agqPERSONAL:VMM = "N"
+        End
+        agqPERSONAL:VMM/default/upper/checkbox/values="N,Y"/tabstop
+        Hide If agqPERSONAL:FORM <> 1
+        hide if agqpersonal:ec = "Y"
+        hide if sfsline:lob_code not one of "DWELLING" ;
+0201    Begin
+        If FUNCTION one of "CHANGE" and
+           agqPERSONAL:CONTENTS_LIMIT <> 0 and
+           agqpersonal:form <> 1 Then
+            agqPERSONAL:THEFT = 1
+        End
+        agqPERSONAL:THEFT/checkbox/values="0,1"/default/tabstop
+        Hide If agqPERSONAL:CONTENTS_LIMIT = 0 Or
+                agqpersonal:form = 1
+        hide if sfsline:lob_code not one of "DWELLING" ;
+
+}
+
+Panel at 22,1 to 22,100  tagged df_seasonal_surcharge
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,27
+             properties
+               {
+                 text = "Override Seasonal Surcharge:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+        }
+
+Panel at 22,28 to 22,100 Tagged df_seasonal_surcharge
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+ ~~_
+
+%%
+
+components
+
+Fields
+0101    agqpersonal:override_seasonal_surcharge/checkbox/values="0,1"
+        hide if sfsemail:agent_no <> 0 or
+                agqpersonal:company_id <> "FLEMINGTON" ;
+
+}
+
+Panel at 23,2 to 24,100  tagged md_exclusion
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+/*           guidetext at 1,1 to 1,40
+             properties
+               {
+                 text = "Remove Lead Paint Exclusion (MPL 24):"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 1,50 to 1,100
+             properties
+               {
+                 text = "Remove Fungi/Mold Exclusions - Liability (MPL 126):"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }*/
+           guidetext at 1,1 to 1,40
+             properties
+               {
+                 text = "Windstorm Loss Mitigation Credit:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 23,45 to 24,100 tagged md_exclusion
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_
+
+%%
+
+components
+
+Fields
+101     agqpersonal:windstorm_loss_mitigation/checkbox/values="0,1"/tabstop
+        if agqpersonal:eff_date < 06.01.2009 and
+           agqpersonal:windstorm_loss_mitigation = 1 then
+            error "This is not available on policies before 6/1/2009"
+
+        if agqpersonal:owner_occupied = "N" and
+           agqpersonal:windstorm_loss_mitigation = 1 then
+            begin
+            agqpersonal:windstorm_loss_mitigation = 0
+            error "Must be owner occupied for the windstorm credit"
+            end
+
+        hide if agqpersonal:state <> 19
+        hide if agqpersonal:owner_occupied = "N";
+101     begin
+        if agqpersonal:owner_occupied = "N" then
+            agqpersonal:windstorm_loss_mitigation = 0
+        end
+        agqpersonal:windstorm_loss_mitigation/checkbox/values="0,1"/displayonly ;
+
+
+}
+
+-- draw a line
+panel at 25,1 to 25,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 26,1 to 26,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,75   tagged calc_fn
+        Properties {
+                Iconname = "btn_view_summary_totals.bmp"
+                }
+        Events  {
+                Action = calc_fn
+                }
+
+}
+
+-- draw a line
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+panel at 28,1 to 32,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+if abort = "YES" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    do update_endorsements
+    do update_endorsements1
+    end
+
+screen exit
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END
+
+Procedure GET_DWELLING_TABLE
+Begin
+L_RECORD_KEY = "TB"
+L_COMPANY_ID = agqpersonal:COMPANY_ID
+L_LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+L_STATE = agqPERSONAL:STATE
+L_OWNER_OCCUPIED = agqPERSONAL:OWNER_OCCUPIED
+L_NO_FAMILIES = agqPERSONAL:NO_FAMILIES
+L_EFF_DATE = agqpersonal:EFF_DATE
+
+Include "plsdftable.pro"
+
+agqPERSONAL:TABLE   = L_TABLE
+agqpersonal:table_1 = l_table
+End
+
+Procedure UPDATE_ENDORSEMENTS
+Begin
+Access agqPERSONAL_ALIAS, Set agqPERSONAL_ALIAS:app_no = G_app_no, Generic
+
+access agsdefault_plp, set agsdefault_plp:company_id       = agqpersonal_alias:company_id,
+                           agsdefault_plp:state            = agqpersonal_alias:state,
+                           agsdefault_plp:agent_no         = agqpersonal_alias:agent_no,
+                           agsdefault_plp:line_of_business = agqpersonal_alias:line_of_business,
+                           agsdefault_plp:form             = l_form, generic
+
+If agqPERSONAL_ALIAS:app_no = G_app_no Then
+    Begin
+    Access PLSPREPRINTED, Set PLSPREPRINTED:COMPANY_ID       = agqpersonal_alias:COMPANY_ID,
+                              PLSPREPRINTED:STATE            = agqpersonal_alias:STATE,
+                              PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal_alias:LINE_OF_BUSINESS, Generic
+
+    l_code_1  = ""
+    l_code_2  = ""
+    l_code_3  = ""
+    l_code_4  = ""
+    l_code_5  = ""
+    l_code_6  = ""
+    l_code_7  = ""
+    l_code_8  = ""
+    l_code_9  = ""
+    l_code_10 = ""
+    l_code_11 = ""
+    l_code_12 = ""
+    l_code_13 = ""
+    l_code_14 = ""
+    l_code_20 = ""
+    l_code_21 = ""
+    l_code_22 = ""
+    l_code_23 = ""
+    l_code_24 = ""
+    l_code_25 = ""
+    l_code_26 = ""
+    l_code_27 = ""
+    l_code_28 = ""
+    while plspreprinted:record_key       = "PF" and
+          PLSPREPRINTED:COMPANY_ID       = agqpersonal_alias:COMPANY_ID and
+          PLSPREPRINTED:STATE            = agqpersonal_alias:STATE and
+          PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal_alias:LINE_OF_BUSINESS
+        begin
+        If agqpersonal_alias:EFF_DATE >= PLSPREPRINTED:rEFF_DATE Then
+            Begin
+            L_CODE_1  = PLSPREPRINTED:CODE[7] -- wind deductible
+            L_CODE_2  = PLSPREPRINTED:CODE[6] -- new home discount
+            L_CODE_3  = PLSPREPRINTED:CODE[2] -- seasonal
+            L_CODE_4  = PLSPREPRINTED:CODE[20] -- workers comp
+            L_CODE_5  = PLSPREPRINTED:CODE[22] -- sal01, fpl01
+            L_CODE_6  = PLSPREPRINTED:CODE[23] -- mpl47
+            L_CODE_7  = PLSPREPRINTED:CODE[5] -- mpl70
+            L_CODE_8  = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[14]
+            L_CODE_9  = PLSPREPRINTED:CODE[21] -- mdl1
+            L_CODE_10 = PLSPREPRINTED:CODE[24] -- mdl62
+            L_CODE_11 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[15] -- mdl2
+            L_CODE_12 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[16] -- mdl63
+            L_CODE_13 = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[17] -- mdw30
+            l_code_14 = plspreprinted:code[25] -- MPL96
+            l_code_20 = plspreprinted:trigger_endorsements[18] -- mpl61
+            l_code_21 = plspreprinted:trigger_endorsements[20] -- mpl24
+            l_code_22 = plspreprinted:code_1[1] -- mpl126
+            l_code_23 = plspreprinted:code_1[2] -- fpl02 boiler
+            l_fpl01_form = plspreprinted:fpl01_form
+            l_code_24 = plspreprinted:code[8] -- mpl67
+            l_code_25 = plspreprinted:code[9] -- mpl68
+            l_code_26 = plspreprinted:code[10] -- mpl69
+            l_code_27 = plspreprinted:code[26] -- mpl97
+            l_code_28 = plspreprinted:code[27] -- mpl46
+            l_code_29 = plspreprinted:code[28] -- sal04
+            End
+
+        Next PLSPREPRINTED
+        End
+
+    Access SFSLINE, Set SFSLINE:COMPANY_ID       = agqpersonal_alias:COMPANY_ID,
+                        SFSLINE:LINE_OF_BUSINESS = agqpersonal_alias:LINE_OF_BUSINESS,
+                        SFSLINE:LOB_SUBLINE      = "00", Generic
+
+    If L_CODE_1 <> "" Then
+        Begin
+        L_CODE = L_CODE_1
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:WIND_DEDUCTIBLE <> 0 and
+           agqpersonal_alias:hurricane_deductible = 0 Then
+            Do ADD_agqEND
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:WIND_DEDUCTIBLE = 0) or
+           (l_add_endorsement = "N" and
+           agqpersonal_alias:hurricane_deductible <> 0)) Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_2 <> "" Then
+        Begin
+        L_CODE = L_CODE_2
+        If agqPERSONAL_ALIAS:YEAR_CONSTRUCTION <> 0 Then
+            Begin
+            Do CHECK_FOR_UNDER_CONSTRUCTION
+            L_NEW_HOME_YEAR = Year(agqpersonal_alias:EFF_DATE) -
+                              agqPERSONAL_ALIAS:YEAR_CONSTRUCTION
+
+            If L_NEW_HOME_YEAR > 99 Then
+                L_NEW_HOME_YEAR = 99
+            If Year(agqpersonal_alias:EFF_DATE) = agqPERSONAL_ALIAS:YEAR_CONSTRUCTION Then
+                L_NEW_HOME_YEAR = 1
+            L_NEW_YEAR_2 = L_NEW_HOME_YEAR
+            L_RECORD_KEY = "NH"
+            Access PLSNEWHOMEDISC, Set PLSNEWHOMEDISC:COMPANY_ID = agqpersonal_alias:COMPANY_ID,
+                                       PLSNEWHOMEDISC:STATE = L_STATE,
+                                       PLSNEWHOMEDISC:LINE_OF_BUSINESS = agqpersonal_alias:LINE_OF_BUSINESS,
+                                       PLSNEWHOMEDISC:YEAR = L_NEW_YEAR_2, Generic
+
+            L_NEW_HOME_DISCOUNT = "N"
+            Repeat Begin
+                Exit If PLSNEWHOMEDISC:RECORD_KEY <> L_RECORD_KEY Or
+                        PLSNEWHOMEDISC:COMPANY_ID <> agqpersonal_alias:COMPANY_ID Or
+                        PLSNEWHOMEDISC:STATE <> L_STATE Or
+                        PLSNEWHOMEDISC:LINE_OF_BUSINESS <> agqpersonal_alias:LINE_OF_BUSINESS Or
+                        PLSNEWHOMEDISC:YEAR <> L_NEW_YEAR_2
+
+                If agqpersonal_alias:EFF_DATE >= PLSNEWHOMEDISC:rEFF_DATE Then
+                    Begin
+                    L_NEW_HOME_DISCOUNT = "Y"
+                    L_NEW_HOME_DISCOUNT_FACTOR = PLSNEWHOMEDISC:FACTOR
+                    End
+                Else
+                    Begin
+                    L_NEW_HOME_DISCOUNT = "N"
+                    L_NEW_HOME_DISCOUNT_FACTOR = 0
+                    End
+
+                Next PLSNEWHOMEDISC
+                End
+            End
+        Else
+            L_NEW_HOME_DISCOUNT = "N"
+
+        Do ACCESS_agqEND
+        If (L_ADD_ENDORSEMENT = "Y" And
+           L_NEW_HOME_DISCOUNT = "Y" And
+           L_NEW_HOME_DISCOUNT_FACTOR < 1.00 And
+           L_NEW_HOME_DISCOUNT_FACTOR <> 0 And
+           agqPERSONAL_ALIAS:FORM <> 4 And
+           agqPERSONAL_ALIAS:FORM <> 6 And
+           (L_MPL13 = "N" Or
+           (L_MPL13 = "Y" And
+           agsdefault_plp:MPL13_AND_NEW_HOME_DISCOUNT = 1))) Then
+            begin
+            Do ADD_agqEND
+            end
+        If (L_ADD_ENDORSEMENT = "N" And
+           (L_NEW_HOME_DISCOUNT = "N" Or
+           L_NEW_HOME_DISCOUNT_FACTOR = 0 Or
+           L_NEW_HOME_DISCOUNT_FACTOR > 1.00 Or
+           (L_MPL13 = "Y" And
+           agsdefault_plp:MPL13_AND_NEW_HOME_DISCOUNT = 0) Or
+           agqPERSONAL_ALIAS:FORM = 4 Or
+           agqPERSONAL_ALIAS:FORM = 6)) Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_3 <> "" and
+       agqpersonal:company_id = "FLEMINGTON" Then
+        Begin
+        if agqpersonal:eff_date >= 07.15.2012 then
+            begin
+            if ((agqpersonal:owner_occupied = "Y" or
+               agqpersonal:seasonal = "Y") and
+               agqpersonal:override_seasonal_surcharge = 0) then
+                begin
+                l_code = l_code_3
+                do access_agqend
+                if l_add_endorsement = "Y" then
+                    do add_agqend
+                end
+            else
+            if agqpersonal:owner_occupied = "N" or
+               agqpersonal:seasonal = "N" or
+               agqpersonal:override_seasonal_surcharge = 1 then
+                begin
+                l_code = l_code_3
+                do access_agqend
+                if l_add_endorsement = "Y" and
+                   agqpersonal:agent_no = 614 and
+                   agqpersonal:override_seasonal_surcharge = 0 then
+                    begin
+                    do add_agqend
+                    end
+                else
+                if ((l_add_endorsement = "N" and
+                   agqpersonal:agent_No <> 614) or
+                   (l_add_endorsement = "N" and
+                   agqpersonal:agent_no = 614 and
+                   agqpersonal:override_seasonal_surcharge = 1)) then
+                    do delete_agqend
+                end
+            end
+        end
+
+    If ((L_CODE_3 <> "" and
+       agqpersonal:company_id <> "FLEMINGTON") or
+       (l_code_3 <> "" and
+       agqpersonal:company_id = "FLEMINGTON" and
+       agqpersonal:eff_date <= 06.30.2012)) Then
+        Begin
+        L_CODE = L_CODE_3
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:SEASONAL = "Y" Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:SEASONAL = "N" Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_4 <> "" And
+       SFSLINE:LOB_CODE = "HOME" Then
+        Begin
+        L_CODE = L_CODE_4
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT <> 0 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_5 <> "" And
+       SFSLINE:LOB_CODE = "HOME" and
+       l_fpl01_Form = 0 Then
+        Begin
+        L_CODE = L_CODE_5
+        Do ACCESS_agqEND
+        If (L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:WAIVE_SAL01 <> "Y" And
+           agqpersonal_alias:EFF_DATE >= L_SAL_EFF_DATE And
+           (agqPERSONAL_ALIAS:FORM one of 3, 5 Or
+           agqPERSONAL_ALIAS:FORM = 4 Or
+           agqPERSONAL_ALIAS:FORM = 6)) Then
+            Begin
+            Change agqPERSONAL_ALIAS
+                Begin
+                agqPERSONAL_ALIAS:WAIVE_SAL01 = "N"
+                End
+            Do ADD_agqEND
+            End
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal_alias:EFF_DATE < L_SAL_EFF_DATE Then
+            Do DELETE_agqEND
+        if l_add_endorsement = "N" and
+           agqpersonal_alias:waive_sal01 = "Y" then
+            do delete_agqend
+        If L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:FORM <> 3 And
+           agqpersonal_alias:form <> 5 and
+           agqPERSONAL_ALIAS:FORM <> 4 And
+           agqPERSONAL_ALIAS:FORM <> 6 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_5 <> "" And
+       SFSLINE:LOB_CODE = "HOME" and
+       l_fpl01_Form = 1 Then
+        Begin
+        L_CODE = L_CODE_5
+        Do ACCESS_agqEND
+        If (L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:WAIVE_SAL01 <> "Y" And
+           agqpersonal_alias:EFF_DATE >= L_SAL_EFF_DATE And
+           (agqPERSONAL_ALIAS:FORM one of 3, 5 Or
+           agqPERSONAL_ALIAS:FORM = 6)) Then
+            Begin
+            Change agqPERSONAL_ALIAS
+                Begin
+                agqPERSONAL_ALIAS:WAIVE_SAL01 = "N"
+                End
+            Do ADD_agqEND
+            End
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal_alias:EFF_DATE < L_SAL_EFF_DATE Then
+            Do DELETE_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:FORM <> 3 And
+           agqpersonal_alias:form <> 5 and
+           agqPERSONAL_ALIAS:FORM <> 6 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_6 <> "" Then
+        Begin
+        L_MPL49 = "N"
+        L_CODE = L_CODE_6
+        Do ACCESS_agqEND
+        If L_MPL47 = "N" And
+           L_MPL49 = "N" and
+           agqpersonal_alias:remove_mpl47 = 0 Then
+            Begin
+            Do ADD_agqEND
+            End
+        Do CHANGE_CONTENTS
+        End
+
+    if l_code_6 <> "" and
+       l_code_6 = "MPL49" and
+       sfsline:option one of "P", "R" then
+        begin
+        l_code = l_code_6
+        do access_agqend
+        if agqpersonal_alias:form one of 5 and
+           l_add_endorsement = "N" then
+            do delete_agqend
+        end
+
+    If L_CODE_7 <> "" Then
+        Begin
+        L_CODE = L_CODE_7
+        Do ACCESS_agqEND
+        If ((SFSLINE:OPTION = "P" Or
+           SFSLINE:OPTION = "R") And
+           L_PLSPREPRINTED_ALARM_FACTOR <> 1.00) Then
+            Begin
+            If L_ADD_ENDORSEMENT = "Y" Then
+                Begin
+                Do ADD_agqEND
+                End
+            End
+        If (L_ADD_ENDORSEMENT = "Y" And
+           ((sfsline:option one of "S" and
+           sfsline:lob_code one of "HOME") or
+           sfsline:lob_code one of "DWELLING") and
+           (agqpersonal_alias:ALARM_OPTION[1] = 1 Or
+           agqpersonal_alias:ALARM_OPTION[2] = 1 Or
+           agqpersonal_alias:ALARM_OPTION[3] = 1 Or
+           agqpersonal_alias:ALARM_OPTION[4] = 1 Or
+           agqpersonal_alias:ALARM_OPTION[5] = 1 Or
+           agqpersonal_alias:ALARM_OPTION[6] = 1)) Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" and
+           agqpersonal_alias:ALARM_OPTION[1] = 0 And
+           agqpersonal_alias:ALARM_OPTION[2] = 0 And
+           agqpersonal_alias:ALARM_OPTION[3] = 0 And
+           agqpersonal_alias:ALARM_OPTION[4] = 0 And
+           agqpersonal_alias:ALARM_OPTION[5] = 0 And
+           agqpersonal_alias:ALARM_OPTION[6] = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_9 <> "" And
+       SFSLINE:LOB_CODE = "DWELLING" Then
+        Begin
+        L_CODE = L_CODE_9
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT <> 0 And
+           agqPERSONAL_ALIAS:LIABILITY_FORM = 1 Then
+            Do ADD_agqEND
+        If (L_ADD_ENDORSEMENT = "N" And
+           (agqPERSONAL_ALIAS:LIABILITY_LIMIT = 0 Or
+           agqPERSONAL_ALIAS:LIABILITY_FORM <> 1)) Then
+            Begin
+            Do DELETE_agqEND
+            If agqPERSONAL_ALIAS:LIABILITY_LIMIT = 0 Then
+                Begin
+                If agqPERSONAL_ALIAS:app_no = agqpersonal_alias:app_no And
+                   agqPERSONAL_ALIAS:PREM_NO = agqpersonal_alias:PREM_NO And
+                   agqPERSONAL_ALIAS:BUILD_NO = agqpersonal_alias:BUILD_NO Then
+                    Change agqPERSONAL_ALIAS
+                       Begin
+                       agqPERSONAL_ALIAS:LIABILITY_FORM = 0
+                       End
+                End
+            End
+        End
+
+    If L_CODE_10 <> "" And
+       SFSLINE:LOB_CODE = "DWELLING" Then
+        Begin
+        L_CODE = L_CODE_10
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" Then
+            Begin
+            If (agqpersonal_alias:LIABILITY_LIMIT <> 0 And
+               agqpersonal_alias:OWNER_OCCUPIED <> "Y" and
+               agqpersonal_alias:remove_mdl62 = 0 Or
+               (agqpersonal_alias:LIABILITY_LIMIT <> 0 And
+               agqpersonal_alias:OWNER_OCCUPIED = "Y" And
+               agqpersonal_alias:NO_FAMILIES  > 1 and
+               agqpersonal_alias:remove_mdl62 = 0)) Then
+                Do ADD_agqEND
+            End
+        If L_ADD_ENDORSEMENT = "N" Then
+            Begin
+            If (agqpersonal_alias:LIABILITY_LIMIT = 0 Or
+               (agqpersonal_alias:OWNER_OCCUPIED = "Y" And
+               agqpersonal_alias:NO_FAMILIES = 1)) Then
+                Do DELETE_agqEND
+            End
+        End
+
+    If L_CODE_11 <> "" And
+       SFSLINE:LOB_CODE = "DWELLING" Then
+        Begin
+        L_CODE = L_CODE_11
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT <> 0 And
+           agqPERSONAL_ALIAS:LIABILITY_FORM = 2 Then
+            Do ADD_agqEND
+        If (L_ADD_ENDORSEMENT = "N" And
+           (agqPERSONAL_ALIAS:LIABILITY_LIMIT = 0 Or
+           agqPERSONAL_ALIAS:LIABILITY_FORM <> 2)) Then
+            Begin
+            Do DELETE_agqEND
+            If agqPERSONAL_ALIAS:LIABILITY_LIMIT = 0 Then
+                Begin
+                If agqPERSONAL_ALIAS:app_no = agqpersonal_alias:app_no And
+                   agqPERSONAL_ALIAS:PREM_NO = agqpersonal_alias:PREM_NO And
+                   agqPERSONAL_ALIAS:BUILD_NO = agqpersonal_alias:BUILD_NO Then
+                    Change agqPERSONAL_ALIAS
+                        Begin
+                        agqPERSONAL_ALIAS:LIABILITY_FORM = 0
+                        End
+                End
+            End
+        End
+
+    If L_CODE_12 <> "" And
+       SFSLINE:LOB_CODE = "DWELLING" Then
+        Begin
+        L_CODE = L_CODE_12
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" Then
+            Begin
+            If (agqPERSONAL_ALIAS:LIABILITY_LIMIT <> 0 And
+               agqPERSONAL_ALIAS:OWNER_OCCUPIED  <> "Y" and
+               agqpersonal_alias:remove_mdl63 = 0 Or
+               (agqPERSONAL_ALIAS:LIABILITY_LIMIT <> 0 And
+               agqPERSONAL_ALIAS:OWNER_OCCUPIED  = "Y" And
+               agqPERSONAL_ALIAS:NO_FAMILIES  > 1 and
+               agqpersonal_alias:remove_mdl63 = 0)) Then
+                Do ADD_agqEND
+            End
+        If L_ADD_ENDORSEMENT = "N" Then
+            Begin
+            If (agqPERSONAL_ALIAS:LIABILITY_LIMIT = 0 Or
+               (agqPERSONAL_ALIAS:OWNER_OCCUPIED  = "Y" And
+               agqPERSONAL_ALIAS:NO_FAMILIES = 1)) Then
+                Do DELETE_agqEND
+            End
+        End
+
+    If L_CODE_13 <> "" And
+       SFSLINE:LOB_CODE = "DWELLING" Then
+        Begin
+        L_CODE = L_CODE_13
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:THEFT = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:THEFT = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_14 <> "" Then
+        Begin
+        L_CODE = L_CODE_14
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT <> 0 Then
+            begin
+            Do ADD_agqEND
+            do add_agqendorse1
+            end
+        If L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT = 0 Then
+            begin
+            Do DELETE_agqEND
+            do delete_agqendorse1
+            end
+        End
+
+    If L_CODE_27 <> "" Then
+        Begin
+        L_CODE = L_CODE_27
+        Do ACCESS_agqEND
+        If ((L_ADD_ENDORSEMENT = "Y" and
+           agqpersonal_alias:dwelling_limit <> 0) or
+           (l_add_endorsement = "Y" and
+           agqpersonal_alias:contents_limit <> 0)) Then
+            begin
+            Do ADD_agqEND
+            do add_agqendorse1
+            end
+        If L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:dwelling_LIMIT = 0 and
+           agqpersonal_alias:contents_limit = 0 Then
+            begin
+            Do DELETE_agqEND
+            do delete_agqendorse1
+            end
+        End
+
+    If L_CODE_28 <> "" Then
+        Begin
+        L_CODE = L_CODE_28
+        Do ACCESS_agqEND
+        If ((L_ADD_ENDORSEMENT = "Y" and
+           sfsline:lob_code one of "HOME" and
+           agqpersonal_alias:seasonal = "N" and
+           l_mho45 = "N") or
+           (l_add_endorsement = "Y" and
+           sfsline:lob_code one of "DWELLING" and
+           agqpersonal_alias:owner_occupied = "Y" and
+           agqpersonal_alias:seasonal = "N" and
+           l_mho45 = "N" and
+           agqpersonal_alias:contents_limit <> 0 and
+           agqpersonal_alias:liability_limit <> 0 and
+           agqpersonal_alias:liability_form <> 1)) then
+            begin
+            Do ADD_agqEND
+            do add_agqendorse1
+            end
+        If ((l_add_endorsement = "N" and
+           sfsline:lob_code one of "HOME", "DWELLING" and
+           agqpersonal_alias:seasonal = "Y") or
+           (l_add_endorsement = "N" and
+           sfsline:lob_code one of "HOME", "DWELLING" and
+           l_mho45 = "Y") or
+           (L_ADD_ENDORSEMENT = "N" And
+           sfsline:lob_code one of "DWELLING" and
+           agqPERSONAL_ALIAS:contents_LIMIT = 0) or
+           (l_add_endorsement = "N" and
+           sfsline:lob_code one of "DWELLING" and
+           agqpersonal_alias:liability_limit = 0) or
+           (l_add_endorsement = "N" and
+           sfsline:lob_code one of "DWELLING" and
+           agqpersonal_alias:liability_form = 1) or
+           (l_add_endorsement = "N" and
+           sfsline:lob_code one of "DWELLING" and
+           agqpersonal_alias:owner_occupied not one of "Y")) Then
+            begin
+            Do DELETE_agqEND
+            do delete_agqendorse1
+            end
+        End
+
+    If L_CODE_20 <> "" And
+       SFSLINE:LOB_CODE = "HOME" and
+       agqpersonal_alias:state not one of 19 Then
+        Begin
+        L_CODE = L_CODE_20
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT <> 0 Then
+            begin
+            Do ADD_agqEND
+            end
+        If L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT = 0 Then
+            begin
+            Do DELETE_agqEND
+            end
+        End
+
+    If L_CODE_21 <> "" And
+       SFSLINE:LOB_CODE = "HOME" Then
+        Begin
+        L_CODE = L_CODE_21
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT <> 0 and
+           agqpersonal_alias:lead_paint_exclusion = 0 Then
+            begin
+            Do ADD_agqEND
+            end
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT = 0) or
+           (l_add_endorsement = "N" and
+           agqpersonal_alias:lead_paint_exclusion = 1)) Then
+            begin
+            Do DELETE_agqEND
+            end
+        End
+
+    If L_CODE_22 <> "" And
+       SFSLINE:LOB_CODE = "HOME" Then
+        Begin
+        L_CODE = L_CODE_22
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT <> 0 and
+           agqpersonal_alias:fungi_mold_exclusion = 0 Then
+            begin
+            Do ADD_agqEND
+            end
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqPERSONAL_ALIAS:LIABILITY_LIMIT = 0) or
+           (l_add_endorsement = "N" and
+           agqpersonal_alias:fungi_mold_exclusion = 1)) Then
+            begin
+            Do DELETE_agqEND
+            end
+        End
+
+    if l_code_23 <> "" then
+        begin
+        l_code = l_code_23
+        do access_agqend
+        if l_add_endorsement = "Y" and
+           agsdefault_plp:boiler = 1 and
+           agqpersonal_alias:delete_boiler = 0 then
+            begin
+            do add_agqend
+            end
+        if ((l_add_endorsement = "N" and
+           agsdefault_plp:boiler = 0) or
+           (l_add_endorsement = "N" and
+           agqpersonal_alias:delete_boiler = 1)) then
+            begin
+            do delete_agqend
+            end
+        end
+
+    If L_CODE_24 <> "" Then
+        Begin
+        L_CODE = L_CODE_24
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal_alias:townhouse_units one of 3, 4 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal_alias:townhouse_units not one of 3, 4 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_25 <> "" Then
+        Begin
+        L_CODE = L_CODE_25
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal_alias:townhouse_units one of 5, 6, 7, 8 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal_alias:townhouse_units not one of 5, 6, 7, 8 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_26 <> "" Then
+        Begin
+        L_CODE = L_CODE_26
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal_alias:townhouse_units > 8 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal_alias:townhouse_units <= 8 Then
+            begin
+            Do DELETE_agqEND
+            do delete_agqendorse1
+            end
+        End
+
+    If L_CODE_29 <> "" And
+       SFSLINE:LOB_CODE = "HOME" Then
+        Begin
+        L_CODE = L_CODE_29
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqPERSONAL_ALIAS:REMOVE_SAL04 = 0 then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" and
+           agqpersonal_alias:remove_sal04 = 1 Then
+            Do DELETE_agqEND
+        End
+
+    End
+
+--if sfssecurity_rating:auto_screen_jump not one of 1 then
+--    FUNCTION = "redisplay"
+
+End
+
+procedure update_endorsements1
+begin
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                    SFSLINE:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+if sfsline:lob_code = "DWELLING" then
+    begin
+    Access PLSPREPRINTED, Set PLSPREPRINTED:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                              PLSPREPRINTED:STATE            = agqpersonal:STATE,
+                              PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS, Generic
+
+    l_code_1  = ""
+    l_code_2  = ""
+    l_code_3  = ""
+    l_code_4  = ""
+    l_code_5  = ""
+    l_code_6  = ""
+    l_code_7  = ""
+    l_code_8  = ""
+    l_code_9  = ""
+    while PLSPREPRINTED:COMPANY_ID       = agqpersonal:COMPANY_ID and
+          PLSPREPRINTED:STATE            = agqpersonal:STATE and
+          PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+        begin
+        If agqpersonal:EFF_DATE >= PLSPREPRINTED:REFF_DATE Then
+            Begin
+            L_CODE_1  = PLSPREPRINTED:CODE[18] -- MDW74
+            L_CODE_2  = PLSPREPRINTED:CODE[19] -- MDW75
+            L_CODE_3  = PLSPREPRINTED:CODE[20] -- workers comp
+            L_CODE_4  = PLSPREPRINTED:CODE[21] -- MDL1
+            L_CODE_5  = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[15] -- mdl2
+            L_CODE_6  = PLSPREPRINTED:TRIGGER_ENDORSEMENTS[17] -- mdw30
+            l_code_7  = plspreprinted:trigger_endorsements[20] -- mpl24
+            l_code_8  = plspreprinted:code_1[1] -- mpl126
+            l_code_9  = plspreprinted:code_1[3] -- MDW30 not including in base premium
+            End
+
+        Next PLSPREPRINTED
+        End
+
+    If L_CODE_1 <> "" Then
+        Begin
+        L_CODE = L_CODE_1
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal:EC = "Y" Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal:EC = "N" Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_2 <> "" Then
+        Begin
+        L_CODE = L_CODE_2
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal:VMM = "Y" Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal:VMM = "N" Then
+            Do DELETE_agqEND
+        End
+
+    -- workers comp
+    If L_CODE_3 <> "" Then
+        Begin
+        L_CODE = L_CODE_3
+        Do ACCESS_agqEND
+        If ((l_add_endorsement = "Y" and
+           agqpersonal:owner_occupied = "Y" and
+           agqpersonal:company_id = "FARMERS") or
+           (l_add_endorsement = "Y" and
+           agqpersonal:liability_form =2 and
+           agqpersonal:company_id not one of "FARMERS", "FLEMINGTON")) Then
+            Do ADD_agqEND
+        If ((l_add_endorsement = "N" and
+           agqpersonal:owner_occupied = "N" and
+           agqpersonal:company_id = "FARMERS") or
+           (l_add_endorsement = "N" and
+           agqpersonal:liability_form <> 2)) Then
+            Do DELETE_agqEND
+        End
+
+    -- MDL1
+    If L_CODE_4 <> "" Then
+        Begin
+        L_CODE = L_CODE_4
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal:LIABILITY_FORM = 1 and
+           agqpersonal:liability_limit <> 0 Then
+            Do ADD_agqEND
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqpersonal:LIABILITY_FORM <> 1) or
+           (l_add_endorsement = "N" and
+           agqpersonal:liability_limit = 0)) Then
+            Do DELETE_agqEND
+        End
+
+    -- MDL2
+    If L_CODE_5 <> "" Then
+        Begin
+        L_CODE = L_CODE_5
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal:LIABILITY_FORM = 2 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal:LIABILITY_FORM <> 2 Then
+            Do DELETE_agqEND
+        End
+
+        -- mdw30
+    If L_CODE_6 <> "" Then
+        Begin
+        L_CODE = L_CODE_6
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal:THEFT = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal:THEFT = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_7 <> "" Then
+        Begin
+        L_CODE = L_CODE_7
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal:liability_limit <> 0 and
+           agqpersonal:lead_paint_exclusion = 0 Then
+            Do ADD_agqEND
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqpersonal:liability_limit = 0) or
+           (l_add_endorsement = "N" and
+           agqpersonal:lead_paint_exclusion = 1)) Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_8 <> "" Then
+        Begin
+        L_CODE = L_CODE_8
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal:liability_limit <> 0 and
+           agqpersonal:fungi_mold_exclusion = 0 Then
+            Do ADD_agqEND
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqpersonal:liability_limit = 0) or
+           (l_add_endorsement = "N" and
+           agqpersonal:fungi_mold_exclusion = 1)) Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_6 <> "" Then
+        Begin
+        L_CODE = L_CODE_6
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal:THEFT = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal:THEFT = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_9 <> "" Then
+        Begin
+        L_CODE = L_CODE_9
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqpersonal:THEFT = 1 Then
+            Do ADD_agqEND
+        If L_ADD_ENDORSEMENT = "N" And
+           agqpersonal:THEFT = 0 Then
+            Do DELETE_agqEND
+        End
+
+    end  -- end of sfsline:lob_code = "DWELLING"
+
+end
+
+Procedure CHECK_FOR_UNDER_CONSTRUCTION
+Begin
+Access agqEND, Set agqEND:app_no = agqPERSONAL:app_no ,
+                   agqEND:PREM_NO = agqPERSONAL:PREM_NO,
+                   agqEND:BUILD_NO = agqPERSONAL:BUILD_NO, Generic
+
+L_MPL13 = "N"
+Repeat Begin
+    Exit If agqEND:app_no <> agqPERSONAL:app_no Or
+            agqEND:PREM_NO <> agqPERSONAL:PREM_NO Or
+            agqEND:BUILD_NO <> agqPERSONAL:BUILD_NO
+
+    If agqEND:CODE = "MPL13" Then
+        L_MPL13 = "Y"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = agqPERSONAL:app_no ,
+                   agqEND:PREM_NO = agqPERSONAL:PREM_NO,
+                   agqEND:BUILD_NO = agqPERSONAL:BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> agqPERSONAL:app_no Or
+            agqEND:PREM_NO <> agqPERSONAL:PREM_NO Or
+            agqEND:BUILD_NO <> agqPERSONAL:BUILD_NO
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqpersonal:COMPANY_ID,
+                      SFSOPTEND:STATE = agqPERSONAL:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+l_description = ""
+l_form_edition = ""
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqpersonal:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqPERSONAL:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqpersonal:LINE_OF_BUSINESS Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqpersonal:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqpersonal:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_description <> "" then
+begin
+Add agqEND
+    Begin
+    agqEND:app_no               =       agqPERSONAL:app_no
+    agqEND:PREM_NO              =       agqPERSONAL:PREM_NO
+    agqEND:BUILD_NO             =       agqPERSONAL:BUILD_NO
+    agqEND:SUB_CODE             =       L_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+--    agqEND:PREMIUM              =       0
+    End
+end
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = agqPERSONAL:app_no ,
+                   agqEND:PREM_NO = agqPERSONAL:PREM_NO,
+                   agqEND:BUILD_NO = agqPERSONAL:BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqEND:app_no <> agqPERSONAL:app_no Or
+            agqEND:PREM_NO <> agqPERSONAL:PREM_NO Or
+            agqEND:BUILD_NO <> agqPERSONAL:BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+procedure add_agqendorse1
+begin
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqPERSONAL:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID and
+      SFSOPTEND:STATE            = agqPERSONAL:STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqpersonal:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqpersonal:eff_date <= sfsoptend:Exp_date or
+       sfsoptend:Exp_date = 0)) Then
+        Begin
+        L_limit = sfsoptend:limit[1]
+        End
+
+    Next SFSOPTEND
+    End
+
+access agqendorse1, set agqendorse1:app_no = agqpersonal:app_no,
+                       agqendorse1:prem_no  = agqpersonal:prem_no,
+                       agqendorse1:build_no = agqpersonal:build_no,
+                       agqendorse1:code     = l_code, generic
+
+add agqendorse1
+    begin
+    agqendorse1:app_no = agqpersonal:app_no
+    agqendorse1:prem_no  = agqpersonal:prem_no
+    agqendorse1:build_no = agqpersonal:build_no
+    agqendorse1:code     = l_code
+    agqendorse1:sub_code = 10
+    agqendorse1:limit[1] = l_limit
+    end
+
+end
+
+procedure delete_agqendorse1
+begin
+access agqendorse1, set agqendorse1:app_no = agqpersonal:app_no,
+                       agqendorse1:prem_no  = agqpersonal:prem_no,
+                       agqendorse1:build_no = agqpersonal:build_no,
+                       agqendorse1:code     = l_code, generic
+
+if agqendorse1:app_no = agqpersonal:app_no and
+   agqendorse1:prem_no  = agqpersonal:prem_no and
+   agqendorse1:build_no = agqpersonal:build_no and
+   agqendorse1:code     = l_code then
+    delete agqendorse1
+
+end
+
+Procedure CHANGE_CONTENTS
+Begin
+/*If agqPERSONAL:DWELLING_LIMIT < agsdefault_plp:COVERAGE_A Then
+    Begin
+    Change agqPERSONAL_ALIAS
+        Begin
+        agqPERSONAL_ALIAS:DWELLING_LIMIT = agsdefault_plp:COVERAGE_A
+        L_DWELLING_LIMIT = agsdefault_plp:COVERAGE_A
+        agqPERSONAL_ALIAS:STRUCTURES_LIMIT[1] = (L_DWELLING_LIMIT *
+                                                (agsdefault_plp:COVERAGE_B_PERCENT
+                                                Divide 100))
+        agqPERSONAL_ALIAS:LOSS_RENTS_LIMIT = (L_DWELLING_LIMIT *
+                                             (agsdefault_plp:COVERAGE_D_PERCENT
+                                             Divide 100))
+        End
+    End*/
+
+L_UPDATED = "N"
+L_CODE = "MPL47"
+Do ACCESS_agqEND
+If L_ADD_ENDORSEMENT = "N" Then
+    Begin
+    Do ACCESS_SFSOPTEND
+    Change agqPERSONAL_ALIAS
+        Begin
+-- 10/2/2002 added because if they increase higher than what mpl47 or mpl49
+-- makes it, it would change back to what mpl47 and mpl49 was
+
+        L_LIMIT = (agqPERSONAL_ALIAS:DWELLING_LIMIT *
+                  (L_INCREASE_COV_C Divide 100))
+        If agqPERSONAL_ALIAS:CONTENTS_LIMIT < L_LIMIT Then
+            agqPERSONAL_ALIAS:CONTENTS_LIMIT = L_LIMIT
+--        agqPERSONAL_ALIAS:CONTENTS_LIMIT = (agqPERSONAL_ALIAS:DWELLING_LIMIT *
+--                                           (L_INCREASE_COV_C Divide 100))
+-- end of 10/2/2002 change
+
+        End
+    L_UPDATED = "Y"
+    End
+
+L_CODE = "MPL49"
+Do ACCESS_agqEND
+If L_ADD_ENDORSEMENT = "N" Then
+    Begin
+    Do ACCESS_SFSOPTEND
+    Change agqPERSONAL_ALIAS
+        Begin
+-- 10/2/2002 added because if they increase higher than what mpl47 or mpl49
+-- makes it, it would change back to what mpl47 and mpl49 was
+
+        L_LIMIT = (agqPERSONAL_ALIAS:DWELLING_LIMIT *
+                  (L_INCREASE_COV_C Divide 100))
+        If agqPERSONAL_ALIAS:CONTENTS_LIMIT < L_LIMIT Then
+            agqPERSONAL_ALIAS:CONTENTS_LIMIT = L_LIMIT
+--        agqPERSONAL_ALIAS:CONTENTS_LIMIT = (agqPERSONAL_ALIAS:DWELLING_LIMIT *
+--                                           (L_INCREASE_COV_C Divide 100))
+-- end of 10/2/2002 change
+
+        End
+    L_DEFAULT_CONTENTS_LIMIT = (agqPERSONAL:DWELLING_LIMIT *
+                               (L_INCREASE_COV_C Divide 100))
+    L_UPDATED = "Y"
+    End
+End
+
+/*Procedure MINIMUM
+Begin
+L_CTR = 1
+
+L_ALARM_FACTOR = 0
+While L_CTR < 8
+    Begin
+    If agqPERSONAL:ALARM_FACTOR[L_CTR] <> 0 Then
+        L_ALARM_FACTOR = L_ALARM_FACTOR + (1 - agqPERSONAL:ALARM_FACTOR[L_CTR])
+    L_CTR = L_CTR + 1
+    End
+
+L_ALARM_FACTOR_1 = L_ALARM_FACTOR * 100
+
+End*/
+
+procedure access_plsrates
+begin
+access plsrates, set plsrates:company_id       = agqpersonal:company_id,
+                     plsrates:state            = agqpersonal:state,
+                     plsrates:line_of_business = agqpersonal:line_of_business, approximate
+
+while plsrates:company_id       = agqpersonal:company_id and
+      plsrates:state            = agqpersonal:state and
+      plsrates:line_of_business = agqpersonal:line_of_business
+       begin
+       if agqpersonal:eff_date >= plsrates:reff_date then
+           begin
+           if plsrates:companion_discount_factor <> 0 or
+              plsrates:progressive_discount_factor <> 0 or
+              plsrates:agency_ins_discount_factor <> 0 then
+               l_companion_discount_date = plsrates:reff_date
+
+            end
+
+        next plsrates
+        end
+end
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no   = agqPERSONAL:app_no ,
+                   agqEND:PREM_NO  = agqPERSONAL:PREM_NO,
+                   agqEND:BUILD_NO = agqPERSONAL:BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+L_MPL47 = "N"
+l_mho45 = "N"
+while agqEND:app_no   = agqPERSONAL:app_no and
+      agqEND:PREM_NO  = agqPERSONAL:PREM_NO and
+      agqEND:BUILD_NO = agqPERSONAL:BUILD_NO
+    begin
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+    If agqEND:CODE = "MPL47" Then
+        L_MPL47 = "Y"
+    If agqEND:CODE = "MPL49" Then
+        L_MPL49 = "Y"
+    if agqend:code = "MHO45" then
+        l_MHO45 = "Y"
+
+    Next agqEND
+    End
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqPERSONAL:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+L_SAL_EFF_DATE = 0
+while SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID and
+      SFSOPTEND:STATE            = agqPERSONAL:STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqpersonal:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqpersonal:eff_date <= sfsoptend:Exp_date or
+       sfsoptend:Exp_date = 0)) Then
+        Begin
+        If SFSOPTEND:CODE one of "SAL01", "FPL01" Then
+            L_SAL_EFF_DATE = SFSOPTEND:EFF_DATE
+        end
+
+    Next SFSOPTEND
+    End
+
+End
+
+Procedure ACCESS_SFSOPTEND
+Begin
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqPERSONAL:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+l_increase_cov_c = 0
+while SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID and
+      SFSOPTEND:STATE            = agqPERSONAL:STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqpersonal:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqpersonal:eff_date <= sfsoptend:exp_date or
+       sfsoptend:Exp_date = 0)) Then
+        L_INCREASE_COV_C = SFSOPTEND:PREMIUM_1[5]
+
+    Next SFSOPTEND
+    End
+
+End
+
+End

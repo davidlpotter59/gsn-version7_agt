@@ -1,0 +1,1804 @@
+
+%%
+Screen
+        Name = "agtmt102";   --Search for Previous Entered application
+        Type = "multiline" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="100x30";
+        Domain="agent_search_display" ;
+        repeat t_listbox_repeat, 100 times Down;
+        showunusedrecords = false
+        autoscroll=TRUE
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11],
+                                     G_line_of_business[4],
+                                     G_from_search_screen[1],
+                                     g_state[2],
+                                     g_enhancement[1] ,
+                                     g_form[1] ,
+                                     g_new_app_no[11] ;
+
+        global string g_initial_screen[50],
+                      g_portfolio[1] ;
+
+        local unsigned ascii number l_csexec_number[12] ;
+
+        local string l_system_id[15],
+                     l_enter[1],
+                     l_insured_name[50],
+                     l_company_id[10],
+                     l_commandline[22],
+                     l_requote[1],
+                     l_lob_code[10],
+                     L_CSEXEC_APPLICATION[25]="" ,
+                     l_app[3]="",
+                     l_private_passenger[1],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_server_name[100],
+                     l_user_id[15]="",
+                     l_dec[15]="";
+
+        Include "print.var"
+
+        Include "virtualdecs.var"
+
+        local unsigned ascii number l_application[11],
+                                    l_lob[4],
+                                    l_state[2],
+                                    l_converted_app_quote_no,
+                                    l_converted_app_policy_no,
+                                    l_sort_order_number=1;
+
+        string l_sort_order="D";    --decending default
+
+
+        number function check_if_converted(number) ;
+        number function check_if_converted_policy(number);
+
+        Include "stdkeys7.inc"
+
+        include "csexec.var"
+
+        access agent_search_display,
+           set agent_search_display:app_no = "", approximate, using fourth index
+
+
+Style Definition
+
+        Include "styles.inc"
+        repeated field style {
+          cursorshape = hand
+        }
+        repeated Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                  cursorshape = hand
+                                }
+
+
+
+Functions
+    --    Include "stdfunc7.inc"
+        reaccess;
+        "start_new_search" display/noreturn "agtmt101" tagged  clear_search_start_new_one_fn;
+        "select" Continue/position { do access_results };
+
+        "display_rating_info" display/noreturn "agtmt010";
+        "back_to_main" display/noreturn "agtmt001" tagged display_main_screen_fn;
+        "func1" sequence "cnvt" tagged app_to_app_fn;
+        "cnvt" continue/position begin
+                                 g_app_no = agent_search_display:app_no
+                                 do app_to_app
+                                 end ;
+
+        "func1" sequence "worksheet"  tagged worksheet_fn ;
+        "worksheet" continue begin
+                             if agent_search_display:line_of_business one of 4 then
+                                 do create_batch_macro
+                             else
+                                 do create_macro
+                             end  ;
+
+        "func2" sequence "quoteletter"  tagged quote_letter_fn ;
+        "quoteletter" continue begin
+                               do print_quote_letter
+                               end ;
+
+Event Definition
+   eventHandler {
+                  mousedoubleclicked {
+                                       function = "select" abort()
+                                     }
+                } tagged t_listbox_field_event
+
+      eventhandler {
+                     action {
+                              do sort_column(str(event.source))
+                            }
+                   } tagged sorting_event
+
+   /*     "display_correct_app_no" {
+                                   warning str(agent_search_display:app_no)
+                                 }
+
+        "REMOVE_SCREEN" {
+                          function = "exit" abort ()
+                        }
+
+        "display_message" { warning "" + event.value }
+   */
+
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+  access agqname,
+     set agqname:app_no = g_app_no, generic
+
+access sfsdefault,
+   set sfsdefault:sfs_code = "SFS", generic
+
+access sfscompany, set sfscompany:company_id = sfsdefault:company_id, generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(farmers_fn)
+    hide(lebins_fn)
+    hide(ggund_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    hide(ggund_fn)
+    hide(others_fn)
+    if agqname:quote_no = 0 then
+        hide(proposal_fn)
+    else
+        show(proposal_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(ggund_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "GGUND" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+
+
+if agent_search_display:app_no <> 0 then
+  {
+    g_app_no = agent_search_display:app_no
+  }
+
+if g_app_no <> 0 then
+  {
+    do display_results_of_search
+  }
+
+screen at 1,1 to 30,100
+  Properties
+      {
+         Layouttype = screen
+         Transparent = False
+         backgroundcolor = "#ADD8E6"
+      }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+   Panel at 1,1 to 2,100 tagged ficof_fn
+     Properties
+        {
+        layouttype = screen
+        }
+    {
+      components
+          guidetext at 1,1 to 2,40
+               properties
+                 {
+                   iconname = "qp_logo.gif"
+                 }
+          guidetext at 1,83 to 2,100
+               properties
+                 {
+                   iconname = "ficof_logo.gif"
+                 }
+
+    }
+
+   Panel at 1,1 to 2,100 tagged lebins_fn
+     Properties
+        {
+        layouttype = screen
+        }
+    {
+      components
+          guidetext at 1,1 to 2,40
+               properties
+                 {
+                   iconname = "qp_logo.gif"
+                 }
+/*          guidetext at 1,83 to 2,100
+               properties
+                 {
+                   iconname = "ficof_logo.gif"
+                 }
+*/
+    }
+
+   Panel at 1,1 to 2,100 tagged ggund_fn
+     Properties
+        {
+        layouttype = screen
+        }
+    {
+      components
+          guidetext at 1,1 to 2,40
+               properties
+                 {
+                   iconname = "qp_logo.gif"
+                 }
+/*          guidetext at 1,83 to 2,100
+               properties
+                 {
+                   iconname = "ficof_logo.gif"
+                 }
+*/
+    }
+
+   Panel at 1,1 to 2,100 tagged farmers_fn
+     Properties
+        {
+          layouttype = screen
+        }
+    {
+      components
+          guidetext at 1,1 to 2,40
+               properties
+                 {
+                   iconname = "qp_logo.gif"
+                 }
+          guidetext at 1,83 to 2,100
+               properties
+                 {
+                   iconname = "salem_logo.gif"
+                 }
+
+    }
+
+   panel at 3,1 to 4,100  tagged others_fn
+   Properties
+           {
+             LayoutType = screen
+             backgroundcolor = "Grey"
+             transparent = False
+             scrollbarpolicy=asneeded
+           }
+     {
+       components
+         guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+           properties
+             {
+                text = "Find A Proposal: Results... "
+                fontsize = 18
+                fontstyle = BOLD
+                transparent = False
+                fontname = "arial"
+                backgroundcolor = "Grey"
+             }
+     }
+
+   panel at 3,1 to 4,100  tagged farmers_fn
+   Properties
+           {
+             LayoutType = screen
+             backgroundcolor = "Grey"
+             transparent = False
+             scrollbarpolicy=asneeded
+           }
+     {
+       components
+         guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+           properties
+             {
+                text = "Find A Quote: Results... "
+                fontsize = 18
+                fontstyle = BOLD
+                transparent = False
+                fontname = "arial"
+                backgroundcolor = "Grey"
+             }
+     }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_printscreen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt102.sd"
+                      fontsize = 9
+                    }
+      }
+
+  Panel at 6,20  to 7, 40 tagged ficof_fn
+      Properties
+         {
+           layouttype = screen
+         }
+    {
+      Components
+        Button at 1,1
+          properties
+            {
+              Iconname = "btn_start_new_search.bmp"
+            }
+          Events  {
+                    Action
+                      {
+                        function = "start_new_search"
+                        postevent("agtmt101","clear_search_result")
+                        abort()
+                      }
+                  }
+    }
+
+  Panel at 6,20  to 7, 40 tagged lebins_fn
+      Properties
+         {
+           layouttype = screen
+         }
+    {
+      Components
+        Button at 1,1
+          properties
+            {
+              Iconname = "btn_start_new_search.bmp"
+            }
+          Events  {
+                    Action
+                      {
+                        function = "start_new_search"
+                        postevent("agtmt101","clear_search_result")
+                        abort()
+                      }
+                  }
+    }
+
+/*  Panel at 3.5,60  to 4.5, 80 tagged farmers_fn
+      Properties
+         {
+           layouttype = screen
+         }
+    {
+      Components
+        Button at 1,1  tagged farmers_app_to_app
+          properties
+            {
+              Iconname = "btn_copy_proposal.bmp"
+            }
+          Events  {
+                    Action
+                      {
+                        function = "func1"
+                        abort()
+                      }
+                  }
+    }*/
+
+  Panel at 6,1  to 7, 85 tagged farmers_fn
+      Properties
+         {
+           layouttype = screen
+         }
+    {
+      Components
+        Button at 1,5
+        Properties {
+                Iconname = "btn_view_print_quote.bmp"
+                }
+        Events  {
+                Action = worksheet_fn
+                }
+
+        Button at 1,35
+          properties
+            {
+              Iconname = "btn_start_new_search.bmp"
+            }
+          Events  {
+                    Action
+                      {
+                        function = "start_new_search"
+                        postevent("agtmt101","clear_search_result")
+                        abort()
+                      }
+                  }
+        Button at 1,60   tagged proposal_fn
+        Properties {
+                Iconname = "btn_view_print_application.bmp"
+                }
+        Events  {
+                Action = quote_letter_fn
+                }
+    }
+
+  Panel at 6,60  to 7, 80 tagged ficof_fn
+      Properties
+         {
+           layouttype = screen
+         }
+    {
+      Components
+        Button at 1,1
+          properties
+            {
+              Iconname = "btn_copy_proposal.bmp"
+            }
+          Events  {
+                    Action
+                      {
+                        function = "func1"
+                        abort()
+                      }
+                  }
+    }
+
+  Panel at 6,60  to 7, 80 tagged lebins_fn
+      Properties
+         {
+           layouttype = screen
+         }
+    {
+      Components
+        Button at 1,1
+          properties
+            {
+              Iconname = "btn_lebins_copy_proposal.bmp"
+            }
+          Events  {
+                    Action
+                      {
+                        function = "func1"
+                        abort()
+                      }
+                  }
+    }
+
+   panel at 7,1 to 8,100
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 10
+           transparent = False
+           Backgroundcolor = "black"
+         }
+     }
+
+
+   Panel at 8,20 to 12,100
+           Properties {
+                        LayoutType = screen
+                      }
+                   {
+                     Components
+                        guidetext at 1,1 tagged t_view1
+                             properties
+                               {
+                                 text = "If No Results Appear,"
+                                 fontsize = 14
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+                        guidetext at 2,10 tagged t_view2
+                             properties
+                               {
+                                 text = "There are no matches for your search criteria - try again.."
+                                 fontsize = 14
+                                 fontstyle = Plain
+                                 fontname = "arial"
+                               }
+
+                        guidetext at 3,1 tagged t_view3
+                             properties
+                               {
+                                 text = "If Results Appear,"
+                                 fontsize = 14
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+
+                        guidetext at 4,10 tagged t_view4
+                             properties
+                               {
+                                 text = "Double-Click on the desired entry from list below"
+                                 fontsize = 14
+                                 fontstyle = Plain
+                                 fontname = "arial"
+                               }
+                   }
+
+   listbox at 13,10 to 18, 87    tagged others_fn
+      {
+        Heading
+          properties
+            {
+              layouttype = row
+              layoutconstraints = "North"
+            }
+          events {
+             adjustment {
+                          warning event.value
+                        }
+            }
+          {
+            components
+              Button/event=sorting_event to 1,11.0 tagged button_1
+                properties
+                  {
+                    text = "Proposal No"
+                  }
+
+              Button/event=sorting_event to 1,15.0  tagged button_2
+                properties
+                  {
+                    text = "LOB"
+                  }
+              Button/event=sorting_event to 1,50.0  tagged button_3
+                properties
+                  {
+                    text = "Insured"
+                  }
+          }
+        panel
+          properties
+            {
+              layouttype        = row
+              ScrollBarPolicy   = asneeded
+              cursorshape       = hand
+            }
+
+          {
+            fields
+              agent_search_display:app_no/event=t_listbox_field_event to 1.0, 11.0 tagged t_listbox_repeat;
+           --   properties {
+           --                cursorshape     = hand
+           --              };
+              agent_search_display:line_of_business/event=t_listbox_field_event to 1.0, 15.0  tagged t_listbox_repeat;
+           --   properties {
+           --                cursorshape     = hand
+           --              };
+              agent_search_display:NAME_FIELD_SEARCH/event=t_listbox_field_event to 1.0, 50.0  tagged t_listbox_repeat;
+            --  properties {
+            --               cursorshape     = hand
+            --             };
+          }
+      }
+
+   listbox at 13,10 to 18, 87    tagged farmers_fn
+      {
+        Heading
+          properties
+            {
+              layouttype = row
+              layoutconstraints = "North"
+            }
+          events {
+             adjustment {
+                          warning event.value
+                        }
+            }
+          {
+            components
+              Button/event=sorting_event to 1,11.0 tagged button_1
+                properties
+                  {
+                    text = "Quote No"
+                  }
+
+              Button/event=sorting_event to 1,15.0  tagged button_2
+                properties
+                  {
+                    text = "LOB"
+                  }
+              Button/event=sorting_event to 1,50.0  tagged button_3
+                properties
+                  {
+                    text = "Insured"
+                  }
+          }
+        panel
+          properties
+            {
+              layouttype        = row
+              ScrollBarPolicy   = asneeded
+              cursorshape       = hand
+            }
+
+          {
+            fields
+              agent_search_display:app_no/event=t_listbox_field_event to 1.0, 11.0 tagged t_listbox_repeat;
+           --   properties {
+           --                cursorshape     = hand
+           --              };
+              agent_search_display:line_of_business/event=t_listbox_field_event to 1.0, 15.0  tagged t_listbox_repeat;
+           --   properties {
+           --                cursorshape     = hand
+           --              };
+              agent_search_display:NAME_FIELD_SEARCH/event=t_listbox_field_event to 1.0, 50.0  tagged t_listbox_repeat;
+            --  properties {
+            --               cursorshape     = hand
+            --             };
+          }
+      }
+
+Panel at 21,1 to 23,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+        Button at 1,40   tagged back_fn
+        Properties {
+                Iconname = "btn_bactomainscreen.bmp"
+                }
+        Events  {
+                Action = display_main_screen_fn --back_fn
+                }
+
+}
+
+}
+
+screen exit
+
+Procedure Definition
+
+procedure print_quote_letter
+begin
+if agent_search_display:app_no <> 0 then
+  {
+    g_app_no = agent_search_display:app_no
+  }
+
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+if ((agqapplication:sub_code = 1 and
+   agqapplication:literal[1,7] = "Deposit" and
+   agent_search_display:line_of_business one of 1) or
+   (agent_search_display:line_of_business one of 1 and
+   agqpersonal:entry_date < 08.09.2012)) then
+    begin
+    proc("cli csbatch agqmso1000 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso1000.cq %s<nl>",l_dec)/noconsole
+
+    if agqapplication:app_no = g_app_no then
+        begin
+        proc("cli csbatch agqmso1001 %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit agqmso1001.cq %s<nl>",l_dec)/noconsole
+        end
+    end
+else
+if agent_search_display:line_of_business one of 1 then
+    begin
+    proc("cli csbatch agqmso9104 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso9104.cq %s<nl>",l_dec)/noconsole
+
+    if agqapplication:app_no = g_app_no then
+        begin
+        proc("cli csbatch agqmso9104a %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit agqmso9104a.cq %s<nl>",l_dec)/noconsole
+        end
+    end
+
+if agent_search_display:line_of_business one of 31, 34, 44 then
+    begin
+    proc("cli csbatch agqmso1000 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso1000.cq %s<nl>",l_dec)/noconsole
+
+    if agqapplication:app_no = g_app_no then
+        begin
+        proc("cli csbatch agqmso1001 %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit agqmso1001.cq %s<nl>",l_dec)/noconsole
+        end
+    end
+
+if agent_search_display:line_of_business one of 4 then
+    begin
+    proc("cli csbatch agqmso9006 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso9006.cq %s<nl>",l_dec)/noconsole
+
+    if agqpersonal:app_no = g_app_no then
+        begin
+        if agqpersonal:company_id = "FARMERS" and
+           agqpersonal:eff_date >=  01.01.2012 then
+            begin
+            proc("cli csbatch agqfosis0311 %s",str(g_app_no,11))/noconsole
+            Proc("cli joinit agqfosis0311.cq %s<nl>",l_dec)/noconsole
+            end
+        end
+
+    access agqcreditscore, set agqcreditscore:app_no = g_app_no, generic
+
+    access plsdefault, set plsdefault:company_id = agqpersonal:company_id,
+                           plsdefault:line_of_business = agqpersonal:line_of_business, generic
+
+    if agqcreditscore:app_no = g_app_no then
+        begin
+        if agqcreditscore:credit_score <= 845 and
+           agqcreditscore:credit_score not one of 0, 111, 125, 999 and
+           agqpersonal:tier <> 9 and
+           agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+           plsdefault:rating_algorithm_date <> 0 then
+            begin
+            proc("cli csbatch agqis0311 %s",str(g_app_no,11))/noconsole
+            Proc("cli joinit agqis0311.cq %s<nl>",l_dec)/noconsole
+            end
+        end
+
+    access agqpersonal2, set agqpersonal2:app_no = g_app_no, generic
+
+    if agqpersonal2:app_no = g_app_no then
+        begin
+        if agqpersonal2:loss_exp_factor > 1.00 and
+           agqpersonal2:loss_exp_factor <> 0 and
+           agqpersonal:form not one of 4, 6 then
+            begin
+            proc("cli csbatch agqce0311 %s",str(g_app_no,11))/noconsole
+            Proc("cli joinit agqce0311.cq %s<nl>",l_dec)/noconsole
+            end
+        end
+    end
+
+if agent_search_display:line_of_business one of 5, 35 then
+    begin
+    if agqgeneral:company_id one of "FLEMINGTON" then
+        begin
+        proc("cli csbatch agqmso001 %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit agqmso001.cq %s<nl>",l_dec)/noconsole
+        end
+    else
+    if agqgeneral:company_id one of "FARMERS", "LEBINS", "GGUND" then
+        begin
+        proc("cli csbatch agqmso001a %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit agqmso001a.cq %s<nl>",l_dec)/noconsole
+        end
+
+    if agqapplication:app_no = g_app_no then
+        begin
+        proc("cli csbatch agqmso002 %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit agqmso002.cq %s<nl>",l_dec)/noconsole
+        end
+    end
+
+if agent_search_display:line_of_business one of 15, 16, 45, 46 then
+    begin
+    proc("cli csbatch agqmso003 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso003.cq %s<nl>",l_dec)/noconsole
+
+    if agqapplication:app_no = g_app_no then
+        begin
+        proc("cli csbatch agqmso003a %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit agqmso003a.cq %s<nl>",l_dec)/noconsole
+        end
+
+    if agqvehicle:company_id one of "FARMERS" then
+        {
+        proc("cli csbatch agqdrivers %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit agqdrivers.cq %s<nl>",l_dec)/noconsole
+        proc("cli csbatch agqidcard1 %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit agqidcard1.cq %s<nl>",l_dec)/noconsole
+        }
+
+    access agqvehicle_alias, set agqvehicle_alias:app_no = g_app_no, generic
+
+    l_private_passenger = "N"
+    while agqvehicle_alias:app_no = g_app_no
+        begin
+        if agqvehicle_alias:type = 2 then
+            l_private_passenger = "Y"
+
+        next agqvehicle_alias
+        end
+
+    if l_private_passenger = "Y" and
+       agqvehicle:company_id = "FARMERS" and
+       agqvehicle:state = 29 then
+        begin
+        proc("cli csbatch njfcsf_092009 %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit njfcsf_092009.cq %s<nl>",l_dec)/noconsole
+        end
+    end
+
+if agent_search_display:line_of_business one of 6, 36 then
+    begin
+    proc("cli csbatch agqmso004 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004.cq %s<nl>",l_dec)/noconsole
+
+    if agqapplication:app_no = g_app_no then
+        begin
+        proc("cli csbatch agqmso002 %s",str(g_app_no,11))/noconsole
+        Proc("cli joinit agqmso002.cq %s<nl>",l_dec)/noconsole
+        end
+    end
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+    Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+    Proc("chmod 777 %s ",L_DEC_PDF)
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+end
+
+Procedure CREATE_MACRO
+Begin
+if agent_search_display:app_no <> 0 then
+  {
+    g_app_no = agent_search_display:app_no
+  }
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+Do REFRESH_WORK_FILES
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+if ((agqapplication:sub_code = 1 and
+   agqapplication:literal[1,7] = "Deposit" and
+   agent_search_display:line_of_business one of 1) or
+   (agent_search_display:line_of_business one of 1 and
+   agqpersonal:entry_date < 08.09.2012)) then
+    begin
+    I_REPORTA = "agqpr1000"
+    I_REPORT = "agqpr1000.cq"
+    I_REPORT_CQE = "agqpr1000.cqe"
+    end
+else
+if agent_search_display:line_of_business one of 1 then
+    begin
+    I_REPORTA = "agqpr9104"
+    I_REPORT = "agqpr9104.cq"
+    I_REPORT_CQE = "agqpr9104.cqe"
+    end
+
+if agent_search_display:line_of_business one of 31, 34, 44 then
+    begin
+    I_REPORTA = "agqpr1000"
+    I_REPORT = "agqpr1000.cq"
+    I_REPORT_CQE = "agqpr1000.cqe"
+    end
+
+if agent_search_display:line_of_business one of 5, 35 then
+    begin
+    if sfscompany:boiler_rating = 4 then
+        begin
+        I_REPORTA = "agqpr101"
+        I_REPORT = "agqpr101.cq"
+        I_REPORT_CQE = "agqpr101.cqe"
+        end
+    else
+    if sfscompany:boiler_rating not one of 4 then
+        begin
+        I_REPORTA = "agqpr100"
+        I_REPORT = "agqpr100.cq"
+        I_REPORT_CQE = "agqpr100.cqe"
+        end
+    end
+
+if agent_search_display:line_of_business one of 15, 16, 45, 46 then
+    begin
+    I_REPORTA = "agqpr600"
+    I_REPORT = "agqpr600.cq"
+    I_REPORT_CQE = "agqpr600.cqe"
+    end
+
+if agent_search_display:line_of_business one of 6, 36 then
+    begin
+    I_REPORTA = "agqpr700"
+    I_REPORT = "agqpr700.cq"
+    I_REPORT_CQE = "agqpr700.cqe"
+    end
+
+L_USERNAME = USERNAME
+I_APP = "agq"
+l_app = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF = L_APP+Str(I_CSEXEC_NUMBER)+".txt"
+I_PARAMETER = I_APP+Str(I_CSEXEC_NUMBER)+".par"
+I_MACROA = I_APP+Str(I_CSEXEC_NUMBER)
+I_MACRO = I_APP+Str(I_CSEXEC_NUMBER)+".mf"
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+if agqprint1:app_no <> g_app_no then
+    begin
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+else
+    begin
+    delete agqprint1
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+
+Deletefile(I_MACRO)
+Writefile(I_MACRO,"clear list<nl>")
+Writefile(I_MACRO,"clear find<nl>")
+Writefile(I_MACRO,"clear sum<nl>")
+Writefile(I_MACRO,"run %s<nl>",i_reporta)
+Writefile(I_MACRO,"cli rm %s<nl>",i_report)
+Writefile(I_MACRO,"rsave %s<nl>",i_reporta)
+Writefile(I_MACRO,"cli joinit %s %s<nl>",i_report,L_DEC)
+Closefile(I_MACRO)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc("cli cq %s",I_MACRO)/noconsole
+Else
+    Proc("cli cq %s",I_MACRO)
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)/noconsole
+    Proc("cli chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("cli rm %s",L_DEC)/noconsole
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)
+    Proc("cli chmod 777 %s ",L_DEC_PDF)
+    Proc("cli rm %s",L_DEC)
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client/noconsole
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+delete agqprint1
+
+Do REFRESH_WORK_FILES
+End
+
+Procedure REFRESH_WORK_FILES
+Begin
+Proc ("cli agqprint1.mk")/noconsole
+End
+
+procedure create_batch_macro
+begin
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+if sfscompany:debug_mode = 0 then
+    begin
+    proc("cli csbatch agqpr9006 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqpr9006.cq %s<nl>",l_dec)/noconsole
+    end
+else
+    begin
+    proc("cli csbatch agqpr9006 %s",str(g_app_no,11))
+    Proc("cli joinit agqpr9006.cq %s<nl>",l_dec)
+    end
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+    Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+    Proc("chmod 777 %s ",L_DEC_PDF)
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+end
+
+procedure display_results_of_search
+
+BEGIN
+  access agent_search_display,
+     set agent_search_display:app_no = "", using fourth index, approximate
+  function = "REACCESS"
+  abort()
+END
+
+procedure back_a_screen
+
+begin
+  display screen "agtmt001"
+end
+
+Procedure sort_column (string p_button)
+
+BEGIN
+  local ascii number l_button_number[1] = val(subfield(p_button,"_",2));
+  if l_button_number <> l_sort_order_number then
+    {
+      setproperty(tag("button_" + str(l_sort_order_number)),iconname,"")   --creating the tag again here
+    }
+
+  l_sort_order_number = l_button_number
+
+  if l_sort_order = "D" then
+    {
+      l_sort_order = "A"
+      setproperty(tag(p_button),iconname,"sort_arrow_up.gif")
+    }
+  else
+    {
+      l_sort_order = "D"
+      setproperty(tag(p_button),iconname,"sort_arrow_down.gif")
+    }
+  switch(l_button_number)
+    case 1 : {
+                if l_sort_order = "D" then
+                  {
+                    access agent_search_display,
+                       set agent_search_display:app_no = 0, using fourth index, approximate
+
+                  }
+                else
+                  {
+                    access agent_search_display,
+                       set agent_search_display:app_no = 0, using first index, approximate
+                  }
+             }
+    case 2 : {
+                if l_sort_order = "D" then
+                  {
+                    access agent_search_display,
+                       set agent_search_display:Line_of_business = 0, using fifth index, approximate
+                  }
+                else
+                  {
+                    access agent_search_display,
+                       set agent_search_display:Line_of_business = 0, using second index, approximate
+                  }
+             }
+    case 3 : {
+               if l_sort_order = "D" then
+                 {
+                   access agent_search_display,
+                      set agent_search_display:NAME_FIELD_SEARCH  = "", using sixth index, approximate
+                 }
+               else
+                 {
+                   access agent_search_display,
+                      set agent_search_display:NAME_FIELD_SEARCH  = "", using third index, approximate
+                 }
+             }
+  }
+  function = "reaccess"
+  abort()
+End
+
+procedure app_to_app
+
+begin
+  do access_sfscsexec
+  g_new_app_no = i_csexec_number
+  access sfsdefault,
+     set sfsdefault:sfs_code = "SFS", generic
+
+  l_company_id = sfsdefault:company_id
+  access sfscompany,
+     set sfscompany:company_id = l_company_id, generic
+
+   access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+  l_commandline = str(g_app_no,11) + str(g_new_app_no,11)
+  if sfscompany:debug_mode = 0 then
+      proc("cli csbatch agqcv101 %s",l_commandline)/noconsole
+  else
+      proc("cli csbatch agqcv101 %s",l_commandline)
+
+  access agqname, set agqname:app_no = g_new_app_no, generic
+
+  access agqmaster, set agqmaster:app_no = g_new_app_no, generic
+
+  access agqgeneral,
+     set agqgeneral:app_no  = g_new_app_no, generic
+
+  access agqworkerscomp1,
+     set agqworkerscomp1:app_no  = g_new_app_no, generic
+
+  access agqpersonal,
+     set agqpersonal:app_no = g_new_app_no, generic
+
+  access agqvehicle,
+     set agqvehicle:app_no = g_new_app_no, generic
+
+  access agqcontractor,
+     set agqcontractor:app_no = g_new_app_no, generic
+
+    g_portfolio = "N"
+    if agqname:line_of_business <> 0 then
+        begin
+        if agqname:line_of_business = 99 then
+            g_portfolio = "Y"
+        end
+
+  if agqname:line_of_business = 99 then
+    {
+    l_state = sfsdefault:state
+    access agqsetupmainscreen,
+         set agqsetupmainscreen:company_id       = agqname:company_id,
+             agqsetupmainscreen:state            = l_state,
+             agqsetupmainscreen:line_of_business = agqname:line_of_business, generic
+
+    postevent("agtmt102","REMOVE_SCREEN")
+    do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqname:line_OF_BUSINESS,g_new_app_no)
+    }
+  else
+  if agqgeneral:app_no = g_new_app_no then
+    {
+    access agqsetupmainscreen,
+         set agqsetupmainscreen:company_id       = agqgeneral:company_id,
+             agqsetupmainscreen:state            = agqgeneral:state,
+             agqsetupmainscreen:line_of_business = agqgeneral:line_of_business, generic
+
+    postevent("agtmt102","REMOVE_SCREEN")
+    if (agqname:quote_no = 0 and
+        agqapplication:app_no <> agqgeneral:app_no) or
+        agqname:quote_no <> 0 then
+        {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqgeneral:line_OF_BUSINESS,g_new_app_no)
+        }
+    else
+    if agqname:quote_no = 0 and
+       agqapplication:app_no = agqgeneral:app_no then  --not converted yet but need to go to agtmt207  status screen in agqsetupmainscreen file
+      {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqgeneral:line_OF_BUSINESS,g_new_app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+      }
+    else
+      {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqgeneral:line_of_BUSINESS,g_new_app_no)
+      }
+    }
+/*  else
+    if agqname:quote_no = 0 and
+       agqapplication:app_no = agqgeneral:app_no then  --not converted yet but need to go to agtmt207  status screen in agqsetupmainscreen file
+      {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqname:line_OF_BUSINESS,g_new_app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+      }
+    else
+      {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqname:line_of_BUSINESS,g_new_app_no)
+      }
+    }*/
+  else
+  if agqworkerscomp1:app_no = g_new_app_no then
+    {
+    access agqsetupmainscreen,
+         set agqsetupmainscreen:company_id       = agqworkerscomp1:company_id,
+             agqsetupmainscreen:state            = agqworkerscomp1:state,
+             agqsetupmainscreen:line_of_business = agqworkerscomp1:line_of_business, generic
+
+    postevent("agtmt102","REMOVE_SCREEN")
+    if (agqname:quote_no = 0 and
+        agqapplication:app_no <> agqworkerscomp1:app_no) or
+        agqname:quote_no <> 0 then
+        {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqworkerscomp1:line_OF_BUSINESS,g_new_app_no)
+        }
+    else
+    if agqname:quote_no = 0 and
+       agqapplication:app_no = agqworkerscomp1:app_no and
+       agqsetupmainscreen:screen_to_call[2] <> "" then  --not converted yet but need to go to agtmt207  status screen in agqsetupmainscreen file
+      {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqworkerscomp1:line_OF_BUSINESS,g_new_app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+      }
+    else
+      {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqworkerscomp1:line_of_BUSINESS,g_new_app_no)
+      }
+    }
+  else
+    if agqpersonal:app_no = g_new_app_no then
+      {
+        access agqsetupmainscreen,
+           set agqsetupmainscreen:company_id       = agqpersonal:company_id,
+               agqsetupmainscreen:state            = agqpersonal:state,
+               agqsetupmainscreen:line_of_business = agqpersonal:line_of_business, generic
+
+        access agqapplication,
+           set agqapplication:app_no = agqpersonal:app_no, generic
+
+        postevent("agtmt102","REMOVE_SCREEN")
+        if agqpersonal:company_id = "FARMERS" and
+           agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+           agqsetupmainscreen:screen_to_call_2 <> "" then
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL_2,agqpersonal:line_of_BUSINESS,g_new_app_no)
+        else
+        if agqpersonal:company_id = "FARMERS" and
+           agqname:ok_to_continue one of "N", "Y" and
+           agqname:eff_date = 0 and
+           agqsetupmainscreen:screen_to_call_2 <> "" then
+            do display_correct_screen("agtmt9000",agqpersonal:line_of_BUSINESS,g_new_app_no)
+        else
+        if agqname:quote_no <> 0 then
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqpersonal:line_of_BUSINESS,agent_search_display:app_no)
+        else
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqpersonal:line_OF_BUSINESS,agent_search_display:app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+
+/*        if (agqname:quote_no = 0 and
+            agqapplication:app_no <> agqpersonal:app_no) or
+            agqname:quote_no <> 0 then
+          {
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqpersonal:line_of_BUSINESS,g_new_app_no)
+          }
+        else
+          if agqname:quote_no = 0 and
+             agqapplication:app_no = agqpersonal:app_no then  --not converted yet but need to go to agtmt207
+            {
+              do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqpersonal:line_OF_BUSINESS,g_new_app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+            }
+          else
+            {
+              do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqpersonal:line_of_BUSINESS,g_new_app_no)
+            }*/
+      }
+else
+if agqvehicle:app_no = g_new_app_no then
+    {
+    access agqsetupmainscreen,
+           set agqsetupmainscreen:company_id       = agqvehicle:company_id,
+               agqsetupmainscreen:state            = agqvehicle:state,
+               agqsetupmainscreen:line_of_business = agqvehicle:line_of_business, generic
+
+    access agqapplication,
+           set agqapplication:app_no = agqvehicle:app_no, generic
+
+    postevent("agtmt102","REMOVE_SCREEN")
+    if (agqname:quote_no = 0 and
+        agqapplication:app_no <> agqvehicle:app_no) or
+        agqname:quote_no <> 0 then
+        {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL_1,agqvehicle:line_of_BUSINESS,g_new_app_no)
+        }
+    else
+    if agqname:quote_no = 0 and
+       agqapplication:app_no = agqvehicle:app_no then  --not converted yet but need to go to agtmt207
+        {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqvehicle:line_OF_BUSINESS,g_new_app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+        }
+    else
+        {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL_1,agqvehicle:line_of_BUSINESS,g_new_app_no)
+        }
+    }
+else
+if agqcontractor:app_no = g_new_app_no then
+    {
+    access agqsetupmainscreen,
+           set agqsetupmainscreen:company_id       = agqcontractor:company_id,
+               agqsetupmainscreen:state            = agqcontractor:state,
+               agqsetupmainscreen:line_of_business = agqcontractor:line_of_business, generic
+
+    access agqapplication,
+           set agqapplication:app_no = agqcontractor:app_no, generic
+
+    postevent("agtmt102","REMOVE_SCREEN")
+    if (agqname:quote_no = 0 and
+        agqapplication:app_no <> agqcontractor:app_no) or
+        agqname:quote_no <> 0 then
+        {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL_1,agqcontractor:line_of_BUSINESS,g_new_app_no)
+        }
+    else
+    if agqname:quote_no = 0 and
+       agqapplication:app_no = agqcontractor:app_no then  --not converted yet but need to go to agtmt207
+        {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqcontractor:line_OF_BUSINESS,g_new_app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+        }
+    else
+        {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL_1,agqcontractor:line_of_BUSINESS,g_new_app_no)
+        }
+    }
+  else
+  if agqname:app_no = g_new_app_no then
+    {
+    l_state = agqmaster:state
+    access agqsetupmainscreen,
+         set agqsetupmainscreen:company_id       = agqname:company_id,
+             agqsetupmainscreen:state            = l_state,
+             agqsetupmainscreen:line_of_business = agqname:line_of_business, generic
+
+    postevent("agtmt102","REMOVE_SCREEN")
+    if (agqname:quote_no = 0 and
+        agqapplication:app_no <> agqname:app_no) or
+        agqname:quote_no <> 0 then
+        {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqname:line_OF_BUSINESS,g_new_app_no)
+        }
+    else
+    if agqname:quote_no = 0 and
+       agqapplication:app_no = agqname:app_no then  --not converted yet but need to go to agtmt207  status screen in agqsetupmainscreen file
+      {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqname:line_OF_BUSINESS,g_new_app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+      }
+    else
+      {
+        do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqname:line_of_BUSINESS,g_new_app_no)
+      }
+    }
+
+end
+
+procedure access_sfscsexec
+begin
+i_csexec_application = "APQQUOTE                 "
+
+access sfscsexec, set sfscsexec:application = i_csexec_application, generic
+
+change sfscsexec
+    begin
+    i_csexec_number = sfscsexec:application_number + 1
+    sfscsexec:application_number = i_csexec_number
+    end
+
+end
+
+Procedure access_results
+BEGIN
+  local string l_answer;
+  local string l_message[100];
+
+  access agqname,
+     set agqname:app_no  = agent_search_display:app_no, generic
+
+  access agqmaster,
+     set agqmaster:app_no  = agent_search_display:app_no, generic
+
+  access agqgeneral,
+     set agqgeneral:app_no  = agent_search_display:app_no, generic
+
+  access agqworkerscomp1,
+     set agqworkerscomp1:app_no  = agent_search_display:app_no, generic
+
+  access agqpersonal,
+     set agqpersonal:app_no = agent_search_display:app_no, generic
+
+  access agqvehicle,
+     set agqvehicle:app_no = agent_search_display:app_no, generic
+
+  access agqcontractor,
+     set agqcontractor:app_no = agent_search_display:app_no, generic
+
+    g_portfolio = "N"
+    if agqname:line_of_business <> 0 then
+        begin
+        g_form = agqpersonal:form
+        g_line_of_business = agqname:line_of_business
+        if agqname:line_of_business = 99 then
+            g_portfolio = "Y"
+        end
+    else
+        begin
+        g_form = agqpersonal:form
+        if agqpersonal:line_of_business <> 0 then
+            g_line_of_business = agqpersonal:line_of_business
+        else
+        if agqgeneral:line_of_business <> 0 then
+            g_line_of_business = agqgeneral:line_of_business
+        else
+        if agqworkerscomp1:line_of_business <> 0 then
+            g_line_of_business = agqworkerscomp1:line_of_business
+        else
+        if agqvehicle:line_of_business <> 0 then
+            g_line_of_business = agqvehicle:line_of_business
+        else
+        if agqcontractor:line_of_business <> 0 then
+            g_line_of_business = agqcontractor:line_of_business
+        else
+            g_line_of_business = agqname:line_of_business
+        end
+
+  l_converted_app_quote_no = check_if_converted(agent_search_display:app_no)
+  l_converted_app_policy_no = check_if_converted_policy(agent_search_display:app_no)
+
+  if agqname:policy_no = 0 then
+      l_message = "Application has been converted to Quote No. -->" + str(l_converted_app_quote_no) + ".  No further changes allowed."
+  else
+  if agqname:policy_no <> 0 then
+      l_message = "Application has been converted to Policy No. -->" + str(l_converted_app_policy_no) + ".  No further changes allowed."
+
+  if l_converted_app_quote_no <> 0 then
+    {
+      l_answer = dialog ("Application Converted Already","information.bmp",trun(l_message),"OK")
+    }
+
+  if agqname:line_of_business = 99 then
+    {
+     access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+     l_state = sfsdefault:state
+      access agqsetupmainscreen,
+         set agqsetupmainscreen:company_id       = agqname:company_id,
+             agqsetupmainscreen:state            = l_state,
+             agqsetupmainscreen:line_of_business = agqname:line_of_business, generic
+
+      postevent("agtmt102","REMOVE_SCREEN")
+      if agqname:quote_no <> 0 then
+          do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqname:line_OF_BUSINESS,agent_search_display:app_no)
+      else
+          do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqname:line_OF_BUSINESS,agent_search_display:app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+    }
+  else
+  if agqgeneral:app_no = agent_search_display:app_no then
+    {
+      access agqsetupmainscreen,
+         set agqsetupmainscreen:company_id       = agqgeneral:company_id,
+             agqsetupmainscreen:state            = agqgeneral:state,
+             agqsetupmainscreen:line_of_business = agqgeneral:line_of_business, generic
+
+      postevent("agtmt102","REMOVE_SCREEN")
+      if agqname:quote_no <> 0 then
+          do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqgeneral:line_OF_BUSINESS,agent_search_display:app_no)
+      else
+          do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqgeneral:line_OF_BUSINESS,agent_search_display:app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+    }
+  else
+  if agqworkerscomp1:app_no = agent_search_display:app_no then
+    {
+      access agqsetupmainscreen,
+         set agqsetupmainscreen:company_id       = agqworkerscomp1:company_id,
+             agqsetupmainscreen:state            = agqworkerscomp1:state,
+             agqsetupmainscreen:line_of_business = agqworkerscomp1:line_of_business, generic
+
+      postevent("agtmt102","REMOVE_SCREEN")
+      if agqname:quote_no <> 0 then
+          do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqworkerscomp1:line_OF_BUSINESS,agent_search_display:app_no)
+      else
+          do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqworkerscomp1:line_OF_BUSINESS,agent_search_display:app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+    }
+  else
+    if agqpersonal:app_no = agent_search_display:app_no then
+      {
+        access agqname, set agqname:app_no = g_app_no, generic
+
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        access plsdefault, set plsdefault:company_id       = agqpersonal:company_id,
+                               plsdefault:line_of_business = agqpersonal:line_of_business, generic
+
+        access agqsetupmainscreen,
+           set agqsetupmainscreen:company_id       = agqpersonal:company_id,
+               agqsetupmainscreen:state            = agqpersonal:state,
+               agqsetupmainscreen:line_of_business = agqpersonal:line_of_business, generic
+
+        access agqapplication,
+           set agqapplication:app_no = agqpersonal:app_no, generic
+
+        access agqapplication, set agqapplication:app_no = agqpersonal:app_no, generic
+
+        l_requote = "N"
+        if ((agqapplication:sub_code = 1 and
+           agqapplication:literal[1,7] = "Deposit" and
+           agqpersonal:line_of_business one of 1) or
+           (agqpersonal:line_of_business one of 1 and
+           agqpersonal:entry_date < 08.09.2012)) then
+            l_requote = "Y"
+
+        postevent("agtmt102","REMOVE_SCREEN")
+        if agqpersonal:company_id = "FARMERS" and
+           agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+           agqsetupmainscreen:screen_to_call_2 <> "" then
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL_2,agqpersonal:line_of_BUSINESS,agent_search_display:app_no)
+        else
+        if agqpersonal:company_id = "FARMERS" and
+           agqname:ok_to_continue one of "N", "Y" and
+           agqname:eff_date = 0 and
+           agqsetupmainscreen:screen_to_call_2 <> "" then
+            do display_correct_screen("agtmt9000",agqpersonal:line_of_BUSINESS,agent_search_display:app_no)
+        else
+        if agqname:quote_no <> 0 then
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqpersonal:line_of_BUSINESS,agent_search_display:app_no)
+        else
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqpersonal:line_OF_BUSINESS,agent_search_display:app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+      }
+  else
+    if agqvehicle:app_no = agent_search_display:app_no then
+      {
+        access agqsetupmainscreen,
+           set agqsetupmainscreen:company_id       = agqvehicle:company_id,
+               agqsetupmainscreen:state            = agqvehicle:state,
+               agqsetupmainscreen:line_of_business = agqvehicle:line_of_business, generic
+
+        access agqapplication,
+           set agqapplication:app_no = agqvehicle:app_no, generic
+
+        l_requote = "N"
+        if agqvehicle:entry_date = 0 and
+           agqvehicle:line_of_business one of 15, 16 and
+           agqname:quote_no = 0 then
+            l_requote = "Y"
+
+        postevent("agtmt102","REMOVE_SCREEN")
+        if agqname:quote_no <> 0 then
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqvehicle:line_of_BUSINESS,agent_search_display:app_no)
+        else
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqvehicle:line_OF_BUSINESS,agent_search_display:app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+        }
+    else
+    if agqcontractor:app_no = agent_search_display:app_no then
+        {
+        access agqsetupmainscreen,
+           set agqsetupmainscreen:company_id       = agqcontractor:company_id,
+               agqsetupmainscreen:state            = agqcontractor:state,
+               agqsetupmainscreen:line_of_business = agqcontractor:line_of_business, generic
+
+        access agqapplication,
+           set agqapplication:app_no = agqcontractor:app_no, generic
+
+        postevent("agtmt102","REMOVE_SCREEN")
+        if agqname:quote_no <> 0 then
+            {
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL_1,agqcontractor:line_of_BUSINESS,agent_search_display:app_no)
+            }
+        else
+            {
+            do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqcontractor:line_OF_BUSINESS,agent_search_display:app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+            }
+        }
+    else
+    if agqname:app_no = agent_search_display:app_no then
+    {
+    l_state = agqmaster:state
+      access agqsetupmainscreen,
+         set agqsetupmainscreen:company_id       = agqname:company_id,
+             agqsetupmainscreen:state            = l_state,
+             agqsetupmainscreen:line_of_business = agqname:line_of_business, generic
+
+      postevent("agtmt102","REMOVE_SCREEN")
+      if agqname:quote_no <> 0 then
+          do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[1],agqname:line_OF_BUSINESS,agent_search_display:app_no)
+      else
+          do display_correct_screen(agqsetupmainscreen:SCREEN_TO_CALL[2],agqname:line_OF_BUSINESS,agent_search_display:app_no)  --show final rating screen if app_no is converted to a quote_no (subbmitted to underwriting)
+    }
+END
+
+
+procedure display_correct_screen(String screen_to_call,number LOB_OF_APP, number Current_search_app_no)
+
+BEGIN
+--  warning (screen_to_call + Str(LOB_OF_APP)+ str(current_search_app_no))
+  g_app_no             = Current_search_app_no
+  g_from_search_screen = 1
+  g_initial_screen     = screen_to_call
+  if agqgeneral:special_enhancement = 1 then    --used for ficof enhancement coverage
+    {
+      g_enhancement = 1
+    }
+  else
+    {
+      g_enhancement = 0
+    }
+  if l_requote = "Y" then
+      begin
+      g_initial_screen = ""
+      g_app_no = 0
+      error "Changes have been made to our rating system, please requote your application"
+      end
+  else
+      begin
+      function = "display_rating_info"
+      postevent("agtmt101","REMOVE_SCREEN")
+      end
+END
+
+number function check_if_converted(number p_app_no)
+
+BEGIN
+--  access agqname,
+--     set agqname:app_no = p_app_no
+
+  if agqname:app_no = p_app_no then
+    {
+--      warning str(p_app_no)
+      return agqname:quote_no
+    }
+  else
+    {
+      return 0
+    }
+
+END
+
+number function check_if_converted_policy(number p_app_no)
+
+BEGIN
+--  access agqname,
+--     set agqname:app_no = p_app_no
+
+  if agqname:app_no = p_app_no and
+     agqname:policy_no <> 0 then
+    {
+--      warning str(p_app_no)
+      return agqname:policy_no
+    }
+  else
+    {
+      return 0
+    }
+
+END
+
+End

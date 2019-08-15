@@ -1,0 +1,1298 @@
+%%
+Screen
+        Name = "agtmt728" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "agqcontractor" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4],
+                                     g_state[2],
+                                     g_quote_no[8] ,
+                                     g_enhancement[1] ;
+
+        global string g_zipcode_change[1] ;
+
+
+        Local Unsigned Ascii Number L_LINE_OF_BUSINESS[4]=0,
+                                    l_val_zipcode[5],
+                                    l_wording_type[1],
+                                    l_commercial_underwriter[2],
+                                    l_zipcode_5[5],
+                                    l_checkbox_1[1],
+                                    l_checkbox_2[1],
+                                    l_checkbox_3[1],
+                                    l_checkbox_4[1],
+                                    l_checkbox_5[1],
+                                    l_checkbox_6[1],
+                                    l_checkbox_7[1],
+                                    l_csexec_number[12],
+                                    l_number[15],
+                                    l_class_code[5],
+                                    l_restricted[1]=0,
+                                    l_restricted_distance[5]=0/dec=2,
+                                    l_tier[2]=0 ;
+
+        local string l_zipcode[9],
+                     l_csexec_application[25],
+                     l_code[7],
+                     l_number_str[25],
+                     l_form_file_name[20],
+                     l_underwriter_name[40],
+                     l_app[3]="agq",
+                     l_scp102[1],
+                     l_scp103[1],
+                     l_lawn_care[1],
+                     l_first[1]="Y",
+                     l_dec[15],
+                     l_commandline[19],
+                     l_business_desc_1[30],
+                     l_business_desc_2[30],
+                     l_continue_1[2],
+                     l_str_zipcode[9],
+                     l_comments[500],
+                     l_comments_1[500],
+                     l_comments_2[500],
+                     l_submission[20],
+                     l_str_state[2],
+                     l_sub_line[2],
+                     l_lob_code[10],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_user_id[15]="",
+                     L_COMPANY_ID[10] ;
+
+        include "swsut100.var"
+
+        include "virtualdecs.var"
+
+        include "print.var"
+
+        include "csexec.var"
+
+        Access agqcontractor,
+           Set agqcontractor:app_NO = G_app_NO, generic ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+                include "styles.inc"
+                Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "back"  display/noreturn "agtmt001" tagged back_fn;
+        "func3" sequence "worksheet"  tagged worksheet_fn ;
+        "worksheet" continue begin
+                             do create_macro
+                             end  ;
+
+        "func4" sequence "quoteletter"  tagged quote_letter_fn ;
+        "quoteletter" continue begin
+                               do print_quote_letter
+                               end ;
+
+        print tagged print_fn ;
+--        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+--disable(exit_fn)
+l_user_id = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_app_submit.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+else
+    begin
+    hide(farmers_fn)
+    hide(ficof_fn)
+    end
+
+Access Validation
+If agqcontractor:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Application Submitted..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100 Tagged quote_no
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101  g_APP_NO/displayonly ;
+}
+
+Panel at 6,1 to 6,30 Tagged icon_line1_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_print_worksheet.bmp"
+                }
+        Events  {
+                Action = worksheet_fn
+                }
+        }
+
+Panel at 6,35 to 6,65 Tagged icon_line1_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1
+        Properties {
+                Iconname = "btn_print_submission_page.bmp"
+                }
+        Events  {
+                Action = print_fn
+                }
+        }
+
+Panel at 6,70 to 6,100 Tagged farmers_fn
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_print_proposal.bmp"
+                }
+        Events  {
+                Action = quote_letter_fn
+                }
+
+}
+
+Panel at 6,70 to 6,100
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_print_quote_and_app.bmp"
+                }
+        Events  {
+                Action = quote_letter_fn
+                }
+
+}
+
+   Panel at 5.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt728.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+    Panel at 8,1 to 8,100 --tagged ficof_fn
+        Properties
+            {
+            LayoutType = screen
+            }
+        {
+        Components
+        guidetext at 1,1 to 1,100
+            properties
+                {
+                text = "Thank You for Your Submission"
+                fontsize = 16
+                fontstyle = bolditalic
+                contentalignment = middle
+                fontname = "arial"
+                }
+        }
+
+    Panel at 10,1 to 10,100 --tagged ficof_fn
+        Properties
+            {
+            LayoutType = screen
+            }
+        {
+        Components
+        guidetext at 1,1 to 1,100
+            properties
+                {
+                text = "Remember to email, fax or mail the signed application as soon as possible."
+                fontsize = 16
+                fontstyle = bolditalic
+                contentalignment = middle
+                fontname = "arial"
+                }
+        }
+
+    Panel at 12,1 to 12,100 --tagged ficof_fn
+        Properties
+            {
+            LayoutType = screen
+            }
+        {
+        Components
+        guidetext at 1,1 to 1,100
+            properties
+                {
+                text = "Please note the following information:"
+                fontsize = 16
+                fontstyle = italic
+                contentalignment = middle
+                fontname = "arial"
+                }
+        }
+
+    Panel at 14,1 to 22,40 --tagged ficof_fn
+        Properties
+            {
+            LayoutType = screen
+            }
+        {
+        Components
+        guidetext at 1,1 to 1,15
+            properties
+                {
+                text = "Quote No:"
+                fontsize = 12
+                contentalignment = right
+                fontname = "arial"
+                }
+        guidetext at 2,1 to 2,15
+            properties
+                {
+                text = "Underwriter:"
+                fontsize = 12
+                contentalignment = right
+                fontname = "arial"
+                }
+        guidetext at 3,1 to 3,15
+            properties
+                {
+                text = "Comments:"
+                fontsize = 12
+                contentalignment = right
+                fontname = "arial"
+                }
+        }
+
+    Panel at 14,1 to 52,100 --tagged ficof_fn
+        Properties
+            {
+            LayoutType = screen
+            }
+        {
+        Components
+        guidetext at 1,45 to 1,65
+            properties
+                {
+                text = "Submission Date/Time:"
+                fontsize = 12
+                contentalignment = right
+                fontname = "arial"
+                }
+        guidetext at 2,45 to 2,65
+            properties
+                {
+                text = "UW Contact No:"
+                fontsize = 12
+                contentalignment = right
+                fontname = "arial"
+                }
+        }
+
+Panel at 14,17 to 15,50 Tagged territory_rating_special
+{
+%%
+________
+__________________________________________
+
+%%
+
+components
+
+fields
+101     begin
+        if function = "POPUP" then
+            begin
+            do access_sfscsexec
+            g_quote_no = i_csexec_number
+            access agqname, set agqname:app_no = g_app_no, generic
+
+            if agqname:app_no = g_app_no then
+                begin
+                change agqname
+                    begin
+                    agqname:quote_no = g_quote_no
+                    end
+                end
+            do update_sfq_files
+            end
+        end
+        g_quote_no/displayonly ;
+201     begin
+        access sfsagent, set sfsagent:company_id = agqcontractor:company_id,
+                             sfsagent:agent_no = agqcontractor:agent_no, generic
+
+        l_commercial_underwriter = sfsagent:commercial_underwriter
+        access sfscomun, set sfscomun:company_id             = agqcontractor:company_id,
+                             sfscomun:commercial_underwriter = l_commercial_underwriter, generic
+        l_underwriter_name = sfscomun:name[1,40]
+        end
+        l_underwriter_name/displayonly ;
+
+}
+
+Panel at 14,67 to 15,100 Tagged territory_rating_special
+{
+%%
+_________________________
+_________________________
+
+%%
+
+components
+
+fields
+101     begin
+            l_submission = str(todaysdate,"MM/DD/YYYY") + " " +
+                           str(systemtime,"HH:MM")
+        end
+        l_submission/displayonly ;
+201     begin
+            l_number_str = str(sfscomun:fax,"(999) 999 - 9999") +
+                           " ext. " +
+                           str(sfscomun:extension)
+        end
+        l_number_str/displayonly ;
+--202     sfscomun:extension/displayonly ;
+
+}
+
+Panel at 16,17 to 23,100 Tagged territory_rating_special
+{
+%%
+___________________________________________________________________________
+
+
+
+
+
+
+
+
+%%
+
+components
+
+fields
+101     begin
+        do check_for_warnings
+
+        end
+        l_comments/freetextlines=7/displayonly ;
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,70 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged submit_info
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+/*panel at 26,1 to 26,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }*/
+panel at 26,1 to 30,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+
+
+}
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+procedure back_a_screen
+begin
+postevent("agtmt010","REMOVE_SCREEN")
+end
+
+procedure access_sfscsexec
+begin
+i_csexec_application = "SFQQUOTE                 "
+
+access sfscsexec, set sfscsexec:application = i_csexec_application, generic
+
+change sfscsexec
+    begin
+    i_csexec_number = sfscsexec:application_number + 1
+    sfscsexec:application_number = i_csexec_number
+    end
+
+end
+
+procedure update_sfq_files
+begin
+l_commandline = str(g_app_no,11) + str(g_quote_no,8)
+if sfscompany:debug_mode = 0 then
+    proc("cli csbatch agqcv100 %s",l_commandline)/noconsole
+else
+    proc("cli csbatch agqcv100 %s",l_commandline)
+
+access scipsimage_version5, set scipsimage_version5:company_id = agqcontractor:company_id, generic
+
+if scipsimage_version5:home_office_image = 1 then
+    begin
+    if sfscompany:debug_mode = 0 then
+        proc("cli csbatch agtup728 %s",l_commandline)/noconsole
+    else
+        proc("cli csbatch agtup728 %s",l_commandline)
+    end
+
+end
+
+procedure check_for_warnings
+begin
+l_wording_type = 1
+access agsupdatewording, set agsupdatewording:company_id       = agqcontractor:company_id,
+                             agsupdatewording:state            = agqcontractor:state,
+                             agsupdatewording:line_of_business = agqcontractor:line_of_business,
+                             agsupdatewording:wording_type     = l_wording_type, generic
+
+l_comments_1 = trun(agsupdatewording:comments)
+
+l_wording_type = 2
+access agsupdatewording, set agsupdatewording:company_id       = agqcontractor:company_id,
+                             agsupdatewording:state            = agqcontractor:state,
+                             agsupdatewording:line_of_business = agqcontractor:line_of_business,
+                             agsupdatewording:wording_type     = l_wording_type, generic
+
+access agqclasscode, set agqclasscode:app_no = g_app_no, generic
+
+l_comments_2 = trun(agsupdatewording:comments)
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+l_first = "Y"
+while agqapplication:app_no = g_app_no
+        begin
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 1, 9 and
+           agqapplication:answer = "N" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 6, 7, 21, 23, 26 and
+           agqapplication:answer = "Y" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 14 and
+           agqapplication:sub_contractors_25_percent = "Y" and
+           agqapplication:answer = "Y" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 27 and
+           agqclasscode:class_code one of 2980 and
+           agqapplication:final_hook_up = "Y" and
+           agqapplication:answer = "Y" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 28 and
+           agqclasscode:class_code one of 2980 and
+           agqapplication:answer = "Y" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 29 and
+           agqclasscode:class_code one of 1980, 5980 and
+           agqapplication:answer = "Y" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 30 and
+           agqclasscode:class_code one of 2980, 2981, 3981, 5981 and
+           agqapplication:answer = "Y" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 31 and
+           agqclasscode:class_code one of 2981, 3981, 3984 and
+           agqapplication:answer = "Y" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 31 and
+           agqclasscode:class_code one of 2980 and
+           agqapplication:answer = "N" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 32 and
+           agqclasscode:class_code one of 2981, 3981 and
+           agqapplication:answer = "Y" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+        if agqapplication:highlight_if_yes = 1 and
+           agqapplication:sub_code one of 33 and
+           agqclasscode:class_code one of 5980 and
+           agqapplication:answer = "N" then
+            begin
+            if l_first = "Y" then
+                begin
+                l_first = "N"
+                l_comments = trun(l_comments_2) +
+                             "<NL>" +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            else
+                begin
+                l_comments = trun(l_comments) +
+                             "<NL>" +
+                             trun(agqapplication:literal)
+                end
+            end
+
+
+        next agqapplication
+        end
+
+if l_comments = "" then
+    l_comments = l_comments_1
+end
+
+procedure check_files
+begin
+l_checkbox_1 = 1
+l_checkbox_2 = 1
+l_checkbox_4 = 1
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+if agqend:app_no = g_app_no then
+    l_checkbox_3 = 1
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+if agqname:name[1] = "" or
+   agqname:address[1] = "" or
+   agqname:city = "" or
+   agqname:str_state = "" or
+   agqname:str_zipcode = "" or
+   agqmaster:form_of_business = "" then
+    l_checkbox_5 = 0
+else
+    l_checkbox_5 = 1
+
+access agqcontractor_alias, set agqcontractor_alias:app_no = g_app_no, generic
+
+l_checkbox_6 = 1
+while agqcontractor_alias:app_no = g_app_no
+    begin
+    access agqlocation, set agqlocation:app_no   = agqcontractor_alias:app_no,
+                            agqlocation:prem_no  = agqcontractor_alias:prem_no,
+                            agqlocation:build_no = agqcontractor_alias:build_no, generic
+
+    if agqlocation:address = "" or
+       agqlocation:city = "" or
+       agqlocation:str_state = "" or
+       agqlocation:str_zipcode = "" or
+       agqcontractor_alias:business_desc[1] = "" then
+        l_checkbox_6 = 0
+
+    next agqcontractor_alias
+    end
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+l_checkbox_7 = 1
+while agqapplication:app_no = g_app_no
+    begin
+    if agqapplication:literal <> "" and
+       agqapplication:answer not one of "N", "Y" then
+        l_checkbox_7 = 0
+
+    next agqapplication
+    end
+
+end
+
+procedure print_quote_letter
+begin
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+If agqcontractor:company_id = "FLEMINGTON" then
+    {
+    proc("cli csbatch agqmso005 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso005.cq %s<nl>",l_dec)/noconsole
+    }
+else
+    {
+    proc("cli csbatch agqmso004 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004.cq %s<nl>",l_dec)/noconsole
+    }
+
+access agqclasscode, set agqclasscode:app_no = g_app_no, generic
+
+l_lawn_care = "N"
+while agqclasscode:app_no = g_app_no
+    begin
+    if agqclasscode:class_code = 3985 then
+        l_lawn_care = "Y"
+
+    next agqclasscode
+    end
+
+if l_lawn_care = "Y" then
+    begin
+    proc("cli csbatch agqmso004a %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004a.cq %s<nl>",l_dec)/noconsole
+    end
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+l_scp102 = "N"
+l_scp103 = "N"
+while agqend:app_no = g_app_no
+    begin
+    if agqend:code = "SCP102" then
+        l_scp102 = "Y"
+    if agqend:code = "SCP103" then
+        l_scp103 = "Y"
+
+    next agqend
+    end
+
+if l_scp102 = "Y" then
+    begin
+    proc("cli csbatch agqmso004b %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004b.cq %s<nl>",l_dec)/noconsole
+    end
+
+if l_scp103 = "Y" then
+    begin
+    proc("cli csbatch agqmso004c %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004c.cq %s<nl>",l_dec)/noconsole
+    end
+
+access sfscompany, set sfscompany:company_id = agqcontractor:company_id, generic
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+while agqend:app_no = g_app_no
+    begin
+    if agqend:code = "MSC711" then
+        begin
+        l_form_file_name = "agqsiscds01"
+        l_commandline = str(g_app_no,11) + str(agqend:prem_no,4) + str(agqend:build_no,4)
+        if l_form_file_name <> "" then
+            begin
+            proc("cli csbatch %s %s",trun(l_form_file_name),l_commandline)/noconsole
+            Proc("cli joinit %s.cq %s<nl>",trun(l_form_file_name),l_dec)/noconsole
+            end
+        end
+    else
+    if agqend:code = "MSC712" then
+        begin
+        l_form_file_name = "agqsiscds02"
+        l_commandline = str(g_app_no,11) + str(agqend:prem_no,4) + str(agqend:build_no,4)
+        if l_form_file_name <> "" then
+            begin
+            proc("cli csbatch %s %s",trun(l_form_file_name),l_commandline)/noconsole
+            Proc("cli joinit %s.cq %s<nl>",trun(l_form_file_name),l_dec)/noconsole
+            end
+        end
+
+    next agqend
+    end
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+while agqend:app_no = g_app_no
+    begin
+    if agqend:prem_no = 0 then
+        access agqcontractor_alias, set agqcontractor_alias:app_no   = g_app_no, generic
+    else
+        access agqcontractor_alias, set agqcontractor_alias:app_no   = g_app_no,
+                                        agqcontractor_alias:prem_no  = agqend:prem_no,
+                                        agqcontractor_alias:build_no = agqend:build_no, generic
+
+    l_code = agqend:code
+    l_class_code = 99998
+    access sfspolicywideoptend, set sfspolicywideoptend:company_id       = agqcontractor_alias:company_id,
+                                    sfspolicywideoptend:state            = agqcontractor_alias:state,
+                                    sfspolicywideoptend:line_of_business = agqcontractor_alias:line_of_business,
+                                    sfspolicywideoptend:class_code       = l_class_code,
+                                    sfspolicywideoptend:code             = l_code, generic
+
+    l_form_file_name = ""
+    while sfspolicywideoptend:company_id       = agqcontractor_alias:company_id and
+          sfspolicywideoptend:state            = agqcontractor_alias:state and
+          sfspolicywideoptend:line_of_business = agqcontractor_alias:line_of_business and
+          sfspolicywideoptend:class_code       = l_class_code and
+          sfspolicywideoptend:code             = l_code
+        begin
+        if (agqcontractor:eff_date >= sfspolicywideoptend:eff_date and
+           (agqcontractor:eff_date <= sfspolicywideoptend:exp_date or
+           sfspolicywideoptend:exp_date = 0)) then
+            begin
+            l_form_file_name = sfspolicywideoptend:form_file_name
+            end
+
+        next sfspolicywideoptend
+        end
+
+    l_commandline = str(g_app_no,11) + str(agqend:prem_no,4) + str(agqend:build_no,4)
+    if l_form_file_name <> "" then
+        begin
+        proc("cli csbatch %s %s",trun(l_form_file_name),l_commandline)/noconsole
+        Proc("cli joinit %s.cq %s<nl>",trun(l_form_file_name),l_dec)/noconsole
+        end
+
+    next agqend
+    end
+
+proc("cli csbatch agqmso002 %s",str(g_app_no,11))/noconsole
+Proc("cli joinit agqmso002.cq %s<nl>",l_dec)/noconsole
+
+L_LOB_CODE = SFSLINE:LOB_CODE
+Access SCIPSCONTROL, Set SCIPSCONTROL:COMPANY_ID = agqcontractor:COMPANY_ID,
+                         SCIPSCONTROL:STATE      = agqcontractor:STATE,
+                         SCIPSCONTROL:LOB_CODE   = L_LOB_CODE,Exact
+
+if agqcontractor:company_id = "FARMERS" then
+    begin
+    proc(":cli csbatch tpd4q %s",str(g_app_no,11))/noconsole
+    Proc(":cli joinit tpd4q.cq %s<nl>",l_dec)/noconsole
+    end
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+    Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+    Proc("chmod 777 %s ",L_DEC_PDF)
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+end
+
+Procedure CREATE_MACRO
+Begin
+Do REFRESH_WORK_FILES
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+L_USERNAME = USERNAME
+I_REPORTA = "agqpr700"
+I_REPORT = "agqpr700.cq"
+I_REPORT_CQE = "agqpr700.cqe"
+I_APP = "agq"
+l_app = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF = L_APP+Str(I_CSEXEC_NUMBER)+".txt"
+I_PARAMETER = I_APP+Str(I_CSEXEC_NUMBER)+".par"
+I_MACROA = I_APP+Str(I_CSEXEC_NUMBER)
+I_MACRO = I_APP+Str(I_CSEXEC_NUMBER)+".mf"
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+if agqprint1:app_no <> g_app_no then
+    begin
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+else
+    begin
+    delete agqprint1
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+
+Deletefile(I_MACRO)
+Writefile(I_MACRO,"clear list<nl>")
+Writefile(I_MACRO,"clear find<nl>")
+Writefile(I_MACRO,"clear sum<nl>")
+Writefile(I_MACRO,"run agqpr700<nl>")
+Writefile(I_MACRO,"cli rm agqpr700.cq<nl>")
+Writefile(I_MACRO,"rsave agqpr700<nl>")
+Writefile(I_MACRO,"cli joinit agqpr700.cq %s<nl>",L_DEC)
+Closefile(I_MACRO)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc("cli cq %s",I_MACRO)/noconsole
+Else
+    Proc("cli cq %s",I_MACRO)
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)/noconsole
+    Proc("cli chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("cli rm %s",L_DEC)/noconsole
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)
+    Proc("cli chmod 777 %s ",L_DEC_PDF)
+    Proc("cli rm %s",L_DEC)
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client/noconsole
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+delete agqprint1
+
+Do REFRESH_WORK_FILES
+End
+
+Procedure REFRESH_WORK_FILES
+Begin
+Proc ("cli agqprint1.mk")/noconsole
+End
+
+end

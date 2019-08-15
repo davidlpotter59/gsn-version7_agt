@@ -1,0 +1,466 @@
+%%                 
+Screen
+        Name = "agtmt601g";
+        Type = "multiline" ;
+        repeat LINE_ITEMS, 10 times down ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqaddlpip" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_vehicle_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local tag l_tag[10] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_vehicle_no[4],
+                                    l_form[2],
+                                    l_limit[8],
+                                    l_mca104[1],
+                                    l_mca201[1],
+                                    l_mca104_prior[1],
+                                    l_mca201_prior[1],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_server_name[100],
+                     l_current_web_page[100],
+                     l_web_site_address[150],
+                     l_add_endorsement[1],
+                     l_Form_edition[25],
+                     l_hide_pip[1],
+                     l_filler[25],
+                     l_um_uim[3],
+                     l_record_key[2],
+                     L_COMPANY_ID[10] ,
+                     l_screen[9],
+                     l_description[75] ;
+
+        Access agqaddlpip,
+           Set agqaddlpip:app_NO     = G_app_NO ,
+               agqaddlpip:vehicle_no = g_vehicle_no ,
+               agqaddlpip:code       = g_code ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+        "add" sequence "new"  tagged add_fn ;
+         "new" continue begin
+                        if agqaddlpip:app_no <> g_app_no then
+                            function = "addnew|append"
+                        else
+                            function = "append"
+                        end;
+        "addnew" add/autoupdate ;
+        append ;
+
+        "redisplay" display/noreturn "agtmt601g" ;
+        "popup" display l_screen ;
+--        forwardtab ;
+
+        Include "stdfunc7m.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+disable(accept_fn)
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "cap"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqvehicle:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER                            --"http://192.168.1.197/"
+
+/*if l_company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "064webhelp_agtmt601g_scr_named_family.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end*/
+
+Access Validation
+If agqaddlpip:app_NO <> G_app_NO or
+   agqaddlpip:vehicle_no <> g_vehicle_no or
+   agqaddlpip:code <> g_code Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "Add'l PIP - Named Family Members..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,1 to 6,85 tagged button_panel
+      Properties
+         {
+           layouttype = screen
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,5
+          properties
+            {
+              Iconname = "btn_add.bmp"
+            }
+          Events  {
+                    Action = add_fn
+                  }
+        Button at 1,35
+          properties
+            {
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+        Button at 1,65 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+        }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt601g.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 9,5 to 21,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+         Enter each Named Family Member:
+
+         __________________________________________________
+         __________________________________________________
+         __________________________________________________
+         __________________________________________________
+         __________________________________________________
+         __________________________________________________
+         __________________________________________________
+         __________________________________________________
+         __________________________________________________
+         __________________________________________________
+
+%%
+
+components
+
+Fields
+301     Begin
+        if function one of "ADD", "ADDNEW", "APPEND", "NEW", "CHG", "CHANGE" then
+            begin
+            enable(accept_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            end
+
+        If FUNCTION one of "ADD", "APPEND", "NEW", "ADDNEW" Then
+            Begin
+            agqADDLPIP:app_no     = G_app_no
+            agqADDLPIP:VEHICLE_NO = G_VEHICLE_NO
+            agqADDLPIP:CODE       = G_CODE
+            Do SUBCODE
+            agqADDLPIP:SUB_CODE   = L_SUB_CODE
+            End
+        End
+        agqADDLPIP:FAMILY_MEMBERS/uppercase   tagged LINE_ITEMS ;
+301     begin
+        if agqaddlpip:family_members = "" then
+            abort()
+        end
+        agqaddlpip:family_members/displayonly tagged LINE_ITEMS;
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,1 to 26,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,75   tagged back_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+/*panel at 27,1 to 32,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+} */
+
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    disable(accept_fn)
+    end
+
+if abort = "YES" then
+    begin
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    disable(accept_fn)
+    end
+
+
+Procedure Definition
+
+/*procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END*/
+
+Procedure SUBCODE
+Begin
+Access agqADDLPIP_ALIAS, Set agqADDLPIP_ALIAS:app_no     = agqADDLPIP:app_no,
+                             agqADDLPIP_ALIAS:VEHICLE_NO = agqADDLPIP:VEHICLE_NO,
+                             agqADDLPIP_ALIAS:CODE       = agqADDLPIP:CODE, Generic
+
+L_SUB_CODE = 0
+while agqADDLPIP_ALIAS:app_no     = agqADDLPIP:app_no and
+      agqADDLPIP_ALIAS:VEHICLE_NO = agqADDLPIP:VEHICLE_NO and
+      agqADDLPIP_ALIAS:CODE       = agqADDLPIP:CODE
+    begin
+    L_SUB_CODE = agqADDLPIP_ALIAS:SUB_CODE
+
+    Next agqADDLPIP_ALIAS
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+End
+
+End

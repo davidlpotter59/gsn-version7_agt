@@ -1,0 +1,1062 @@
+%%
+Screen
+        Name = "agtmt9105" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Windowtitle = "%a    %s Underwriting Submission - Ver. 7.00     %m" ;
+        Domain = "Agqname" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+        Global Unsigned Ascii Number g_form[1] ;
+
+        string l_business_desc[30],
+               l_business_desc1[30],
+               l_form_of_business[1],
+               l_prior_fob_description[50],
+               l_fob_description[50],
+               l_code_1[7],
+               l_code_2[7],
+               l_username[15],
+               l_code[7],
+               l_add_endorsement[1],
+               l_form_edition[25],
+               l_description[75],
+               l_enter[1],
+               l_current_web_page[50],
+               l_web_site_address[150],
+               l_server_name[100],
+               l_continue_2[3],
+               l_str_zipcode[9],
+               l_fob_description1[75];
+
+        unsigned ascii number l_sub_code[4] ,
+                              l_state[2],
+                              l_email_address[1] ;
+
+        Access agqname,
+           Set agqname:app_NO = G_app_NO, generic ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+        include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+        add/autoupdate tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+        "finalchecklist" display "agtmt9110"   tagged final_checklist_fn ;
+        "back" display/noreturn "agtmt001" tagged back_fn ;
+        "nextscreen" display/noreturn "agtmt9106"  tagged nextscreen_fn ;
+        "previousscreen" display/noreturn "agtmt9104" tagged previousscreen_fn ;
+
+        "func1" display "agtmt9105a" tagged corp_fn;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+disable(accept_fn)
+access sfsdefault,
+   set sfsdefault:sfs_code = "SFS", generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : switch(g_form)
+                  case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                  case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                  case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                  default : begin
+                            setproperty(t_mho3,iconname,"")
+                            setproperty(t_mho4,iconname,"")
+                            setproperty(t_mho6,iconname,"")
+                            end
+                  end
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access sfsline, set sfsline:company_id       = agqpersonal:company_id,
+                    sfsline:line_of_business = agqpersonal:line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+l_username = username
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER
+
+if agqpersonal:company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "15webhelp_agtmt1201_scr_mail_address.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+do add_blank_agqname
+do populate_local_varible
+
+Access Validation
+If agqname:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen -- column
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        scrollbarpolicy = asneeded
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Applicant Information: Mailing Address..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101  agqname:app_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1.5,10    tagged change_fn
+        Properties {
+                Iconname = "btn_edit_entries.bmp"
+                }
+        Events  {
+                Action = change_fn
+                }
+
+        Button at 1.5,35   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+        Button at 1.5,60 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+    }
+
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt9105.sd"
+                      fontsize = 9
+                    }
+      }
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties
+        {
+        layouttype = column
+        }
+    {
+    Components
+        Button to 1,1
+            properties
+                {
+                Iconname = "btn_print_screen.bmp"
+                }
+            events
+                {
+                action
+                    {
+                    function = "print"
+                    abort()
+                    }
+                }
+    }
+
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+                }
+    }
+
+Panel at 8,1 to 23,19
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+            guidetext at 4,1 to 4,18
+             properties
+               {
+                 text = "Name:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+              }
+           guidetext at 7,1 to 7,18
+             properties
+               {
+                 text = "Address:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 10,1 to 10,18
+             properties
+               {
+                 text = "City State Zip:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 11,1 to 11,18
+             properties
+               {
+                 text = "Phone:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+         }
+
+Panel at 9,35 to 10,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1.5,1 to 1.5,18
+             properties
+               {
+                 text = "Mailing Address"
+                 fontsize = 14
+                 fontstyle = BOLD
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+        }
+
+Panel at 8,20 to 23,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+
+
+
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+______________________________   ___    __________
+_________________
+
+%%
+
+components
+
+Fields
+401     begin
+          if function one of "ADD","NEW","CHG","CHANGE" then
+            {
+              enable(accept_fn)
+              disable(back_fn)
+              disable(previousscreen_fn)
+              disable(nextscreen_fn)
+              disable(final_checklist_fn)
+              disable(corp_fn)
+            }
+          else
+            {
+              disable(accept_fn)
+              enable(previousscreen_fn)
+              enable(nextscreen_fn)
+              enable(back_fn)
+              enable(corp_fn)
+              enable(final_checklist_fn)
+            }
+        access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+        if function one of "CHANGE" then
+            agqname:name[1] = agqpersonal:business_name[1]
+        END
+        agqname:name[1]/default/tabstop
+        do update_agqpersonal ;
+501     agqname:name[2]/tabstop;
+601     agqname:name[3]/tabstop;
+701     agqname:address[1]/tabstop;
+801     agqname:address[2]/tabstop;
+901     agqname:address[3]/tabstop;
+1001    agqname:city/tabstop;
+1002    agqname:str_state/tabstop;
+1003    agqname:str_zipcode/tabstop
+        switch(agqname:str_state)
+          case "NJ" : l_state = 29
+          case "MD" : l_state = 19
+          default   : l_state = 29
+          end
+
+        l_str_zipcode = agqname:str_zipcode[1,5] + "0000"
+        access sfszipcode, set sfszipcode:company_id       = agqname:company_id,
+                               sfszipcode:state            = l_state,
+                               sfszipcode:line_of_business = agqname:line_of_business,
+                               sfszipcode:str_zipcode      = l_str_zipcode, generic
+
+        if l_str_zipcode <> sfszipcode:str_zipcode and
+           l_state = 29 then
+            error "Invalid Zip Code Entered" ;
+
+1003    Begin
+        if val(agqname:str_zipcode) <> 0 then
+            begin
+            If agqNAME:STR_ZIPCODE[6,9] = "" Then
+                agqNAME:STR_ZIPCODE[6,9] = "0000"
+            end
+        End
+        agqNAME:STR_ZIPCODE/displayonly ;
+1101    agqname:telephone/tabstop;
+
+}
+
+/*Panel at 20,10 to 20,55
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,45
+             properties
+               {
+                 text = "Are the mailing and location address the same?:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "Arial"
+               }
+        }
+
+Panel at 20,47 to 20,95 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_
+
+%%
+
+components
+
+Fields
+101     agqname:same_as_mailing/checkbox/values="0,1"/default/tabstop
+        if agqname:same_as_mailing = 1 then
+            do update_location ;
+
+} */
+
+Panel at 22,10 to 23,55  tagged ficof_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,45
+             properties
+               {
+                 text = "Does the insured have an email address?:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 2,1 to 2,45
+             properties
+               {
+                 text = "Email Address:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "Arial"
+               }
+        }
+
+Panel at 22,47 to 23,95 Tagged ficof_fn
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_
+__________________________________________________
+
+%%
+
+components
+
+Fields
+101     begin
+        if agqname:email_address <> "" then
+            l_email_address = 1
+        end
+        l_email_address/checkbox/values="0,1"/default/tabstop
+        if l_email_address = 0 then
+            agqname:email_address = "" ;
+201     agqname:email_address/tabstop
+        hide if l_email_address = 0 ;
+
+}
+
+Panel at 25,36 to 25,61 Tagged icon_line2_tg
+    Properties
+        {
+        LayoutType = screen
+        }
+    {
+    Components
+        Button at 1,5  tagged corp_fn
+        Properties {
+                Iconname = "btn_corporate_officers.bmp"
+                }
+        Events  {
+                Action {
+                       function = "func1"
+                       abort()
+                       }
+                }
+        }
+
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+                }
+    }
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+    Properties
+        {
+        LayoutType = screen
+        }
+    {
+    Components
+        Button at 1,5  tagged previousscreen_fn
+        Properties {
+                Iconname = "previous_screen.bmp"
+                }
+        Events  {
+                Action {
+                       function = "previousscreen"
+                       abort()
+                       }
+                }
+
+        Button at 1,40   tagged final_checklist_fn
+        Properties {
+                Iconname = "final_checklist.bmp"
+                }
+        Events  {
+                Action {
+                       function = "finalchecklist"
+                       abort()
+                       }
+                }
+
+        Button at 1,75   tagged nextscreen_fn
+            Properties
+                {
+                Iconname = "next_screen.bmp"
+                }
+            Events
+                {
+                Action
+                    {
+                    function = "nextscreen"
+                    abort()
+                    }
+                }
+
+}
+
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+                }
+    }
+
+panel at 27,1 to 32,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+
+}
+
+
+update
+if updateok = "NO" then
+    begin
+    disable(accept_fn)
+    enable(back_fn)
+    enable(corp_fn)
+    enable(final_checklist_fn)
+    enable(nextscreen_fn)
+    enable(previousscreen_fn)
+    end
+
+if abort = "YES" then
+    begin
+    disable(accept_fn)
+    enable(back_fn)
+    enable(corp_fn)
+    enable(final_checklist_fn)
+    enable(nextscreen_fn)
+    enable(previousscreen_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    begin
+    disable(accept_fn)
+    enable(back_fn)
+    enable(corp_fn)
+    enable(final_checklist_fn)
+    enable(nextscreen_fn)
+    enable(previousscreen_fn)
+/*    access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+    Access PLSPREPRINTED, Set PLSPREPRINTED:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                              PLSPREPRINTED:STATE            = agqpersonal:state,
+                              PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS, Generic
+
+    l_code_1  = ""
+    while PLSPREPRINTED:COMPANY_ID       = agqpersonal:COMPANY_ID and
+          PLSPREPRINTED:STATE            = agqpersonal:state and
+          PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+        begin
+        If agqpersonal:EFF_DATE >= PLSPREPRINTED:REFF_DATE Then
+            Begin
+            l_code_1  = plspreprinted:code_1[5] -- mpl03
+            l_code_2  = plspreprinted:code[21] -- mdl1
+            End
+
+        Next PLSPREPRINTED
+        End
+
+    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+    If L_CODE_1 <> "" Then
+        Begin
+        L_CODE = L_CODE_1
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqmaster:form_of_business one of "C", "L", "P" and
+           agqpersonal:liability_limit <> 0 then
+            begin
+            Do ADD_agqEND
+            if agqpersonal:eff_date >= 11.01.2012 then
+                begin
+                l_code = l_code_2
+                do access_agqend
+                if l_add_endorsement = "N" then
+                    do delete_agqend
+                end
+            end
+
+        If L_ADD_ENDORSEMENT = "N" And
+           agqmaster:form_of_business not one of "C", "L", "P", "" and
+           agqpersonal:owner_occupied = "Y" then
+            begin
+            Do DELETE_agqEND
+            if agqpersonal:eff_date >= 11.01.2012 then
+                begin
+                L_CODE = L_CODE_2
+                Do ACCESS_agqEND
+                If L_ADD_ENDORSEMENT = "Y" And
+                   agqPERSONAL:LIABILITY_FORM = 1 and
+                   agqpersonal:liability_limit <> 0 Then
+                    Do ADD_agqEND
+                end
+            End
+
+        End*/
+
+    end
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = agqPERSONAL:app_no ,
+                   agqEND:PREM_NO = agqPERSONAL:PREM_NO,
+                   agqEND:BUILD_NO = agqPERSONAL:BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqEND:app_no <> agqPERSONAL:app_no Or
+            agqEND:PREM_NO <> agqPERSONAL:PREM_NO Or
+            agqEND:BUILD_NO <> agqPERSONAL:BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+procedure add_agqend
+Begin
+Access agqEND, Set agqEND:app_no = agqPERSONAL:app_no ,
+                   agqEND:PREM_NO = agqPERSONAL:PREM_NO,
+                   agqEND:BUILD_NO = agqPERSONAL:BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> agqPERSONAL:app_no Or
+            agqEND:PREM_NO <> agqPERSONAL:PREM_NO Or
+            agqEND:BUILD_NO <> agqPERSONAL:BUILD_NO
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqpersonal:COMPANY_ID,
+                      SFSOPTEND:STATE = agqpersonal:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqpersonal:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqpersonal:state Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqpersonal:LINE_OF_BUSINESS Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqpersonal:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqpersonal:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqEND
+    Begin
+    agqEND:app_no             =       agqPERSONAL:app_no
+    agqEND:PREM_NO              =       agqPERSONAL:PREM_NO
+    agqEND:BUILD_NO             =       agqPERSONAL:BUILD_NO
+    agqEND:SUB_CODE             =       L_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+--    agqEND:PREMIUM              =       0
+    End
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = agqPERSONAL:app_no ,
+                   agqEND:PREM_NO = agqPERSONAL:PREM_NO,
+                   agqEND:BUILD_NO = agqPERSONAL:BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqEND:app_no <> agqPERSONAL:app_no Or
+            agqEND:PREM_NO <> agqPERSONAL:PREM_NO Or
+            agqEND:BUILD_NO <> agqPERSONAL:BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+procedure update_location
+begin
+access agqlocation, set agqlocation:app_no = g_app_no, generic
+
+if agqlocation:app_no = g_app_no then
+    begin
+    change agqlocation
+        begin
+        agqlocation:address     = agqname:address[1]
+        agqlocation:address1[1] = agqname:address[2]
+        agqlocation:address1[2] = agqname:address[3]
+        agqlocation:city        = agqname:city
+        agqlocation:str_state   = agqname:str_state
+        agqlocation:str_zipcode = agqname:str_zipcode
+        end
+    end
+else
+    begin
+    add agqlocation
+        begin
+        agqlocation:app_no      = agqname:app_no
+        agqlocation:prem_no     = 1
+        agqlocation:build_no    = 1
+        agqlocation:address     = agqname:address[1]
+        agqlocation:address1[1] = agqname:address[2]
+        agqlocation:address1[2] = agqname:address[3]
+        agqlocation:city        = agqname:city
+        agqlocation:str_state   = agqname:str_state
+        agqlocation:str_zipcode = agqname:str_zipcode
+        end
+    end
+
+end
+
+procedure update_agqpersonal
+begin
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+while agqpersonal:app_no = g_app_no
+    begin
+    change agqpersonal
+        begin
+        agqpersonal:business_name[1] = agqname:name[1]
+        end
+
+    next agqpersonal
+    end
+
+end
+
+procedure get_heading(string l_display_heading)
+
+begin
+  postevent("agtmt010b","set_info_box",l_display_heading)
+end
+
+
+procedure back_a_screen
+
+begin
+  postevent("menutree","REMOVE_SCREEN","Display_Main")
+end
+
+procedure add_blank_agqname
+
+BEGIN
+  local file agqname_a = alias for agqname;
+
+  access agqname_a,
+     set agqname_a:app_no = g_app_no, exact
+
+  if agqname_a:app_no <> g_app_no then
+    {
+      add agqname_a
+        {
+          access agqpersonal,
+             set agqpersonal:app_no = g_app_no, generic
+
+          if agqpersonal:app_no = g_app_no then
+            {
+              agqname_a:company_id = agqpersonal:company_id
+            }
+          agqname_a:app_no  = g_app_no
+        }
+      function = "reaccess"
+      abort()
+    }
+END
+
+procedure update_agqmaster
+BEGIN
+access agqmaster, set agqmaster:app_no = g_app_no, exact
+
+if agqmaster:app_no = g_app_no then
+    {
+    change agqmaster
+        {
+        agqmaster:form_of_business  = l_form_of_business
+        agqmaster:FOB_DESCRIPTION   = l_fob_description1
+        }
+    }
+
+/*access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+Access PLSPREPRINTED, Set PLSPREPRINTED:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                          PLSPREPRINTED:STATE            = agqpersonal:state,
+                          PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS, Generic
+
+l_code_1  = ""
+while PLSPREPRINTED:COMPANY_ID       = agqpersonal:COMPANY_ID and
+      PLSPREPRINTED:STATE            = agqpersonal:state and
+      PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+    begin
+    If agqpersonal:EFF_DATE >= PLSPREPRINTED:REFF_DATE Then
+        Begin
+        l_code_1  = plspreprinted:code_1[5] -- mpl03
+        End
+
+    Next PLSPREPRINTED
+    End
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+If L_CODE_1 <> "" Then
+    Begin
+    L_CODE = L_CODE_1
+    Do ACCESS_agqEND
+    If L_ADD_ENDORSEMENT = "Y" And
+       agqmaster:form_of_business one of "C", "L", "P" and
+       agqpersonal:liability_limit <> 0 then
+        Do ADD_agqEND
+    If L_ADD_ENDORSEMENT = "N" And
+       agqmaster:form_of_business not one of "C", "L", "P", "" and
+       agqpersonal:owner_occupied = "Y" then
+        Do DELETE_agqEND
+    End*/
+
+END
+
+procedure populate_local_varible
+
+BEGIN
+  local file sfsfob_a = alias for sfsfob;
+  access agqmaster,
+     set agqmaster:app_no = g_app_no, exact
+
+  if agqmaster:app_no = g_app_no then
+    {
+      l_form_of_business = agqmaster:form_of_business
+
+      access sfsfob_a,
+         set sfsfob_a:company_id       = agqname:company_id,
+             sfsfob_a:FORM_OF_BUSINESS = l_form_of_business, exact
+
+--      warning agqname:company_id + sfsfob_a:form_of_business + "-->" + l_form_of_business
+--      warning sfsfob:description
+      l_fob_description   = sfsfob_a:description
+      l_fob_description1  = agqmaster:fob_description
+      function = "reaccess"
+      abort()
+    }
+END
+
+end

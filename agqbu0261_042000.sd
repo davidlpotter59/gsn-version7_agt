@@ -1,0 +1,511 @@
+%%                                                
+/*
+Date Written: February 22, 2002
+
+Name: agqbu0261_042000.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+03/21/2002             RMG              Upgrade to VCS from VCQ
+04/17/2002             RMG              Data Added
+08/02/2002             RMG              Adding Code for Edition Date
+03/28/2006             JES              Updating to new version
+04/18/2006             DWR              Clean-up
+06/28/2010             JLB              Cleaned up code
+===========================
+*/
+
+Program
+  Name = "agqbu0261_042000";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[19] = "agqbu0261_042000.cq";
+ String L_COPY_NAME[20] ;
+ String L_agqLOCATION_ZIP ;
+ unsigned ascii number l_app_no[11] ;
+ unsigned ascii number l_prem_no[4];
+ unsigned ascii number l_build_no[4] ;
+ Unsigned Ascii Number L_LINE_COUNTER;
+ Unsigned Ascii Number L_STATE[2];
+ Unsigned Ascii Number L_LIMIT_NO[2];
+ Unsigned Ascii Number L_LINE_OF_BUSINESS[4];
+ Unsigned Ascii Number L_LOOP;
+ wdate L_EFF_DATE;
+
+ Include "swsut100.var"
+ Include "swsut200.var"
+ Include "swsut300.var"
+ Include "csfonts.inc"
+
+Initialization
+  l_app_no = val(commandline[1,11])
+  l_prem_no = val(commandline[12,15])
+  l_build_no = val(commandline[16,19])
+
+  Deletefile (L_FILE_NAME);
+
+Access agqMASTER,
+   Set agqMASTER:app_no    = l_app_no , generic
+
+Access agqNAME,
+   Set agqNAME:app_no    = l_app_no , generic
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no    = l_app_no ,
+       agqlocation:prem_no   = l_prem_no,
+       agqlocation:build_no  = l_build_no, generic
+
+Access agqEND_ALIAS,
+   Set agqEND_ALIAS:app_no    = l_app_no ,
+       agqend_alias:prem_no   = l_prem_no,
+       agqend_alias:build_no  = l_build_no, generic
+
+Access agqendorse,
+   Set agqendorse:app_no    = l_app_no ,
+       agqendorse:prem_no   = l_prem_no,
+       agqendorse:build_no  = l_build_no, generic
+
+Access agqgeneral,
+   Set agqgeneral:app_no    = l_app_no ,
+       agqgeneral:prem_no   = l_prem_no,
+       agqgeneral:build_no  = l_build_no, generic
+
+Include "swsut100.inc"
+I_CODE = "BU0261"
+Include "swsut200.inc"
+Include "swsut300.inc"
+
+While agqend_alias:app_no    = l_app_no and
+      agqend_alias:prem_no   = l_prem_no and
+      agqend_alias:build_no  = l_build_no
+{
+  If agqend_alias:CODE = I_CODE Then
+    {
+      L_STATE            = agqGENERAL:STATE
+      L_COMPANY_ID       = agqgeneral:COMPANY_ID
+      L_LINE_OF_BUSINESS = agqgeneral:line_of_business
+
+      Access SFSOPTEND,
+         Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+             SFSOPTEND:STATE            = L_STATE,
+             SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+             SFSOPTEND:CODE             = I_CODE, generic
+
+       While SFSOPTEND:COMPANY_ID       = L_COMPANY_ID and
+             SFSOPTEND:STATE            = L_STATE and
+             SFSOPTEND:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS and
+             SFSOPTEND:CODE             = I_CODE
+
+         {  --start of sfsoptend check
+           If (agqgeneral:eff_date >= sfsoptend:eff_date and
+              (agqgeneral:eff_date <= sfsoptend:exp_date or
+               sfsoptend:exp_date = 0)) then
+             {
+               l_eff_date = sfsoptend:eff_date
+             }
+           next sfsoptend
+         }
+
+      Access SFSOPTEND,
+         Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+             SFSOPTEND:STATE            = L_STATE,
+             SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+             SFSOPTEND:CODE             = I_CODE,
+             SFSOPTEND:EFF_DATE         = L_EFF_DATE, exact
+
+        If sfsoptend:edition <> 0 then
+          {
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a420h6890V")
+            Writefile(L_FILE_NAME,"%s","Ed. ")
+            Writefile(L_FILE_NAME,"%n",sfsoptend:edition)
+          }
+
+      Access agqENDORSE,
+         Set agqENDORSE:app_no       = l_app_no,
+             agqENDORSE:PREM_NO      = agqend_alias:PREM_NO,
+             agqENDORSE:BUILD_NO     = agqend_alias:BUILD_NO,
+             agqENDORSE:CODE         = I_CODE, Generic
+
+      Access agqLOCATION,
+         Set agqLOCATION:app_no       = l_app_no ,
+             agqLOCATION:PREM_NO      = agqend_alias:PREM_NO ,
+             agqLOCATION:BUILD_NO     = agqend_alias:BUILD_NO ,Generic
+
+      L_agqLOCATION_ZIP = If (Val(agqLOCATION:STR_ZIPCODE[6,9]) = 0) Then
+                              agqLOCATION:STR_ZIPCODE[1,5]
+                          Else
+                              agqLOCATION:STR_ZIPCODE[1,5] + "-" +
+                              agqLOCATION:STR_ZIPCODE[6,9]
+
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a420h7000V")
+      Writefile(L_FILE_NAME,"%s",L_COPYRIGHT_6)
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",sfsoptend:copyright)
+      Writefile(L_FILE_NAME,"%s","<NL>")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+      Writefile(L_FILE_NAME,"%s","<033>&a4300h120V")
+      Writefile(L_FILE_NAME,"%s",Trun(SFSOPTEND:FORM_PRINT))
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s",SFSOPTEND:EDITION_PRINT)
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","FUNCTIONAL REPLACEMENT CONDITION")
+      Writefile(L_FILE_NAME,"%s","<033>&a+25h-30V<033>*c75h3v0P")
+      Writefile(L_FILE_NAME,"%s","<033>&a+100h+30V")
+      Writefile(L_FILE_NAME,"%s","COVERAGE B ")
+      Writefile(L_FILE_NAME,"%s","<033>&a+0h+20V")
+      Writefile(L_FILE_NAME,"%s",L_BULLET_6)
+      Writefile(L_FILE_NAME,"%s","<033>&a+0h-20V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s"," PART I")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","This endorsement establishes modified Conditions in ")
+      Writefile(L_FILE_NAME,"%s","connection with the Bases of Loss Settlement in Part I.G, allowing you to replace")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","the subject personal property with other property of ")
+      Writefile(L_FILE_NAME,"%s","lesser replacement value or the same replacement value but of enhanced utility.")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","The required information may be shown below or elsewhere in this policy.")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+180V")
+      Writefile(L_FILE_NAME,"%s","The provisions of this endorsement apply only when the endorsement number is listed in")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","the Declarations. Except as provided below, all other provisions in this policy are unchanged.")
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h-60V<033>*c5800h5v0P")--Horizontal line
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+240V")
+      Writefile(L_FILE_NAME,"%s","Application # ")
+      Writefile(L_FILE_NAME,"%n",agqLOCATION:app_no)
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+240V")
+      Writefile(L_FILE_NAME,"%s","SCHEDULE")
+
+      Writefile(L_FILE_NAME,"%s",l_push)
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","Designated Property")
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","Location ")
+      Writefile(L_FILE_NAME,"%n",agqLOCATION:PREM_NO)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","Building ")
+      Writefile(L_FILE_NAME,"%n",agqLOCATION:BUILD_NO)
+
+      If (agqLOCATION:ADDRESS <> "") Then
+        {
+          Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+          Writefile(L_FILE_NAME,"%s",Trun(agqLOCATION:ADDRESS))
+        }
+      For L_LOOP = 1 to 3
+        {
+          If agqLOCATION:ADDRESS1[L_LOOP] <> "" Then
+            {
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+              Writefile(L_FILE_NAME,"%s",agqLOCATION:ADDRESS1[L_LOOP])
+            }
+        }
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s",Trun(agqLOCATION:CITY))
+      Writefile(L_FILE_NAME,"%s",", ")
+      Writefile(L_FILE_NAME,"%s",agqLOCATION:STR_STATE)
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_agqLOCATION_ZIP)
+
+      Writefile(L_FILE_NAME,"%s",l_pop)
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3400h+120V")
+      Writefile(L_FILE_NAME,"%s","Limit of Liability")
+      Writefile(L_FILE_NAME,"%s","<033>&a3400h+120V")
+      Writefile(L_FILE_NAME,"%s","$")
+      Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+      Writefile(L_FILE_NAME,"%s",Str(agqENDORSE:LIMIT[1],"ZZ,ZZZ,ZZ9"))
+      Writefile(L_FILE_NAME,"%s","<033>&a190h+0V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+
+      Writefile(L_FILE_NAME,"%s",l_push)
+      Writefile(L_FILE_NAME,"%s","<033>&a300h3500V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h3500V")
+      Writefile(L_FILE_NAME,"%s","COVERAGE MODIFICATION")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+      Writefile(L_FILE_NAME,"%s","The subject personal property listed in the Schedule are")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+      Writefile(L_FILE_NAME,"%s","covered for their Functional Replacement Value, which is")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+      Writefile(L_FILE_NAME,"%s","determined based on Condition ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","1.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_7)
+      Writefile(L_FILE_NAME,"%s","(1) ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","or ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","1.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_7)
+      Writefile(L_FILE_NAME,"%s","(2) ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s",", as applicable")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+      Writefile(L_FILE_NAME,"%s","(whether replacement is made/is not made):")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a290h+180V")
+      Writefile(L_FILE_NAME,"%s","Part I.G. is Amended as Follows:")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+      Writefile(L_FILE_NAME,"%s","The following modified Conditions apply to the subject")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+      Writefile(L_FILE_NAME,"%s","damaged personal property:")
+
+      Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD_9,"<033>&a290h+180V",
+                      "How Losses are Settled")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a290h+180V")
+      Writefile(L_FILE_NAME,"%s","Condition 2.A.1. is replaced by the following Conditions:")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+      Writefile(L_FILE_NAME,"%s","1.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_7)
+      Writefile(L_FILE_NAME,"%s","(1)")
+      Writefile(L_FILE_NAME,"%s","<033>&a490h+0V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","If ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","you ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","make replacement pursuant to Condition 2.C.1,")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a490h+120V")
+      Writefile(L_FILE_NAME,"%s","the Functional Replacement Value of the subject personal")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a490h+120V")
+      Writefile(L_FILE_NAME,"%s","property, at the time of loss, is determined as being the")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a490h+120V")
+      Writefile(L_FILE_NAME,"%s","lesser of (a) or (b):")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a490h+120V")
+      Writefile(L_FILE_NAME,"%s","(a)")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a690h+0V")
+      Writefile(L_FILE_NAME,"%s","The cost reasonably required with diligence and")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a690h+120V")
+      Writefile(L_FILE_NAME,"%s","ongoing effort to repair, replace, or restore the")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a690h+120V")
+      Writefile(L_FILE_NAME,"%s","subject personal property with the most closely")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a690h+120V")
+      Writefile(L_FILE_NAME,"%s","equivalent property currently available (but")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a690h+120V")
+      Writefile(L_FILE_NAME,"%s","allowing replacement with other property that is")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a690h+120V")
+      Writefile(L_FILE_NAME,"%s","less costly or of similar cost to the covered property")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a690h+120V")
+      Writefile(L_FILE_NAME,"%s","although of enhanced utility) and used for the same")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a690h+120V")
+      Writefile(L_FILE_NAME,"%s","purpose; or")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a490h+180V")
+      Writefile(L_FILE_NAME,"%s","(b)")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a690h+0V")
+      Writefile(L_FILE_NAME,"%s","The necessary reasonable expense paid to repair,")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a690h+120V")
+      Writefile(L_FILE_NAME,"%s","replace, or restore the subject personal property.")
+
+      Writefile(L_FILE_NAME,"%s",l_pop)
+      Writefile(L_FILE_NAME,"%s","<033>&a3000h3500V")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3000h+0V")
+      Writefile(L_FILE_NAME,"%s","1.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_7)
+      Writefile(L_FILE_NAME,"%s","(2)")
+      Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","If ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","you ")
+      Writefile(L_FILE_NAME,"%s",L_UNDERLINE_START)
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","do not")
+      Writefile(L_FILE_NAME,"%s",L_UNDERLINE_END)
+      Writefile(L_FILE_NAME,"%s"," make replacement pursuant to Condition")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+      Writefile(L_FILE_NAME,"%s","2.C.1 or otherwise do not make claim under ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","1.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_7)
+      Writefile(L_FILE_NAME,"%s","(1) ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","above,")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+      Writefile(L_FILE_NAME,"%s","the Functional Replacement Value of the subject personal")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+      Writefile(L_FILE_NAME,"%s","property, at the time of loss, is determined as being the")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+      Writefile(L_FILE_NAME,"%s","lesser of (a) or (b):")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3400h+120V")
+      Writefile(L_FILE_NAME,"%s","(a)")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3600h+0V")
+      Writefile(L_FILE_NAME,"%s","The lesser cost or value, as follows:")
+
+      Writefile(L_FILE_NAME,"%s","<033>&a3600h+120V")
+      Writefile(L_FILE_NAME,"%s",L_BULLET_6)
+      Writefile(L_FILE_NAME,"%s","<033>&a+0h-20V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3800h+0V")
+      Writefile(L_FILE_NAME,"%s","The cost (less allowance for deterioration and")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+      Writefile(L_FILE_NAME,"%s","depreciation) to repair, replace, or restore the")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+      Writefile(L_FILE_NAME,"%s","subject personal property with property of")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+      Writefile(L_FILE_NAME,"%s","comparable quality and for the same purpose;")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+      Writefile(L_FILE_NAME,"%s","or")
+
+      Writefile(L_FILE_NAME,"%s","<033>&a3600h+160V")
+      Writefile(L_FILE_NAME,"%s",L_BULLET_6)
+      Writefile(L_FILE_NAME,"%s","<033>&a+0h-20V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3800h+0V")
+      Writefile(L_FILE_NAME,"%s","The market value of the subject personal")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+      Writefile(L_FILE_NAME,"%s","property at the time of loss, with such market")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+      Writefile(L_FILE_NAME,"%s","value being the price that the property could")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+      Writefile(L_FILE_NAME,"%s","reasonably have realized if, at such time, such")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+      Writefile(L_FILE_NAME,"%s","had been offered for sale in a fair market.")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3400h+180V")
+      Writefile(L_FILE_NAME,"%s","(b)")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3600h+0V")
+      Writefile(L_FILE_NAME,"%s","The necessary reasonable expense paid to repair,")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3600h+120V")
+      Writefile(L_FILE_NAME,"%s","replace, or restore the subject personal property.")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3000h+240V")
+      Writefile(L_FILE_NAME,"%s","ADDITIONAL CONDITIONS")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3000h+120V")
+      Writefile(L_FILE_NAME,"%s","A.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+      Writefile(L_FILE_NAME,"%s","Replacement Coverage ")
+      Writefile(L_FILE_NAME,"%s","Condition G.2.C.1 applies to BU 02 61.")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3000h+180V")
+      Writefile(L_FILE_NAME,"%s","B.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+      Writefile(L_FILE_NAME,"%s","BU 02 61 does not apply to stock.")
+      Writefile(L_FILE_NAME,"%s","<FF>")
+    }
+  Next agqend_alias
+}
+
+Update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+End

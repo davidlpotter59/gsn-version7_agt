@@ -1,0 +1,680 @@
+%%                 
+Screen
+        Name = "agtmt3009";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqaddprem" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_form[1];
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_no_locations[2]=0,
+                                    l_first_prem_no[4]=0,
+                                    l_first_build_no[4]=0,
+                                    l_last_prem_no[4]=0,
+                                    l_last_build_no[4]=0,
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_first_location[1]="Y" ,
+                     l_first_str_location[12]="",
+                     l_last_str_location[12]="",
+                     l_str_location[12]="",
+                     l_system_id[15],
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ;
+
+        Access agqaddprem,
+           Set agqaddprem:app_NO   = G_app_NO ,
+               agqaddprem:prem_no  = g_prem_no,
+               agqaddprem:build_no = g_build_no ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access plsdefault, set plsdefault:company_id = agqpersonal:company_id,
+                       plsdefault:line_of_business = agqpersonal:line_of_business, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : if agqpersonal:company_id = "FARMERS" and
+                   agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+                   plsdefault:rating_algorithm_date <> 0 then
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3_new,iconname,"title_mho3.bmp")
+                      case 4  : setproperty(t_mho4_new,iconname,"title_mho4.bmp")
+                      case 6  : setproperty(t_mho6_new,iconname,"title_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3_new,iconname,"")
+                                setproperty(t_mho4_new,iconname,"")
+                                setproperty(t_mho6_new,iconname,"")
+                                end
+                      end
+                    end
+                else
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                      case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                      case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3,iconname,"")
+                                setproperty(t_mho4,iconname,"")
+                                setproperty(t_mho6,iconname,"")
+                                end
+                      end
+                   end
+
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if agqaddprem:app_no <> g_app_no or
+   agqaddprem:prem_no <> g_prem_no or
+   agqaddprem:build_no <> g_build_no then
+    function = "ADD"
+
+Access Validation
+If agqaddprem:app_NO <> G_app_NO or
+   agqaddprem:prem_no <> g_prem_no or
+   agqaddprem:build_no <> g_build_no Then
+    Error 1000 ;
+
+access agqaddprem_alias, set agqaddprem_alias:app_no   = agqaddprem:app_no,
+                             agqaddprem_alias:prem_no  = agqaddprem:prem_no,
+                             agqaddprem_alias:build_no = agqaddprem:build_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqaddprem_alias:app_no   = agqaddprem:app_no and
+      agqaddprem_alias:prem_no  = agqaddprem:prem_no and
+      agqaddprem_alias:build_no = agqaddprem:build_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqaddprem_alias:prem_no) +
+                               str(agqaddprem_alias:build_no) +
+                               str(agqaddprem_alias:sub_code)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqaddprem_alias:prem_no) +
+                           str(agqaddprem_alias:build_no) +
+                           str(agqaddprem_alias:sub_code)
+    l_no_locations  = l_no_locations + 1
+
+    next agqaddprem_alias
+    end
+
+l_str_location = str(agqaddprem:prem_no) +
+                 str(agqaddprem:build_no) +
+                 str(agqaddprem:sub_code)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+    fontstyle = BOLD
+
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho3_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,20 tagged t_mho4_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho6_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "MPL 26 - Additional Insured Premises"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+--          backgroundcolor = "#ADD8E6"
+        }
+{
+Components
+
+        Button at 1.5,1   tagged add_fn
+        Properties {
+                Iconname = "btn_add_location.bmp"
+                }
+        Events  {
+                Action = add_fn
+                }
+
+        Button at 1.5,38    tagged change_fn
+        Properties {
+                Iconname = "btn_edit_location.bmp"
+                }
+        Events  {
+                Action = change_fn
+                }
+
+        Button at 1.5, 70 tagged delete_fn
+        Properties {
+                Iconname = "btn_delete_location.bmp"
+                }
+        Events  {
+                Action = delete_fn
+                }
+    }
+
+Panel at 8,70 to 8,100 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt3009.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 9,1 to 23, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+    Number    Direction                Street                  Type
+   ________      ____       ______________________________    ______
+
+                               Address
+          __________________________________________________
+          __________________________________________________
+          __________________________________________________
+
+                City                  State       Zip Code
+  ______________________________       ____      ____________
+
+No of Units: _
+%%
+
+components
+
+Fields
+201     Begin
+        access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+        If FUNCTION = "ADD" Then
+            Begin
+            agqaddprem:app_no   = G_app_no
+            agqaddprem:PREM_NO  = G_PREM_NO
+            agqaddprem:BUILD_NO = G_BUILD_NO
+            do subcode
+            agqaddprem:sub_code = l_sub_code + 10
+            End
+        End
+        agqaddprem:ST_NUMBER/tabstop;
+202     begin
+        access sfsdirection_alias,
+           set sfsdirection_alias:company_id = agqpersonal:company_id, generic
+
+        end
+        agqaddprem:ST_DIRECTION/tabstop
+        l_st_direction = agqaddprem:st_direction
+        access sfsdirection,
+           set sfsdirection:company_id = agqpersonal:company_id,
+               sfsdirection:direction  = l_st_direction, generic
+
+        If agqaddprem:ST_DIRECTION <> SFSDIRECTION:DIRECTION Then
+            Error 1404
+
+        Activehelp SFSDIRECTION_ALIAS:DIRECTION,
+                   SFSDIRECTION_ALIAS:DESCRIPTION ;
+203     agqaddprem:STREET/tabstop;
+204     begin
+        access sfsstrtype_alias, set sfsstrtype_alias:company_id = agqpersonal:company_id, generic
+
+        end
+        agqaddprem:ST_TYPE/tabstop
+        l_st_type = agqaddprem:st_type
+        access sfsstrtype, set sfsstrtype:company_id = agqpersonal:company_id,
+                               sfsstrtype:st_type = l_st_type, generic
+
+        If agqaddprem:ST_TYPE <> SFSSTRTYPE:ST_TYPE Then
+            Error 1307
+
+        Activehelp SFSSTRTYPE_ALIAS:ST_TYPE,
+                   SFSSTRTYPE_ALIAS:DESCRIPTION ;
+
+501     begin
+        If FUNCTION One Of "ADD", "CHANGE" Then
+            begin
+            If agqaddprem:ST_NUMBER = 0 Then
+                begin
+                If Len(Trun(SFSDIRECTION:DESCRIPTION)) = 0 Then
+                    begin
+                    agqaddprem:ADDRESS[1] = Trun(agqaddprem:STREET) + " " +
+                                            Trun(SFSSTRTYPE:DESCRIPTION)
+                    end
+                Else
+                    begin
+                    agqaddprem:ADDRESS[1] = Trun(SFSDIRECTION:DESCRIPTION) + " " +
+                                            Trun(agqaddprem:STREET) + " " +
+                                            Trun(SFSSTRTYPE:DESCRIPTION)
+                    end
+                end
+            Else
+                begin
+                If Len(Trun(SFSDIRECTION:DESCRIPTION)) = 0 Then
+                    begin
+                    agqaddprem:ADDRESS[1] = Trun(Str(agqaddprem:ST_NUMBER)) + " " +
+                                            Trun(agqaddprem:STREET) + " " +
+                                            Trun(SFSSTRTYPE:DESCRIPTION)
+                    end
+                Else
+                    begin
+                    agqaddprem:ADDRESS[1] = Trun(Str(agqaddprem:ST_NUMBER)) + " " +
+                                            Trun(SFSDIRECTION:DESCRIPTION) + " " +
+                                            Trun(agqaddprem:STREET) + " " +
+                                            Trun(SFSSTRTYPE:DESCRIPTION)
+                    end
+                end
+            end
+        end
+        agqaddprem:ADDRESS[1]/default/uppercase/tabstop;
+601     agqaddprem:address[2]/uppercase/tabstop ;
+701     agqaddprem:address[3]/uppercase/tabstop ;
+
+1001    agqaddprem:CITY/tabstop;
+1002    agqaddprem:STR_STATE/tabstop;
+1003    agqaddprem:STR_ZIPCODE/tabstop;
+1003    Begin
+          If agqaddprem:STR_ZIPCODE[6,9] = "" Then
+             agqaddprem:STR_ZIPCODE[6,9] = "0000"
+        End
+        agqaddprem:STR_ZIPCODE/displayonly ;
+
+1201    agqaddprem:no_units/tabstop mandatory
+        if agqaddprem:no_units = 0 then
+            error "You must enter the number of units" ;
+
+}
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,1 to 23,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+
+        Button at 1,32    tagged previous_fn
+        Properties {
+                Iconname = "btn_previous.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+
+        Button at 1, 48 tagged next_fn
+        Properties {
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+
+
+        Button at 1,75   tagged nextscreen_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+procedure definition
+
+procedure subcode
+begin
+access agqaddprem_alias,
+   set agqaddprem_alias:app_no   = agqaddprem:app_no,
+       agqaddprem_alias:prem_no  = agqaddprem:prem_no,
+       agqaddprem_alias:build_no = agqaddprem:build_no, generic
+
+l_sub_code = 0
+while agqaddprem_alias:app_no   = agqaddprem:app_no and
+      agqaddprem_alias:prem_no  = agqaddprem:prem_no and
+      agqaddprem_alias:build_no = agqaddprem:build_no
+        begin
+        l_sub_code = agqaddprem_alias:sub_code
+
+        next agqaddprem_alias
+        end
+
+end
+
+End

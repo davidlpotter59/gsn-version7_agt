@@ -1,0 +1,882 @@
+%%                      
+Screen
+        Name = "agtmt800";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="sfsdefault" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_form[1] ;
+        global unsigned ascii number g_class_code[5] ;
+
+        global string g_company_id[10] ,
+                      g_ok_to_add[1] ,
+                      g_display_modal[1] ;
+
+        local string l_continue_2[3] ,
+                     l_continue_1[2] ,
+                     i_csexec_application[25] ,
+                     l_company_id[10] ,
+                     l_username[15] ;
+
+        local unsigned ascii number l_csexec_number[12],
+                                    i_csexec_number[12] ,
+                                    l_form[2],
+                                    l_state[2] ,
+                                    l_agent_no[4] ;
+
+        Access sfsdefault, Set sfsdefault:sfs_code = "SFS", generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "back" return ;
+        "func1" display/noreturn "agtmt801" ;
+
+        include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_company_id = sfsdefault:company_id
+l_username   = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+
+l_agent_no   = sfsemail:agent_no
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = l_agent_no, generic
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+
+screen at 1,1 to 30,100
+
+Properties
+    {
+    Layouttype = screen
+    layoutconstraints = stretch
+    bordercolor = "black"
+    borderwidth = 2
+    transparent = false
+    backgroundimagename="quotebackground.jpg"
+    }
+{
+
+panel/hidden
+{
+Fields
+    function at 1,1 ;
+}
+
+Panel at 1,1 to 2,100
+Properties
+    {
+    layouttype = screen
+    }
+{
+components
+   guidetext at 1,1 to 2,40
+       properties
+           {
+           iconname = "qp_logo.gif"
+           }
+   guidetext at 1,83 to 2,100 tagged ficof_fn
+       properties
+           {
+           iconname = "ficof_logo.gif"
+           }
+   guidetext at 1,83 to 2,100 tagged farmers_fn
+       properties
+           {
+           iconname = "salem_logo.gif"
+           }
+}
+
+panel at 3,1 to 4,100
+Properties
+    {
+    LayoutType = screen
+    backgroundcolor = "Grey"
+    transparent = False
+    }
+{
+components
+    guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+        properties
+            {
+            text = "Small Contractors"
+            fontsize = 18
+            fontstyle = BOLD
+            fontname = "arial"
+            transparent = False
+            backgroundcolor = "Grey"
+            }
+}
+
+Panel at 6,40 to 7,58 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_back_to_main_screen.bmp"
+            }
+        events
+            {
+            action
+                {
+                function = "back"
+                abort()
+                }
+            }
+}
+
+Panel at 5,94 to 6,96 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_printscreen.bmp"
+            }
+        events
+            {
+            action
+                {
+                function = "print"
+                abort()
+                }
+            }
+}
+
+Panel at 6.45,92
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    guidetext to 1,1
+        properties
+            {
+            text = "agtmt800.sd"
+            fontsize = 9
+            }
+}
+
+panel at 8,1 to 8,100 tagged line_panel_1
+{
+Components
+    line at 1,1 to 1,100
+        Properties
+            {
+            Linestyle = embossed
+            Linewidth = 5
+            foregroundcolor = "black"
+            }
+}
+
+Panel at 9,1 to 9,100
+Properties
+    {
+    LayoutType = screen
+    }
+{
+Components
+    guidetext at 1,20 to 1,100
+        properties
+            {
+            text = "Select A Class Code From This Group If ...Liability Only Coverage"
+            fontsize = 16
+            fontname = "arial"
+            fontstyle = bold
+            }
+}
+
+Panel at 11,2 to 12,28 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_air_and_heating.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 1980
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 13,2 to 14,28 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_dry_wall_install.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 3981
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 15,2 to 16,28 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_fence_erection.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 2985
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 17,2 to 18,28 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_painting.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 5981
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 11,35 to 12,55 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_electrician.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 2980
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 13,35 to 14,55 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_carpentry.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 2981
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 15,35 to 16,55 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_carpet_install.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 1982
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 17,35 to 18,55 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_janitorial.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 3984
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 11,68 to 12,91 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_plumbing.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 5980
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 13,68 to 14,91 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_interior_design.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 2984
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 15,68 to 16,91 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_carpet_cleaning.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 1984
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 17,68 to 18,91 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lo_tile_stone_work.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 4983
+                g_form       = 4
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+panel at 19,1 to 19,100 tagged line_panel_1
+{
+Components
+    line at 1,1 to 1,100
+        Properties
+            {
+            Linestyle = embossed
+            Linewidth = 5
+            foregroundcolor = "black"
+            }
+}
+
+Panel at 20,1 to 20,100
+Properties
+    {
+    LayoutType = screen
+    }
+{
+Components
+    guidetext at 1,20 to 1,100
+        properties
+            {
+            text = "Select A Class Code From This Group If ...Liability And Property Coverage"
+            fontsize = 16
+            fontname = "arial"
+            fontstyle = bold
+            }
+}
+
+Panel at 22,2 to 23,28 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_air_and_heating.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 1980
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 24,2 to 25,28 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_dry_wall_install.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 3981
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 26,2 to 27,28 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_fence_erection.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 2985
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 28,2 to 29,28 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_painting.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 5981
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 22,35 to 23,55 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_electrician.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 2980
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 24,35 to 25,55 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_carpentry.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 2981
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 26,35 to 27,55 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_carpet_install.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 1982
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 28,35 to 29,55 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_janitorial.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 3984
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 22,68 to 23,91 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_plumbing.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 5980
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 24,68 to 25,91 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_interior_design.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 2984
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 26,68 to 27,91 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_carpet_cleaning.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 1984
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+Panel at 28,68 to 29,91 tagged button_panel
+Properties
+    {
+    layouttype = column
+    }
+{
+Components
+    Button to 1,1
+        properties
+            {
+            Iconname = "btn_lp_tile_stone_work.bmp"
+            }
+        events
+            {
+            action
+                {
+                g_class_code = 4983
+                g_form       = 3
+                function = "func1"
+                abort()
+                }
+            }
+}
+
+}
+
+update
+if abort = "YES" then
+    begin
+    g_form = 0
+    end
+
+if abort = "NO" then
+    begin
+    g_ok_to_add = "Y"
+    if g_display_modal <> "Y" then
+        function = "nextscreen"
+    else
+        begin
+--        display modal screen "agtmt701e"
+--        with initial function "ADD|BACK"
+        end
+    end
+
+screen exit
+g_ok_to_add = "Y"
+
+procedure definition
+
+procedure access_sfscsexec
+begin
+i_csexec_application = "APQQUOTE                 "
+
+access sfscsexec, set sfscsexec:application = i_csexec_application, generic
+
+change sfscsexec
+    begin
+    i_csexec_number = sfscsexec:application_number + 1
+    sfscsexec:application_number = i_csexec_number
+    end
+
+end
+
+End

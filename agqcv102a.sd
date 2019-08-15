@@ -1,0 +1,343 @@
+%%
+Program
+        Name = "agqcv102a" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ,
+                                     g_policy_no[9],
+                                     g_year[4],
+                                     g_end_sequence[4] ;
+
+        Local String L_PROCEDURE[20] ;
+
+Initialisation
+G_APP_NO       = val(COMMANDLINE[1,11])
+g_policy_no    = val(commandline[12,20])
+g_year         = val(commandline[21,24])
+g_end_sequence = val(commandline[25,28])
+
+Access agqNAME, Set agqNAME:app_NO = G_app_NO, Exact
+
+L_PROCEDURE = "capvehicle FILE UPDATE"
+
+Access agqVEHICLE, Set agqVEHICLE:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqVEHICLE:app_no <> G_app_no
+
+    Add capVEHICLE
+        Begin
+        capVEHICLE:policy_no                = G_policy_no
+        capvehicle:pol_year                 = g_year
+        capvehicle:end_sequence             = g_end_sequence
+        capVEHICLE:VEHICLE_NO               = agqVEHICLE:VEHICLE_NO
+        capVEHICLE:RECORD_RDF               = agqVEHICLE:RECORD_RDF/raw
+        capVEHICLE:COMPANY_ID               = agqVEHICLE:COMPANY_ID/raw
+        capVEHICLE:LINE_OF_BUSINESS         = agqVEHICLE:LINE_OF_BUSINESS
+        capvehicle:zipcode                  = agqname:zipcode
+        End
+
+    Next agqVEHICLE
+    End
+
+L_PROCEDURE = "agqaddin2 FILE UPDATE"
+
+Access agqaddin2, Set agqaddin2:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqaddin2:app_no <> G_app_no
+
+    Add capADDIN
+        Begin
+        capADDIN:policy_no              = G_policy_no
+        capaddin:pol_year               = g_year
+        capaddin:end_sequence           = g_end_sequence
+        capADDIN:VEHICLE_NO             = agqaddin2:VEHICLE_NO
+        capADDIN:RECORD_RDF             = agqaddin2:RECORD_RDF/raw
+        End
+
+    Next agqaddin2
+    End
+
+L_PROCEDURE = "capaddlpip FILE UPDATE"
+
+Access agqADDLPIP, Set agqADDLPIP:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqADDLPIP:app_no <> G_app_no
+
+    access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+    while agqvehicle:app_no = g_app_no
+        begin
+        Add capADDLPIP
+            Begin
+            capADDLPIP:policy_no              = G_policy_no
+            capaddlpip:pol_year               = g_year
+            capaddlpip:end_sequence           = g_end_sequence
+            capADDLPIP:VEHICLE_NO             = agqvehicle:VEHICLE_NO
+            capADDLPIP:CODE                   = agqADDLPIP:CODE/raw
+            capADDLPIP:SUB_CODE               = agqADDLPIP:SUB_CODE
+            capADDLPIP:RECORD_RDF             = agqADDLPIP:RECORD_RDF/raw
+            end
+
+        next agqvehicle
+        End
+
+    Next agqADDLPIP
+    End
+
+L_PROCEDURE = "capdev FILE UPDATE"
+
+Access agqDEV, Set agqDEV:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqDEV:app_no <> G_app_no
+
+    Add capDEV
+        Begin
+        capDEV:policy_no              = G_policy_no
+        capdev:pol_year               = g_year
+        capdev:end_sequence           = g_end_sequence
+        capDEV:RECORD_RDF             = agqDEV:RECORD_RDF/raw
+        End
+
+    Next agqDEV
+    End
+
+L_PROCEDURE = "capbroadened FILE UPDATE"
+
+Access agqBROADENED, Set agqBROADENED:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqBROADENED:app_no <> G_app_no
+
+    Add capBROADENED
+        Begin
+        capBROADENED:policy_no              = G_policy_no
+        capbroadened:pol_year               = g_year
+        capbroadened:end_sequence           = g_end_sequence
+        capBROADENED:SUB_CODE               = agqBROADENED:SUB_CODE
+        capBROADENED:RECORD_RDF             = agqBROADENED:RECORD_RDF/raw
+        End
+
+    Next agqBROADENED
+    End
+
+L_PROCEDURE = "capdoc FILE UPDATE"
+
+Access agqDOC, Set agqDOC:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqDOC:app_no <> G_app_no
+
+    Add capDOC
+        Begin
+        capDOC:policy_no              = G_policy_no
+        capdoc:pol_year               = g_year
+        capdoc:end_sequence           = g_end_sequence
+        capDOC:NAME                   = agqDOC:NAME/raw
+        capDOC:RECORD_RDF             = agqDOC:RECORD_RDF/raw
+        End
+
+    Next agqDOC
+    End
+
+L_PROCEDURE = "capdriver FILE UPDATE"
+
+Access agqDRIVER, Set agqDRIVER:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqDRIVER:app_no <> G_app_no
+
+    Add capDRIVER
+        Begin
+        capDRIVER:policy_no              = G_policy_no
+        capdriver:pol_year               = g_year
+        capdriver:end_sequence           = g_end_sequence
+        capDRIVER:SUB_CODE               = agqDRIVER:SUB_CODE
+        capDRIVER:RECORD_RDF             = agqDRIVER:RECORD_RDF/raw
+        End
+
+    Next agqDRIVER
+    End
+
+L_PROCEDURE = "capendorse FILE UPDATE"
+
+Access agqendorse2, Set agqendorse2:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqendorse2:app_no <> G_app_no
+
+    access agqvehicle, set agqvehicle:app_no     = agqendorse2:app_no,
+                           agqvehicle:vehicle_no = agqendorse2:vehicle_no, generic
+
+    Add capENDORSE
+        Begin
+        capENDORSE:policy_no              = G_policy_no
+        capendorse:pol_year               = g_year
+        capendorse:end_sequence           = g_end_sequence
+        capENDORSE:VEHICLE_NO             = agqendorse2:VEHICLE_NO
+        capENDORSE:CODE                   = agqendorse2:CODE/raw
+        capENDORSE:SUB_CODE               = agqendorse2:SUB_CODE
+        capENDORSE:RECORD_RDF             = agqendorse2:RECORD_RDF/raw
+        if agqendorse2:code = "MCA201" then
+            capendorse:description = str(agqendorse2:vehicle_no) + "-" +
+                                     str(agqvehicle:year) + "-" +
+                                     trun(agqvehicle:make) + "-" +
+                                     trun(agqvehicle:model) + "-" +
+                                     trun(agqvehicle:serial_no)
+        End
+
+    Next agqendorse2
+    End
+
+L_PROCEDURE = "capaddlinsured FILE UPDATE"
+
+Access agqaddlinsured, Set agqaddlinsured:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqaddlinsured:app_no <> G_app_no
+
+    Add capaddlinsured
+        Begin
+        capaddlinsured:policy_no              = G_policy_no
+        capaddlinsured:pol_year               = g_year
+        capaddlinsured:end_sequence           = g_end_sequence
+        capaddlinsured:VEHICLE_NO             = agqaddlinsured:VEHICLE_NO
+        capaddlinsured:CODE                   = agqaddlinsured:CODE/raw
+        capaddlinsured:SUB_CODE               = agqaddlinsured:SUB_CODE
+        capaddlinsured:RECORD_RDF             = agqaddlinsured:RECORD_RDF/raw
+        End
+
+    Next agqaddlinsured
+    End
+
+L_PROCEDURE = "capfinancial FILE UPDATE"
+
+Access agqFINANCIAL, Set agqFINANCIAL:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqFINANCIAL:app_no <> G_app_no
+
+    Add capFINANCIAL
+        Begin
+        capFINANCIAL:policy_no              = G_policy_no
+        capfinancial:pol_year               = g_year
+        capfinancial:end_sequence           = g_end_sequence
+        capFINANCIAL:TRANS_DATE             = agqFINANCIAL:TRANS_DATE
+        capFINANCIAL:RECORD_RDF             = agqFINANCIAL:RECORD_RDF/raw
+        End
+
+    Next agqFINANCIAL
+    End
+
+L_PROCEDURE = "capnonowned FILE UPDATE"
+
+Access agqNONOWNED, Set agqNONOWNED:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqNONOWNED:app_no <> G_app_no
+
+write("%c%s",1005,"")
+pause(50)
+    Add capNONOWNED
+        Begin
+        capNONOWNED:policy_no              = G_policy_no
+        capnonowned:pol_year               = g_year
+        capnonowned:end_sequence           = g_end_sequence
+        capNONOWNED:RECORD_RDF             = agqNONOWNED:RECORD_RDF/raw
+        End
+
+    Next agqNONOWNED
+    End
+
+L_PROCEDURE = "cappip FILE UPDATE"
+
+Access agqPIP, Set agqPIP:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqPIP:app_no <> G_app_no
+
+    Add capPIP
+        Begin
+        capPIP:policy_no              = G_policy_no
+        cappip:pol_year               = g_year
+        cappip:end_sequence           = g_end_sequence
+        capPIP:VEHICLE_NO             = agqPIP:VEHICLE_NO
+        capPIP:RECORD_RDF             = agqPIP:RECORD_RDF/raw
+        End
+
+    Next agqPIP
+    End
+
+L_PROCEDURE = "cappanofault FILE UPDATE"
+
+Access agqPANOFAULT, Set agqPANOFAULT:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqPANOFAULT:app_no <> G_app_no
+
+    Add capPANOFAULT
+        Begin
+        capPANOFAULT:policy_no              = G_policy_no
+        cappanofault:pol_year               = g_year
+        cappanofault:end_sequence           = g_end_sequence
+        capPANOFAULT:VEHICLE_NO             = agqPANOFAULT:VEHICLE_NO
+        capPANOFAULT:RECORD_RDF             = agqPANOFAULT:RECORD_RDF/raw
+        End
+
+    Next agqPANOFAULT
+    End
+
+/*L_PROCEDURE = "capgaragekeepers FILE UPDATE"
+
+Access agqgaragekeepers, Set agqgaragekeepers:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqgaragekeepers:app_no <> G_app_no
+
+    Add capgaragekeepers
+        Begin
+        capgaragekeepers:policy_no              = G_policy_no
+        capgaragekeepers:pol_year               = g_year
+        capgaragekeepers:end_sequence           = g_end_sequence
+        capgaragekeepers:VEHICLE_NO             = agqgaragekeepers:VEHICLE_NO
+        capgaragekeepers:RECORD_RDF             = agqgaragekeepers:RECORD_RDF/raw
+        End
+
+    Next agqgaragekeepers
+    End*/
+
+L_PROCEDURE = "capsymbol FILE UPDATE"
+
+Access agqsymbol, Set agqsymbol:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqsymbol:app_no <> G_app_no
+
+    Add capsymbol
+        Begin
+        capsymbol:policy_no              = G_policy_no
+        capsymbol:pol_year               = g_year
+        capsymbol:end_sequence           = g_end_sequence
+        capsymbol:VEHICLE_NO             = agqsymbol:VEHICLE_NO
+        capsymbol:RECORD_RDF             = agqsymbol:RECORD_RDF/raw
+        End
+
+    Next agqsymbol
+    End
+
+Update
+
+Errors
+Writefile("agqcv102a.err","<NL>")
+Writefile("agqcv102a.err","%S",L_PROCEDURE)
+Writefile("agqcv102a.err","<NL>")
+Writefile("agqcv102a.err","%N%S agqcv102.err",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv102a.err","<NL>")
+Writefile("agqcv102a.err","<NL>")
+
+End

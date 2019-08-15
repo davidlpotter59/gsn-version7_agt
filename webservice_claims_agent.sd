@@ -1,0 +1,595 @@
+%%
+Program
+       Name="webservice_claims_agent"
+       Type="file"
+       Domain="dummy"
+--  do not add padcharacter equals space it will cresh this program
+
+       string l_filename1[30] = "request_claim.xml";
+       string l_filename[30] = "request_response_claim.xml";
+       string l_filename2[30] = "orginalrequest_claim.xml";
+       string l_responsefile[30] = "response_claim.xml";
+       string l_claim_file[12] = "claim";
+       string l_credit_error_file[18] = "error_claim"
+       string l_which_web_service_function[500];
+       string l_accept_id[9];
+       string l_temp[14500];
+       string l_error_message[300];
+       string l_which_protocol[40];
+       string l_web_service_error[2048];
+       string l_response_1[14500] ;
+       string function remove_newlines(string) ;
+       string function parse_get_response(string, string, string);
+       string l_enter[1];
+       string l_header[50] ;
+       string l_header_1[50] ;
+       string l_name[22] ;
+       unsigned ascii number l_trys_for_accept_id[2] = 0;
+       unsigned ascii number l_quit_program[1];
+       unsigned ascii number l_no_matches[2] ;
+       unsigned ascii number l_app_no[11] ;
+       unsigned ascii number l_matches[4] ;
+       unsigned ascii number l_sub_code[4] ;
+       unsigned ascii number l_sub[4] ;
+       unsigned ascii number l_file_hit[6];
+       unsigned ascii number l_position[8];
+       unsigned ascii number l_position_1[8];
+       unsigned ascii number l_start_position[8];
+       unsigned ascii number l_length_pos[8];
+       unsigned ascii number l_length[6];
+
+
+Initialisation
+l_app_no         = val(commandline[1,11])
+L_which_protocol = uppercase(COMMANDLINE [12,52])
+
+access agqclaim, set agqclaim:app_no = l_app_no, generic
+
+while agqclaim:app_no = l_app_no
+    begin
+    delete agqclaim
+
+    next agqclaim
+    end
+
+deletefile(l_claim_file)
+deletefile(l_credit_error_file)
+deletefile(l_filename2)
+deletefile(l_filename1)
+deletefile(l_filename)
+do get_claim_request    --setup the claim request format and it will create the request.xml file
+l_which_web_service_function="SOAPMethodName: https://expressnet.iix.com/web-services/Auth:sendRequest<NL>"
+
+do connect_with_webservice(l_which_web_service_function,1)      --sendRequest returns an 9 digit accept_id
+
+deletefile(l_filename1)                   --erase the send_request.xml file so I can reuse it for the getResponse
+if l_quit_program not one of 1 then    --the request came back bad why asked for a get response to a bad formatted sting
+    {
+    do fillin_get_response(l_accept_id)
+    l_which_web_service_function="SOAPMethodName: https://expressnet.iix.com/web-services/Auth:getResponse<NL>"
+    do connect_with_webservice(l_which_web_service_function,0)      --get_response to the original request with accept id.
+    }
+
+Update
+
+procedure definition
+
+procedure connect_with_webservice(string p_which_web_service_function,
+                                  number p_call_accept_message)
+begin
+Handle conn;
+Handle req;
+String l_request[14500];
+String l_response[14500];
+string l_claim_segment[7];
+string l_error_segment[19];
+string l_claim[5];
+
+l_response = ""
+-- Read in the Soap request from request.xml
+req = openfile(l_filename1)                    --request.xml
+repeat
+    {
+    String l_line[1024];
+    readfile( req, l_line, 1024, "<NL>" )
+    if errornumber = 0 then
+        {
+        l_request = l_request + l_line + "<NL>"
+        }
+    } until errornumber <> 0
+
+closefile( req )
+
+-- Open a secure https connection to web service
+conn = opensocket( "expressnet.iix.com", "https", true )
+
+-- Send the HTTP request headers
+writefile( conn, "POST https://expressnet.iix.com/web-services/Auth<NL>" )
+writefile( conn, "Content-Type: text/xml<NL>" )
+writefile( conn, "%s",p_which_web_service_function )
+writefile( conn, "Content-Length: %X<NL>", Len( l_request ) )
+writefile( conn, "<NL>" )
+
+-- Now sent the body of the request
+writefile( conn, "%X", l_request )
+
+-- Flush the output to the server
+flushfile( conn )
+
+-- Read back the response from the server
+repeat
+    {
+    String l_line[1024];
+    readfile( conn, l_line, 1024, "<NL>" )
+    if errornumber = 0 then
+        {
+        l_response = l_response + l_line + "<NL>"
+        }
+    } until errornumber <> 0
+
+closefile( conn )    -- Close the connection
+
+-- Display what we got
+write( "%X<NL>",l_response )
+
+writefile(l_filename,"%s",l_response)
+l_error_segment   = '"xsd:string">Error:'
+pause(1000)
+if p_call_accept_message = 1 then     --there will be a accept message from the get_response I need to parse for the credit score
+    {
+    do get_accept_message_from_request(l_response)  --this will provide the accept_id if is does I need to request it again up to 10 times if response not yet available it give
+    if trun(l_accept_id) = "" then --means an error message was sent back one would be Response not yet avaiable is returned.  If it is Response Not yet available I have to i have to try again I have a loop 10 all other errors should stop the program
+        {
+        l_error_message = parse_get_response("",l_error_segment, l_response)
+
+        if uppercase(l_error_message) = uppercase("Response Not Yet Available") then
+            {
+            l_which_web_service_function="SOAPMethodName: https://expressnet.iix.com/web-services/Auth:getResponse<NL>"
+            if l_trys_for_accept_id <= 10 then
+                {
+                l_trys_for_accept_id = l_trys_for_accept_id + 1
+                pause (500)   --half a second pause for next attempt
+                do connect_with_webservice(l_which_web_service_function,1)       --need to call for the accept ID.
+                }
+            else
+                {
+                write("%s%s<NL>","ERROR MESSAGE -->",l_error_message)
+                writefile(l_credit_error_file,"%s<nl>","I tried 10 times and no accept ID was given.  Please contact IIX 1-800-683-8553 option 7.")
+                closefile(l_error_message)
+                }
+            }
+        else
+            {
+            write("%s%s<NL>","ERROR MESSAGE is getting close -->",l_error_message)
+            writefile(l_credit_error_file,"%s<nl>",l_error_message)
+            closefile(l_error_message)
+            l_quit_program = 1
+            }
+        }
+    }
+else
+    {
+    do parse_subject_header(l_response)
+    l_response_1 = remove_newlines(l_response)
+    if l_no_matches > 0 then
+        begin
+        l_matches = 1
+        l_start_position = 1
+        while l_matches <= l_no_matches
+            begin
+            l_length = len(l_response_1)
+            l_response_1 = l_response_1[l_start_position,l_length]
+            l_claim = parse_get_response(l_claim_segment,l_error_segment, l_response_1)
+/*            if l_claim[1] = "+" then
+                {
+                if Val(l_claim) = 0 then
+                    {
+                    writefile(l_claim_file,"%s%s",l_claim,"<NL>")
+                    }
+                else
+                    {
+                    writefile(l_claim_file,"%s%s",l_claim,"<NL>")
+                    }
+                closefile(l_claim_file)
+                }
+            else
+                {
+                l_error_message = parse_get_response("",l_error_segment, l_response)
+                if uppercase(l_error_message) = uppercase("Response Not Yet Available") then
+                    {
+                    l_which_web_service_function="SOAPMethodName: https://expressnet.iix.com/web-services/Auth:getResponse<NL>"
+                    do connect_with_webservice(l_which_web_service_function,0)
+                    l_response = ""
+                    write( "%x%x<NL>", "I have the error messageray",l_error_message)
+                    writefile(l_claim_file,"%s<nl>",l_error_message)
+                    closefile(l_error_message)
+                    }
+                else
+                if uppercase(l_error_message) = uppercase("Your WebServices Password has Expired. Please call WebServices Customer Support at 1-800-683-8553, option 7.") or
+                   uppercase(l_error_message) = uppercase("Your WebServices Password has been revoked. Please call WebServices Customer Support at 1-800-683-8553, option 7") or
+                   uppercase(l_error_message) = uppercase("The WebServices Password you entered is not valid. Your password will be revoked after 3 failed login attempts.") or
+                   uppercase(l_error_message) = uppercase("Invalid account/bill code for this request ID") or
+                   uppercase(l_error_message) = uppercase("This Account is not registered for online application access. Please Register before trying to Sign In.") or
+                   uppercase(l_error_message) = uppercase("No requests can be processed for this Account. The Account has unknown status. Please contact iiX Sales at 1-800-683-8553, option 1.") or
+                   uppercase(l_error_message) = uppercase("The Account you entered is not an iiX account. Please check with your system administrator and try again.") then
+                    {
+                    writefile(l_credit_error_file,"%s<NL>",l_error_message)
+                    closefile(l_error_message)
+                    Proc("cli mail -s Web Service Account Error %s < l_credit_error_file","sfbattles@gmail.com")/noconsole
+                    Proc("cli mail -s Web Service Account Error %s < l_credit_error_file","support@fosnj.com")/noconsole
+                    }
+                else
+                    {
+                    do parse_subject_header(l_response)
+    --                write( "%x%x<NL>", "I have the error message bell",l_error_message)
+                    writefile(l_credit_error_file,"%s<NL>",l_error_message)
+                    closefile(l_error_message)
+                    Proc("cli mail -s Web Service Formatting Error %s < l_credit_error_file","sfbattles@gmail.com")/noconsole
+                    Proc("cli mail -s Web Service Formatting Error %s < l_credit_error_file","support@fosnj.com")/noconsole
+                    }
+                }    */
+
+            l_matches = l_matches + 1
+            end
+        end
+    else
+    if l_no_matches = 0 then
+        begin
+        access agqclaim, set agqclaim:app_no = l_app_no, generic
+
+        if agqclaim:app_no = l_app_no then
+            begin
+            change agqclaim
+                begin
+                agqclaim:no_matches = l_no_matches
+                end
+            end
+        else
+            begin
+            add agqclaim
+                begin
+                agqclaim:app_no   = l_app_no
+                agqclaim:sub_code   = 1
+                agqclaim:no_matches = l_no_matches
+                end
+            end
+
+        end
+
+    }
+
+
+end
+
+procedure parse_subject_header(string p_response)
+BEGIN
+string l_subject_header_segment[7];
+string l_ssn_match_indicator[2];
+unsigned ascii number l_next_file[4] ;
+
+
+l_subject_header_segment = iix_individual_claims:subject_header_segment
+l_header = "&lt;APLUS-PROPERTY&gt;"
+l_position = pos(trun(l_header),p_response)
+
+l_header = "&lt;HDR-NUM-MATCHES&gt;"
+l_header_1 = "&lt;/HDR-NUM-MATCHES&gt;"
+l_position = pos(trun(l_header),p_response)
+l_position_1 = pos(trun(l_header_1),p_response)
+if l_position <> 0 then    --found the header OAPR
+    {
+    l_file_hit = l_position    --at the file hit
+    l_no_matches = val(p_response[l_position + 23,l_position_1 - 1])
+    }
+
+END
+
+string function remove_newlines(string p_response)
+BEGIN
+string l_subject_header_segment[7];
+string l_ssn_match_indicator[2];
+unsigned ascii number l_next_file[4] ;
+unsigned ascii number l_newline_at[8] ;
+
+l_newline_at = 1
+while l_newline_at <> 0
+    begin
+    l_newline_at = pos("<NL>",p_response)
+    p_response = p_response[1,l_newline_at - 1] + p_response[l_newline_at + 1,len(p_response)]
+    end
+
+return p_response
+
+END
+
+string function parse_get_response(string p_search_str, string p_error_str, string p_response)
+BEGIN
+string l_claim[5];
+unsigned ascii number l_no_matches_pos[2] ;
+string l_match_type[2] ;
+
+if l_file_hit <> 0 then
+    {
+    access agqclaim, set agqclaim:app_no = l_app_no, generic
+
+    do subcode
+    add agqclaim
+        begin
+        agqclaim:app_no         =       l_app_no
+        agqclaim:sub_code       =       l_sub_code
+
+        l_header = ";FIRST-INS-NAME&gt;"
+        l_header_1 = "&lt;/FIRST-INS-NAME&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:name = p_response[l_position + 19, l_position_1 - 1]
+
+        l_header = "&lt;LOSS-LOCATION&gt;"
+        l_header_1 = "&lt;/LOSS-LOCATION&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:loss_location  =       p_response[l_position + 21, l_position_1 - 1]
+
+        l_header = "&lt;MATCH-TYPE&gt;"
+        l_header_1 = "&lt;/MATCH-TYPE&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:match_type     =       p_response[l_position + 18, l_position_1 - 1]
+
+        agqclaim:no_matches     =       l_no_matches
+
+        l_header = "&lt;LOSS-DATA&gt;"
+        l_header_1 = "&lt;/LOSS-DATA&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:loss_date      =       date(p_response[l_position + 17, l_position_1 -1])
+
+        l_header = "&lt;LOSS-AMOUNT&gt;"
+        l_header_1 = "&lt;/LOSS-AMOUNT&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:loss_amount    =       p_response[l_position + 19,l_position_1 - 1]
+
+        l_header = "&lt;CLAIM-TYPE&gt;"
+        l_header_1 = "&lt;/CLAIM-TYPE&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:claim_type     =       p_response[l_position + 18,l_position_1 -1]
+
+        l_header = "&lt;CAUSE-OF-LOSS&gt;"
+        l_header_1 = "&lt;/CAUSE-OF-LOSS&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:cause_loss         =       p_response[l_position + 21,l_position_1 - 1]
+
+        l_header = "&lt;CATASTROPHE-NUM&gt;"
+        l_header_1 = "&lt;/CATASTROPHE-NUM&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:catastrophe_no     =       p_response[l_position + 23,l_position_1 - 1]
+
+        l_header = "&lt;POLICY-TYPE&gt;"
+        l_header_1 = "&lt;/POLICY-TYPE&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:policy_type = p_response[l_position + 19,l_position_1 - 1]
+
+        l_header = "&lt;POLICY-NUM&gt;"
+        l_header_1 = "&lt;/POLICY-NUM&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:policy_number      =       p_response[l_position + 18,l_position_1 - 1]
+
+        l_header = "&lt;LOSS-CARRIER&gt;"
+        l_header_1 = "&lt;/LOSS-CARRIER&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:loss_carrier       =       p_response[l_position + 20,l_position_1 - 1]
+
+        l_header = "&lt;CASE-NUM&gt;"
+        l_header_1 = "&lt;/CASE-NUM&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:case_no            =       p_response[l_position + 16,l_position_1 - 1]
+
+        l_header = "&lt;CLAIMANT-NAME&gt;"
+        l_header_1 = "&lt;/CLAIMANT-NAME&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:claimant_name = p_response[l_position + 21,l_position_1 - 1]
+
+        l_header = "&lt;CLAIMANT-ADDR&gt;"
+        l_header_1 = "&lt;/CLAIMANT-ADDR&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:claimant_address = p_response[l_position + 21,l_position_1 - 1]
+
+        l_header = "&lt;CLAIM-STATUS&gt;"
+        l_header_1 = "&lt;/CLAIM-STATUS&gt;"
+        l_position = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        agqclaim:claim_status             = p_response[l_position + 20,l_position_1 - 1]
+
+        l_header         = "&lt;/RETURNED-DATA&gt;"
+        l_position       = pos(trun(l_header),p_response)
+        l_start_position = l_position + 21
+        end
+
+    return l_claim
+    }
+else
+    {
+    l_position = pos(p_error_str,p_response)   --found location of the start of the error string
+    l_position_1 = pos("</return>",p_response)   --find the ending of the error message
+    if l_position <> 0 then
+        {
+        l_error_message = p_response[l_position+len(p_error_str),l_position_1 - 1]
+        }
+    return l_error_message  --Means there was an error processing the request.  I will have to write out the error message to a file.
+    }
+
+END
+
+procedure subcode
+begin
+access agqclaim, set agqclaim:app_no = l_app_no, generic
+
+l_sub_code = 0
+while agqclaim:app_no = l_app_no
+    begin
+    l_sub_code = agqclaim:sub_code
+
+    next agqclaim
+    end
+
+l_sub_code = l_sub_code + 1
+end
+
+/*string function parse_get_response(string p_search_str, string p_error_str, string p_response)
+BEGIN
+unsigned ascii number l_position[6];
+unsigned ascii number l_position1[6];
+string l_claim[5];
+
+l_position = pos(p_search_str,p_response)   --found location of the start of the p_search_string
+
+if l_position <> 0 then
+    {
+    l_claim = p_response[l_position+12,l_position+19]
+    return l_claim
+    }
+else
+    {
+    l_position = pos(p_error_str,p_response)   --found location of the start of the error string
+    l_position1 = pos("</return>",p_response)   --find the ending of the error message
+    if l_position <> 0 then
+        {
+        l_error_message = p_response[l_position+len(p_error_str),l_position1 - 1]
+        }
+
+    return l_error_message  --Means there was an error processing the request.  I will have to write out the error message to a file.
+    }
+
+END*/
+
+Procedure get_accept_message_from_request(string p_response)
+BEGIN
+unsigned ascii number l_position[4];
+string l_search_str[20] = "Accept:";
+
+l_accept_id = ""
+l_position = pos(l_search_str,p_response)  --found location of the start of the Accept:
+if p_response[l_position,l_position+6] = "Accept:" then
+    {
+    l_accept_id = p_response[l_position+7,l_position+16]
+    }
+else   --accept_id did not return one the get request.  This could be because of login information is wrong.
+    {
+    l_accept_id = ""
+    }
+write("%c-->%s<--<nl>",11002,L_accept_id)
+
+End
+
+procedure fillin_get_response(string p_accept_id)             --this uses the get response which need to have the accept_id
+BEGIN
+string l_request_format[34];
+access iix_individual_claims,
+     set iix_individual_claims:which_protocol = l_which_protocol, approximate   --WAS IIX
+deletefile(l_filename1)
+l_request_format= iix_individual_claims:user_name +
+                  iix_individual_claims:user_password +
+                  str(iix_individual_claims:account_number,"999999") +
+                  iix_individual_claims:bill_code +
+                  iix_individual_claims:product +
+                  p_accept_id
+
+writefile(l_filename1,"%s",trun(iix_individual_claims:XML_BEFORE_GET_RESPONSE_FORMAT))
+writefile(l_filename1,"%s",trun(l_request_format))
+writefile(l_filename1,"%s",trun(iix_individual_claims:XML_AFTER_GET_RESPONSE_FORMAT))
+closefile(l_filename1)
+END
+
+procedure get_claim_request        --fills in for the orginal request.
+BEGIN
+string l_request_format[528];
+access iix_individual_claims,
+     set iix_individual_claims:which_protocol = l_which_protocol, approximate --was "IIX"
+
+l_request_format= iix_individual_claims:user_name +
+                  iix_individual_claims:user_password +
+                  str(iix_individual_claims:account_number,"999999") +
+                  iix_individual_claims:bill_code +
+                  iix_individual_claims:product +
+                  iix_individual_claims:response_format_code +
+                  iix_individual_claims:record_type +
+                  iix_individual_claims:quoteback +
+                  iix_individual_claims:block_id_1 +
+                  uppercase(iix_individual_claims:last_name) +
+                  uppercase(iix_individual_claims:first_name) +
+                  uppercase(iix_individual_claims:middle_initial) +
+                  iix_individual_claims:dob +
+                  iix_individual_claims:ssn +
+                  uppercase(iix_individual_claims:aka_last_name) +
+                  uppercase(iix_individual_claims:aka_first_name) +
+                  uppercase(iix_individual_claims:aka_middle_initial) +
+                  iix_individual_claims:block_id_r +
+                  iix_individual_claims:loc_house_number +
+                  iix_individual_claims:loc_street_direction +
+                  iix_individual_claims:loc_street_name +
+                  iix_individual_claims:loc_street_type +
+                  iix_individual_claims:loc_apt_number +
+                  iix_individual_claims:loc_city +
+                  iix_individual_claims:loc_state +
+                  iix_individual_claims:loc_zip
+
+if iix_individual_claims:last_name_1 <> "" then
+    begin
+    l_request_format = l_request_format +
+                       iix_individual_claims:block_id_2 +
+                       uppercase(iix_individual_claims:last_name_1) +
+                       uppercase(iix_individual_claims:first_name_1) +
+                       uppercase(iix_individual_claims:middle_initial_1) +
+                       iix_individual_claims:dob_1 +
+                       iix_individual_claims:ssn_1 +
+                       uppercase(iix_individual_claims:aka_last_name_1) +
+                       uppercase(iix_individual_claims:aka_first_name_1) +
+                       uppercase(iix_individual_claims:aka_middle_initial_1)
+    end
+
+l_request_format = l_request_format +
+                   iix_individual_claims:block_id_c +
+                   iix_individual_claims:mailing_house_number +
+                   iix_individual_claims:mailing_street_direction +
+                   iix_individual_claims:mailing_street_name +
+                   iix_individual_claims:mailing_street_type +
+                   iix_individual_claims:mailing_apt_number +
+                   iix_individual_claims:mailing_city +
+                   iix_individual_claims:mailing_state +
+                   iix_individual_claims:mailing_zip
+
+if iix_individual_claims:previous_street_name <> "" then
+    begin
+    l_request_format = l_request_format +
+                       iix_individual_claims:block_id_p +
+                       iix_individual_claims:previous_house_number +
+                       iix_individual_claims:previous_street_direction +
+                       iix_individual_claims:previous_street_name +
+                       iix_individual_claims:previous_street_type +
+                       iix_individual_claims:previous_apt_number +
+                       iix_individual_claims:previous_city +
+                       iix_individual_claims:previous_state +
+                       iix_individual_claims:previous_zip
+    end
+
+writefile(l_filename1,"%s",trun(iix_individual_claims:XML_BEFORE_REQUEST_FORMAT))
+writefile(l_filename1,"%s",l_request_format)
+writefile(l_filename1,"%s",trun(iix_individual_claims:XML_after_REQUEST_FORMAT))
+writefile(l_filename2,"%s",trun(iix_individual_claims:XML_BEFORE_REQUEST_FORMAT))
+writefile(l_filename2,"%s",l_request_format)
+writefile(l_filename2,"%s",trun(iix_individual_claims:XML_after_REQUEST_FORMAT))
+closefile(l_filename1)
+closefile(l_filename2)
+END
+
+End

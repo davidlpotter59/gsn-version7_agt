@@ -1,0 +1,883 @@
+%%                 
+Screen
+        Name = "agtmt100e";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Domain="dummy" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2];
+
+        array[40] of string l_view_desc[65];
+        array[40] of unsigned ascii number l_value[40];
+--        array[40] of tag t_remove_checkbox;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_loop[2],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_count[4],
+                                    l_prem_no[4],
+                                    l_build_no[4],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_enter[1],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ;
+
+--        access sfspolicywideoptend,
+--           set sfspolicywideoptend:company_id       = g_company_id,
+--               sfspolicywideoptend:state            = g_state,
+--               sfspolicywideoptend:line_of_business = g_line_of_business, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+    reaccess;
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+        "calc" display "agtmt200" tagged calc_fn ;
+        "update_totals" display/noreturn "boqmt010" ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+  do read_forms
+
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+Access Validation
+If agqmaster:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+   Panel at 2,1 to 3.5,100
+           Properties {
+                        LayoutType = screen
+                        backgroundcolor = "Grey"
+                      }
+                   {
+                     Components
+                        guidetext at 1,1 to 1,70 tagged t_policy_wide
+                             properties
+                               {
+                                 text = "Optional Endorsements - Location Specific . . ."
+                                 contentalignment = left
+                               --  BorderStyle = Raised
+                                 fontsize = 18
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 transparent = False
+                                 backgroundcolor = "Grey"
+                               }
+                        guidetext at 1,70 to 1,110 tagged t_policy_wide
+                             properties
+                               {
+                                 text = "Quote No:"
+                                 contentalignment = left
+                               --  BorderStyle = Raised
+                                 fontsize = 18
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 transparent = False
+                                 backgroundcolor = "Grey"
+                               }
+
+                   }
+
+   Panel at 4, 1 to 4,30 tagged button_panel
+      Properties
+         {
+           layouttype = screen
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+              Iconname = "btn_editentries.gif"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+   panel at 5,1 to 5,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+
+Panel at 6,1 to 18,40
+           Properties {
+                        LayoutType = screen
+                        backgroundcolor = "Grey"
+                      }
+                   {
+                     Components
+                        guidetext at 1,1 to 1,37 tagged t_view1
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 2,1 to 2,37 tagged t_view2
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 3,1 to 3,37 tagged t_view3
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 4,1 to 4,37 tagged t_view4
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 5,1 to 5,37 tagged t_view5
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 6,1 to 6,37 tagged t_view6
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 7,1 to 7,37 tagged t_view7
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 8,1 to 8,37 tagged t_view8
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 9,1 to 9,37 tagged t_view9
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 10,1 to 10,37 tagged t_view10
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 11,1 to 11,37 tagged t_view11
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 12,1 to 12,37 tagged t_view12
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+
+                        guidetext at 13,1 to 13,37 tagged t_view13
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                  }
+                            --second column if list start here
+Panel at 6,45 to 18,100
+           Properties {
+                        LayoutType = screen
+                        backgroundcolor = "Grey"
+                      }
+                   {
+                     Components
+                        guidetext at 1,1 to 1,40 tagged t_view14
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 2,1 to 2,40 tagged t_view15
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 3,1 to 3,40 tagged t_view16
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 4,1 to 4,40 tagged t_view17
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 5,1 to 5,40 tagged t_view18
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 6,1 to 6,40 tagged t_view19
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 7,1 to 7,40 tagged t_view20
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 8,1 to 8,40 tagged t_view21
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 9,1 to 9,40 tagged t_view22
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 10,1 to 10,40 tagged t_view23
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 11,1 to 11,40 tagged t_view24
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 12,1 to 12,40 tagged t_view25
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                        guidetext at 13,1 to 13,40 tagged t_view26
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "TIME-Roman"
+                                 contentalignment = right
+                               }
+                   }
+
+
+
+Panel at 6,40 to 18, 41
+{
+%%
+__
+__
+__
+__
+__
+__
+__
+__
+__
+__
+__
+__
+__
+%%
+
+components
+
+Fields
+
+101 l_value[1]/checkbox/values="0,1"/default  tagged t_remove_checkbox1 ;
+201 l_value[2]/checkbox/values="0,1"/default
+    hide if l_view_desc[2] = NULL ;
+301 l_value[3]/checkbox/values="0,1"/default
+hide if l_view_desc[3] = NULL ;
+401
+
+     l_value[4]/checkbox/values="0,1"/default;
+501  l_value[5]/checkbox/values="0,1"/default tagged t_remove_checkbox5;
+601 l_value[6]/checkbox/values="0,1"/default  tagged t_remove_checkbox6;
+
+701 l_value[7]/checkbox/values="0,1"/default  tagged t_remove_checkbox7;
+
+801 l_value[8]/checkbox/values="0,1"/default   tagged t_remove_checkbox8;
+
+901 l_value[9]/checkbox/values="0,1"/default   tagged t_remove_checkbox9;
+
+1001 l_value[10]/checkbox/values="0,1"/default  tagged t_remove_checkbox10;
+
+1101 l_value[11]/checkbox/values="0,1"/default  tagged t_remove_checkbox11;
+
+1201 l_value[12]/checkbox/values="0,1"/default  tagged t_remove_checkbox12;
+
+1301 l_value[13]/checkbox/values="0,1"/default tagged t_remove_checkbox13;
+
+}
+
+
+Panel at 6,90 to 18, 91
+{
+%%
+__
+__
+__
+__
+__
+__
+__
+__
+__
+__
+__
+__
+__
+%%
+
+components
+
+Fields
+101 l_value[14]/checkbox/values="0,1"/default tagged t_remove_checkbox14;
+201 l_value[15]/checkbox/values="0,1"/default tagged t_remove_checkbox15;
+301 l_value[16]/checkbox/values="0,1"/default tagged t_remove_checkbox16;
+401 l_value[17]/checkbox/values="0,1"/default tagged t_remove_checkbox17;
+501 l_value[18]/checkbox/values="0,1"/default tagged t_remove_checkbox18;
+601 l_value[19]/checkbox/values="0,1"/default tagged t_remove_checkbox19;
+701 l_value[20]/checkbox/values="0,1"/default tagged t_remove_checkbox20;
+801 l_value[21]/checkbox/values="0,1"/default tagged t_remove_checkbox21;
+901 l_value[22]/checkbox/values="0,1"/default tagged t_remove_checkbox22;
+1001 l_value[23]/checkbox/values="0,1"/default tagged t_remove_checkbox23;
+1101 l_value[24]/checkbox/values="0,1"/default tagged t_remove_checkbox24;
+1201 l_value[25]/checkbox/values="0,1"/default tagged t_remove_checkbox25;
+1301 l_value[26]/checkbox/values="0,1"/default tagged t_remove_checkbox26;
+}
+
+
+panel at 19,1 to 19,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 19.75,70 to 19.75,90
+   Properties
+        {
+          LayoutType = row
+          layoutgap = 2
+        }
+   {
+     Components
+       Button at 1,10  tagged next_fn
+         Properties
+           {
+             Iconname = "view_summarytotals.jpg"
+           }
+         Events
+           {
+             Action = calc_fn
+           }
+   }
+
+panel at 21,1 to 21,100
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+}
+Postupdate
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    if function one of "ADD", "CHANGE" then
+        begin
+        Access agqgeneral_ALIAS, Set agqgeneral_ALIAS:app_NO = G_app_NO, generic
+
+        while agqgeneral_alias:app_no = g_app_no
+            begin
+            change agqgeneral_alias
+                begin
+                agqgeneral_alias:remove_terrorism_form = agqmaster:exclude_terrorism
+                end
+
+            next agqgeneral_alias
+            end
+
+        Access agqgeneral, Set agqgeneral:app_no = g_APP_NO, generic
+
+        Access bpstrigger, Set bpstrigger:COMPANY_ID       = agqgeneral:COMPANY_ID,
+                               bpstrigger:STATE            = g_STATE,
+                               bpstrigger:LINE_OF_BUSINESS = G_LINE_OF_BUSINESS, Generic
+
+        while bpstrigger:company_id       = agqgeneral:company_id and
+              bpstrigger:state            = g_state and
+              bpstrigger:line_of_business = g_line_of_business
+            begin
+            If agqgeneral:EFF_DATE >= bpstrigger:RATE_DATE Then
+                Begin
+                L_CODE_1 = bpstrigger:code[5] -- MCL430
+                End
+
+            Next bpstrigger
+            End
+
+        If L_CODE_1 <> "" Then
+            Begin
+            -- LLC form
+            L_CODE = L_CODE_1
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqmaster:form_of_business one of "L" Then
+                Do ADD_agqend
+            If L_ADD_ENDORSEMENT = "N" And
+               agqmaster:form_of_business not one of "L" Then
+                Do DELETE_agqend
+            End
+
+        Access BPSRATE, Set BPSRATE:COMPANY_ID       = agqgeneral:COMPANY_ID,
+                            BPSRATE:STATE            = g_STATE,
+                            BPSRATE:LINE_OF_BUSINESS = G_LINE_OF_BUSINESS, Generic
+
+        l_code_1 = ""
+        while bpsrate:company_id = agqgeneral:company_id and
+              bpsrate:state = g_state and
+              bpsrate:line_of_business = g_line_of_business
+            begin
+            If agqgeneral:EFF_DATE >= BPSRATE:EFF_DATE Then
+                Begin
+                L_CODE_1 = BPSRATE:HIRED_NONOWNED_CODE[1] -- BU5004
+                L_CODE_2 = BPSRATE:HIRED_NONOWNED_CODE[2] -- BU0140
+                End
+
+            Next BPSRATE
+            End
+
+        If L_CODE_1 <> "" Then
+            Begin
+            -- delete Hired/Nonown
+            L_CODE = L_CODE_1
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqmaster:DELETE_HIRED_NONOWNED = "Y" Then
+                Do ADD_agqend
+            If L_ADD_ENDORSEMENT = "N" And
+               agqmaster:DELETE_HIRED_NONOWNED = "N" Then
+                Do DELETE_agqend
+            End
+
+        If L_CODE_2 <> "" Then
+            Begin
+            -- extend hired/nonowned
+            L_CODE = L_CODE_2
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqmaster:EXTEND_HIRED_NONOWNED = "Y" Then
+                Do ADD_agqend
+            If L_ADD_ENDORSEMENT = "N" And
+               agqmaster:EXTEND_HIRED_NONOWNED = "N" Then
+                Do DELETE_agqend
+            End
+        end
+
+    If FUNCTION = "CHANGE" Then
+        Begin
+        Access agQgeneral,
+           Set agqgeneral:app_no = g_APP_NO, Generic
+
+        access agqmaster,
+           set agqmaster:app_no = g_app_no, generic
+/*
+        Access agsDEFAULT,
+           Set agsDEFAULT:COMPANY_ID       = agqgeneral:COMPANY_ID,
+               agsDEFAULT:LINE_OF_BUSINESS = G_LINE_OF_BUSINESS,
+               agsDEFAULT:FORM             = agqmaster:FORM, Generic
+
+        Access agqgeneral, Set agqgeneral:app_no = g_APP_NO, Generic
+
+        while agqgeneral:app_no = g_APP_NO
+            begin
+            If agqgeneral:PROPERTY_LIMIT <> 0 And
+               agqmaster:FORM = 3 And
+               agqgeneral:MONEY_LIMIT_ON = 0 Then
+                Change agqgeneral
+                    Begin
+                    agqgeneral:MONEY_LIMIT_ON  = agsDEFAULT:MONEY_LIMIT_ON
+                    agqgeneral:MONEY_LIMIT_OFF = agsDEFAULT:MONEY_LIMIT_OFF
+                    End
+
+            If agqmaster:FORM = 1 And
+               agqgeneral:ATTACH_BU5001 = "N" Then
+                Change agqgeneral
+                    Begin
+                    agqgeneral:MONEY_LIMIT_ON = 0
+                    agqgeneral:MONEY_LIMIT_OFF = 0
+                    End
+
+            If agqgeneral:DIFFERENT_OFF_PREMISES = 0 Then
+                Change agqgeneral
+                    Begin
+                    agqgeneral:OFF_PREMISES_LIMIT = agqmaster:OFF_PREMISES_LIMIT
+                    End
+
+            Next agqgeneral
+            End
+*/
+
+        End
+
+    end
+
+screen exit
+if function one of "EXIT", "BACK" and
+   g_inquiry not one of "Y" then
+    function = "update_totals"
+
+Procedure Definition
+
+procedure read_forms
+
+BEGIN
+  Local File policywideoptend = alias for sfspolicywideoptend;
+  unsigned ascii number l_state = 29;
+  tag l_the_tag[15];
+
+  access agqgeneral,
+     set agqgeneral:app_no = g_app_no, generic
+
+  access policywideoptend,
+     set policywideoptend:company_id       = "FLEMINGTON",
+         policywideoptend:state            = l_state,
+         policywideoptend:line_of_business = g_line_of_business, generic
+
+  l_count = 1
+  while policywideoptend:errornumber <> 4026
+    {
+      if policywideoptend:location_specific one of 1 then
+        {
+          l_view_desc[l_count] = trun(policywideoptend:POLICY_WIDE_FORM_DESC) + policywideoptend:form_print
+          l_the_tag = tag(trun(policywideoptend:tag_name))
+          do printguidetext(l_the_tag,trun(l_view_desc[l_count]))
+          l_count = l_count + 1
+        }
+      next policywideoptend
+    }
+  for l_loop = l_count to 26
+    {
+      if l_view_desc[l_loop] = "" then
+        {
+          switch(l_loop)
+            case 5 : hide(t_remove_checkbox5)
+            case 6 : hide(t_remove_checkbox6)
+            case 7 : hide(t_remove_checkbox7)
+            case 8 : hide(t_remove_checkbox8)
+            case 9 : hide(t_remove_checkbox9)
+            case 10 : hide(t_remove_checkbox10)
+            case 11 : hide(t_remove_checkbox11)
+            case 12 : hide(t_remove_checkbox12)
+            case 13 : hide(t_remove_checkbox13)
+            case 14 : hide(t_remove_checkbox14)
+            case 15 : hide(t_remove_checkbox15)
+            case 16 : hide(t_remove_checkbox16)
+            case 17 : hide(t_remove_checkbox17)
+            case 18 : hide(t_remove_checkbox18)
+            case 19 : hide(t_remove_checkbox19)
+            case 20 : hide(t_remove_checkbox20)
+            case 21 : hide(t_remove_checkbox21)
+            case 22 : hide(t_remove_checkbox22)
+            case 23 : hide(t_remove_checkbox23)
+            case 24 : hide(t_remove_checkbox24)
+            case 25 : hide(t_remove_checkbox25)
+            case 26 : hide(t_remove_checkbox26)
+          end
+        }
+    }
+END
+
+procedure printguidetext(tag current_tag, string display_string)
+
+BEGIN
+  Setproperty(current_tag, text, display_string)
+END
+
+procedure update_exclusion
+begin
+access agqgeneral, set agqgeneral:app_no = g_APP_NO, generic
+
+l_remove_form = 0
+while agqgeneral:app_no = g_APP_NO
+        begin
+        if agqgeneral:remove_terrorism_Form = 1 then
+            l_remove_form = 1
+
+        next agqgeneral
+        end
+
+end
+
+Procedure ACCESS_agqend
+Begin
+Access agqend, Set agqend:app_no = g_APP_NO ,
+                   agqend:PREM_NO  = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqend:app_no = g_APP_NO and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+    begin
+    If agqend:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend
+    End
+
+End
+
+Procedure ADD_agqend
+Begin
+Access agqend, Set agqend:app_no = g_APP_NO ,
+                   agqend:PREM_NO  = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+L_SUB_CODE = 0
+while agqend:app_no = g_APP_NO and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+        begin
+        L_SUB_CODE = agqend:SUB_CODE
+
+        Next agqend
+        End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access agqgeneral_ALIAS, Set agqgeneral_ALIAS:app_no = g_APP_NO,
+                             agqgeneral_ALIAS:PREM_NO  = G_PREM_NO,
+                             agqgeneral_ALIAS:BUILD_NO = G_BUILD_NO, Generic
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqgeneral:COMPANY_ID,
+                      SFSOPTEND:STATE            = g_STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = G_LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqgeneral:COMPANY_ID and
+      SFSOPTEND:STATE            = g_STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = g_LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+        begin
+        If (agqgeneral:EFF_DATE >= SFSOPTEND:EFF_DATE and
+           (agqgeneral:eff_date <= sfsoptend:exp_date or
+           sfsoptend:exp_date = 0)) Then
+            Begin
+            L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+            L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+            End
+
+        Next SFSOPTEND
+        End
+
+if l_form_edition <> "" then
+    begin
+    Add agqend
+        Begin
+        agqend:app_no             =       g_APP_NO
+        agqend:PREM_NO              =       0
+        agqend:BUILD_NO             =       0
+        agqend:SUB_CODE             =       L_SUB_CODE
+        agqend:CODE                 =       L_CODE
+        agqend:FORM_EDITION         =       L_FORM_EDITION
+        agqend:DESCRIPTION          =       L_DESCRIPTION
+        agqend:PREMIUM              =       0
+        agqend:lob_end_code         =       "X"
+        end
+    End
+
+End
+
+Procedure DELETE_agqend
+Begin
+Access agqend, Set agqend:app_no = g_APP_NO ,
+                   agqend:PREM_NO  = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+while agqend:app_no = g_APP_NO and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+        begin
+        If agqend:CODE = L_CODE Then
+            Delete agqend
+
+        Next agqend
+        End
+
+End
+
+End

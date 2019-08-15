@@ -1,0 +1,747 @@
+%%
+/*
+Date Written: July 18, 2006
+
+Name: agqmca301_011997.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+07/18/2006            DWR     new form Version with New naming convention
+===========================
+*/
+
+Program
+  Name = "agqmca301_011997";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[19] = "agqmca301_011997.cq";
+ String L_COPY_NAME[20] ;
+ String L_agqaddlinsured_ZIP;
+ String L_INFILE[15]="casmca301.in";
+ String L_READ_INFILE[25];
+ String L_FORM_PRINT[15] ;
+ String L_EDITION_PRINT[10] ;
+ String L_agqNAME_ZIP[20] = "";
+
+ unsigned ascii number l_app_no[11] ;
+ unsigned ascii number l_vehicle_no[11] ;
+ Unsigned Ascii Number L_TOTAL_VEHICLE_PER_PAGE = 54;
+ Unsigned Ascii Number L_FIRST_PAGE_TOTAL_VEHICLE = 34;
+ Unsigned Ascii Number L_TOTAL_VEHICLE;
+ Unsigned Ascii Number L_LINE_COUNTER;
+ Unsigned Ascii Number L_MAX_LINE = 55;
+ Unsigned Ascii Number L_PRINTED_VEHICLE_ON_PAGE = 0;
+ Unsigned ascii number l_max_lines;
+ Unsigned Ascii Number L_YEAR[4];
+ Unsigned Ascii number L_LINE_OF_BUSINESS[4];
+ Unsigned ascii number l_found[1];
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_STATE[2]=0;
+ Unsigned Ascii Number L_LOOP;
+ wdate L_EFF_DATE;
+ Unsigned Ascii Number L_PAGE_NUMBER = 1;
+
+   Include "csfonts.inc"
+   Include "swsut100.var"
+   Include "swsut200.var"
+   Include "swsut300.var"
+   Include "line_spacing.var"
+   Include "sfsrevname.var"
+
+Initialization
+l_app_no = val(commandline[1,11])
+l_vehicle_no = val(commandline[12,15])
+
+Deletefile (L_FILE_NAME);
+
+Access agqNAME,
+   Set agqNAME:app_no    = l_app_no, generic
+
+Access agqmaster,
+   Set agqmaster:app_no    = l_app_no, generic
+
+Access agqvehicle,
+   Set agqvehicle:app_no    = l_app_no, generic
+
+Access agqendorse2,
+   Set agqendorse2:app_no    = l_app_no , generic
+
+Access agqend1_alias,
+   Set agqend1_alias:app_no    = l_app_no , generic
+
+Access agqaddin2,
+   Set agqaddin2:app_no    = l_app_no,
+       agqaddin2:VEHICLE_NO   = l_VEHICLE_NO, Generic
+
+Access SFSCOMPANY,
+   Set SFSCOMPANY:COMPANY_ID = agqvehicle:company_id , Exact
+
+Access SCIPSCONTROL,
+   Set SCIPSCONTROL:COMPANY_ID = agqvehicle:company_id , Exact
+
+Access SFSLINE,
+   Set SFSLINE:COMPANY_ID       = agqvehicle:company_id ,
+       SFSLINE:LINE_OF_BUSINESS = agqvehicle:LINE_OF_BUSINESS,
+       SFSLINE:LOB_SUBLINE      = "00", Generic
+
+   Include "swsut100.inc"
+   I_CODE = "MCA301"
+   Include "swsut200.inc"
+
+do print_other
+
+update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+
+Procedure definition
+
+Procedure print_other
+Begin
+While agqvehicle:app_no    = l_app_no
+{
+  If agqvehicle:additional_insured = "Y" then
+    {
+      L_STATE            = agqvehicle:STATE
+      L_COMPANY_ID       = agqvehicle:company_id
+      L_LINE_OF_BUSINESS = agqvehicle:line_of_business
+
+      Access SFSOPTEND,
+         Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+             SFSOPTEND:STATE            = L_STATE,
+             SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+             SFSOPTEND:CODE             = I_CODE, generic
+
+       While SFSOPTEND:COMPANY_ID       = L_COMPANY_ID and
+             SFSOPTEND:STATE            = L_STATE and
+             SFSOPTEND:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS and
+             SFSOPTEND:CODE             = I_CODE
+
+         {  --start of sfsoptend check
+           If (agqvehicle:eff_date >= sfsoptend:eff_date and
+              (agqvehicle:eff_date < sfsoptend:exp_date or
+               sfsoptend:exp_date = 0)) then
+             {
+               l_eff_date = sfsoptend:eff_date
+             }
+           next sfsoptend
+         }
+
+      Access SFSOPTEND,
+         Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+             SFSOPTEND:STATE            = L_STATE,
+             SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+             SFSOPTEND:CODE             = I_CODE,
+             SFSOPTEND:EFF_DATE         = L_EFF_DATE, exact
+
+      If sfsoptend:edition <> 0 then
+        {
+          Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+          Writefile(L_FILE_NAME,"%s","<033>&a420h7080V")
+          Writefile(L_FILE_NAME,"%s","Ed. ")
+          Writefile(L_FILE_NAME,"%n",sfsoptend:edition)
+        }
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a420h7200V")
+      Writefile(L_FILE_NAME,"%s",l_copyright_6)
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s",sfsoptend:COPYRIGHT)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+      Writefile(L_FILE_NAME,"%s","<033>&a4300h120V")
+      Writefile(L_FILE_NAME,"%s",Trun(SFSOPTEND:FORM_PRINT))
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s",SFSOPTEND:EDITION_PRINT)
+
+      If (Val(agqvehicle:STR_ZIPCODE[6,9]) = 0) Then
+        {
+          L_agqNAME_ZIP =  agqvehicle:STR_ZIPCODE[1,5]
+        }
+      Else
+        {
+          L_agqNAME_ZIP = agqvehicle:STR_ZIPCODE[1,5] + "-" +
+                          agqvehicle:STR_ZIPCODE[6,9]
+        }
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","ADDITIONAL ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","INSURED ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","- LESSOR")
+      L_LINE_COUNTER = L_LINE_COUNTER +1
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","This endorsement modifies the policy to provide that certain leased autos are considered as owned autos and includes the lessor ")
+      L_LINE_COUNTER = L_LINE_COUNTER +1
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","as an insured. The required information may be shown below or elsewhere in the policy.")
+      L_LINE_COUNTER = L_LINE_COUNTER +1
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","The provisions of this endorsement apply only when the endorsement number is listed in the Declarations. ")
+      L_LINE_COUNTER = L_LINE_COUNTER +1
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+140V")
+      Writefile(L_FILE_NAME,"%s","Except as provided below, all other provisions in this policy are unchanged.")
+      L_LINE_COUNTER = L_LINE_COUNTER +1
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+60V<033>*c5400h5v0P") --Horizontal Line
+      L_LINE_COUNTER = L_LINE_COUNTER +2
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+140V")
+      Writefile(L_FILE_NAME,"%s","Policy # ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_9)
+      Writefile(L_FILE_NAME,"%n",l_app_no)
+      L_LINE_COUNTER = L_LINE_COUNTER +2
+
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+200V")
+      Writefile(L_FILE_NAME,"%s","SCHEDULE")
+      L_LINE_COUNTER = L_LINE_COUNTER +2
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+200V")
+      Writefile(L_FILE_NAME,"%s","Insurance Company: ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_9)
+      Writefile(L_FILE_NAME,"%s",SFSCOMPANY:NAME[1])
+      L_LINE_COUNTER = L_LINE_COUNTER +1
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+      Writefile(L_FILE_NAME,"%s","Policy Number: ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_9)
+      Writefile(L_FILE_NAME,"%n",agqVEHICLE:app_no)
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a2600h+0V")
+      Writefile(L_FILE_NAME,"%s","From: ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_9)
+      Writefile(L_FILE_NAME,"%d",agqNAME:EFF_DATE)
+      Writefile(L_FILE_NAME,"%s","<033>&a3850h+0V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","To: ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_9)
+
+      Access agqaddin2,
+         Set agqaddin2:app_no    = agqvehicle:app_no,
+             agqaddin2:VEHICLE_NO   = agqVEHICLE:VEHICLE_NO, Generic
+
+      While agqaddin2:app_no    = agqvehicle:app_no and
+            agqaddin2:vehicle_no   = agqvehicle:vehicle_no
+      {
+        If agqaddin2:SIX_MONTHS_OR_LESS = "Y" Then
+          {
+            Writefile(L_FILE_NAME,"%d",agqaddin2:EXP_DATE)
+          }
+
+        Else
+          {
+            Writefile(L_FILE_NAME,"%d",agqNAME:EXP_DATE)
+          }
+
+        L_LINE_COUNTER = L_LINE_COUNTER +1
+
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+        Writefile(L_FILE_NAME,"%s","<033>&a3850h+120V")
+        Writefile(L_FILE_NAME,"%s","(Expiration Date)")
+        L_LINE_COUNTER = L_LINE_COUNTER +2
+
+        --the following is the name scetion for the Named Insured
+
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+        Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+        Writefile(L_FILE_NAME,"%s","Named ")
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+        Writefile(L_FILE_NAME,"%s","Insured: ")
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+        Writefile(L_FILE_NAME,"%s","<033>&a0h-120V")
+
+        For L_LOOP = 1 to 3
+          {
+            I_NAME=agqNAME:NAME[L_LOOP,1,40]
+            Include "sfsrevname7.pro"
+            If agqNAME:NAME[L_LOOP] <> "" Then
+              {
+                Writefile(L_FILE_NAME,"%s","<033>&a775h+120V")
+                Writefile(L_FILE_NAME,"%s",I_REV_NAME)
+              }
+          }
+
+        Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+        Writefile(L_FILE_NAME,"%s","Address:")
+        Writefile(L_FILE_NAME,"%s","<033>&a0h-120V")
+
+        For L_LOOP = 1 To 3
+          {
+            If agqNAME:ADDRESS[L_LOOP] <> "" Then
+              {
+                Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+                Writefile(L_FILE_NAME,"%s","<033>&a475h+120V")
+                Writefile(L_FILE_NAME,"%s",agqNAME:ADDRESS[L_LOOP])
+              }
+          }
+
+        Writefile(L_FILE_NAME,"%s","<033>&a475h+120V")
+        Writefile(L_FILE_NAME,"%s",Trun(agqNAME:CITY))
+        Writefile(L_FILE_NAME,"%s",", ")
+        Writefile(L_FILE_NAME,"%s",agqNAME:STR_STATE)
+        Writefile(L_FILE_NAME,"%s"," ")
+        Writefile(L_FILE_NAME,"%s",L_agqNAME_ZIP)
+        L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+        --the following are the name fields for the Additional Named Lessor section
+
+
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+        Writefile(L_FILE_NAME,"%s","<033>&a90h+240V")
+        Writefile(L_FILE_NAME,"%s","Additional ")
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+        Writefile(L_FILE_NAME,"%s","Insured ")
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+        Writefile(L_FILE_NAME,"%s","(Lessor):")
+
+        If agqaddin2:NAME[1] <> "" or
+           agqaddin2:NAME[2] <> "" or
+           agqaddin2:NAME[3] <> ""
+           Then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a1230h-120V")
+
+            For L_LOOP = 1 To 3
+              {
+                Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+                Writefile(L_FILE_NAME,"%s","<033>&a1230h+120V")
+                Writefile(L_FILE_NAME,"%s",agqaddin2:NAME[L_LOOP])
+              }
+
+            Writefile(L_FILE_NAME,"%s",l_arial_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+            Writefile(L_FILE_NAME,"%s","Address: ")
+            Writefile(L_FILE_NAME,"%s","<033>&a475h-120V")
+
+            For L_LOOP = 1 To 3
+              {
+                Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+                Writefile(L_FILE_NAME,"%s","<033>&a475h+120V")
+                Writefile(L_FILE_NAME,"%s",agqaddin2:ADDRESS[L_LOOP])
+              }
+
+            Writefile(L_FILE_NAME,"%s","<033>&a475h+120V")
+            Writefile(L_FILE_NAME,"%s",Trun(agqaddin2:CITY))
+            Writefile(L_FILE_NAME,"%s",", ")
+            Writefile(L_FILE_NAME,"%s",agqaddin2:STR_STATE)
+            Writefile(L_FILE_NAME,"%s"," ")
+            Writefile(L_FILE_NAME,"%s",agqaddin2:STR_ZIPCODE)
+            L_LINE_COUNTER = L_LINE_COUNTER + 2
+          }
+        Else
+          {
+            Writefile(L_FILE_NAME,"%s",l_arial_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+            Writefile(L_FILE_NAME,"%s","Address: ")
+          }
+
+      next agqaddin2
+      }--while agqaddin2
+
+--Beginning of Description of Leased Autos
+Writefile(L_FILE_NAME,"%s",l_arial_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h3500V")
+Writefile(L_FILE_NAME,"%s","Description of ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","Leased Autos: ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+Writefile(L_FILE_NAME,"%s","Vehicle Number ")
+Writefile(L_FILE_NAME,"%s","<033>&a1000h+0V")
+Writefile(L_FILE_NAME,"%s","Year")
+Writefile(L_FILE_NAME,"%s","<033>&a1300h+0V")
+Writefile(L_FILE_NAME,"%s","Make")
+Writefile(L_FILE_NAME,"%s","<033>&a2520h+0V")
+Writefile(L_FILE_NAME,"%s","Model")
+Writefile(L_FILE_NAME,"%s","<033>&a4500h+0V")
+Writefile(L_FILE_NAME,"%s","Serial Number")
+L_LINE_COUNTER = L_LINE_COUNTER +1
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a300h+120V")
+Writefile(L_FILE_NAME,"%n",agqVEHICLE:VEHICLE_NO)
+Writefile(L_FILE_NAME,"%s","<033>&a1000h+0V")
+Writefile(L_FILE_NAME,"%n",agqVEHICLE:YEAR)
+Writefile(L_FILE_NAME,"%s","<033>&a1300h+0V")
+Writefile(L_FILE_NAME,"%s",agqVEHICLE:MAKE)
+Writefile(L_FILE_NAME,"%s","<033>&a2520h+0V")
+Writefile(L_FILE_NAME,"%s",Trun(agqVEHICLE:MODEL))
+Writefile(L_FILE_NAME,"%s","<033>&a4500h+0V")
+Writefile(L_FILE_NAME,"%s",agqVEHICLE:SERIAL_NO)
+L_LINE_COUNTER = L_LINE_COUNTER +1
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h+240V")
+Writefile(L_FILE_NAME,"%s","Coverages")
+Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+Writefile(L_FILE_NAME,"%s","Limits of Liability")
+L_LINE_COUNTER = L_LINE_COUNTER +2
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h+240V")
+Writefile(L_FILE_NAME,"%s","Liability - Coverage A")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+Writefile(L_FILE_NAME,"%s","$")
+Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+Writefile(L_FILE_NAME,"%s",Str(agqMASTER:LIABILITY,"ZZ,ZZZ,ZZZ"))
+L_LINE_COUNTER = L_LINE_COUNTER +2
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h+200V")
+Writefile(L_FILE_NAME,"%s","Medical Payments - Coverage B")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+Writefile(L_FILE_NAME,"%s","$")
+Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+
+If SCIPSCONTROL:CA_ADDL_INSURED_LIABILITY = 1 Then
+  {
+    Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:MEDICAL_PAYMENTS,"ZZ,ZZZ,ZZ9"))
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s",str(0,"ZZ,ZZZ,ZZ9"))
+  }
+
+L_LINE_COUNTER = L_LINE_COUNTER +2
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h+200V")
+Writefile(L_FILE_NAME,"%s","Personal Injury Protection - Coverage C")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+Writefile(L_FILE_NAME,"%s","$ ")
+
+If SCIPSCONTROL:CA_ADDL_INSURED_LIABILITY = 1 Then
+  {
+    Writefile(L_FILE_NAME,"%s","BASIC")
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s","N/A")
+  }
+
+L_LINE_COUNTER = L_LINE_COUNTER +2
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h+280V")
+Writefile(L_FILE_NAME,"%s","Comprehensive - Coverage F")
+Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+Writefile(L_FILE_NAME,"%s","Actual Cash Value or Cost of Repair (whichever is less) minus Deductible ")
+L_LINE_COUNTER = L_LINE_COUNTER +1
+
+Writefile(L_FILE_NAME,"%s","<033>&a2200h+120V")
+Writefile(L_FILE_NAME,"%s"," of $")
+Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:COMP_DEDUCTIBLE,"ZZ,ZZZ"))
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a2750h+0V")
+Writefile(L_FILE_NAME,"%s","for each ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","Leased Auto.")
+L_LINE_COUNTER = L_LINE_COUNTER +2
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h+180V")
+Writefile(L_FILE_NAME,"%s","Collision - Coverage G")
+Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+Writefile(L_FILE_NAME,"%s","Actual Cash Value or Cost of Repair (whichever is less) minus Deductible ")
+L_LINE_COUNTER = L_LINE_COUNTER +1
+
+Writefile(L_FILE_NAME,"%s","<033>&a2200h+120V")
+Writefile(L_FILE_NAME,"%s"," of $")
+Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:COLL_DEDUCTIBLE,"ZZ,ZZZ"))
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a2750h+0V")
+Writefile(L_FILE_NAME,"%s","for each ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","Leased Auto.")
+L_LINE_COUNTER = L_LINE_COUNTER +2
+L_LINE_COUNTER =0
+
+                  --*****Page 2 of MCA 301 01 97*****
+
+Writefile(L_FILE_NAME,"%s",L_PUSH)
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h+240V")
+Writefile(L_FILE_NAME,"%s","COVERAGE MODIFICATION")
+
+Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","A.")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+0V")
+Writefile(L_FILE_NAME,"%s","Any ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","leased auto ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","described in the Schedule of this")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+Writefile(L_FILE_NAME,"%s","endorsement will be considered as a covered ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","auto you")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+Writefile(L_FILE_NAME,"%s","own and not a covered ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","auto you ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","borrow, hire or rent.")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+180V")
+Writefile(L_FILE_NAME,"%s","For such covered ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","autos, ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","the Who is An ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","Insured ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","provisions")
+Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+Writefile(L_FILE_NAME,"%s","are amended to include the lessor named in the Schedule ")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+Writefile(L_FILE_NAME,"%s","of this endorsement as an ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","insured.")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h+180V")
+Writefile(L_FILE_NAME,"%s","B.")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+0V")
+Writefile(L_FILE_NAME,"%s","The coverages designated in the Schedule as provided by")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+Writefile(L_FILE_NAME,"%s","this endorsement cease to apply to the described ")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","leased ")
+Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+Writefile(L_FILE_NAME,"%s","autos ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","on the expiration date shown in the Schedule, or on ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+Writefile(L_FILE_NAME,"%s","the date the lessor (or an agent of the lessor) takes ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+Writefile(L_FILE_NAME,"%s","possession of the ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","leased auto, ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","whichever occurs first.")
+
+Writefile(L_FILE_NAME,"%s",L_POP)
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3000h+240V")
+Writefile(L_FILE_NAME,"%s","CHANGES IN CONDITIONS")
+
+Writefile(L_FILE_NAME,"%s","<033>&a3000h+120V")
+Writefile(L_FILE_NAME,"%s","A.")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+Writefile(L_FILE_NAME,"%s","The SPECIAL PHYSICAL DAMAGE CONDITION - ")
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","LOSS ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","PAYABLE is amended by adding the following:")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+180V")
+Writefile(L_FILE_NAME,"%s","The lessor named in the Schedule of this endorsement")
+
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s","will be considered a ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","loss ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","payee for the physical damage ")
+
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s","coverages designated in the Schedule.")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3000h+180V")
+Writefile(L_FILE_NAME,"%s","B.")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+Writefile(L_FILE_NAME,"%s","The COMMON CONDITION - CANCELLATION /")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s","TERMINATION is amended by adding the following:")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s","1.")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3400h+0V")
+Writefile(L_FILE_NAME,"%s","If ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","we ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","cancel this policy, ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","we ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","will mail or send the")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3400h+120V")
+Writefile(L_FILE_NAME,"%s","lessor named in the Schedule of this endorsement the")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3400h+120V")
+Writefile(L_FILE_NAME,"%s","same advance notice of cancellation ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","we ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","send to the")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3400h+120V")
+Writefile(L_FILE_NAME,"%s","first named insured.")
+
+Writefile(L_FILE_NAME,"%s","<033>&f1S")
+Writefile(L_FILE_NAME,"%s","<FF>")
+
+Writefile(L_FILE_NAME,"%s",L_PUSH)
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+0V")
+Writefile(L_FILE_NAME,"%s","2.")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a490h+0V")
+Writefile(L_FILE_NAME,"%s","If the ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","first named insured ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","cancels this policy, ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","we ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","will")
+Writefile(L_FILE_NAME,"%s","<033>&a490h+120V")
+Writefile(L_FILE_NAME,"%s","mail or send notice to the lessor.")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+180V")
+Writefile(L_FILE_NAME,"%s","3.")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a490h+0V")
+Writefile(L_FILE_NAME,"%s","Cancellation ends the agreement provided under this")
+
+Writefile(L_FILE_NAME,"%s","<033>&a490h+120V")
+Writefile(L_FILE_NAME,"%s","endorsement.")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a90h+180V")
+Writefile(L_FILE_NAME,"%s","C.")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a290h+0V")
+Writefile(L_FILE_NAME,"%s","The COMMON CONDITION - PREMIUMS is ")
+
+Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+Writefile(L_FILE_NAME,"%s","amended by adding the following:")
+
+Writefile(L_FILE_NAME,"%s","<033>&a290h+180V")
+Writefile(L_FILE_NAME,"%s","The lessor named in the Schedule of this endorsement is")
+
+Writefile(L_FILE_NAME,"%s","<033>&a290h+120V")
+Writefile(L_FILE_NAME,"%s","not responsible for payment of any premiums.")
+
+Writefile(L_FILE_NAME,"%s",L_POP)
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3000h+0V")
+Writefile(L_FILE_NAME,"%s","ADDITIONAL DEFINITION")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s","As used in this endorsement, the following definition is")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s","added:")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+180V")
+Writefile(L_FILE_NAME,"%s","Leased auto ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","means an ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","auto ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","leased or rented to ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","you")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s","(including any extra, replacement, or substitute ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+Writefile(L_FILE_NAME,"%s","auto")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s","needed to meet seasonal or other needs) under a leasing or ")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s","rental agreement that requires ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","you ")
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","to provide direct, ")
+
+Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+Writefile(L_FILE_NAME,"%s","primary insurance for the lessor.")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a4800h7000V")
+Writefile(L_FILE_NAME,"%s",Trun(SFSOPTEND:FORM_PRINT))
+Writefile(L_FILE_NAME,"%s"," ")
+Writefile(L_FILE_NAME,"%s",SFSOPTEND:EDITION_PRINT)
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a2800h7200V")
+Writefile(L_FILE_NAME,"%s","- ")
+Writefile(L_FILE_NAME,"%n",L_PAGE_NUMBER + 1)
+Writefile(L_FILE_NAME,"%s"," -")
+
+Writefile(L_FILE_NAME,"%s","<FF>")
+      }---if agqaddin2
+  next agqvehicle
+  }---while agqvehicle
+end
+
+
+End

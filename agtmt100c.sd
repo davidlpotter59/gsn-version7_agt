@@ -1,0 +1,2727 @@
+%%                 
+Screen
+        Name = "agtmt100c";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Domain="agqgeneral" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ;
+
+        array[40] of string l_view_desc[65];
+        array[40] of string l_policywide_code[7] ;
+        array[40] of string l_popup_screen[15] ;
+        array[40] of unsigned ascii number l_location_specific[1] ;
+        array[40] of unsigned ascii number l_value[1];
+        array[40] of unsigned ascii number l_prior_value[1];
+        array[40] of tag l_the_tag[15] ;
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_no_locations[2],
+                                    l_first_prem_no[4],
+                                    l_last_prem_no[4],
+                                    l_first_build_no[4],
+                                    l_last_build_no[4],
+                                    l_popup_complete[1],
+                                    l_loop[2],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_count[4],
+                                    l_prem_no[4],
+                                    l_build_no[4],
+                                    l_prem_no_1[4],
+                                    l_build_no_1[4],
+                                    l_liability_code[2] ,
+                                    l_sub[2],
+                                    l_tag_position[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_last_str_location[8],
+                     l_first_str_location[8],
+                     l_str_location[8],
+                     l_first_location[1]="Y",
+                     l_system_id[15],
+                     l_username[15],
+                     l_enter[1],
+                     l_screen[8],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_company_id[10],
+                     l_description[55] ;
+
+        access agqgeneral, set agqgeneral:app_no = g_app_no, generic ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+         reaccess;
+         "redisplay" display/noreturn "agtmt100c" ;
+        "change" sequence "chg|redisplay"   tagged change_fn ;
+        "chg" change/hidden ;
+        "calc" display "agtmt200" tagged calc_fn ;
+--        "func1" continue begin
+--                         function = "func2"
+--                         end;
+        "func1" display l_screen ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+disable(accept_fn)
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_opt_endt.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+Access Validation
+If agqmaster:app_NO <> G_app_NO Then
+    Error 1000
+
+access agqgeneral_alias, set agqgeneral_alias:app_no = agqgeneral:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqgeneral_alias:app_no = agqgeneral:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqgeneral_alias:prem_no) +
+                               str(agqgeneral_alias:build_no)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqgeneral_alias:prem_no) +
+                           str(agqgeneral_alias:build_no)
+    l_no_locations  = l_no_locations + 1
+
+    next agqgeneral_alias
+    end
+
+l_str_location = str(agqgeneral:prem_no) +
+                 str(agqgeneral:build_no)
+
+if l_no_locations = 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+
+Properties
+    {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+    scrollbarpolicy = asneeded
+    }
+{
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2, 100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2, 100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+        }
+
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Optional Endorsements..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100 Tagged quote_no
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     G_APP_NO/displayonly ;
+
+}
+
+Panel at 6,1 to 7,100 Tagged location
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,12
+             properties
+               {
+                 text = "Location No:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 6,13 to 7,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+____
+%%
+
+components
+
+fields
+101     agqgeneral:prem_no/displayonly ;
+
+}
+
+Panel at 6,1 to 7,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,15 to 1,27
+             properties
+               {
+                 text = "Building No:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 6,28 to 7,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+____
+
+%%
+
+components
+
+fields
+101     agqgeneral:build_no/displayonly ;
+101     begin
+            l_prem_no  = agqgeneral:prem_no
+            l_build_no = agqgeneral:build_no
+            do read_forms
+        end
+        agqgeneral:build_no/displayonly ;
+
+}
+
+Panel at 6,35 to 6,100 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_edit_entries.bmp"
+              }
+          Events
+              {
+              Action = change_fn
+              }
+
+    }
+
+/*Panel at 6,35 to 6,50 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_edit_entries.bmp"
+              }
+          Events
+              {
+              Action = change_fn
+              }
+
+    }*/
+
+Panel at 6,60 to 6,75 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35 tagged accept_fn
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt100c.sd"
+                      fontsize = 9
+                    }
+      }
+
+panel at 7,1 to 7,100 tagged line_panel_1
+     {
+     Components line at 1,1 to 1,100
+       Properties
+           {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+           }
+     }
+
+Panel at 8,1 to 21,40
+           Properties {
+                        LayoutType = screen
+                        backgroundcolor = "Grey"
+                      }
+                   {
+                     Components
+                        guidetext at 1,1 to 1,37 tagged t_view1
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(1)
+                                             }
+                                }
+
+                        guidetext at 2,1 to 2,37 tagged t_view2
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(2)
+                                             }
+                                }
+
+                        guidetext at 3,1 to 3,37 tagged t_view3
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(3)
+                                             }
+                                }
+
+                        guidetext at 4,1 to 4,37 tagged t_view4
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(4)
+                                             }
+                                }
+
+                        guidetext at 5,1 to 5,37 tagged t_view5
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(5)
+                                             }
+                                }
+
+                        guidetext at 6,1 to 6,37 tagged t_view6
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(6)
+                                             }
+                                }
+
+                        guidetext at 7,1 to 7,37 tagged t_view7
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(7)
+                                             }
+                                }
+
+                        guidetext at 8,1 to 8,37 tagged t_view8
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(8)
+                                             }
+                                }
+
+                        guidetext at 9,1 to 9,37 tagged t_view9
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(9)
+                                             }
+                                }
+
+                        guidetext at 10,1 to 10,37 tagged t_view10
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(10)
+                                             }
+                                }
+
+                        guidetext at 11,1 to 11,37 tagged t_view11
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(11)
+                                             }
+                                }
+
+                        guidetext at 12,1 to 12,37 tagged t_view12
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(12)
+                                             }
+                                }
+
+                        guidetext at 13,1 to 13,37 tagged t_view13
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(13)
+                                             }
+                                }
+
+                        guidetext at 14,1 to 14,37 tagged t_view14
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(14)
+                                             }
+                                }
+
+                        }
+
+                            --second column if list start here
+Panel at 8,45 to 21,100
+           Properties {
+                        LayoutType = screen
+                        backgroundcolor = "Grey"
+                      }
+                   {
+                     Components
+                        guidetext at 1,1 to 1,40 tagged t_view15
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(15)
+                                             }
+                                }
+
+                        guidetext at 2,1 to 2,40 tagged t_view16
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(16)
+                                             }
+                                }
+
+                        guidetext at 3,1 to 3,40 tagged t_view17
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(17)
+                                             }
+                                }
+
+                        guidetext at 4,1 to 4,40 tagged t_view18
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(18)
+                                             }
+                                }
+
+                        guidetext at 5,1 to 5,40 tagged t_view19
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(19)
+                                             }
+                                }
+
+                        guidetext at 6,1 to 6,40 tagged t_view20
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(20)
+                                             }
+                                }
+
+                        guidetext at 7,1 to 7,40 tagged t_view21
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(21)
+                                             }
+                                }
+
+                        guidetext at 8,1 to 8,40 tagged t_view22
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(22)
+                                             }
+                                }
+
+                        guidetext at 9,1 to 9,40 tagged t_view23
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(23)
+                                             }
+                                }
+
+                        guidetext at 10,1 to 10,40 tagged t_view24
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(24)
+                                             }
+                                }
+
+                        guidetext at 11,1 to 11,40 tagged t_view25
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(25)
+                                             }
+                                }
+
+                        guidetext at 12,1 to 12,40 tagged t_view26
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(26)
+                                             }
+                                }
+
+                        guidetext at 13,1 to 13,40 tagged t_view27
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(27)
+                                             }
+                                }
+
+                        guidetext at 14,1 to 14,40 tagged t_view28
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(28)
+                                             }
+                                }
+
+                   }
+
+
+
+Panel at 8,40 to 21, 43
+{
+%%
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+
+%%
+
+components
+
+Fields
+
+101     begin
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            enable(accept_fn)
+            disable(calc_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            enable(calc_fn)
+            end
+
+            l_sub = 1
+            l_code = l_policywide_code[1]
+            if l_value[1] = 1 then
+                begin
+                do check_popup
+                l_sub = 1
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[1] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[1] = l_value[1]
+        end
+        l_value[1]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox1
+        l_sub = 1
+        if l_prior_value[1] <> l_value[1] then
+            do update_endorsements(l_sub) ;
+201     begin
+            l_sub = 2
+            l_code = l_policywide_code[2]
+            if l_value[2] = 1 then
+                begin
+                do check_popup
+                l_sub = 2
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[2] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[2] = l_value[2]
+        end
+        l_value[2]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox2
+        l_sub = 2
+        if l_prior_value[2] <> l_value[2] then
+            do update_endorsements(l_sub) ;
+301     begin
+            l_sub = 3
+            l_code = l_policywide_code[3]
+            if l_value[3] = 1 then
+                begin
+                do check_popup
+                l_sub = 3
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[3] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[3] = l_value[3]
+        end
+        l_value[3]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox3
+        l_sub = 3
+        if l_prior_value[3] <> l_value[3] then
+            do update_endorsements(l_sub) ;
+401     begin
+            l_sub = 4
+            l_code = l_policywide_code[4]
+            if l_value[4] = 1 then
+                begin
+                do check_popup
+                l_sub = 4
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[4] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[4] = l_value[4]
+        end
+        l_value[4]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox4
+        l_sub = 4
+        if l_prior_value[4] <> l_value[4] then
+            do update_endorsements(l_sub) ;
+501     begin
+            l_sub = 5
+            l_code = l_policywide_code[5]
+            if l_value[5] = 1 then
+                begin
+                do check_popup
+                l_sub = 5
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[5] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[5] = l_value[5]
+        end
+        l_value[5]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox5
+        l_sub = 5
+        if l_prior_value[5] <> l_value[5] then
+            do update_endorsements(l_sub) ;
+601     begin
+            l_sub = 6
+            l_code = l_policywide_code[6]
+            if l_value[6] = 1 then
+                begin
+                do check_popup
+                l_sub = 6
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[6] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[6] = l_value[6]
+        end
+        l_value[6]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox6
+        l_sub = 6
+        if l_prior_value[6] <> l_value[6] then
+            do update_endorsements(l_sub) ;
+701     begin
+            l_sub = 7
+            l_code = l_policywide_code[7]
+            if l_value[7] = 1 then
+                begin
+                do check_popup
+                l_sub = 7
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[7] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[7] = l_value[7]
+        end
+        l_value[7]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox7
+        l_sub = 7
+        if l_prior_value[7] <> l_value[7] then
+            do update_endorsements(l_sub) ;
+801     begin
+            l_sub = 8
+            l_code = l_policywide_code[8]
+            if l_value[8] = 1 then
+                begin
+                do check_popup
+                l_sub = 8
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[8] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[8] = l_value[8]
+        end
+        l_value[8]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox8
+        l_sub = 8
+        if l_prior_value[8] <> l_value[8] then
+            do update_endorsements(l_sub) ;
+901     begin
+            l_sub = 9
+            l_code = l_policywide_code[9]
+            if l_value[9] = 1 then
+                begin
+                do check_popup
+                l_sub = 9
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[9] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[9] = l_value[9]
+        end
+        l_value[9]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox9
+        l_sub = 9
+        if l_prior_value[9] <> l_value[9] then
+            do update_endorsements(l_sub) ;
+1001    begin
+            l_sub = 10
+            l_code = l_policywide_code[10]
+            if l_value[10] = 1 then
+                begin
+                do check_popup
+                l_sub = 10
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[10] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[10] = l_value[10]
+        end
+        l_value[10]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox10
+        l_sub = 10
+        if l_prior_value[10] <> l_value[10] then
+            do update_endorsements(l_sub) ;
+1101    begin
+            l_sub = 11
+            l_code = l_policywide_code[11]
+            if l_value[11] = 1 then
+                begin
+                do check_popup
+                l_sub = 11
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[11] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[11] = l_value[11]
+        end
+        l_value[11]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox11
+        l_sub = 11
+        if l_prior_value[11] <> l_value[11] then
+            do update_endorsements(l_sub) ;
+1201    begin
+            l_sub = 12
+            l_code = l_policywide_code[12]
+            if l_value[12] = 1 then
+                begin
+                do check_popup
+                l_sub = 12
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[12] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[12] = l_value[12]
+        end
+        l_value[12]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox12
+        l_sub = 12
+        if l_prior_value[12] <> l_value[12] then
+            do update_endorsements(l_sub) ;
+1301    begin
+            l_sub = 13
+            l_code = l_policywide_code[13]
+            if l_value[13] = 1 then
+                begin
+                do check_popup
+                l_sub = 13
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[13] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[13] = l_value[13]
+        end
+        l_value[13]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox13
+        l_sub = 13
+        if l_prior_value[13] <> l_value[13] then
+            do update_endorsements(l_sub) ;
+1401    begin
+            l_sub = 14
+            l_code = l_policywide_code[14]
+            if l_value[14] = 1 then
+                begin
+                do check_popup
+                l_sub = 14
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[14] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[14] = l_value[14]
+        end
+        l_value[14]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox14
+        l_sub = 14
+        if l_prior_value[14] <> l_value[14] then
+            do update_endorsements(l_sub) ;
+
+}
+
+Panel at 8,90 to 21, 100
+{
+%%
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+%%
+
+components
+
+Fields
+101     begin
+            l_sub = 15
+            l_code = l_policywide_code[15]
+            if l_value[15] = 1 then
+                begin
+                do check_popup
+                l_sub = 15
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[15] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[15] = l_value[15]
+        end
+        l_value[15]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox15
+        l_sub = 15
+        if l_prior_value[15] <> l_value[15] then
+            do update_endorsements(l_sub) ;
+201     begin
+            l_sub = 16
+            l_code = l_policywide_code[16]
+            if l_value[16] = 1 then
+                begin
+                do check_popup
+                l_sub = 16
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[16] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[16] = l_value[16]
+        end
+        l_value[16]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox16
+        l_sub = 16
+        if l_prior_value[16] <> l_value[16] then
+            do update_endorsements(l_sub) ;
+301     begin
+            l_sub = 17
+            l_code = l_policywide_code[17]
+            if l_value[17] = 1 then
+                begin
+                do check_popup
+                l_sub = 17
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[17] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[17] = l_value[17]
+        end
+        l_value[17]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox17
+        l_sub = 17
+        if l_prior_value[17] <> l_value[17] then
+            do update_endorsements(l_sub) ;
+401     begin
+            l_sub = 18
+            l_code = l_policywide_code[18]
+            if l_value[18] = 1 then
+                begin
+                do check_popup
+                l_sub = 18
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[18] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[18] = l_value[18]
+        end
+        l_value[18]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox18
+        l_sub = 18
+        if l_prior_value[18] <> l_value[18] then
+            do update_endorsements(l_sub) ;
+501     begin
+            l_sub = 19
+            l_code = l_policywide_code[19]
+            if l_value[19] = 1 then
+                begin
+                do check_popup
+                l_sub = 19
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[19] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[19] = l_value[19]
+        end
+        l_value[19]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox19
+        l_sub = 19
+        if l_prior_value[19] <> l_value[19] then
+            do update_endorsements(l_sub) ;
+601     begin
+            l_sub = 20
+            l_code = l_policywide_code[20]
+            if l_value[20] = 1 then
+                begin
+                do check_popup
+                l_sub = 20
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[20] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[20] = l_value[20]
+        end
+        l_value[20]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox20
+        l_sub = 20
+        if l_prior_value[20] <> l_value[20] then
+            do update_endorsements(l_sub) ;
+701     begin
+            l_sub = 21
+            l_code = l_policywide_code[21]
+            if l_value[21] = 1 then
+                begin
+                do check_popup
+                l_sub = 21
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[21] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+
+            l_prior_value[21] = l_value[21]
+        end
+        l_value[21]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox21
+        l_sub = 21
+        if l_prior_value[21] <> l_value[21] then
+            do update_endorsements(l_sub) ;
+801     begin
+            l_sub = 22
+            l_code = l_policywide_code[22]
+            if l_value[22] = 1 then
+                begin
+                do check_popup
+                l_sub = 22
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[22] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[22] = l_value[22]
+        end
+        l_value[22]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox22
+        l_sub = 22
+        if l_prior_value[22] <> l_value[22] then
+            do update_endorsements(l_sub) ;
+901     begin
+            l_sub = 23
+            l_code = l_policywide_code[23]
+            if l_value[23] = 1 then
+                begin
+                do check_popup
+                l_sub = 23
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[23] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[23] = l_value[23]
+        end
+        l_value[23]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox23
+        l_sub = 23
+        if l_prior_value[23] <> l_value[23] then
+            do update_endorsements(l_sub) ;
+1001    begin
+            l_sub = 24
+            l_code = l_policywide_code[24]
+            if l_value[24] = 1 then
+                begin
+                do check_popup
+                l_sub = 24
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[24] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[24] = l_value[24]
+        end
+        l_value[24]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox24
+        l_sub = 24
+        if l_prior_value[24] <> l_value[24] then
+            do update_endorsements(l_sub) ;
+1101    begin
+            l_sub = 25
+            l_code = l_policywide_code[25]
+            if l_value[25] = 1 then
+                begin
+                do check_popup
+                l_sub = 25
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[25] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[25] = l_value[25]
+        end
+        l_value[25]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox25
+        l_sub = 25
+        if l_prior_value[25] <> l_value[25] then
+            do update_endorsements(l_sub) ;
+1201    begin
+            l_sub = 26
+            l_code = l_policywide_code[26]
+            if l_value[26] = 1 then
+                begin
+                do check_popup
+                l_sub = 26
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[26] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[26] = l_value[26]
+        end
+        l_value[26]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox26
+        l_sub = 26
+        if l_prior_value[26] <> l_value[26] then
+            do update_endorsements(l_sub) ;
+1301    begin
+            l_sub = 27
+            l_code = l_policywide_code[27]
+            if l_value[27] = 1 then
+                begin
+                do check_popup
+                l_sub = 27
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[27] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[27] = l_value[27]
+        end
+        l_value[27]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox27
+        l_sub = 27
+        if l_prior_value[27] <> l_value[27] then
+            do update_endorsements(l_sub) ;
+1401    begin
+            l_sub = 28
+            l_code = l_policywide_code[28]
+            if l_value[28] = 1 then
+                begin
+                do check_popup
+                l_sub = 28
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[28] = 0 then
+                begin
+                do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            l_prior_value[28] = l_value[28]
+        end
+        l_value[28]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox28
+        l_sub = 28
+        if l_prior_value[28] <> l_value[28] then
+            do update_endorsements(l_sub);
+
+}
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,1 to 24,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,32    tagged previous_fn
+        Properties {
+                Iconname = "btn_prev_loc.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+
+        Button at 1, 48 tagged next_fn
+        Properties {
+                Iconname = "btn_next_loc.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+        Button at 1,75   tagged calc_fn
+        Properties {
+                Iconname = "btn_view_summary_totals.bmp"
+                }
+        Events  {
+                Action = calc_fn
+                }
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+panel at 24,1 to 30,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+if abort = "YES" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    enable(calc_fn)
+    disable(accept_fn)
+
+    l_sub = 1
+    while l_sub < 30
+        begin
+
+        l_sub = l_sub + 1
+        end
+    end
+
+Procedure Definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+
+procedure check_for_Red
+begin
+l_sub = 1
+while l_sub < 30
+    begin
+    if l_value[l_sub] = 1 then
+        begin
+        l_code = l_policywide_code[l_sub]
+        if l_location_specific[l_sub] = 0 then
+            begin
+            l_prem_no  = 0
+            l_build_no = 0
+            g_prem_no  = 0
+            g_build_no = 0
+            end
+        else
+            begin
+            l_prem_no  = agqgeneral:prem_no
+            l_build_no = agqgeneral:build_no
+            g_prem_no  = agqgeneral:prem_no
+            g_build_no = agqgeneral:build_no
+            end
+        do check_popup
+        if l_popup_complete = 1 then
+            do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+        end
+
+    l_sub = l_sub + 1
+    end
+
+end
+
+procedure check_popup
+begin
+l_popup_complete = 0
+l_code = l_policywide_code[l_sub]
+if l_location_specific[l_sub] = 0 then
+    begin
+    l_prem_no  = 0
+    l_build_no = 0
+    g_prem_no  = 0
+    g_build_no = 0
+    end
+else
+    begin
+    l_prem_no  = agqgeneral:prem_no
+    l_build_no = agqgeneral:build_no
+    g_prem_no  = agqgeneral:prem_no
+    g_build_no = agqgeneral:build_no
+    end
+
+if l_code one of "BU0120" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:address  <> "" and
+           agqendorse:city <> "" and
+           agqendorse:str_state <> "" and
+           agqendorse:zipcode <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU0283" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:limit[1] <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU0281" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:eff_date <> 0 and
+           agqendorse:exp_date <> 0 and
+           agqendorse:limit[1] <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU0265" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:eff_date <> 0 and
+           agqendorse:exp_date <> 0 and
+           agqendorse:description[1] <> "" then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0282", "BU2582" then
+    begin
+    access agqdishonesty, set agqdishonesty:app_no   = g_app_no,
+                              agqdishonesty:prem_no  = l_prem_no,
+                              agqdishonesty:build_no = l_build_no, generic
+
+    if agqdishonesty:app_no   = g_app_no and
+       agqdishonesty:prem_no  = l_prem_no and
+       agqdishonesty:build_no = l_build_no then
+        begin
+        if agqdishonesty:limit <> 0 and
+           agqdishonesty:deductible <> 0 and
+           agqdishonesty:no_employees <> 0 and
+           g_enhancement = 0 then
+            l_popup_complete = 1
+        else
+        if agqdishonesty:limit <> 0 and
+           g_enhancement = 1 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0195" then
+    begin
+    access agqfuneral, set agqfuneral:app_no   = g_app_no,
+                           agqfuneral:prem_no  = l_prem_no,
+                           agqfuneral:build_no = l_build_no, generic
+
+    if agqfuneral:app_no   = g_app_no and
+       agqfuneral:prem_no  = l_prem_no and
+       agqfuneral:build_no = l_build_no then
+        begin
+        if agqfuneral:bodies[1] <> 0 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0193" then
+    begin
+    access agqbshop, set agqbshop:app_no   = g_app_no,
+                         agqbshop:prem_no  = l_prem_no,
+                         agqbshop:build_no = l_build_no, generic
+
+    if agqbshop:app_no   = g_app_no and
+       agqbshop:prem_no  = l_prem_no and
+       agqbshop:build_no = l_build_no then
+        begin
+        if agqbshop:barber_full_time <> 0 or
+           agqbshop:beauty_full_time <> 0 or
+           agqbshop:beauty_part_time <> 0 or
+           agqbshop:manicurists <> 0 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0370" then
+    begin
+    access agqcomputer, set agqcomputer:app_no   = g_app_no,
+                            agqcomputer:prem_no  = l_prem_no,
+                            agqcomputer:build_no = l_build_no, generic
+
+    if agqcomputer:app_no   = g_app_no and
+       agqcomputer:prem_no  = l_prem_no and
+       agqcomputer:build_no = l_build_no then
+        begin
+        if agqcomputer:limit[1] <> 0 or
+           agqcomputer:limit[2] <> 0 or
+           agqcomputer:limit[3] <> 0 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0375" then
+    begin
+    access agqglass, set agqglass:app_no   = g_app_no,
+                         agqglass:prem_no  = l_prem_no,
+                         agqglass:build_no = l_build_no, generic
+
+    if agqglass:app_no   = g_app_no and
+       agqglass:prem_no  = l_prem_no and
+       agqglass:build_no = l_build_no then
+        begin
+        if agqglass:limit <> 0 and
+           agqglass:deductible <> 0 and
+           g_enhancement = 0 then
+            l_popup_complete = 1
+        if agqglass:limit <> 0 and
+           g_enhancement = 1 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0507" then
+    begin
+    access agqoperations, set agqoperations:app_no   = g_app_no,
+                              agqoperations:prem_no  = l_prem_no,
+                              agqoperations:build_no = l_build_no, generic
+
+    if agqoperations:app_no   = g_app_no and
+       agqoperations:prem_no  = l_prem_no and
+       agqoperations:build_no = l_build_no then
+        begin
+        if agqoperations:exclude_products <> "" or
+           agqoperations:exclude_adj_injury <> "" or
+           agqoperations:exclude_other[1] <> "" then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0601", "BU0607", "BU0616"  then
+    begin
+    access agqaddin, set agqaddin:app_no   = g_app_no,
+                         agqaddin:prem_no  = l_prem_no,
+                         agqaddin:build_no = l_build_no,
+                         agqaddin:code     = l_code,  generic
+
+    while agqaddin:app_no   = g_app_no and
+          agqaddin:prem_no  = l_prem_no and
+          agqaddin:build_no = l_build_no and
+          agqaddin:code     = l_code
+        begin
+        if agqaddin:name[1] <> "" and
+           agqaddin:address[1] <> "" and
+           agqaddin:city <> "" and
+           agqaddin:str_state <> "" and
+           agqaddin:zipcode <> 0 then
+            l_popup_complete = 1
+        else
+            l_popup_complete = 0
+
+        next agqaddin
+        end
+    end
+end
+
+procedure display_blue(tag l_tag, string l_color, number l_position, string l_display_screen)
+begin
+if l_position = 1 and
+   l_display_screen <> "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure display_red(tag l_tag, string l_color, number l_position, string l_display_screen)
+begin
+if l_position = 1 and
+   l_display_screen <> "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure remove_blue(tag l_tag, string l_color, number l_position, string l_display_screen)
+begin
+if l_position = 0 or
+   l_display_screen = "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure remove_red(tag l_tag, string l_color, number l_position, string l_display_screen)
+begin
+if l_position = 0 or
+   l_display_screen = "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure display_popup(number l_sub)
+begin
+if l_value[l_sub] = 1 then
+    begin
+    if l_location_specific[l_sub] = 0 then
+        begin
+        g_prem_no  = 0
+        g_build_no = 0
+        end
+    else
+        begin
+        g_prem_no  = agqgeneral:prem_no
+        g_build_no = agqgeneral:build_no
+        end
+    g_code     = l_policywide_code[l_sub]
+    if l_popup_screen[l_sub] <> "" then
+        begin
+        l_screen = trun(l_popup_screen[l_sub])
+        display modal screen l_screen
+--        function = "func1"
+--        abort()
+        end
+--    else
+--        begin
+--        abort()
+--        end
+    end
+
+end
+
+procedure update_endorsements(number l_sub)
+begin
+if l_value[l_sub] = 1 then
+    begin
+    if l_location_specific[l_sub] = 0 then
+        begin
+        l_prem_no  = 0
+        l_build_no = 0
+        g_prem_no  = 0
+        g_build_no = 0
+        end
+    else
+        begin
+        l_prem_no  = agqgeneral:prem_no
+        l_build_no = agqgeneral:build_no
+        g_prem_no  = agqgeneral:prem_no
+        g_build_no = agqgeneral:build_no
+        end
+    l_code = l_policywide_code[l_sub]
+    g_code = l_policywide_code[l_sub]
+    do add_endorsements
+    if l_code one of "FMA100", "BU0507" then
+        begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        access agqoperations, set agqoperations:app_no   = g_app_no,
+                                  agqoperations:prem_no  = l_prem_no,
+                                  agqoperations:build_no = l_build_no, generic
+
+        if agqmaster:app_no = g_app_no then
+            begin
+            if (agqend:code = "FMA100" or
+               (agqend:code = "BU0507" and
+               agqoperations:exclude_adj_injury = "Y")) then
+                begin
+                change agqmaster
+                    begin
+                    agqmaster:personal_add_injury = 0
+                    end
+                end
+            end
+        end
+    if l_popup_screen[l_sub] <> "" then
+        begin
+        if l_location_specific[l_sub] = 0 then
+            begin
+            l_prem_no  = 0
+            l_build_no = 0
+            g_prem_no  = 0
+            g_build_no = 0
+            end
+        else
+            begin
+            l_prem_no  = agqgeneral:prem_no
+            l_build_no = agqgeneral:build_no
+            g_prem_no  = agqgeneral:prem_no
+            g_build_no = agqgeneral:build_no
+            end
+        l_screen = trun(l_popup_screen[l_sub])
+        display modal screen l_screen
+--        function = "func1"
+--        abort()
+        end
+--    else
+--        begin
+--        abort()
+--        end
+    end
+
+if l_value[l_sub] = 0 then
+    begin
+    do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+    do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+    if l_location_specific[l_sub] = 0 then
+        begin
+        l_prem_no  = 0
+        l_build_no = 0
+        end
+    else
+        begin
+        l_prem_no  = agqgeneral:prem_no
+        l_build_no = agqgeneral:build_no
+        end
+    l_code = l_policywide_code[l_sub]
+    do delete_endorsements
+--    abort()
+    end
+
+end
+
+procedure add_endorsements
+begin
+l_code = l_policywide_code[l_sub]
+do access_agqend
+if l_add_endorsement = "Y" then
+    do add_agqend
+
+end
+
+procedure delete_endorsements
+begin
+l_code = l_policywide_code[l_sub]
+do access_agqend
+if l_code one of "FMA100", "BU0507" then
+    begin
+    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+    if agqgeneral:property_limit <> 0 then
+        l_form = 3
+    else
+        l_form = 1
+
+    access agsdefault_bop, set agsdefault_bop:company_id       = agqgeneral:company_id,
+                               agsdefault_bop:state            = agqgeneral:state,
+                               agsdefault_bop:agent_no         = agqgeneral:agent_no,
+                               agsdefault_bop:line_of_business = agqgeneral:line_of_business,
+                               agsdefault_bop:form             = l_form, generic
+
+    access sfsliability, set sfsliability:company_id       = agqgeneral:company_id,
+                             sfsliability:state            = agqgeneral:state,
+                             sfsliability:line_of_business = agqgeneral:line_of_business,
+                             sfsliability:liability_code   = agqmaster:liability_code, generic
+
+
+    if agqmaster:app_no = g_app_no then
+        begin
+        change agqmaster
+            begin
+            agqmaster:personal_add_injury = sfsliability:limit
+            end
+        end
+    end
+
+if l_add_endorsement = "N" then
+    begin
+    do delete_agqend
+    do delete_popup_files
+    end
+
+end
+
+procedure delete_popup_files
+begin
+l_code = l_policywide_code[l_sub]
+access agqendorse, set agqendorse:app_no   = g_app_no,
+                       agqendorse:prem_no  = l_prem_no,
+                       agqendorse:build_no = l_build_no,
+                       agqendorse:code     = l_code,  generic
+
+while agqendorse:app_no   = g_app_no and
+      agqendorse:prem_no  = l_prem_no and
+      agqendorse:build_no = l_build_no and
+      agqendorse:code     = l_code
+        begin
+        delete agqendorse
+
+        next agqendorse
+        end
+
+if l_code one of "BU0282", "BU2582" then
+    begin
+    access agqdishonesty, set agqdishonesty:app_no   = g_app_no,
+                              agqdishonesty:prem_no  = l_prem_no,
+                              agqdishonesty:build_no = l_build_no, generic
+
+    while agqdishonesty:app_no   = g_app_no and
+          agqdishonesty:prem_no  = l_prem_no and
+          agqdishonesty:build_no = l_build_no
+        begin
+        delete agqdishonesty
+
+        next agqdishonesty
+        end
+    end
+
+if l_code one of "BU0195" then
+    begin
+    access agqfuneral, set agqfuneral:app_no   = g_app_no,
+                           agqfuneral:prem_no  = l_prem_no,
+                           agqfuneral:build_no = l_build_no, generic
+
+    while agqfuneral:app_no   = g_app_no and
+          agqfuneral:prem_no  = l_prem_no and
+          agqfuneral:build_no = l_build_no
+        begin
+        delete agqfuneral
+
+        next agqfuneral
+        end
+    end
+
+if l_code one of "BU0193" then
+    begin
+    access agqbshop, set agqbshop:app_no   = g_app_no,
+                         agqbshop:prem_no  = l_prem_no,
+                         agqbshop:build_no = l_build_no, generic
+
+    while agqbshop:app_no   = g_app_no and
+          agqbshop:prem_no  = l_prem_no and
+          agqbshop:build_no = l_build_no
+        begin
+        delete agqbshop
+
+        next agqbshop
+        end
+    end
+
+if l_code one of "BU0370" then
+    begin
+    access agqcomputer, set agqcomputer:app_no   = g_app_no,
+                            agqcomputer:prem_no  = l_prem_no,
+                            agqcomputer:build_no = l_build_no, generic
+
+    while agqcomputer:app_no   = g_app_no and
+          agqcomputer:prem_no  = l_prem_no and
+          agqcomputer:build_no = l_build_no
+        begin
+        delete agqcomputer
+
+        next agqcomputer
+        end
+    access agqcompdesc, set agqcompdesc:app_no   = g_app_no,
+                            agqcompdesc:prem_no  = l_prem_no,
+                            agqcompdesc:build_no = l_build_no, generic
+
+    while agqcompdesc:app_no   = g_app_no and
+          agqcompdesc:prem_no  = l_prem_no and
+          agqcompdesc:build_no = l_build_no
+        begin
+        delete agqcompdesc
+
+        next agqcompdesc
+        end
+    end
+
+if l_code one of "BU0375" then
+    begin
+    access agqglass, set agqglass:app_no   = g_app_no,
+                         agqglass:prem_no  = l_prem_no,
+                         agqglass:build_no = l_build_no, generic
+
+    while agqglass:app_no   = g_app_no and
+          agqglass:prem_no  = l_prem_no and
+          agqglass:build_no = l_build_no
+        begin
+        delete agqglass
+
+        next agqglass
+        end
+    end
+
+if l_code one of "BU0507" then
+    begin
+    access agqoperations, set agqoperations:app_no   = g_app_no,
+                              agqoperations:prem_no  = l_prem_no,
+                              agqoperations:build_no = l_build_no, generic
+
+    while agqoperations:app_no   = g_app_no and
+          agqoperations:prem_no  = l_prem_no and
+          agqoperations:build_no = l_build_no
+        begin
+        delete agqoperations
+
+        next agqoperations
+        end
+    end
+
+if l_code one of "BU0601", "BU0607", "BU0616"  then
+    begin
+    access agqaddin, set agqaddin:app_no   = g_app_no,
+                         agqaddin:prem_no  = l_prem_no,
+                         agqaddin:build_no = l_build_no,
+                         agqaddin:code     = l_code, generic
+
+    while agqaddin:app_no   = g_app_no and
+          agqaddin:prem_no  = l_prem_no and
+          agqaddin:build_no = l_build_no and
+          agqaddin:code     = l_code
+        begin
+        delete agqaddin
+
+        next agqaddin
+        end
+    end
+
+end
+
+procedure read_forms
+
+BEGIN
+  string l_reset_form_display[50];
+  unsigned ascii number l_left_side_no[2],
+                        l_right_side_no[2];
+
+access agqgeneral_alias,
+   set agqgeneral_alias:app_no   = g_app_no,
+       agqgeneral_alias:prem_no  = l_prem_no,
+       agqgeneral_alias:build_no = l_build_no, generic
+
+if agqgeneral_alias:app_no   = g_app_no and
+   agqgeneral_alias:prem_no  = l_prem_no and
+   agqgeneral_alias:build_no = l_build_no then
+  begin
+    access sfspolicywideoptend,
+       set sfspolicywideoptend:company_id       = agqgeneral_alias:company_id,
+           sfspolicywideoptend:state            = agqgeneral_alias:state,
+           sfspolicywideoptend:line_of_business = agqgeneral_alias:line_of_business,
+           sfspolicywideoptend:class_code       = agqgeneral_alias:class_code, generic
+
+    while sfspolicywideoptend:company_id       = agqgeneral_alias:company_id and
+          sfspolicywideoptend:state            = agqgeneral_alias:state and
+          sfspolicywideoptend:line_of_business = agqgeneral_alias:line_of_business and
+          sfspolicywideoptend:class_code       = agqgeneral_alias:class_code
+      {
+        if (agqgeneral_alias:eff_date >= sfspolicywideoptend:eff_date and
+           (agqgeneral_alias:eff_date <= sfspolicywideoptend:exp_date or
+           sfspolicywideoptend:exp_date = 0)) then
+          {
+            l_tag_position = val(sfspolicywideoptend:tag_name[7,8])
+            if l_tag_position <=  14 then
+              {
+                if l_left_side_no < l_tag_position then
+                  {
+                    l_left_side_no = l_tag_position
+                  }
+              }
+            else
+              {
+                if L_right_side_no < l_tag_position then
+                  {
+                    l_right_side_no = l_tag_position
+                  }
+              }
+            l_policywide_code[l_tag_position] = sfspolicywideoptend:code
+            if sfspolicywideoptend:location_specific = 0 then
+                begin
+                l_prem_no_1  = 0
+                l_build_no_1 = 0
+                end
+            else
+                begin
+                l_prem_no_1  = l_prem_no
+                l_build_no_1 = l_build_no
+                end
+            l_value[l_tag_position] = 0
+            do read_agqend
+            l_view_desc[l_tag_position] = trun(sfspolicywideoptend:POLICY_WIDE_FORM_DESC)
+                                          + sfspolicywideoptend:form_print
+            l_popup_screen[l_tag_position] = sfspolicywideoptend:popup_screen
+            l_the_tag[l_tag_position] = tag(trun(sfspolicywideoptend:tag_name))
+            l_location_specific[l_tag_position] = sfspolicywideoptend:location_specific
+            do printguidetext(l_the_tag[l_tag_position],trun(l_view_desc[l_tag_position]))
+          }
+        next sfspolicywideoptend
+      }
+    for l_loop = l_left_side_no + 1  to 14
+      {
+        l_view_desc[l_loop] = ""
+        l_reset_form_display = "t_view" + str(l_loop)
+        l_the_tag[l_loop] = tag(trun(l_reset_form_display))
+        do printguidetext(l_the_tag[l_loop],trun(l_view_desc[l_loop]))
+      }
+    for l_loop = l_right_side_no + 1  to 28
+      {
+        l_view_desc[l_loop] = ""
+        l_reset_form_display = "t_view" + str(l_loop)
+        l_the_tag[l_loop] = tag(trun(l_reset_form_display))
+        do printguidetext(l_the_tag[l_loop],trun(l_view_desc[l_loop]))
+      }
+  end
+
+    l_loop = 1
+    while l_loop <= 28
+    {
+    if l_view_desc[l_loop] = "" then
+        {
+        switch(l_loop)
+          case 1  : hide(t_remove_checkbox1)
+          case 2  : hide(t_remove_checkbox2)
+          case 3  : hide(t_remove_checkbox3)
+          case 4  : hide(t_remove_checkbox4)
+          case 5  : hide(t_remove_checkbox5)
+          case 6  : hide(t_remove_checkbox6)
+          case 7  : hide(t_remove_checkbox7)
+          case 8  : hide(t_remove_checkbox8)
+          case 9  : hide(t_remove_checkbox9)
+          case 10 : hide(t_remove_checkbox10)
+          case 11 : hide(t_remove_checkbox11)
+          case 12 : hide(t_remove_checkbox12)
+          case 13 : hide(t_remove_checkbox13)
+          case 14 : hide(t_remove_checkbox14)
+          case 15 : hide(t_remove_checkbox15)
+          case 16 : hide(t_remove_checkbox16)
+          case 17 : hide(t_remove_checkbox17)
+          case 18 : hide(t_remove_checkbox18)
+          case 19 : hide(t_remove_checkbox19)
+          case 20 : hide(t_remove_checkbox20)
+          case 21 : hide(t_remove_checkbox21)
+          case 22 : hide(t_remove_checkbox22)
+          case 23 : hide(t_remove_checkbox23)
+          case 24 : hide(t_remove_checkbox24)
+          case 25 : hide(t_remove_checkbox25)
+          case 26 : hide(t_remove_checkbox26)
+          case 27 : hide(t_remove_checkbox27)
+          case 28 : hide(t_remove_checkbox28)
+          end
+        }
+    else
+    if l_view_desc[l_loop] <> "" then
+        {
+        switch(l_loop)
+          case 1  : show(t_remove_checkbox1)
+          case 2  : show(t_remove_checkbox2)
+          case 3  : show(t_remove_checkbox3)
+          case 4  : show(t_remove_checkbox4)
+          case 5  : show(t_remove_checkbox5)
+          case 6  : show(t_remove_checkbox6)
+          case 7  : show(t_remove_checkbox7)
+          case 8  : show(t_remove_checkbox8)
+          case 9  : show(t_remove_checkbox9)
+          case 10 : show(t_remove_checkbox10)
+          case 11 : show(t_remove_checkbox11)
+          case 12 : show(t_remove_checkbox12)
+          case 13 : show(t_remove_checkbox13)
+          case 14 : show(t_remove_checkbox14)
+          case 15 : show(t_remove_checkbox15)
+          case 16 : show(t_remove_checkbox16)
+          case 17 : show(t_remove_checkbox17)
+          case 18 : show(t_remove_checkbox18)
+          case 19 : show(t_remove_checkbox19)
+          case 20 : show(t_remove_checkbox20)
+          case 21 : show(t_remove_checkbox21)
+          case 22 : show(t_remove_checkbox22)
+          case 23 : show(t_remove_checkbox23)
+          case 24 : show(t_remove_checkbox24)
+          case 25 : show(t_remove_checkbox25)
+          case 26 : show(t_remove_checkbox26)
+          case 27 : show(t_remove_checkbox27)
+          case 28 : show(t_remove_checkbox28)
+          end
+        }
+
+    l_loop = l_loop + 1
+    }
+
+END
+
+procedure printguidetext(tag current_tag, string display_string)
+
+BEGIN
+    Setproperty(current_tag, text, display_string)
+END
+
+procedure read_agqend
+begin
+  access agqend,
+     set agqend:app_no   = g_app_no,
+         agqend:prem_no  = l_prem_no_1,
+         agqend:build_no = l_build_no_1, generic
+
+while agqend:app_no   = g_app_no and
+      agqend:prem_no  = l_prem_no_1 and
+      agqend:build_no = l_build_no_1
+  begin
+    if agqend:code     = l_policywide_code[l_tag_position] and
+       agqend:prem_no  = l_prem_no_1 and
+       agqend:build_no = l_build_no_1 then
+        begin
+        l_value[l_tag_position] = 1
+        end
+--    else
+--        begin
+--        l_value[l_tag_position] = 0
+--        end
+    next agqend
+  end
+end
+
+/*procedure update_exclusion
+begin
+access agqgeneral, set agqgeneral:app_no = g_APP_NO, generic
+
+l_remove_form = 0
+while agqgeneral:app_no = g_APP_NO
+        begin
+        if agqgeneral:remove_terrorism_Form = 1 then
+            l_remove_form = 1
+
+        next agqgeneral
+        end
+
+end */
+
+Procedure ACCESS_agqend
+Begin
+Access agqend, Set agqend:app_no   = g_APP_NO ,
+                   agqend:PREM_NO  = l_prem_no,
+                   agqend:BUILD_NO = l_build_no, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqend:app_no   = g_APP_NO and
+      agqend:PREM_NO  = l_prem_no and
+      agqend:BUILD_NO = l_build_no
+    begin
+    If agqend:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend
+    End
+
+End
+
+Procedure ADD_agqend
+Begin
+Access agqend, Set agqend:app_no   = g_APP_NO ,
+                   agqend:PREM_NO  = l_prem_no,
+                   agqend:BUILD_NO = l_build_no, Generic
+
+L_SUB_CODE = 0
+while agqend:app_no   = g_APP_NO and
+      agqend:PREM_NO  = l_prem_no and
+      agqend:BUILD_NO = l_build_no
+        begin
+        L_SUB_CODE = agqend:SUB_CODE
+
+        Next agqend
+        End
+
+L_SUB_CODE = L_SUB_CODE + 10
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqgeneral:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqgeneral:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqgeneral:COMPANY_ID and
+      SFSOPTEND:STATE            = agqgeneral:STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+        begin
+        If (agqgeneral:EFF_DATE >= SFSOPTEND:EFF_DATE and
+           (agqgeneral:eff_date <= sfsoptend:exp_date or
+           sfsoptend:exp_date = 0)) Then
+            Begin
+            L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+            L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+            End
+
+        Next SFSOPTEND
+        End
+
+if l_form_edition <> "" then
+    begin
+    Add agqend
+        Begin
+        agqend:app_no               =       g_APP_NO
+        agqend:PREM_NO              =       l_prem_no
+        agqend:BUILD_NO             =       l_build_no
+        agqend:SUB_CODE             =       L_SUB_CODE
+        agqend:CODE                 =       L_CODE
+        agqend:FORM_EDITION         =       L_FORM_EDITION
+        agqend:DESCRIPTION          =       L_DESCRIPTION
+        agqend:PREMIUM              =       0
+        agqend:lob_end_code         =       "X"
+        end
+    End
+
+End
+
+Procedure DELETE_agqend
+Begin
+Access agqend, Set agqend:app_no   = g_APP_NO ,
+                   agqend:PREM_NO  = l_prem_no,
+                   agqend:BUILD_NO = l_build_no, Generic
+
+while agqend:app_no   = g_APP_NO and
+      agqend:PREM_NO  = l_prem_no and
+      agqend:BUILD_NO = l_build_no
+        begin
+        If agqend:CODE = L_CODE Then
+            Delete agqend
+
+        Next agqend
+        End
+
+End
+
+End

@@ -1,0 +1,847 @@
+%%
+Screen
+        Name = "agtmt4001" ;
+        Type = "Multiline" ;
+        Repeat LINE_ITEMS, 40 times down ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "agqworkerscomp1" ;
+        showunusedrecords=false
+        autoscroll=true
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+
+        global string g_inquiry[1] ,
+                      g_portfolio[1];
+
+        local unsigned ascii number l_csexec_number[12] ,
+                                    i_csexec_number[12] ,
+                                    l_line_of_business_1[4],
+                                    l_line_of_business[4],
+                                    l_total[8] ;
+
+        local tag l_tag[8] ;
+
+        local string l_csexec_application[25] ,
+                     l_app[3],
+                     l_dec[15] ,
+                     l_screen[10],
+                     l_screen_1[10],
+                     l_company_id[10],
+                     l_user_id[15],
+                     l_continue_2[3],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150];
+
+        Include "print.var"
+
+        Include "virtualdecs.var"
+
+        Access agqworkerscomp1, Set agqworkerscomp1:app_NO = G_app_NO, approximate ;
+
+        scrollmessage = "" ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+
+                include "styles.inc"
+                Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+                repeated displayonly field style {backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay"  display/noreturn "agtmt4001" ;
+        "displayit"  display "agtmt4000" tagged rating_info_fn;
+        "func4" display/noreturn "agtmt4000a" tagged class_code_fn ;
+        "func5" display/noreturn "agtmt4000b" tagged optional_info_fn ;
+        "func6" display/noreturn "agtmt4002" tagged submit_fn ;
+        "func7" sequence "irpm" tagged irpm_fn ;
+        "irpm" continue begin
+                        if agqname:line_of_business = 99 then
+                            l_screen_1 = "agtmt4001b"
+                        else
+                            l_screen_1 = "agtmt4001a"
+                        function = "popup"
+                        end ;
+
+        "func1" sequence "worksheet"  tagged worksheet_fn ;
+        "worksheet" continue begin
+                             do create_macro
+                             end  ;
+
+        "func2" sequence "quoteletter"  tagged quote_letter_fn ;
+        "quoteletter" continue begin
+                               do print_quote_letter
+                               end ;
+
+        "back" sequence "goto" tagged back_fn ;
+        "goto" continue begin
+                        if g_portfolio not one of "Y" then
+                            l_screen_1 = "agtmt001"
+                        else
+                            l_screen_1 = "agtmt9999"
+                        function = "popup"
+                        end ;
+        "popup" display/noreturn l_screen_1 ;
+
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    disable(submit_fn)
+
+if agqname:line_of_business = 99 then
+    disable(submit_fn)
+
+l_user_id = username
+access sfsemail, set sfsemail:company_id = agqworkerscomp1:company_id,
+                     sfsemail:user_id    = l_user_id, generic
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:line_of_business = 99 then
+    begin
+    l_line_of_business_1 = 99
+    l_line_of_business = 9
+    end
+else
+    begin
+    l_line_of_business_1 = g_line_of_business
+    l_line_of_business = g_line_of_business
+    end
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID = agqworkerscomp1:company_id,
+                    SFSLINE:LINE_OF_BUSINESS = l_line_of_business_1,
+                    SFSLINE:LOB_SUBLINE = "00",Generic
+
+setproperty(t_line_of_business,iconname,"title_workers_comp.bmp")
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+if sfsemail:agent_no <> 0 then
+    hide(irpm_fn)
+
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_prop_summary.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+Access Validation
+If agqworkerscomp1:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        scrollbarpolicy = always
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,30 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Proposal Summary..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+        event
+                {
+                mouseclicked = ""
+                }
+
+}
+
+Panel at 3.45,75 to 4.45, 100 Tagged quote_no
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101    agqworkerscomp1:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+
+        Button at 1.5,2   tagged add_fn
+        Properties {
+                Iconname = "btn_view_print_worksheet.bmp"
+                }
+        Events  {
+                Action = worksheet_fn
+                }
+
+        Button at 1.5,35 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+
+        Button at 1.5, 60 tagged quote_letter_fn
+        Properties {
+                Iconname = "btn_view_print_proposal.bmp"
+                }
+        Events  {
+                Action = quote_letter_fn
+                }
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt4001.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 10,1 to 11,95
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,27 to 1,30
+             properties
+               {
+                 text = "Loc"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 1,35 to 1,39
+             properties
+               {
+                 text = "Build"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 2,27 to 2,30
+             properties
+               {
+                 text = "    No"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 2,35 to 2,39
+             properties
+               {
+                 text = "    No"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 2,47 to 2,55
+             properties
+               {
+                 text = "Premium"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+scrollpanel at 13,22 to 15,73
+properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+
+Panel
+properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+%%
+    ____     ____      ___________
+%%
+
+components
+
+fields
+0101    agqworkerscomp1:prem_no/displayonly  tagged LINE_ITEMS;
+0102    agqworkerscomp1:build_no/displayonly tagged LINE_ITEMS ;
+0103    begin
+        if sfscompany:debug_mode = 1 then
+            proc("csbatch agtup4001 %s",str(g_app_no,11))
+        else
+            proc("csbatch agtup4001 %s",str(g_app_no,11))/noconsole
+        access agqworkerscomp1_alias, set agqworkerscomp1_alias:app_no   = agqworkerscomp1:app_no,
+                                          agqworkerscomp1_alias:prem_no  = agqworkerscomp1:prem_no,
+                                          agqworkerscomp1_alias:build_no = agqworkerscomp1:build_no, generic
+
+        end
+        agqworkerscomp1_alias:premium_1[20]/displayonly/mask="Z,ZZZ,ZZZ" tagged LINE_ITEMS;
+
+}
+
+}
+
+Panel at 17,22 to 18, 73
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        foregroundcolor    = "blue"
+        }
+event
+        {
+        mouseclicked = ""
+        }
+{
+%%
+       Policy Premium: ___________
+%%
+
+components
+
+fields
+101     begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        l_total = agqmaster:total[20]
+        l_tag = tag("totals_fn")
+        setproperty(l_tag,foregroundcolor,"blue")
+        end
+        l_total/displayonly/mask="ZZZ,ZZZ,ZZZ" tagged totals_fn
+        hide if sfsline:lob_code = "CPORTFOLIO";
+
+101     begin
+        access agqmastsupp, set agqmastsupp:app_no = g_app_no,
+                                agqmastsupp:line_of_business = l_line_of_business, generic
+
+        l_total = agqmastsupp:total[20]
+        l_tag = tag("totals_fn")
+        setproperty(l_tag,foregroundcolor,"blue")
+        end
+        l_total/displayonly/mask="ZZZ,ZZZ,ZZZ" tagged totals_fn
+        hide if sfsline:lob_code <> "CPORTFOLIO";
+
+}
+
+Panel at 19,5 to 20,6    tagged irpm_fn
+    Properties
+        {
+        layouttype = column
+        }
+    {
+    Components
+        Button at 1,1
+            Properties {
+                Iconname = "btn_irpm.bmp"
+                }
+            Events  {
+                Action = irpm_fn
+                }
+    }
+
+-- draw a line
+panel at 21,1 to 21,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 22,5 to 22,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged rating_info
+            Properties
+                {
+                Iconname = "btn_rating_infomation.bmp"
+                }
+            Events
+                {
+                Action
+                        {
+                           function = "displayit"
+                           abort()
+                        }
+
+                }
+        }
+
+Panel at 22,60 to 22,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1    tagged class_code_fn
+        Properties {
+                Iconname = "btn_class_code.bmp"
+                }
+        Events  {
+                Action = class_code_fn
+                }
+
+}
+
+Panel at 23.5,5 to 24,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1    tagged optional_info
+        Properties {
+                Iconname = "btn_opt_endt.bmp"
+                }
+        Events  {
+                Action = optional_info_fn
+                }
+
+        }
+
+panel at 25,1 to 25,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 26,10 to 26,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                        if g_portfolio <> "Y" then
+                          begin
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                          end
+                       else
+                          begin
+                          function = "back"
+                          abort()
+                          end
+                       }
+                }
+
+        }
+
+Panel at 26,70 to 26,100 Tagged ficof_fn
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged submit_info
+        Properties {
+  --              Text = "Submit to Underwriting"
+                Iconname = "btn_app_entry.bmp"
+                }
+        Events  {
+                Action = submit_fn
+                }
+
+}
+
+Panel at 26,70 to 26,100 Tagged farmers_fn
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged submit_info
+        Properties {
+  --              Text = "Submit to Underwriting"
+                Iconname = "btn_app_entry.bmp"
+                }
+        Events  {
+                Action = submit_fn
+                }
+
+}
+
+Panel at 26,60 to 28,90 Tagged lebins_fn
+Properties
+        {
+        LayoutType = column
+        }
+{
+Components
+        Button at 1,1   tagged submit_info
+        Properties {
+  --              Text = "Submit to Underwriting"
+                Iconname = "btn_app_entry_lebins.bmp"
+                }
+        Events  {
+                Action = submit_fn
+                }
+
+}
+
+panel at 27,1 to 33,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+
+}
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+procedure display_blue(tag l_tag, string l_color)
+begin
+    setproperty(l_tag,foregroundcolor,l_color)
+end
+
+procedure print_quote_letter
+begin
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+access sfscompany, set sfscompany:company_id = agqworkerscomp1:company_id, generic
+
+if sfscompany:company_id one of "LEBINS" then
+    begin
+    proc("cli csbatch agqmso9999 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso9999.cq %s<nl>",l_dec)/noconsole
+    end
+
+if sfscompany:debug_mode = 0 then
+    begin
+    proc("cli csbatch agqmso4000 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso4000.cq %s<nl>",l_dec)/noconsole
+    end
+else
+    begin
+    proc("cli csbatch agqmso4000 %s",str(g_app_no,11))
+    Proc("cli joinit agqmso4000.cq %s<nl>",l_dec)
+    end
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+if agqapplication:app_no = g_app_no then
+    begin
+    proc("cli csbatch agqmso4000a %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso4000a.cq %s<nl>",l_dec)/noconsole
+    end
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+    Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+    Proc("chmod 777 %s ",L_DEC_PDF)
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+end
+
+Procedure CREATE_MACRO
+Begin
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+access sfscompany, set sfscompany:company_id = agqworkerscomp1:company_id, generic
+
+if sfscompany:debug_mode = 0 then
+    begin
+    proc("cli csbatch agqmso4001 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso4001.cq %s<nl>",l_dec)/noconsole
+    end
+else
+    begin
+    proc("cli csbatch agqmso4001 %s",str(g_app_no,11))
+    Proc("cli joinit agqmso4001.cq %s<nl>",l_dec)
+    end
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+    Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+    Proc("chmod 777 %s ",L_DEC_PDF)
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+end
+
+end

@@ -1,0 +1,2571 @@
+%%
+/*
+Date Written: October 7, 2005
+
+Name: agqmso001.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------------------
+10/07/2005            REL & DWR    Initial agq Quote Letter setup
+07/10/2006            DWR          Added Rating Information section
+--------------------------------------------------------------------------
+*/
+
+Program
+  Name = "agqmso001";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ array [120] of string l_no_duplicate_printing[7];
+
+ string l_font[35] ;
+ String L_FILE_NAME[12] = "agqmso001.cq";
+ String L_COPY_NAME[20] ;
+ String I_REV_NAME2[50] ;
+ String L_POLICY_FORM;
+ String L_TYPE_STR[100];
+ String L_POLICY_DECLARATION[60];
+ String L_TRANS_EFF;
+ String L_AUDIT;
+ String L_PREV_STRING[100];
+ String L_INSURED_CITY_STATE[50];
+ String L_agqNAME_ZIP="";
+ String L_SFSAGENT;
+ String L_agqLOCATION_ZIP;
+ String L_SFSMORT_ZIP[10];
+ String L_agqSUPP_ZIP[10];
+ String L_AGENT_ADDRESS;
+ string l_supplemental_form[7];
+ String L_FOB[75];
+ String L_AGENT_TEL[13];
+ String L_AGENT_ZIP[10];
+ String L_MORTGAGE_ID[10];
+ String L_LOB_CODE[10];
+ string l_enter[1];
+ String L_COMPANY_ZIP[10];
+ String L_TERROR_FORM[7];
+ String L_COMPANY_ID[10];
+ String L_BILL_PLAN[2];
+ String L_MORTGAGE_TYPE_1[1];
+ String L_STATE_STR[2];
+ String L_PRINT_BLANK_WORDING;
+ String L_MORTGAGE_TYPE_2[1];
+ String L_SIGNATURE_STRING[55];
+ String L_PLEASED_WORDING[200];
+ String L_PRODUCER_LABEL;
+ String L_CHARACTER_STRING[1500]            = "";
+ string l_h_position[5]                    = "";
+ string l_v_position[5]                    = "";
+ String L_NEWPAGE_WORDING[40]              = "";
+ String L_CONSTRUCTION[1];
+ String I_code[7];
+
+
+ wdate l_eff_date,
+       l_bpsdefault2_eff_date ;
+
+ Number L_TRANS_CODE;
+ number function add_and_check_print_array(string)
+ Number L_MM_1;
+ Number L_DD_1;
+ Number L_YY_1;
+ Number L_RENEWAL[9];
+
+ Unsigned Ascii Number L_START_PRINT[4]    = 0;
+ unsigned ascii number l_restaurant[1]     = 0 ;
+ Unsigned Ascii Number L_END_PRINT[4]      = 0;
+ Unsigned Ascii Number L_LEN_STRING[4]     = 0;
+ Unsigned Ascii Number L_CHARACTER_BREAK   = 0;
+ Unsigned Ascii Number L_CHARACTER_COUNTER = 0;
+ Unsigned Ascii Number L_MAX_CHAR          = 0;
+ unsigned ascii number l_top_of_page       = 0;
+ Unsigned Ascii Number l_form[1];
+ Unsigned Ascii Number L_LINE_HEIGHT;
+ Unsigned Ascii Number L_MASTER_CODE[4];
+ Unsigned ascii number l_app_no[11];
+ Unsigned ascii number l_quote_no[11];
+ Unsigned Ascii Number L_DECIPOINT;
+ Unsigned Ascii Number L_CHARACTER_PER_INCH;
+-- Unsigned Ascii Number L_LEN_STRING;
+ Unsigned Ascii Number L_PAGE_MIDDLE;
+ Unsigned Ascii Number L_HALF_MULTIPLIER;
+ Unsigned Ascii Number L_CHAR_MULTIPLIER[10]/decimals=4;
+ Unsigned Ascii Number L_PAGE_NUMBER = 1;
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_LINE_COUNTER;
+ Unsigned Ascii Number L_MED_LIMIT;
+ Unsigned Ascii Number L_S_LINE_FOR_LOCATION = 0; --start line for location
+ Unsigned Ascii Number L_BIGGER_LINE =0;
+ Unsigned Ascii Number L_SCREEN_COR= 0;
+ Unsigned Ascii Number L_E_LINE_FOR_INSURED = 0;
+ Unsigned Ascii Number L_PAGENUMBER;
+ Unsigned Ascii Number L_MAX_LINES;
+ Unsigned Ascii Number L_LOCATION_COUNTER;
+ Unsigned Ascii Number L_SIZE_COUNTER;
+ Unsigned Ascii Number L_LIABILITY[9];
+ Unsigned Ascii Number L_LINE_OF_BUSINESS[4];
+ Unsigned Ascii Number L_INSURED_COUNTER;
+ Unsigned Ascii Number L_AGENT_COUNTER;
+ Unsigned Ascii Number L_TWO_PLACER;
+ Unsigned Ascii Number L_SFSFORM[2];
+ Unsigned Ascii Number L_agqMASTER_FORM[1];
+ Unsigned Ascii Number L_LOOP;
+ Unsigned Ascii Number L_SCIPSCONTROL;
+ Unsigned Ascii Number L_STATE_NUM[2];
+ Unsigned Ascii Number L_PRINTED_DATED[1];  --delete after scipscontrol is set up
+ Unsigned Ascii Number L_LOC_COUNTER;
+ Unsigned Ascii Number L_STATE[2];
+ Unsigned Ascii Number L_STATE2[2];
+ Unsigned Ascii Number L_EMPLOYEE[9];
+
+ Local Unsigned Ascii Number L_COUNTY;
+ Local Unsigned Ascii Number l_rating_territory[3];
+
+ Include "swsut100.var"
+ Include "csfonts.inc"
+ Include "sfsrevname.var"
+-- Include "line_spacing.var"
+
+ Include "header.var"
+
+Initialization
+Deletefile (L_FILE_NAME)
+L_app_no = val(COMMANDLINE[1,11])
+L_quote_no = val(COMMANDLINE[1,11])
+
+Access agqGENERAL ,
+   Set agqGENERAL:app_no = l_app_no,generic
+
+Access agqGENERAL2 ,
+   Set agqGENERAL2:app_no = l_app_no,generic
+
+Access agqmaster,
+   Set agqmaster:app_no = l_app_no,generic
+
+Access agqname,
+   Set agqname:app_no = l_app_no,generic
+
+--Access agqname,
+--   Set agqname:quote_no = l_quote_no,generic
+
+Access agsdefault_bop,
+   Set agsdefault_bop:company_id       = agqgeneral:company_id,
+       agsdefault_bop:state            = agqGENERAL:STATE,
+       agsdefault_bop:agent_no         = agqgeneral:AGENT_NO,
+       agsdefault_bop:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS, Generic
+
+Access SFSLINE,
+   Set SFSLINE:COMPANY_ID       = agqgeneral:COMPANY_ID,
+       SFSLINE:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS,
+       SFSLINE:LOB_SUBLINE      = "00",  exact
+
+Access SFSAGENT,
+   Set SFSAGENT:COMPANY_ID = agqgeneral:COMPANY_ID,
+       SFSAGENT:AGENT_NO   = agqgeneral:AGENT_NO, Exact
+
+Access SFSSTATE,
+   Set SFSSTATE:COMPANY_ID = agqGENERAL:COMPANY_ID,
+       SFSSTATE:STATE      = agqGENERAL:STATE,
+       SFSSTATE:COUNTY     = agqGENERAL:COUNTY, Exact
+
+Access SFSCONSTRUCTION,
+   Set SFSCONSTRUCTION:COMPANY_ID       = agqGENERAL:COMPANY_ID,
+       SFSCONSTRUCTION:STATE            = agqGENERAL:STATE,
+       SFSCONSTRUCTION:LINE_OF_BUSINESS = agqGENERAL:LINE_OF_BUSINESS,
+       SFSCONSTRUCTION:CONSTRUCTION     = agqGENERAL:CONSTRUCTION, Exact
+
+L_SFSFORM = agqMASTER:FORM
+
+Access SFSFORM,
+   Set SFSFORM:COMPANY_ID       = agqGENERAL:COMPANY_ID,
+       SFSFORM:STATE            = agqGENERAL:STATE,
+       SFSFORM:LINE_OF_BUSINESS = agqGENERAL:LINE_OF_BUSINESS,
+       SFSFORM:POLICY_FORM      = L_SFSFORM, Exact
+
+L_COMPANY_ID       = agqgeneral:COMPANY_ID
+L_LOB_CODE         = SFSLINE:LOB_CODE
+L_STATE            = agqgeneral:state
+
+Access SCIPSCONTROL,
+   Set SCIPSCONTROL:COMPANY_ID          = L_COMPANY_ID,
+       SCIPSCONTROL:STATE               = L_STATE,
+       SCIPSCONTROL:LOB_CODE            = L_LOB_CODE, Exact
+
+if sfsline_alias:lob_code = "CPORTFOLIO" then
+    begin
+    access agqmastsupp, set agqmastsupp:app_no           = agqgeneral:app_no,
+                            agqmastsupp:line_of_business = agqgeneral:line_of_business, generic
+
+    l_form               = agqmastsupp:form
+    end
+else
+    begin
+    access agqmaster, set agqmaster:app_no = agqgeneral:app_no, exact
+
+    l_form               = agqmaster:form
+    end
+
+if l_form = 0 then
+    begin
+    if agqgeneral:property_limit <> 0 then
+        l_form = 3
+    else
+        l_form = 1
+    end
+
+switch(l_form)
+  case 1, 3 : begin
+              if agqgeneral:restaurant = 1 then
+                  l_supplemental_form = "BU0421"/raw
+              else
+                  l_supplemental_form = "BU0403"/raw
+              end
+  default   : begin
+              if agqgeneral:restaurant = 1 then
+                  l_supplemental_form = "BU0424"/raw
+              else
+                  l_supplemental_form = "BU0413"/raw
+              end
+  end
+
+Access BPSDEFAULT2, Set BPSDEFAULT2:COMPANY_ID        = agqgeneral:company_id,
+                        bpsdefault2:state             = agqgeneral:state,
+                        BPSDEFAULT2:LINE_OF_BUSINESS  = agqgeneral:line_of_business,
+                        BPSDEFAULT2:SUPPLEMENTAL_FORM = l_supplemental_form, Generic
+
+l_bpsdefault2_eff_date = 0
+while BPSDEFAULT2:COMPANY_ID        = agqgeneral:company_id and
+      bpsdefault2:state             = agqgeneral:state and
+      BPSDEFAULT2:LINE_OF_BUSINESS  = agqgeneral:line_of_business and
+      BPSDEFAULT2:SUPPLEMENTAL_FORM = l_supplemental_form
+        begin
+        if (agqgeneral:eff_date >= bpsdefault2:eff_date and
+           (agqgeneral:eff_date <= bpsdefault2:exp_date or
+           bpsdefault2:exp_date = 0)) then
+            l_bpsdefault2_eff_date = bpsdefault2:eff_date
+
+        next bpsdefault2
+        end
+
+Access BPSDEFAULT2, Set BPSDEFAULT2:COMPANY_ID        = agqgeneral:company_id,
+                        bpsdefault2:state             = agqgeneral:state,
+                        BPSDEFAULT2:LINE_OF_BUSINESS  = agqgeneral:line_of_business,
+                        BPSDEFAULT2:SUPPLEMENTAL_FORM = l_supplemental_form,
+                        bpsdefault2:eff_date          = l_bpsdefault2_eff_date, Generic
+
+Access BPSSUPPLEMENTAL,
+   Set BPSSUPPLEMENTAL:COMPANY_ID       = agqGENERAL:COMPANY_ID,
+       BPSSUPPLEMENTAL:STATE            = agqGENERAL:STATE,
+       BPSSUPPLEMENTAL:LINE_OF_BUSINESS = agqGENERAL:LINE_OF_BUSINESS, generic
+
+Switch(AGQMASTER:FORM_OF_BUSINESS)
+  Case 'C' : L_FOB = "Corporation"
+  Case 'I' : L_FOB = "Individual"
+  Case 'J' : L_FOB = "Joint Venture"
+  Case 'O' : L_FOB = "Organization"
+  Case 'P' : L_FOB = "Partnership"
+  Case 'L' : L_FOB = "LLC"
+  case 'T' :
+  if AGQMASTER:FORM_OF_BUSINESS one of "OTHER" then
+    {
+      L_FOB =  trun(agqmaster:FOB_DESCRIPTION)
+    }
+End
+
+L_POLICY_DECLARATION = Trun(SFSLINE:DESCRIPTION) + " " + "POLICY DECLARATIONS"
+
+L_AGQNAME_ZIP = If (Val(AGQNAME:STR_ZIPCODE[1,4]) = 0) Then
+                        AGQNAME:STR_ZIPCODE[5,9]
+                Else
+                   AGQNAME:STR_ZIPCODE[5,9] + "-" +
+                   AGQNAME:STR_ZIPCODE[1,4]
+
+L_INSURED_CITY_STATE = Trun(agqNAME:CITY) + ", " + agqNAME:STR_STATE + "  " + L_AGQNAME_ZIP
+
+L_AGENT_TEL = SFSAGENT:TELEPHONE[1];
+
+L_SFSAGENT = If (Val(SFSAGENT:ZIPCODE_1_4) = 0) Then
+                     SFSAGENT:ZIPCODE_5_9
+             Else
+                 SFSAGENT:ZIPCODE_5_9 + "-" + SFSAGENT:ZIPCODE_1_4
+
+L_AGENT_ZIP =  If (Val(SFSAGENT:STR_ZIPCODE[6,9]) = 0) Then
+                       SFSAGENT:STR_ZIPCODE[1,5]
+               Else
+                  SFSAGENT:STR_ZIPCODE[1,5] + "-" +
+                  SFSAGENT:STR_ZIPCODE[6,9]
+
+L_COMPANY_ZIP =  If (Val(SFSCOMPANY:STR_ZIPCODE[6,9]) = 0) Then
+                         SFSCOMPANY:STR_ZIPCODE[1,5]
+                 Else
+                    SFSCOMPANY:STR_ZIPCODE[1,5] + "-" +
+                    SFSCOMPANY:STR_ZIPCODE[6,9]
+
+L_AGENT_ADDRESS = SFSAGENT:CITY + ", " + SFSAGENT:STR_STATE
+
+L_MED_LIMIT = agqMASTER:MEDICAL_LIMIT
+
+Include "swudeccs.inc"
+
+Switch(AGQMASTER:LIABILITY_CODE)
+  Case 1 : L_LIABILITY = 300000
+  Case 2 : L_LIABILITY = 500000
+  Case 3 : L_LIABILITY = 1000000
+  End
+
+L_MAX_LINES        = 62
+L_SIZE_COUNTER     = 0
+L_LINE_COUNTER     = 1
+L_PAGENUMBER       = 1
+L_LOCATION_COUNTER = 1
+L_INSURED_COUNTER  = 0
+L_AGENT_COUNTER    = 0
+
+If SCIPSCONTROL:DUPLEX_SHORT_EDGE = 1 Then
+  {
+    Writefile(L_FILE_NAME,"%s",L_SEDUP)
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s",L_LEDUP)
+  }
+--border
+
+  --box on page 1
+  Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c10a3045b0P")    --left vertical li
+  Writefile(L_FILE_NAME,"%s","<033>&a5585h0V<033>*c10a3045b0P")   --right vertical
+  Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c5467h20v0P")    --top horizontal line to
+  Writefile(L_FILE_NAME,"%s","<033>&a140h7300V<033>*c5467h20v0P") --bottom horizontal line
+
+
+Writefile(L_FILE_NAME,"%s%s%s%n",L_ARIAL_BOLD_9,
+                      "<033>&a5000h7250V",
+                      "Page ",L_PAGE_NUMBER)
+
+Access SFSCOMPANY,
+   Set SFSCOMPANY:COMPANY_ID = agqgeneral:COMPANY_ID, Exact
+
+Writefile(L_FILE_NAME,"%s","<033>&a0h0V")
+
+
+L_STRING       = trun(sfscompany:name[1])
+L_FONT         =  trun(L_ARIAL_BOLD_9)
+L_PITCH_HALF   = 6
+L_PITCH_FULL   = 12
+L_VERTICAL_POS = "+180"
+Include "center2.pro"
+
+if scipscontrol:quotation_lob_wording_change = 1 then
+  begin
+    L_PLEASED_WORDING = trun(sfsline:description)
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    L_STRING       = L_PLEASED_WORDING
+    L_FONT         = L_ARIAL_BOLD
+    L_PITCH_HALF   = 6
+    L_PITCH_FULL   = 12
+    L_VERTICAL_POS = "+160"
+    Include "center2.pro"
+
+    L_PLEASED_WORDING = "We are pleased to submit the following quotation to you."
+
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    L_STRING       = L_PLEASED_WORDING
+    L_FONT         = L_ARIAL_BOLD
+    L_PITCH_HALF   = 6
+    L_PITCH_FULL   = 12
+    L_VERTICAL_POS = "+160"
+    Include "center2.pro"
+  end
+else
+  begin
+    L_PLEASED_WORDING = "We are pleased to submit the following " +
+                        trun(sfsline:description) + " " + "quotation to you."
+
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_9) --was 12
+    L_STRING       = L_PLEASED_WORDING
+    L_FONT         = L_ARIAL_BOLD_9 --was bold_10
+    L_PITCH_HALF   = 5
+    L_PITCH_FULL   = 10
+    L_VERTICAL_POS = "+100"
+    Include "center2.pro"
+  end
+
+Writefile(L_FILE_NAME,"%s%s","<NL>","<033>&f0S") --pushed memory location on stack
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Writefile(L_FILE_NAME,"%s%s%s%s","<033>&f1S",L_ARIAL,"<033>&a200h+30V",
+                      "Application Number: ")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD_12,"<033>&a1150h+0V",
+                      "APP",trun(str(l_app_no)))
+
+--Writefile(L_FILE_NAME,"%s","<NL>")
+--L_LINE_HEIGHT = L_LINE_HEIGHT + 120
+Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s",L_ARIAL,"<033>&a300h+0V",
+                  "<033>&a1900h-85V<033>*c85h10v0P",  -- top horizontal
+                  "<033>&a1900h+0V<033>*c5a40b0P", -- left vertical
+                  "<033>&a1980h+0V<033>*c5a40b0P", -- right vertical
+                  "<033>&a1900h+85V<033>*c85h10v0P", -- bottom horizontal
+                  L_ARIAL_BOLD,"<033>&a2050h+0V","BASIC PLUS")
+L_LINE_HEIGHT = L_LINE_HEIGHT +30  --was -85
+If agqMASTER:FORM = 1 Then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD,"<033>&a1910h-2V","X")
+  }
+if agqgeneral:state = 19 then
+  begin
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s","<033>&a300h+0V",
+                      L_ARIAL,"<033>&a1900h-85V<033>*c85h10v0P",  -- top horizontal
+                      "<033>&a1900h+0V<033>*c5a40b0P", -- left vertical
+                      "<033>&a1980h+0V<033>*c5a40b0P", -- right vertical
+                      "<033>&a1900h+85V<033>*c85h10v0P", -- bottom horizontal
+                      L_ARIAL_BOLD,"<033>&a2050h-0V","NAMED PERILS")
+    If agqMASTER:FORM = 2 Then
+      begin
+        Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL,"<033>&a2310h-2V","X")
+      end
+  end
+Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s","<033>&a300h+0V",
+                  L_ARIAL,"<033>&a2900h-85V<033>*c85h10v0P",  -- top horizontal
+                  "<033>&a2900h+0V<033>*c5a40b0P", -- left vertical
+                  "<033>&a2980h+0V<033>*c5a40b0P", -- right vertical
+                  "<033>&a2900h+85V<033>*c85h10v0P", -- bottom horizontal
+                  L_ARIAL_BOLD,"<033>&a3050h-0V","EXPANDED")
+If agqMASTER:FORM = 3 then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL,"<033>&a2910h-2V","X")
+  }
+Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s","<033>&a300h+0V",
+                  L_ARIAL,"<033>&a3800h-85V<033>*c85h10v0P",  -- top horizontal
+                  "<033>&a3800h+0V<033>*c5a40b0P", -- left vertical
+                  "<033>&a3880h+0V<033>*c5a40b0P", -- right vertical
+                  "<033>&a3800h+85V<033>*c85h10v0P", -- bottom horizontal
+                  L_ARIAL_BOLD,"<033>&a3950h-0V","ENHANCEMENT ENDORSEMENT")
+--NEED TO FIX THIS LINE BELOW TO BE CORRECT NUMBER, NOT 33
+If agqgeneral:special_enhancement one of 1 Then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL,"<033>&a3810h-2V","X")
+  }
+
+Writefile(L_FILE_NAME,"%s%s%s%s","<NL>",L_ARIAL,
+                      "<033>&a200h+0V","Quote Number: ")
+
+If agqname:quote_no <> 0 then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD_12),"Q",trun(str(agqname:quote_no)))
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s%s",trun(L_ARIAL_BOLD_9),"NOT CONVERTED")
+  }
+L_LINE_HEIGHT = L_LINE_HEIGHT + 30
+L_LINE_COUNTER = L_LINE_COUNTER + 4
+
+if sfscompany:company_id one of "FARMERS" then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%n%s","<NL>","<NL>",L_ARIAL_BOLD_9,
+                          "<033>&a350h+0V","Applicant Name and Mailing Address",
+                          "<033>&a3000h+0V","Agent -","<033>&a3400h+0V",
+                           SFSAGENT:AGENT_NO,"<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 3
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%n%s","<NL>","<033>&a350h+90V",L_ARIAL_BOLD_9,
+                          "<033>&a350h+0V","Named Insured and Mailing Address",
+                          "<033>&a3000h+0V","Agent -","<033>&a3400h+0V",
+                          SFSAGENT:AGENT_NO,"<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 3
+  }
+
+Writefile(L_FILE_NAME,"%s","<033>&f0S")   --push the cursor position on the stack
+Writefile(L_FILE_NAME,"%s","<033>&f0S")   --used to see if agent or insured
+                                          --name/address has more lines
+
+L_LINE_HEIGHT = L_LINE_HEIGHT + 360
+--L_LINE_HEIGHT = L_LINE_HEIGHT + 360
+L_LINE_COUNTER = (L_LINE_HEIGHT Div 120) + 2
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+
+if agqname:name[1] <> "" then
+  {
+    For L_LOOP = 1 To 3
+      {
+        I_NAME=agqname:name[L_LOOP,1,40]
+        Include "sfsrevname7.pro"
+        If agqname:name[L_LOOP] <> "" Then
+          {
+            Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",I_REV_NAME,"<NL>")
+            L_INSURED_COUNTER = L_INSURED_COUNTER +1
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+          }
+      }
+
+    For L_LOOP = 1 To 3
+      {
+        If (agqNAME:ADDRESS[L_LOOP] <> "") Then
+          {
+            Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",agqNAME:ADDRESS[L_LOOP,1,40],"<NL>")
+            L_INSURED_COUNTER = L_INSURED_COUNTER +1
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+          }
+      }
+    Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",L_INSURED_CITY_STATE,"<NL>")
+    L_INSURED_COUNTER = L_INSURED_COUNTER +1
+    L_LINE_COUNTER= L_LINE_COUNTER + 1
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",agqgeneral:business_name[1],"<NL>")
+  }
+
+--START OF AGENT pRINTING
+  Writefile(L_FILE_NAME,"%s","<033>&f1S")  --pop agent cursor postion off stack
+
+  If SCIPSCONTROL:PRODUCER_LABEL One Of 1 Then
+    {
+      L_MASTER_CODE = SFSAGENT:AGENT_MASTER_CODE
+
+      Access SFSAGENT,
+         Set SFSAGENT:COMPANY_ID = agqgeneral:COMPANY_ID,
+             SFSAGENT:AGENT_NO   = L_MASTER_CODE, Exact
+
+      Writefile(L_FILE_NAME,"%s","<033>&a3000h+0V")
+      Writefile(L_FILE_NAME,"%s",SFSAGENT:NAME[1])  --prints master agent code
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+      Writefile(L_FILE_NAME,"%s","<033>&a3000h+120V")
+      Writefile(L_FILE_NAME,"%s",L_PRODUCER_LABEL)
+      Writefile(L_FILE_NAME,"%s",L_ARIAL)
+      Writefile(L_FILE_NAME,"%s","<NL>")
+    }
+--reaccessing producer agent
+
+  For L_LOOP = 1 To 3
+    {
+      If SFSAGENT:NAME[L_LOOP] <> "" Then
+        {
+          Writefile(L_FILE_NAME,"%s%s","<033>&a3000h+0V",SFSAGENT:NAME[L_LOOP])
+          Writefile(L_FILE_NAME,"%s","<NL>")
+          L_LINE_COUNTER = L_LINE_COUNTER + 1
+          l_agent_counter = l_agent_counter + 1
+        }
+    }
+  For L_LOOP = 1 To 3
+    {
+      If SFSAGENT:ADDRESS[L_LOOP] <> "" Then
+        {
+          Writefile(L_FILE_NAME,"%s%s%s","<033>&a3000h+0V",SFSAGENT:ADDRESS[L_LOOP],"<NL>")
+          L_LINE_COUNTER = L_LINE_COUNTER + 1
+          l_agent_counter = l_agent_counter + 1
+        }
+    }
+  Writefile(L_FILE_NAME,"%s%s, %s%s%s%s","<033>&a3000h+0V",Trun(SFSAGENT:CITY),
+                       SFSAGENT:STR_STATE," ",L_AGENT_ZIP,"<NL>")
+  L_LINE_COUNTER= L_LINE_COUNTER + 1
+  l_agent_counter = l_agent_counter + 1
+  Writefile(L_FILE_NAME,"%s%s%s%s %s-%s","<033>&a3000h+0V",
+                        "(",L_AGENT_TEL[1,3],")",L_AGENT_TEL[4,6],
+                        L_AGENT_TEL[7,10])
+
+  Writefile(L_FILE_NAME,"%s","<033>&f1S")  --pop agent cursor postion off stack
+
+    If l_agent_counter > l_insured_counter Then
+      {
+        For l_loop = 1 to l_agent_counter
+          {
+            Writefile(L_FILE_NAME,"%s","<NL>")
+          }
+      }
+  Else
+      {
+        For l_loop = 1 to l_insured_counter
+          {
+            Writefile(L_FILE_NAME,"%s","<NL>")
+          }
+      }
+--**********************************************************************
+--putting in the QUOTE TERM LINE ON THE DEC PAGE
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+
+--Writefile(L_FILE_NAME,"%s","<033>&a300h+0V")
+--Writefile(L_FILE_NAME,"%s","<033>&a200h+40V<033>*c5a217b0P")   --left vertical
+--Writefile(L_FILE_NAME,"%s","<033>&a5479h+0V<033>*c5a217b0P")   --right vertica
+--Writefile(L_FILE_NAME,"%s%s","<033>&a200h+0V<033>*c5289h5v0P","<NL>") --horizo
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+Writefile(L_FILE_NAME,"%s","<033>&a200h+90V")
+Writefile(L_FILE_NAME,"%s", "Quoted Term: ")
+Writefile(L_FILE_NAME,"%s%s%s",str(agqgeneral:EFF_DATE,"MM/DD/YYYY")," to ",str(agqgeneral:EXP_DATE,"MM/DD/YYYY"))
+
+
+Writefile(L_FILE_NAME,"%s","<033>&a2600h+0V")
+Writefile(L_FILE_NAME,"%s%s","Quote Valid Until: ", str(todaysdate + 30,"MM/DD/YYYY"))
+
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+--**********************************************************************
+
+If L_FOB one of "Corporation","Joint Venture","Partnership" then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a200h+0V","You are a:",l_arial_9,
+                          "<033>&a750h+0V",Uppercase(L_FOB))
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a200h+0V","You are an:",l_arial_9,
+                          "<033>&a730h+0V",Uppercase(L_FOB))
+  }
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no = L_app_no,generic
+
+L_LOC_COUNTER = 0
+
+Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD_9,
+          "<033>&a2600h+0V","Your Business/Operation: ",L_ARIAL_9)
+
+  Writefile(L_FILE_NAME,"%s","<033>&a3750h+0V")
+  Writefile(L_FILE_NAME,"%s",agqGENERAL:BUSINESS_DESC[1])
+
+  If agqGENERAL:BUSINESS_DESC[2] <> "" Then
+    {
+      Writefile(L_FILE_NAME,"%s","<NL>")
+      Writefile(L_FILE_NAME,"%s","<033>&a3750h+0V")
+      Writefile(L_FILE_NAME,"%s",agqGENERAL:BUSINESS_DESC[2])
+      l_line_counter = l_line_counter + 1
+    }
+Writefile(L_FILE_NAME,"%s","<NL>")
+l_line_counter = l_line_counter + 2
+
+    Access agqLOCATION,
+       Set agqLOCATION:app_no     = l_app_no,generic
+
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h5v0P","<NL>")
+l_line_counter = l_line_counter +1
+
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_bold)
+Writefile(L_FILE_NAME,"%s","<033>&a2050h+20V")
+Writefile(L_FILE_NAME,"%s","COVERAGES")
+Writefile(L_FILE_NAME,"%s","<033>&a2050h+20V<033>*c625h5v0P")
+Writefile(L_FILE_NAME,"%s","<033>&a2900h-20V")
+Writefile(L_FILE_NAME,"%s","LIMIT OF LIABILITY")
+Writefile(L_FILE_NAME,"%s","<033>&a2900h+20V<033>*c900h5v0P")
+
+Writefile(L_FILE_NAME,"%s","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_9)
+Writefile(L_FILE_NAME,"%s","<033>&a1750h+0V")
+Writefile(L_FILE_NAME,"%s","Each Occurrence Limit:")
+Writefile(L_FILE_NAME,"%s","<033>&a2900h+0V")
+Writefile(L_FILE_NAME,"%s","$ ")
+Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+Writefile(L_FILE_NAME,"%s",Str(L_LIABILITY,"ZZ,ZZZ,ZZZ"))
+Writefile(L_FILE_NAME,"%s","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_9)
+Writefile(L_FILE_NAME,"%s","<033>&a1685h+0V")
+Writefile(L_FILE_NAME,"%s","General Aggregate Limit:")
+Writefile(L_FILE_NAME,"%s","<033>&a2900h+0V")
+Writefile(L_FILE_NAME,"%s","$ ")
+Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+Writefile(L_FILE_NAME,"%s",Str(agqMASTER:GENERAL_AGGREGATE,"ZZ,ZZZ,ZZZ"))
+Writefile(L_FILE_NAME,"%s","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_9)
+Writefile(L_FILE_NAME,"%s","<033>&a638h+0V")
+Writefile(L_FILE_NAME,"%s","Products Completed Operations Aggregate Limit:")
+Writefile(L_FILE_NAME,"%s","<033>&a2900h+0V")
+Writefile(L_FILE_NAME,"%s","$ ")
+Access agqoperations,
+   Set agqoperations:app_no     = l_app_no,generic
+
+If agqoperations:exclude_products = "Y" then
+  {
+    Writefile(L_FILE_NAME,"%s","")
+  }
+else
+  {
+    Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+    Writefile(L_FILE_NAME,"%s",Str(l_liability,"ZZ,ZZZ,ZZZ"))
+  }
+Writefile(L_FILE_NAME,"%s","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_9)
+Writefile(L_FILE_NAME,"%s","<033>&a1133h+0V")
+Writefile(L_FILE_NAME,"%s","Personal and Advertising Injury Limit:")
+Writefile(L_FILE_NAME,"%s","<033>&a2900h+0V")
+Writefile(L_FILE_NAME,"%s","$ ")
+Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+Writefile(L_FILE_NAME,"%s",Str(agqMASTER:personal_add_injury,"ZZ,ZZZ,ZZZ"))
+Writefile(L_FILE_NAME,"%s","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_9)
+Writefile(L_FILE_NAME,"%s","<033>&a1698h+0V")
+Writefile(L_FILE_NAME,"%s","Fire Legal Liability Limit:")
+Writefile(L_FILE_NAME,"%s","<033>&a2900h+0V")
+Writefile(L_FILE_NAME,"%s","$ ")
+Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+Writefile(L_FILE_NAME,"%s",Str(agqgeneral:fire_limit,"ZZ,ZZZ,ZZZ"))
+Writefile(L_FILE_NAME,"%s","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+Writefile(L_FILE_NAME,"%s","<033>&a1764h+0V")
+Writefile(L_FILE_NAME,"%s","Medical Expense Limit:")
+Writefile(L_FILE_NAME,"%s","<033>&a2900h+0V")
+Writefile(L_FILE_NAME,"%s","$ ")
+Writefile(L_FILE_NAME,"%s",trun(L_LETTER_GOTHIC_BOLD_10))
+Writefile(L_FILE_NAME,"%s",Str(agqMASTER:MEDICAL_LIMIT,"ZZ,ZZZ,ZZZ"))
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+20V")
+
+Writefile(L_FILE_NAME,"%s","<033>&a150h+40V<033>*c5455h20v0P")
+Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD,
+                      "<033>&a650h+130V","THIS QUOTE CONTAINS AGGREGATE LIMITS: REFER TO LIMITS OF INSURANCE SECTION.")
+l_line_counter = l_line_counter + 1
+Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD,
+                      "<033>&a1620h+130V","PART II A OF THE COVERAGE FORM FOR DETAILS")
+l_line_counter = l_line_counter + 1
+
+Writefile(L_FILE_NAME,"%s","<033>&a150h+40V<033>*c5455h20v0P")
+
+Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD,
+                      "<033>&a2200h+160V","SCHEDULE OF PREMISES")
+l_line_counter = l_line_counter + 1
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a150h+40V<033>*c5455h20v0P","<NL>")
+
+While agqgeneral:app_no = L_app_no
+  {
+    Access SFSSTATE,
+       Set SFSSTATE:COMPANY_ID = agqGENERAL:COMPANY_ID,
+           SFSSTATE:STATE      = agqGENERAL:STATE,
+           SFSSTATE:COUNTY     = agqGENERAL:COUNTY, Exact
+
+    Access SFSCONSTRUCTION,
+       Set SFSCONSTRUCTION:COMPANY_ID       = agqGENERAL:COMPANY_ID,
+           SFSCONSTRUCTION:STATE            = agqGENERAL:STATE,
+           SFSCONSTRUCTION:LINE_OF_BUSINESS = agqGENERAL:LINE_OF_BUSINESS,
+           SFSCONSTRUCTION:CONSTRUCTION     = agqGENERAL:CONSTRUCTION, Exact
+
+       --checking to see if the address field are blank in they are not blank then we need
+       --to adjust the counter to the appropriate line to make sure that the next group
+       --of data that prints will print all together.
+
+    Access agqlocation,
+       Set agqlocation:app_no   = agqgeneral:app_no,
+           agqlocation:prem_no  = agqgeneral:prem_no,
+           agqlocation:build_no = agqgeneral:build_no, generic
+
+    If l_page_number >= 2 and l_top_of_page = 0 then
+      {
+        l_top_of_page = 1
+        Writefile(L_FILE_NAME,"%s","<033>&a+0h+0V") --sets starting point for newpage
+        Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,"<033>&a2000h+120V",
+                              "SCHEDULE OF PREMISES CONTINUED","<NL>")
+        Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+        l_line_counter = l_line_counter + 2
+      }
+    Do schedule_of_premises
+
+    if l_page_number = 1 then
+      {
+        do totals
+        Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+        Writefile(L_FILE_NAME,"%s%s","<033>&a2130h+120V","THIS IS NOT A POLICY")
+        l_line_counter = l_line_counter + 1
+
+        do fraud_warning
+        do insert_newpage
+      }
+    Else
+      {
+        if l_location_counter mod 2 = 0 then
+          {
+            do fraud_warning
+            do insert_newpage
+          }
+      }
+    Next agqgeneral
+  }
+
+/***********************************************************************************
+ if there are no additional interests then section 7. will be on the second page
+ so I do not need to draw the line above 7. that is why I have the else there
+ ***********************************************************************************/
+
+If (l_line_counter >= L_MAX_LINES - 12) or
+   (l_page_number = 1) Then
+  {
+      do fraud_warning
+      do insert_newpage
+  }
+
+Access agqGENERAL ,
+   Set agqGENERAL:app_no    = L_app_no,Generic
+
+L_LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS
+L_agqMASTER_FORM   = agqMASTER:FORM
+L_COMPANY_ID       = agqgeneral:COMPANY_ID
+L_MAX_LINES        = 55
+
+/*-----------------------------------------------------------------------------
+ The following code prints out the manditory and non-mandatory  endorsements
+-----------------------------------------------------------------------------*/
+
+
+access sfsend,
+   set sfsend:company_id       = l_company_id,
+       sfsend:state            = agqgeneral:state,
+       sfsend:line_of_business = l_line_of_business,
+       sfsend:form             = l_agqmaster_form, generic
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+Writefile(L_FILE_NAME,"%s","<033>&a350h+120V")
+Writefile(L_FILE_NAME,"%s","Form Edition")
+Writefile(L_FILE_NAME,"%s","<033>&a1750h+0V")
+Writefile(L_FILE_NAME,"%s","Description")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Access agqEND,
+   Set agqEND:app_no   = L_app_no ,generic
+
+
+While sfsend:company_id       = l_company_id and
+      sfsend:state            = agqgeneral:state and
+      sfsend:line_of_business = l_line_of_business and
+      sfsend:form             = l_agqmaster_form
+  {   --Start of Outside While
+
+    if (agqgeneral:eff_date >= sfsend:eff_date and
+       (agqgeneral:eff_date <= sfsend:Exp_date or
+        sfsend:exp_date = 00.00.0000)) then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL,
+        "<033>&a350h+0V",sfsend:FORM_EDITION,
+        "<033>&a1750h+0V",sfsend:DESCRIPTION,"<NL>")
+        l_line_counter = l_line_counter +1
+      }
+    next sfsend
+  }
+
+While agqend:app_no = L_app_no
+    {   --Start of Inside While
+    if add_and_check_print_array(agqend:code) = 1 then
+        {
+        Writefile(L_FILE_NAME,"%s",L_ARIAL)
+        Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+        Writefile(L_FILE_NAME,"%s",agqend:FORM_EDITION)
+        Writefile(L_FILE_NAME,"%s","<033>&a1750h+0V")
+        Writefile(L_FILE_NAME,"%s",agqend:DESCRIPTION)
+        if agqend:code = "MCP251" then
+            begin
+            Writefile(L_FILE_NAME,"%s","<033>&a3800h+0V")
+            writefile(l_file_name,"%s%s%s","(Limit: ",str(agqgeneral:wind_deductible,"ZZZZZ"),")")
+            end
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        l_line_counter = l_line_counter +1
+        If l_line_counter + 10 = L_MAX_LINES Then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a150h-80V<033>*c5455h20v0P")
+            do fraud_warning
+            do insert_newpage
+            Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,"<033>&a1800h+0V",
+                                 "FORMS AND ENDORSEMENTS CONTINUED","<NL>")
+                                 l_line_counter = l_line_counter +1
+            Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+          }
+      }
+    Next agqend
+  }   --End of Inside While
+
+
+Access SFSMSOTERROR,
+   Set SFSMSOTERROR:COMPANY_ID       = L_COMPANY_ID,
+       SFSMSOTERROR:STATE            = I_STATE,
+       SFSMSOTERROR:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS, Generic
+
+While  SFSMSOTERROR:COMPANY_ID       = L_COMPANY_ID And
+       SFSMSOTERROR:STATE            = I_STATE And
+       SFSMSOTERROR:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS
+     begin
+        if SFSMSOTERROR:EFF_DATE <= agqNAME:EFF_DATE then
+           L_TERROR_FORM = SFSMSOTERROR:TERRORISM_FORM_TO_ADD
+
+        Next SFSMSOTERROR
+     end
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no    = L_app_no,Generic
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+Writefile(L_FILE_NAME,"%s","<033>&a200h+200V")
+Writefile(L_FILE_NAME,"%s","*    ")
+Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+Writefile(L_FILE_NAME,"%s",agqLOCATION:STR_STATE)
+Writefile(L_FILE_NAME,"%s"," Mandatory Forms")
+Writefile(L_FILE_NAME,"%s","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+l_line_counter = l_line_counter + 1
+
+If agqSUPP:app_no = L_app_no Then
+  {
+    do mort
+  }
+
+do fraud_warning
+
+If L_PAGE_NUMBER Mod 2 > 0 Then
+  {
+    Writefile(L_FILE_NAME,"%s","<FF>")
+  }
+
+update
+
+Screen Exit
+  Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET)
+  Closefile(L_FILE_NAME)
+
+procedure definition
+
+procedure align_text(string p_string,
+                     string P_horizontal_pos,
+                     string p_VERTICAL_POS,
+                     number P_pitch_full,
+                     string p_font)
+
+Begin
+  Writefile(L_FILE_NAME,"%s",Trun(p_FONT))  -- Font to use
+  Writefile(L_FILE_NAME,"%s","<033>&f1000Y") -- Define the Text Macro's number
+  Writefile(L_FILE_NAME,"%s","<033>&f0X") -- Start of Macro
+  Writefile(L_FILE_NAME,"%s",Trun(p_STRING)) -- Text to print
+  Writefile(L_FILE_NAME,"%s","<033>&f1X") -- End of Macro
+  Writefile(L_FILE_NAME,"%s","<033>&f9X") -- Makes Macro Temporary
+  Writefile(L_FILE_NAME,"%s%s%s%s%s","<033>&a",P_horizontal_pos,"h",p_VERTICAL_POS,"V") -- Center of page position and vertical position
+  Writefile(L_FILE_NAME,"%s","<033>*vo1T") -- Sets Text to be Invisible
+  Writefile(L_FILE_NAME,"%s","<033>&a180P") -- Print right to left
+  Writefile(L_FILE_NAME,"%s%n%s","<033>(s",p_PITCH_FULL,"V") -- Set font pitch to half
+  Writefile(L_FILE_NAME,"%s","<033>&f1000Y") -- Call Macro Number
+  Writefile(L_FILE_NAME,"%s","<033>&f2X") -- Print Macro
+  Writefile(L_FILE_NAME,"%s","<033>*v1oT") -- Make Text Visible
+  Writefile(L_FILE_NAME,"%s","<033>&a0P")  -- Print Left to right
+  Writefile(L_FILE_NAME,"%s%n%s","<033>(s",p_PITCH_FULL,"V") -- Set font pitch to normal
+  Writefile(L_FILE_NAME,"%s","<033>&f1000Y") -- Call Macro Number
+  Writefile(L_FILE_NAME,"%s","<033>&f2X") -- Print Macro
+--  Writefile(L_FILE_NAME,"%s","<NL>") -- New line (duh)
+END
+
+number function add_and_check_print_array(string p_code)
+
+BEGIN
+  l_loop = 1
+  while l_no_duplicate_printing[l_loop] <> p_code and
+        l_no_duplicate_printing[l_loop] <> "" and
+        l_loop < 120   --prevents out of arrary out of bounds
+    {
+      L_loop = l_loop + 1
+    }
+  --found position of where to put the next form in the loop
+
+  if l_no_duplicate_printing[l_loop] <> p_code then
+    {
+      l_no_duplicate_printing[l_loop] = p_code
+      return 1
+    }
+  else
+    {
+      return 0
+    }
+END
+
+Procedure schedule_of_premises
+  {
+
+    If (Val(agqLOCATION:STR_ZIPCODE[6,9]) = 0) Then
+      {
+        L_agqLOCATION_ZIP = agqLOCATION:STR_ZIPCODE[1,5]
+      }
+    Else
+      {
+        L_agqLOCATION_ZIP = agqLOCATION:STR_ZIPCODE[1,5] + "-" +
+                            agqLOCATION:STR_ZIPCODE[6,9]
+      }
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_8)
+        Writefile(L_FILE_NAME,"%s","<033>&a200h+10V")
+        Writefile(L_FILE_NAME,"%s","Location")
+        Writefile(L_FILE_NAME,"%s","<033>&a700h+0V")
+        Writefile(L_FILE_NAME,"%n",agqgeneral:PREM_NO)
+        Writefile(L_FILE_NAME,"%s","<033>&a1000h+0V")
+        Writefile(L_FILE_NAME,"%s","Building")
+        Writefile(L_FILE_NAME,"%s","<033>&a1500h+0V")
+        Writefile(L_FILE_NAME,"%n",agqgeneral:BUILD_NO)
+
+        if agqlocation:address = "" then
+          {
+            Writefile(L_FILE_NAME,"%s%s%s%s",l_arial_bold,"<033>&a200h+160V","Location Information Not Entered Yet","<NL>")
+                    l_line_counter = l_line_counter + 1
+          }
+        Else
+          {
+            Writefile(L_FILE_NAME,"%s%s%s%s",l_arial_9,"<033>&a1800h+0V",agqLOCATION:ADDRESS,"<NL>")
+            l_line_counter = l_line_counter + 1
+
+            For L_LOOP = 1 To 3
+              {
+                If agqLOCATION:ADDRESS1[L_LOOP] <> "" Then
+                  {
+                    Writefile(L_FILE_NAME,"%s%s%s","<033>&a1800h+0V",agqLOCATION:ADDRESS1[L_LOOP],"<NL>")
+                    L_LINE_COUNTER = L_LINE_COUNTER + 1
+                  }
+              }
+            Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s","<033>&a1800h+0V",Trun(agqLOCATION:CITY),", ",
+                                   Trun(agqLOCATION:STR_STATE)," ",L_agqLOCATION_ZIP,"<NL>")
+            l_line_counter = l_line_counter + 1
+          }
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_8)
+        Writefile(L_FILE_NAME,"%s","<033>&a400h+60V")
+        Writefile(L_FILE_NAME,"%s","Coverage A")
+        l_line_counter = l_line_counter + 1
+        Writefile(L_FILE_NAME,"%s","<033>&a1300h+0V")
+        Writefile(L_FILE_NAME,"%s","Coverage B")
+        Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+        Writefile(L_FILE_NAME,"%s","Coverage C")
+        Writefile(L_FILE_NAME,"%s","<033>&a3600h+0V")
+        Writefile(L_FILE_NAME,"%s","Rating")
+
+        Writefile(L_FILE_NAME,"%s",trun(l_arial_italic_bold_8))
+        Writefile(L_FILE_NAME,"%s","<033>&a460h+120V")
+        Writefile(L_FILE_NAME,"%s","Building")
+        l_line_counter = l_line_counter + 1
+        Writefile(L_FILE_NAME,"%s","<033>&a1220h+0V")
+        Writefile(L_FILE_NAME,"%s","Bus. Pers. Prop.")
+        Writefile(L_FILE_NAME,"%s","<033>&a2040h+0V")
+        Writefile(L_FILE_NAME,"%s","Loss of Bus. Income")
+        Writefile(L_FILE_NAME,"%s",L_ARIAL_bold_8)
+        Writefile(L_FILE_NAME,"%s","<033>&a2900h+0V")
+        Writefile(L_FILE_NAME,"%s","Deductible")
+        Writefile(L_FILE_NAME,"%s","<033>&a3565h+0V")
+        Writefile(L_FILE_NAME,"%s","Territory")
+        Writefile(L_FILE_NAME,"%s","<033>&a4400h+0V")
+        Writefile(L_FILE_NAME,"%s","Construction")
+        Writefile(L_FILE_NAME,"%s","<033>&a5000h+0V")
+        Writefile(L_FILE_NAME,"%s","Occupancy")
+        Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+        l_line_counter = l_line_counter + 1
+
+        If (L_LOCATION_COUNTER >= 1 ) Then
+          {
+            Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h5v0P","<NL>")
+            l_line_counter = l_line_counter + 1
+
+            Writefile(L_FILE_NAME,"%s",trun(l_arial_italic_8))
+            Writefile(L_FILE_NAME,"%s","<033>&a460h+0V")
+
+            --***    Coverage A Building Limit     *****
+            If agqGENERAL:BUILDING_LIMIT = 0 Then
+              {
+                Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_bold_8,"<033>&a560h+0V",SCIPSCONTROL:BLANK_WORDING)
+              }
+            Else
+              {
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a360h+0V","$",
+                              trun(L_LETTER_GOTHIC_BOLD_8),
+                              Str(agqGENERAL:BUILDING_LIMIT,"ZZ,ZZZ,ZZZ"))
+                --removed by Fran & Ken Cain 07/30/09
+                if agqgeneral:acv_building = "Y" then
+                  {
+                   Writefile(L_FILE_NAME,"%s%S",trun(L_ARIAL_BOLD_8)," (ACV)")
+                  }
+                else
+                  {
+                   Writefile(L_FILE_NAME,"%s%S",trun(L_ARIAL_BOLD_8)," (RC)")
+                  }
+              }
+
+            --***    Coverage B Property Limit  ***
+            If agqGENERAL:Property_LIMIT = 0 Then
+              {
+                Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_bold_8,"<033>&a1450h+0V",SCIPSCONTROL:BLANK_WORDING)
+              }
+            Else
+              {
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1250h+0V","$",
+                              trun(L_LETTER_GOTHIC_BOLD_8),
+                              Str(agqGENERAL:property_LIMIT,"ZZ,ZZZ,ZZZ"))
+
+                if agqgeneral:acv_contents = "Y" then
+                  {
+                   Writefile(L_FILE_NAME,"%s%S",trun(L_ARIAL_BOLD_8)," (ACV)")
+                  }
+                else
+                  {
+                   Writefile(L_FILE_NAME,"%s%S",trun(L_ARIAL_BOLD_8)," (RC)")
+                  }
+                }
+
+            --***   Coverage C Loss Business Income   ***
+            Writefile(L_FILE_NAME,"%s","<033>&a2040h+0V")
+            If agqGENERAL:LIABILITY_ONLY = 1 then
+              {
+                Writefile(L_FILE_NAME,"%s%s","<033>&a2040h+0V","Not Applicable")
+              }
+            Else
+              {
+                If (agqGENERAL:DELETE_LOSS_INCOME = "Y") Then
+                  {
+                    Writefile(L_FILE_NAME,"%s%s","<033>&a2040h-0V",SCIPSCONTROL:BLANK_WORDING)
+                  }
+
+                Else
+                  {
+                    If (agqGENERAL:LOSS_INCOME_LIMIT = 0) Then
+                      {
+                        Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_8)
+                        Writefile(L_FILE_NAME,"%s%s","<033>&a2240h-0V","Included")
+                      }
+                  }
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a2040h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:LOSS_INCOME_LIMIT,"ZZ,ZZZ,ZZZ"))
+
+              }
+
+
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_8)
+            --***   Deductible   ***
+            Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a2900h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agqmaster:deductible,"ZZ,ZZZ"))
+            --***   Rating Territory   ***
+            Writefile(L_FILE_NAME,"%s","<033>&a3500h+0V")
+            Access BPSRATINGTERR,
+               Set BPSRATINGTERR:COMPANY_ID       = agqgeneral:COMPANY_ID,
+                   BPSRATINGTERR:STATE            = agqGENERAL:STATE,
+                   BPSRATINGTERR:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS,
+                   BPSRATINGTERR:COUNTY           = agqGENERAL:COUNTY,
+                   BPSRATINGTERR:TERRITORY        = agqGENERAL:RATING_TERRITORY, Generic
+
+            Writefile(L_FILE_NAME,"%s",trun(l_arial_bold_8))
+            Writefile(L_FILE_NAME,"%s",bpsratingterr:description)
+            --***   Construction   ***
+
+            Writefile(L_FILE_NAME,"%s","<033>&a4600h+0V")
+            if agqgeneral:construction one of 1 then
+              {
+                Writefile(L_FILE_NAME,"%S","A")
+              }
+            if agqgeneral:construction one of 2 then
+              {
+                Writefile(L_FILE_NAME,"%S","B")
+              }
+            if agqgeneral:construction one of 3 then
+              {
+                Writefile(L_FILE_NAME,"%S","C")
+              }
+            if agqgeneral:construction one of 4 then
+              {
+                Writefile(L_FILE_NAME,"%S","D")
+              }
+            --***   Owner Occupied   ***
+            Writefile(L_FILE_NAME,"%s","<033>&a5150h+0V")
+            Writefile(L_FILE_NAME,"%n",agqgeneral:class_code)
+
+            Writefile(L_FILE_NAME,"%s%s","<033>&a150h+70V<033>*c5455h5v0P","<NL>")
+            l_line_counter = l_line_counter + 1
+
+            --***   Supplemental Coverages Section   ***
+
+            Writefile(L_FILE_NAME,"%s",l_arial_bold_8)
+            Writefile(L_FILE_NAME,"%s","<033>&a2350h+60V")
+            Writefile(L_FILE_NAME,"%s","Supplemental Coverages")
+            l_line_counter = l_line_counter + 0.5
+
+            l_vertical_pos = "+120"
+            l_pitch_full = 8
+            l_font = l_arial_8
+            l_horizontal_pos = "1320" --position across the page:note that this prints from the
+                                      --positon you choose backwards toward the left margin so that the resluting
+                                      --list is right justified on the dec
+
+            Writefile(L_FILE_NAME,"%s",l_Push)
+            l_string = "Accounts Receivable:"
+            If agqGENERAL:AR_LIMIT <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:AR_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85" --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:AR_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:AR_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Supplies/Materials:"
+            If agqGENERAL:SUPPLIES_LIMIT <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:SUPPLIES_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:SUPPLIES_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:supplies_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Building Code/Law:"
+            If agqGENERAL:BUILDING_CODE_PERCENT <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1720h+0V",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:BUILDING_CODE_PERCENT*0.01,".ZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1720h+0V",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:BUILDING_CODE_PERCENT*0.01,".ZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1720h+0V",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:BUILDING_CODE_PERCENT*0.01,".ZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Building Glass:"
+            If agqGENERAL:GLASS_LIMIT <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:GLASS_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:GLASS_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:BUILDING_GLASS,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Customer Property:"
+            If agqGENERAL:CUSTOMER_PROP_LIMIT <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:CUSTOMER_PROP_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:CUSTOMER_PROP_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:CUSTOMER_PROP_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Utility Services:"
+            If agqGENERAL:UTILITY_LIMIT <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:UTILITY_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:UTILITY_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:UTILITY_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Mechanical Breakdown:"
+            If agqGENERAL:MECHANICAL_LIMIT <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:MECHANICAL_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:MECHANICAL_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:MECHANICAL_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Off Premises Property Cov-A:"
+            If agsdefault_bop:off_premises_a <> 0 and
+               agqgeneral:special_enhancement not one of 1 Then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:off_premises_a,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:off_premises_a,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Off Premises Property Cov-B:"
+            If agsdefault_bop:off_premises_b <> 0 and
+               agqgeneral:special_enhancement not one of 1 Then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:off_premises_b,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:off_premises_b,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Personal Effects:"
+            If agsdefault_bop:personal_effects <> 0 and
+               agqgeneral:special_enhancement not one of 1 Then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:personal_effects,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:personal_effects,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Electronic Data:"
+            If agqGENERAL2:electronic_data <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL2:electronic_data,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+              do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+              l_vertical_pos = "+85"     --spacing between intems going down the list
+              Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a1370h+0V","$",
+                                    trun(L_LETTER_GOTHIC_BOLD_8),
+                                    Str(bpsdefault2:electronic_data,"ZZ,ZZZ,ZZZ"))
+                                    l_line_counter = l_line_counter + 1
+              }
+
+            --***Start of Middle Column***
+
+            Writefile(L_FILE_NAME,"%s",l_POP)
+
+            l_vertical_pos = "+120"
+            l_pitch_full = 8
+            l_font = l_arial_8
+            l_horizontal_pos = "3200" --position across the page:note that this prints from the
+                                      --positon you choose backwards toward the left margin so that the resluting
+                                      --list is right justified on the dec
+
+            Writefile(L_FILE_NAME,"%s",l_Push)
+            l_string = "Debris Removal:"
+            If agqGENERAL:DEBRIS_REMOVAL_LIMIT <> 0 and
+               agqgeneral:special_enhancement not one of 1 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:DEBRIS_REMOVAL_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                     -- l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:DEBRIS_REMOVAL,"ZZ,ZZZ,ZZZ"))
+                                      --    l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:DEBRIS_REMOVAL,"ZZ,ZZZ,ZZZ"))
+                                      --    l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Fire Dept. Service Charge:"
+            If agsdefault_bop:fire_department <> 0 and
+               agqgeneral:special_enhancement not one of 1 Then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:fire_department,"ZZ,ZZZ,ZZZ"))
+                                    --  l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agsdefault_bop:fire_department <> 0 and
+                   agqgeneral:special_enhancement one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(bpssupplemental:fire_department,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Fire Extinguisher Expense:"
+            If agsdefault_bop:fire_extinguisher <> 0 and
+               agqgeneral:special_enhancement not one of 1 Then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:fire_extinguisher,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:fire_extinguisher,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Outdoor Exterior Signs:"
+            If agqGENERAL:signs_LIMIT <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:signs_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:signs_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:SIGNS_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Pollution Clean-Up:"
+            If agqGENERAL:pollution_limit <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:pollution_limit,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:pollution_limit,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:POLLUTION_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Property Restrictions-Furs:"
+            If agsdefault_bop:furs <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:furs,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:furs,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:FURS,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Property Restrictions-Jewelry:"
+            If agsdefault_bop:jewelry <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:jewelry,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement  one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:jewelry,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Jewelry Value Waiver Limit:"
+            If agsdefault_bop:jewelry_waiver <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:jewelry_waiver,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:jewelry_waiver,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Trees, Shrubs, Plants-Per Occurr:"
+            If agsdefault_bop:trees_shrubs[1] <> 0 and
+               agqgeneral:special_enhancement not one of 1 Then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:trees_shrubs[1],"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:trees_shrubs[1],"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Trees, Shrubs, Plants-on Any One:"
+            If agsdefault_bop:trees_shrubs[2] <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:trees_shrubs[2],"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:trees_shrubs[2],"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Credit Card/Forgery/Counterfeit Mny:"
+            If agqGENERAL2:credit_card <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL2:credit_card,"ZZ,ZZZ,ZZZ"))
+                                      l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpsdefault2:credit_card,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a3250h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:credit_card_limit,"ZZ,ZZZ,ZZZ"))
+                                          l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            --***Start of Third Column***
+
+            Writefile(L_FILE_NAME,"%s",l_POP)
+
+            l_vertical_pos = "+120"
+            l_pitch_full = 8
+            l_font = l_arial_8
+            l_horizontal_pos = "4850" --position across the page:note that this prints from the
+                                      --positon you choose backwards toward the left margin so that the resluting
+                                      --list is right justified on the dec
+
+            Writefile(L_FILE_NAME,"%s",l_Push)
+            l_string = "Valuable Papers:"
+            If agqGENERAL:valuable_papers_limit <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:valuable_papers_limit,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:valuable_papers_limit,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:valuable_papers_limit,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+              }
+
+            l_string = "Water-Drain Backup:"
+
+            --If agqmaster:form one of 1 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:water_backup_LIMIT,"ZZ,ZZZ,ZZ9"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+
+     /*
+
+      The else that follows was taken otu by FICOF and we no longer use the bpssupplemental file
+      for the new agent rating system
+
+      Else
+              {
+                If agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:water_backup_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:water_backup_LIMIT,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+                  }
+              }
+     */
+            If agqgeneral:special_enhancement one of 1 Then
+              {
+                l_string = "Arson Reward:"
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                  trun(L_LETTER_GOTHIC_BOLD_8),
+                                  Str(BPSSUPPLEMENTAL:arson_reward,"ZZ,ZZZ,ZZZ"))
+                                --  l_line_counter = l_line_counter + 1
+              }
+            else
+              {
+                l_string = "Arson Reward:"
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD_8,"<033>&a5250h+0V","N/A")
+                                --    l_line_counter = l_line_counter + 1
+              }
+
+            l_string = "Computer-Hardware:"
+            Access agqcomputer,
+               Set agqcomputer:app_no   = agqgeneral:app_no,
+                   agqcomputer:prem_no  = agqgeneral:prem_no,
+                   agqcomputer:build_no = agqgeneral:build_no, generic
+
+            --If agqmaster:form one of 1 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                       trun(L_LETTER_GOTHIC_BOLD_8),
+                                       Str(agqcomputer:limit[1],"ZZ,ZZZ,ZZ9"))
+                                       --    l_line_counter = l_line_counter + 1
+              }
+       /*
+            Else
+              {
+                if agqcomputer:limit[1] > agsdefault_bop:computer_limit then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                           trun(L_LETTER_GOTHIC_BOLD_8),
+                                           Str(agqcomputer:limit[1],"ZZ,ZZZ,ZZ9"))
+                                           --    l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:computer_limit,"ZZ,ZZZ,ZZZ"))
+                                      --    l_line_counter = l_line_counter + 1
+                  }
+              }
+
+
+            If agsdefault_bop:computer_limit <> 0 and
+               agqgeneral:special_enhancement not one of 1 Then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:computer_limit,"ZZ,ZZZ,ZZZ"))
+                                --    l_line_counter = l_line_counter + 1
+                                                                                                                                                                                                                     }
+            Else
+              {
+                If agqgeneral:special_enhancement one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpssupplemental:computer_coverage_hardware,"ZZ,ZZZ,ZZZ"))
+                                --        l_line_counter = l_line_counter + 1
+                  }
+              }
+            */
+
+            l_string = "Computer-Software:"
+          --  If agqmaster:form one of 1 then
+             -- {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                       trun(L_LETTER_GOTHIC_BOLD_8),
+                                       Str(agqcomputer:limit[3],"ZZ,ZZZ,ZZ9"))
+                                       --    l_line_counter = l_line_counter + 1
+               /*
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                                 trun(L_LETTER_GOTHIC_BOLD_8),
+                                                 Str(agqcomputer:limit[1],"ZZ,ZZZ,ZZ9"))
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                                 trun(L_LETTER_GOTHIC_BOLD_8),
+                                                 Str(agqcomputer:limit[2],"ZZ,ZZZ,ZZ9"))
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                                 trun(L_LETTER_GOTHIC_BOLD_8),
+                                                 Str(agqcomputer:limit[3],"ZZ,ZZZ,ZZ9"))
+
+               */
+           --   }
+
+       /*
+            Else
+              {
+                if agqcomputer:limit[3] > agsdefault_bop:computer_limit then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                           trun(L_LETTER_GOTHIC_BOLD_8),
+                                           Str(agqcomputer:limit[3],"ZZ,ZZZ,ZZ9"))
+                                           --    l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:computer_limit_1,"ZZ,ZZZ,ZZZ"))
+                                      --    l_line_counter = l_line_counter + 1
+                  }
+              }
+
+
+            if agqcomputer:limit[2] <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqcomputer:limit[2],"ZZ,ZZZ,ZZZ"))
+              }
+            else
+              {
+                If agsdefault_bop:computer_limit_1 <> 0 and
+                   agqgeneral:special_enhancement not one of 1 Then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:computer_limit_1,"ZZ,ZZZ,ZZZ"))
+                                      --    l_line_counter = l_line_counter + 1
+                  }
+                Else
+                  {
+                    If agqgeneral:special_enhancement one of 1 Then
+                      {
+                        do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                        l_vertical_pos = "+85"     --spacing between intems going down the list
+                        Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                              trun(L_LETTER_GOTHIC_BOLD_8),
+                                              Str(bpssupplemental:computer_coverage_media,"ZZ,ZZZ,ZZZ"))
+                                      --        l_line_counter = l_line_counter + 1
+                      }
+                  }
+              }
+       */
+            l_string = "Computer Extra Expense:"
+       --     If agqmaster:form one of 1 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                       trun(L_LETTER_GOTHIC_BOLD_8),
+                                       Str(agqcomputer:limit[2],"ZZ,ZZZ,ZZ9"))
+                                       --    l_line_counter = l_line_counter + 1
+              }
+       /*
+            Else
+              {
+                if agqcomputer:limit[2] > agsdefault_bop:computer_limit then
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                           trun(L_LETTER_GOTHIC_BOLD_8),
+                                           Str(agqcomputer:limit[2],"ZZ,ZZZ,ZZ9"))
+                                           --    l_line_counter = l_line_counter + 1
+                  }
+
+                Else
+                  {
+                    do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    l_vertical_pos = "+85"     --spacing between intems going down the list
+                    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(agsdefault_bop:computer_limit,"ZZ,ZZZ,ZZZ"))
+                                      --    l_line_counter = l_line_counter + 1
+                  }
+
+                    --do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                    --l_vertical_pos = "+85"     --spacing between intems going down the list
+                    --Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                    --                  trun(L_LETTER_GOTHIC_BOLD_8),
+                    --                  Str(agsdefault_bop:computer_limit_2,"ZZ,ZZZ,ZZZ"))
+                                      --    l_line_counter = l_line_counter + 1
+                  --}
+              }
+
+            If agsdefault_bop:computer_limit <> 0 and
+               agqgeneral:special_enhancement not one of 1 Then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agsdefault_bop:computer_limit,"ZZ,ZZZ,ZZZ"))
+                                  --    l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD_8,"<033>&a5250h+0V","N/A")
+                                  --  l_line_counter = l_line_counter + 1
+              }
+       */
+            Access agqdishonesty,
+               Set agqdishonesty:app_no   = agqgeneral:app_no, generic
+
+           l_string = "Employee Dishonesty:"
+           if agqdishonesty:app_no = agqgeneral:app_no then
+                {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqdishonesty:limit,"ZZ,ZZZ,ZZZ"))
+                                      --Str(agsdefault_bop:employee_dishonesty,"ZZ,ZZZ,ZZ9"))
+                                   --   l_line_counter = l_line_counter + 1
+                }
+            else
+            if agqgeneral2:employee_dis_limit <> 0 then
+                {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqgeneral2:employee_dis_limit,"ZZ,ZZZ,ZZZ"))
+                }
+
+            l_string = "Lock Replacement:"
+            If agqgeneral:special_enhancement one of 1 Then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                  trun(L_LETTER_GOTHIC_BOLD_8),
+                                  Str(BPSSUPPLEMENTAL:lock_replacement,"ZZ,ZZZ,ZZZ"))
+                               --   l_line_counter = l_line_counter + 1
+              }
+            else
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD_8,"<033>&a5250h+0V","N/A")
+                               --    l_line_counter = l_line_counter + 1
+              }
+
+            l_string = "Money/Secur-On Premises:"
+            --If agqGENERAL:money_LIMIT_ON <> 0 Then
+            --  {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:money_LIMIT_ON,"ZZ,ZZZ,ZZ9"))
+                               --       l_line_counter = l_line_counter + 1
+            --  }
+            l_string = "Money/Secur-Off Premises:"
+            do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+            l_vertical_pos = "+85"     --spacing between intems going down the list
+            Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL:money_LIMIT_off,"ZZ,ZZZ,ZZ9"))
+
+
+            l_string = "Loss Income/Dependent Prop:"
+            If agqGENERAL2:dependent_property <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL2:dependent_property,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+              do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+              l_vertical_pos = "+85"     --spacing between intems going down the list
+              Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpsdefault2:loss_of_income_dependent,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+              }
+
+            l_string = "Loss Income/Interrupt Computer:"
+            If agqGENERAL2:interruption <> 0 then
+              {
+                do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+                l_vertical_pos = "+85"     --spacing between intems going down the list
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                      trun(L_LETTER_GOTHIC_BOLD_8),
+                                      Str(agqGENERAL2:interruption,"ZZ,ZZZ,ZZZ"))
+                                   --   l_line_counter = l_line_counter + 1
+              }
+            Else
+              {
+              do align_text(l_string,l_horizontal_pos,l_VERTICAL_POS,l_pitch_full,l_font)
+              l_vertical_pos = "+85"     --spacing between intems going down the list
+              Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_8,"<033>&a4900h+0V","$",
+                                          trun(L_LETTER_GOTHIC_BOLD_8),
+                                          Str(bpsdefault2:loss_of_income_interruption,"ZZ,ZZZ,ZZZ"))
+                                   --       l_line_counter = l_line_counter + 1
+              }
+
+            Writefile(L_FILE_NAME,"%s%s","<033>&a150h+120V<033>*c5455h20v0P","<NL>")
+            l_line_counter = l_line_counter + 1
+          }
+
+        l_location_counter = l_location_counter + 1
+
+  }--End of schedule_of_premises
+
+procedure insert_newpage
+{
+  Writefile(L_FILE_NAME,"%s","<FF>")
+  l_top_of_page = 0
+  L_LINE_COUNTER = 0
+  Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c10a3045b0P")   --left ve
+  Writefile(L_FILE_NAME,"%s","<033>&a5585h0V<033>*c10a3045b0P")   --right
+  Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c5467h20v0P") --top horiz
+  Writefile(L_FILE_NAME,"%s","<033>&a140h7300V<033>*c5467h20v0P") --bottom
+  L_PAGE_NUMBER = L_PAGE_NUMBER + 1
+
+  Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+  Writefile(L_FILE_NAME,"%s","<033>&a220h120V")
+  Writefile(L_FILE_NAME,"%s",Trun(SFSLINE:DESCRIPTION))
+  Writefile(L_FILE_NAME,"%s"," QUOTE LETTER")
+  Writefile(L_FILE_NAME,"%s","<033>&a4200h+0V")
+  Writefile(L_FILE_NAME,"%s","Application No. ")
+  Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+  Writefile(L_FILE_NAME,"%s","APP")
+  Writefile(L_FILE_NAME,"%n",L_app_no)
+
+  Writefile(L_FILE_NAME,"%s%s","<033>&a160h+40V<033>*c5430h5v0P","<NL>")
+  L_LINE_COUNTER = L_LINE_COUNTER + 1
+}
+
+procedure check_payor_flags
+
+{
+  if scipscontrol:payor_code_bottom_of_page one of 1 and
+     agqNAME:eff_date >= scipscontrol:payor_code_bottom_page_date then
+    {
+      Writefile(L_FILE_NAME,"%s","<033>&a4000h+0V")
+      If SCIPSCONTROL:DONT_PRINT_PAYOR_CODE_ALL_COPY = 1 then
+        {
+          If SCIPSCONTROL:payor_code_bottom_of_page one of 1 and
+             trun(uppercase(SCIPSCONTROL:PAY_CODE_COPY_NAME)) = trun(uppercase(L_COPY_NAME)) Then
+            {
+              do print_payor_codes
+            }
+        }
+      else
+        {
+          If SCIPSCONTROL:payor_code_bottom_of_page one of 1 then
+            {
+              do print_payor_codes
+            }
+        }
+    }
+}
+
+Procedure print_payor_codes
+
+{
+  L_BILL_PLAN = agqNAME:BILL_PLAN
+  If agqSUPP:MORTGAGE_TYPE_1 = "" Then
+    {
+      L_MORTGAGE_TYPE_1 = " "
+    }
+  Else
+    {
+      L_MORTGAGE_TYPE_1 = agqSUPP:MORTGAGE_TYPE_1
+    }
+  Access SFSPAYCODE,
+     Set SFSPAYCODE:COMPANY_ID      = L_COMPANY_ID,
+         SFSPAYCODE:BILL_PLAN       = L_BILL_PLAN,
+         SFSPAYCODE:MORTGAGE_TYPE_1 = L_MORTGAGE_TYPE_1, Generic
+  Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+  Writefile(L_FILE_NAME,"%s","<033>&a+0h+0V")
+  Writefile(L_FILE_NAME,"%s"," - ")
+  Writefile(L_FILE_NAME,"%s",agqNAME:BILL_PLAN)
+  Writefile(L_FILE_NAME,"%s"," - ")
+  Writefile(L_FILE_NAME,"%s",SFSPAYCODE:PAY_CODE)
+}
+
+procedure fraud_warning
+Begin
+--  l_line_counter = 1   --l_next_pos + 120
+  Access SCIPSFRAUD,
+     Set SCIPSFRAUD:COMPANY_ID = L_COMPANY_ID, approximate
+
+  Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+  Writefile(L_FILE_NAME,"%s","<033>&a200h6800V")
+
+  -- Writefile(L_FILE_NAME,"%n",l_line_counter)
+
+  Writefile(L_FILE_NAME,"%s","FRAUD WARNING")
+  Writefile(L_FILE_NAME,"%s",l_arial_bold_7)
+  Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+  --  Writefile(L_FILE_NAME,"%s","APPLICANT'S SIGNATURE")
+  Writefile(L_FILE_NAME,"%s",l_arial_8)
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+--  l_max_lines        = 60
+  L_FONT             = l_arial_8
+  L_V_POSITION       = "+0"
+  L_H_POSITION       = "200"
+  L_CHARACTER_STRING = trun(SCIPSFRAUD:FRAUD_WARNING)
+  L_MAX_CHAR         = 75
+  include "line_spacing.inc"
+
+  Writefile(L_FILE_NAME,"%s%s%s%s%s%n",L_ARIAL_BOLD_9,
+                        "<033>&a2400h+120V",L_COPY_NAME,"<033>&a5000h7250V",
+                        "Page ",L_PAGE_NUMBER)
+End -- End of Fraud Warning Procedure
+
+Procedure totals
+  Begin
+
+    Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,"<033>&a200h+60V","Printed Date ",
+                      Str(TODAYSDATE,"mm/dd/yyyy"))
+    Writefile(L_FILE_NAME,"%s",L_ARIAL)
+
+    Writefile(L_FILE_NAME,"%s%s","<033>&a3500h+0V","Total: ")
+
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<033>&a4750h+0V","$",
+                      str(L_LETTER_GOTHIC_BOLD_12),"<033>&a4800h+0V",
+                      Str(agqMASTER:TOTAL[20] - agqmaster:surcharge - agqmaster:terrorism_premium,"(ZZ,ZZZ,ZZZ)"),"<NL>")
+
+    Writefile(L_FILE_NAME,"%s",L_ARIAL)
+    Writefile(L_FILE_NAME,"%s%s","<033>&a3500h+0V","Terrorism: ")
+
+    Writefile(L_FILE_NAME,"%s%s","<033>&a4750h+0V","$")
+    Writefile(L_FILE_NAME,"%s",str(L_LETTER_GOTHIC_BOLD_12))
+    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+    Writefile(L_FILE_NAME,"%s%s",str(agqMASTER:TERRORISM_PREMIUM,"(ZZ,ZZZ,ZZZ)"),"<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    Writefile(L_FILE_NAME,"%s",L_ARIAL)
+    --Writefile(L_FILE_NAME,"%s%s","<033>&a3500h+0V","Total Premium:")
+
+    --Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<033>&a4750h+0V","$",
+    --                      str(L_LETTER_GOTHIC_BOLD_12),"<033>&a4800h+0V",
+    --                      --Str(agqMASTER:TOTAL[1] + agqmaster:total[2]+ agqMASTER:TERRORISM_PREMIUM,"(ZZ,ZZZ,ZZZ)"),"<NL>")
+    --                      Str(agqMASTER:TOTAL[17] + agqMASTER:TERRORISM_PREMIUM,"(ZZ,ZZZ,ZZZ)"),"<NL>")
+
+    --surcharge
+
+    If (SCIPSCONTROL:SURCHARGE_WORDING <> "") Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s",L_ARIAL,"<033>&a3500h+0V",
+                          Trun(SCIPSCONTROL:SURCHARGE_WORDING),":","<033>&a4750h+0V","$",
+                          trun(L_LETTER_GOTHIC_BOLD_12),"<033>&a4800h+0V",
+                          Str(agqMASTER:SURCHARGE,"(ZZ,ZZZ,ZZZ)"),
+                          L_ARIAL,"<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 2
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL,"<033>&a3500h+0V",
+                          "Total Amount Due:")
+
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<033>&a4750h+0V","$",
+                          L_LETTER_GOTHIC_BOLD_12,"<033>&a4800h+0V",
+                          Str((agqMASTER:TOTAL[20]),"(ZZ,ZZZ,ZZZ)")
+                          ,"<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    if scipscontrol:breakout_pliga = 1 then
+       begin
+         If L_TRANS_CODE One Of 11, 16 Then  --these are endorsements transcodes
+           begin
+             Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                    L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                    L_LETTER_GOTHIC_BOLD_10,
+                                    Str(agqMASTER:amt_due_total[1],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                    "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                    SCIPSCONTROL:CANCELLATION_DEFINITION)
+              Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                    L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                    L_LETTER_GOTHIC_BOLD_10,
+                                    Str(agqMASTER:amt_due_total[3],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                    "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                    SCIPSCONTROL:CANCELLATION_DEFINITION_1)
+           end
+        else
+          If L_TRANS_CODE One Of 12,13 Then  --these are endorsements transcodes
+             begin
+               Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                      L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                      L_LETTER_GOTHIC_BOLD_10,
+                                      Str(agqMASTER:amt_due_total[1],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                      "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                      SCIPSCONTROL:endorsement_DEFINITION)
+               Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                      L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                      L_LETTER_GOTHIC_BOLD_10,
+                                      Str(agqMASTER:amt_due_total[3],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                      "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                      SCIPSCONTROL:endorsement_DEFINITION_1)
+             end
+       end
+    else
+      begin
+        If L_TRANS_CODE One Of 11, 12, 13, 16 Then
+          begin
+            Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                  L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                  L_LETTER_GOTHIC_BOLD_10,
+                                  Str(agqMASTER:TOTAL[20],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                  "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                  SCIPSCONTROL:CANCELLATION_DEFINITION)
+          end
+      end
+
+
+
+END --end totals
+
+procedure mort
+Begin
+do fraud_warning
+Do insert_newpage
+
+Access agqSUPP, Set agqSUPP:app_no = L_app_no,Generic
+
+If agqSUPP:app_no = L_app_no Then
+    {
+    Writefile(L_FILE_NAME,"%s","<033>&a80h+0V")
+    Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,
+                          "<033>&a2300h+120V","ADDITIONAL INTERESTS","<NL>")
+    l_line_counter = l_line_counter +1
+
+    Writefile(L_FILE_NAME,"%s%s%s%s","<033>&a1550h+0V","We cover the following ",
+                          "as their interest are indicated below:","<NL>")
+    l_line_counter = l_line_counter + 1
+    }
+Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+
+While agqSUPP:app_no = L_app_no
+    {
+    L_agqSUPP_ZIP = If (Val(agqSUPP:STR_ZIPCODE[6,9]) = 0) Then
+                            agqSUPP:STR_ZIPCODE[1,5]
+                    Else
+                       agqSUPP:STR_ZIPCODE[1,5] + "-" +
+                       agqSUPP:STR_ZIPCODE[6,9]
+
+    Writefile(L_FILE_NAME,"%s%s%s%s%n%s%s%s%n%s",L_ARIAL_BOLD,
+                              "<033>&a350h+0V","Location",
+                              "<033>&a900h+0V",agqSUPP:PREM_NO,"<033>&a1350h+0V",
+                              "Building","<033>&a1800h+0V",agqSUPP:BUILD_NO,"<NL>")
+    l_line_counter = l_line_counter +1
+
+    Writefile(L_FILE_NAME,"%s%s%s","<033>&a350h+0V","Interest ",L_ARIAL)
+    L_COMPANY_ID      = agqgeneral:COMPANY_ID
+    L_MORTGAGE_TYPE_2 = agqSUPP:MORTGAGE_TYPE_2
+    Access SFSMORTTYPE, Set SFSMORTTYPE:COMPANY_ID    = L_COMPANY_ID,
+                            SFSMORTTYPE:MORTGAGE_CODE = L_MORTGAGE_TYPE_2, Exact
+
+    --access the sfspayotype to print out description firt mortgage or loss payee ...etc
+    Writefile(L_FILE_NAME,"%s%s","<033>&a900h+0V",SFSMORTTYPE:DESCRIPTION)
+    Writefile(L_FILE_NAME,"%s%s%s%s%s","<NL>",L_ARIAL_BOLD,"<033>&a350h+0V",
+                              "Name",L_ARIAL)
+
+    For L_LOOP = 1 To 3
+        {
+        If agqSUPP:NAME[L_LOOP] <> "" Then
+            {
+            Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V",agqSUPP:NAME[L_LOOP],"<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            l_agent_counter = l_agent_counter + 1
+            }
+        }
+
+    If agqSUPP:SUCCESSOR = "Y" Then
+        {
+        Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V",
+                              Uppercase("It's Successors and/or Assigns"),"<NL>")
+        l_line_counter = l_line_counter +1
+        }
+
+    If agqSUPP:ATIMA = "Y" Then
+        {
+        Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V","ATIMA","<NL>")
+        l_line_counter = l_line_counter +1
+        }
+
+    If agqSUPP:ACCOUNT_NO <> "" Then
+        {
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s",L_ARIAL_BOLD,"<033>&a350h+0V",
+                           "Loan # ",L_ARIAL,"<033>&a900h+0V",
+                           agqSUPP:ACCOUNT_NO,"<NL>")
+        l_line_counter = l_line_counter +1
+        }
+
+    Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,"<033>&a350h+0V",
+                              "Address ",L_ARIAL)
+    For L_LOOP = 1 To 3
+        {
+        If agqSUPP:ADDRESS[L_LOOP] <> "" Then
+            {
+            Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V",agqSUPP:ADDRESS[L_LOOP],"<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            l_agent_counter = l_agent_counter + 1
+            }
+        }
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s","<033>&a900h+0V",Trun(agqSUPP:CITY),", ",
+                              agqSUPP:STR_STATE," ",L_agqSUPP_ZIP,"<NL>")
+    l_line_counter = l_line_counter +1
+    Writefile(L_FILE_NAME,"%s","<033>&a350h+180V")
+    l_line_counter = l_line_counter +1.5
+    If l_line_counter >= L_MAX_LINES - 5 then
+        {
+        do fraud_warning
+        do insert_newpage
+        l_line_counter = 0
+        Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,
+                              "<033>&a1900h+120V","ADDITIONAL INTERESTS CONTIMUED","<NL>")
+        l_line_counter = l_line_counter +1
+
+        Writefile(L_FILE_NAME,"%s","<033>&a150h-80V<033>*c5455h20v0P")
+        Writefile(L_FILE_NAME,"%s","<033>&a350h+160V")
+        }
+
+    Next agqSUPP
+    }
+
+Writefile(L_FILE_NAME,"%s","<033>&a150h-80V<033>*c5455h20v0P")
+end--end mort
+
+End --End of Program

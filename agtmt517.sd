@@ -1,0 +1,539 @@
+%%                 
+Screen
+        Name = "agtmt517";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqapplication" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     g_sub_code[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ,
+                                     g_form[1];
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_literal[100] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ;
+
+        Access agqapplication,
+           Set agqapplication:app_NO   = G_app_NO ,
+               agqapplication:sub_code = g_sub_code ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        add/autoupdate tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic ;
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access plsdefault, set plsdefault:company_id = agqpersonal:company_id,
+                       plsdefault:line_of_business = agqpersonal:line_of_business, generic
+
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+/*if agqapplication:completion_date  = 0 and
+   agqapplication:renovation_value = 0 then
+    function = "change"*/
+
+switch(g_line_of_business)
+  case 5      : switch(g_enhancement)
+                  case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+                  default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+                  end
+  case 50     : switch(g_enhancement)
+                  case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+                  default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+                  end
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : if agqpersonal:company_id = "FARMERS" and
+                   agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+                   plsdefault:rating_algorithm_date <> 0 then
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3_new,iconname,"title_mho3.bmp")
+                      case 4  : setproperty(t_mho4_new,iconname,"title_mho4.bmp")
+                      case 6  : setproperty(t_mho6_new,iconname,"title_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3_new,iconname,"")
+                                setproperty(t_mho4_new,iconname,"")
+                                setproperty(t_mho6_new,iconname,"")
+                                end
+                      end
+                    end
+                else
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                      case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                      case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3,iconname,"")
+                                setproperty(t_mho4,iconname,"")
+                                setproperty(t_mho6,iconname,"")
+                                end
+                      end
+                   end
+
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+if g_line_of_business not one of 5, 50 then
+    begin
+    hide(t_line_of_business)
+    hide(t_line_of_business_1)
+    end
+else
+    begin
+    hide(t_mdw1)
+    hide(t_mdw2)
+    hide(t_mdw3)
+    hide(t_mdw6)
+    hide(t_mho3)
+    hide(t_mho4)
+    hide(t_mho6)
+    hide(t_pref_mho3)
+    hide(t_pref_mho5)
+    hide(t_prem_mho3)
+    end
+
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(ggund_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ggund_fn)
+    hide(ficof_fn)
+    end
+else
+if sfsdefault:company_id one of "GGUND" then
+    begin
+    hide(farmers_fn)
+    hide(ficof_fn)
+    hide(t_line_of_business)
+    hide(t_line_of_business_1)
+    end
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(add_fn)
+    disable(delete_fn)
+    end
+
+Access Validation
+If agqapplication:app_NO <> G_app_NO or
+   agqapplication:sub_code <> g_sub_code Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ggund_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho3_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,20 tagged t_mho4_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho6_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+        }
+
+
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "Application"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt517.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,5 to 20, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        fontstyle = bold
+        }
+{
+%%
+____________________________________________________
+     Enter the completion date of renovations or reconstruction:
+        __________
+     Enter the cost of the renovations or reconstruction:
+        __________
+
+%%
+
+components
+
+Fields
+101     g_literal/showasguidetext/displayonly ;
+301     agqapplication:completion_date/tabstop ;
+501     agqapplication:renovation_value/tabstop ;
+
+}
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,35 to 23,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+End

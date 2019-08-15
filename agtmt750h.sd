@@ -1,0 +1,1363 @@
+%%
+Screen
+        Name = "agtmt750h";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--        Windowtitle="%a     %s Optional Coverages - Ver. 7.00     %m";
+        Domain="agqcontractor" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_no[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number G_FORM[1] ;
+        global unsigned ascii number g_line_of_business[4] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_waive[1] ;
+
+        global string g_inquiry[1] ;
+
+        local tag l_tag[10] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_code_8[7],
+                     l_code_9[7],
+                     l_code_10[7],
+                     l_code_11[7],
+                     l_code_12[7],
+                     l_code_13[7],
+                     l_code_14[7],
+                     l_code_15[7],
+                     l_code_16[7],
+                     l_code_17[7],
+                     l_server_name[100],
+                     l_screen[9],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_company_id[10],
+                     l_first_str_location[8],
+                     l_desc[75],
+                     l_last_str_location[8],
+                     l_str_location[8],
+                     l_first_location[1]="Y",
+                     l_user_id[15]="",
+                     l_continue_1[3]="",
+                     l_prior_sprinklered[1]="",
+                     l_add_endorsement[1],
+                     l_form_edition[18],
+                     l_description[55] ,
+                     l_location_wording[9]="Location:",
+                     l_burglary_string[20]="",
+                     l_money_string[30]="",
+                     l_continue_2[3],
+                     l_building_wording[9]="Building:" ;
+
+        local unsigned ascii number l_sub_code[4]=0 ,
+                                    l_state[2]=0 ,
+                                    l_no_locations[2]=0,
+                                    l_prem_no[4],
+                                    l_build_no[4],
+                                    l_fire_limit[8],
+                                    l_money_limit_on[8]=0,
+                                    l_default_ar_limit[8]=0,
+                                    l_fire_alarm[1],
+                                    l_burglar_alarm[1],
+                                    l_default_customer_prop_limit[8]=0,
+                                    l_default_utility_limit[8]=0,
+                                    l_default_signs_limit[8]=0,
+                                    l_default_valuable_papers_limit[8]=0,
+                                    l_first_prem_no[4]=0,
+                                    l_first_build_no[4]=0,
+                                    l_last_prem_no[4]=0,
+                                    l_last_build_no[4]=0,
+                                    l_form[1]=0,
+                                    l_money_limit_off[8]=0,
+                                    l_deductible[5]=0;
+        Include "virtualdecs.var"
+
+        Access agqcontractor, Set agqcontractor:app_no = G_app_no, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "change" sequence "chg" tagged change_fn ;
+        "chg" change/hidden ;
+
+        "calc" display/noreturn "agtmt751" tagged calc_fn ;
+
+        "back" display/noreturn "agtmt001" tagged back_fn ;
+        "nextscreen" display/noreturn "agtmt750f"  tagged nextscreen_fn ;
+        "previousscreen" display/noreturn "agtmt750e" tagged previousscreen_fn ;
+
+        include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+disable(accept_fn)
+Access agsdefault_scp, Set agsdefault_scp:COMPANY_ID       = agqcontractor:company_id,
+                           agsdefault_scp:state            = agqcontractor:state,
+                           agsdefault_scp:agent_no         = agqcontractor:agent_no,
+                           agsdefault_scp:LINE_OF_BUSINESS = agqcontractor:line_of_business,
+                           agsdefault_scp:FORM             = agqcontractor:FORM, Generic
+
+l_user_id = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_supple_coverages.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+access sfsemail, set sfsemail:company_id = agqcontractor:company_id,
+                     sfsemail:user_id = l_user_id, generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                    SFSLINE:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access sfscompany, set sfscompany:company_id = agqcontractor:company_id, generic
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+/*switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end*/
+
+/*if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)*/
+
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+Access Validation
+If agqcontractor:app_no <> G_app_no then
+    Error 1000 ;
+
+access agqcontractor_alias, set agqcontractor_alias:app_no = agqcontractor:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqcontractor_alias:app_no = agqcontractor:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqcontractor_alias:prem_no) +
+                               str(agqcontractor_alias:build_no)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqcontractor_alias:prem_no) +
+                           str(agqcontractor_alias:build_no)
+    l_no_locations  = l_no_locations + 1
+
+    next agqcontractor_alias
+    end
+
+l_str_location = str(agqcontractor:prem_no) +
+                 str(agqcontractor:build_no)
+
+if l_no_locations = 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30, 100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+/*            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }*/
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "Supplemental Coverages..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     agqcontractor:app_no/displayonly ;
+
+}
+
+Panel at 5,5 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+
+
+        Button at 1.5,10   tagged change_fn
+        Properties {
+                Iconname = "btn_edit_entries.bmp"
+                }
+        Events  {
+                Action = change_fn
+                }
+
+        Button at 1.5,60 tagged accept_fn
+        Properties {
+                Iconname = "btn_accept_edits.bmp"
+                }
+          Events  {
+                    mouseclicked = accept
+                  }
+    }
+
+Panel at 8,1 to 8,100 Tagged location
+        Properties {
+                LayoutType = screen
+--                transparent = False
+--                backgroundcolor = "White"
+        }
+        {
+         Components
+           guidetext at 1,24 to 1,36
+             properties
+               {
+                 text = "Location No:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 1,44 to 1,56
+             properties
+               {
+                 text = "Building No:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,33 to 8,60 Tagged rating_pl
+Properties
+        {
+--          transparent = False
+--          backgroundcolor = "White"
+        }
+{
+%%
+____                ____
+%%
+
+components
+
+fields
+101     agqcontractor:prem_no/displayonly ;
+102     agqcontractor:build_no/displayonly ;
+}
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt750h.sd"
+                      fontsize = 9
+                    }
+      }
+
+panel at 7,1 to 7,100 tagged line_panel_1
+     {
+     Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 10,1 to 25,21
+        Properties {
+--                layouttype = row
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,21
+             properties
+               {
+                 text = "Accounts Receivable:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 2,1 to 2,21
+             properties
+               {
+                 text = "Building Extension:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 3,1 to 3,21
+             properties
+               {
+                 text = "- Glass Limit:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 4,1 to 4,21
+             properties
+               {
+                 text = "- Glass Per:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 5,1 to 5,21
+             properties
+               {
+                 text = "Outdoor Signs:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 6,1 to 6,21
+             properties
+               {
+                 text = "- Attached:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 7,1 to 7,21
+             properties
+               {
+                 text = "- Not Attached:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 8,1 to 8,21
+             properties
+               {
+                 text = "Building Code/Law:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 9,1 to 9,21
+             properties
+               {
+                 text = "Debris Removal:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 10,1 to 10,21
+             properties
+               {
+                 text = "Off Premise Property:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           }
+
+Panel at 10,1 to 25,61
+        Properties {
+        }
+        {
+         Components
+           guidetext at 1,40 to 1,61
+             properties
+               {
+                 text = "Outdoor Property:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,40 to 2,61
+             properties
+               {
+                 text = "- Limit:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 3,40 to 3,61
+             properties
+               {
+                 text = "- Per Item:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 4,40 to 4,61
+             properties
+               {
+                 text = "Personal Effects:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+           guidetext at 5,40 to 5,61
+             properties
+               {
+                 text = "Valuable Papers:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 6,40 to 6,61
+             properties
+               {
+                 text = "Limit Water Backup:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 7,40 to 7,61
+             properties
+               {
+                 text = "Water Backup Limit:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 8,40 to 8,61 tagged burglar_alarm_fn
+             properties
+               {
+                 text = "Central Station Burglar Alarm:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+             events
+               {
+               mouseclicked
+                   {
+                   l_screen = "agtmt701g"
+                   do display_popup
+                   }
+                }
+           guidetext at 9,40 to 9,61  tagged fire_alarm_fn
+             properties
+               {
+                 text = "Central Station Fire Alarm:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+             events
+               {
+               mouseclicked
+                   {
+                   l_screen = "agtmt701f"
+                   do display_popup
+                   }
+                }
+        }
+
+Panel at 10,23 to 25,39
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+--                LayoutType = column
+        }
+{
+%%
+__________
+
+________
+________
+
+__________
+__________
+___
+__________
+__________
+__________
+
+
+
+
+%%
+
+components
+
+Fields
+101     begin
+         if function one of "ADD","NEW","CHG","CHANGE" then
+           {
+             enable(accept_fn)
+             disable(previousscreen_fn)
+             disable(nextscreen_fn)
+             disable(back_fn)
+           }
+         else
+           {
+             disable(accept_fn)
+             enable(previousscreen_fn)
+             enable(nextscreen_fn)
+             enable(back_fn)
+           }
+        end
+        agqCONTRACTOR:AR_LIMIT/default/tabstop
+        hide if agqcontractor:form = 4 ;
+301     agqCONTRACTOR:GLASS_LIMIT/default/tabstop
+        hide if agqcontractor:form = 4
+        if agqcontractor:glass_limit > 2500 then
+            error "Increase permitted to $2,500"
+
+        if agqcontractor:glass_limit <> 1000 and
+           agqcontractor:glass_limit <> 2500 then
+            begin
+            error "Valid Glass Limits are 1000 or 2500"
+            agqcontractor:glass_limit = 1000
+            end
+
+        if agqcontractor:glass_limit = 2500 then
+            agqcontractor:glass_per = 250
+        else
+            agqcontractor:glass_per = 100;
+401     agqCONTRACTOR:GLASS_PER/displayonly/tabstop
+        hide if agqcontractor:form = 4 ;
+--        if agqcontractor:glass_per > 250 then
+--            error "Increase permitted to $250 per pane";
+601     agqCONTRACTOR:SIGNS_ATTACHED_LIMIT/default/tabstop
+        hide if agqcontractor:form = 4 ;
+701     agqCONTRACTOR:SIGNS_NOT_ATTACHED_LIMIT/default/tabstop
+        hide if agqcontractor:form = 4 ;
+801     agqCONTRACTOR:BUILDING_CODE_LAW/default/tabstop
+        hide if agqcontractor:form = 4
+        if agqcontractor:building_acv = 1 or
+           agqcontractor:contents_acv = 1 then
+            begin
+            l_continue_1 = dialog("NOTE","warning.bmp","Building Code/Law not available when on Actual Cash Value basis","OK")
+            agqcontractor:building_code_law = 0
+            end;
+
+801     begin
+        if agqcontractor:building_acv = 1 or
+           agqcontractor:contents_acv = 1 then
+            agqcontractor:building_code_law = 0
+        end
+        agqcontractor:building_code_law/displayonly ;
+901     agqCONTRACTOR:DEBRIS_LIMIT/default/tabstop
+        hide if agqcontractor:form = 4 ;
+1001    agqCONTRACTOR:OFF_PREM_LIMIT/default/tabstop
+        hide if agqcontractor:form = 4
+        If agqCONTRACTOR:OFF_PREM_LIMIT <> SCSOFFPREM:LIMIT Then
+            Error 1286
+
+        Activehelp SCSOFFPREM_ALIAS:LIMIT ;
+
+}
+
+Panel at 10,63 to 25,100
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+
+__________
+__________
+__________
+__________
+~~_
+__________
+~~_
+~~_
+
+
+%%
+
+components
+
+Fields
+201     agqCONTRACTOR:OUTDOOR_PROPERTY_LIMIT/default/tabstop
+        hide if agqcontractor:form = 4 ;
+301     agqCONTRACTOR:OUTDOOR_PROPERTY_PER/default/tabstop
+        hide if agqcontractor:form = 4 ;
+401     agqCONTRACTOR:PERSONAL_EFFECTS/default/tabstop
+        hide if agqcontractor:form = 4 ;
+501     agqCONTRACTOR:VALUABLE_PAPERS/default/tabstop
+        hide if agqcontractor:form = 4 ;
+601     agqCONTRACTOR:LIMIT_WATER_BKUP/checkbox/values="0,1"/tabstop
+        hide if agqcontractor:form = 4 ;
+701     Begin
+        if function one of "ADD", "CHANGE", "CHG" then
+        begin
+        If agqCONTRACTOR:LIMIT_WATER_BKUP = 1 Then
+            Begin
+            Access agsdefault_scp, Set agsdefault_scp:COMPANY_ID = agqcontractor:COMPANY_ID,
+                                       agsdefault_scp:STATE = agqCONTRACTOR:STATE,
+                                       agsdefault_scp:agent_No = agqcontractor:agent_no,
+                                       agsdefault_scp:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS, Generic
+
+            while agsdefault_scp:COMPANY_ID = agqcontractor:COMPANY_ID and
+                  agsdefault_scp:STATE = agqCONTRACTOR:STATE and
+                  agsdefault_scp:agent_no = agqcontractor:agent_no and
+                  agsdefault_scp:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+                begin
+                If agqcontractor:EFF_DATE >= agsdefault_scp:EFF_DATE Then
+                    agqCONTRACTOR:WATER_BKUP_LIMIT = agsdefault_scp:WATER_LIMIT
+
+                Next agsdefault_scp
+                End
+            End
+        Else
+            agqCONTRACTOR:WATER_BKUP_LIMIT = 0
+        end
+        End
+        agqCONTRACTOR:WATER_BKUP_LIMIT/displayonly
+        hide if agqcontractor:form = 4 ;
+701     agqCONTRACTOR:WATER_BKUP_LIMIT/default/tabstop
+        Hide If agqCONTRACTOR:LIMIT_WATER_BKUP = 0
+        hide if agqcontractor:form = 4 ;
+801     begin
+        l_burglar_alarm = agqcontractor:burglary_alarm
+        if agqcontractor:burglary_alarm = 1 then
+            begin
+            l_tag = tag("burglar_alarm_fn")
+            setproperty(l_tag,foregroundcolor,"blue")
+            end
+        end
+        agqcontractor:burglary_alarm/checkbox/values="0,1" ;
+901     begin
+        l_fire_alarm = agqcontractor:fire_alarm
+        if agqcontractor:fire_alarm = 1 then
+            begin
+            l_tag = tag("fire_alarm_fn")
+            setproperty(l_tag,foregroundcolor,"blue")
+            end
+        end
+        agqcontractor:fire_alarm/checkbox/values="0,1" ;
+
+}
+
+-- draw a line
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5  tagged previousscreen_fn
+        Properties {
+                Iconname = "previous_screen.bmp"
+                }
+        Events  {
+                Action {
+                       function = "previousscreen"
+                       abort()
+                       }
+                }
+
+        Button at 1,37   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+
+        Button at 1,75   tagged nextscreen_fn
+            Properties
+                {
+                Iconname = "next_screen.bmp"
+                }
+            Events
+                {
+                Action
+                    {
+                    function = "nextscreen"
+                    abort()
+                    }
+                }
+}
+
+-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+}
+
+panel at 30,1 to 32,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+
+Update
+if UPDATEOK = "NO" then
+  {
+    enable (previousscreen_fn)
+    enable(nextscreen_fn)
+    disable(accept_fn)
+    enable(back_fn)
+  }
+
+if abort = "YES" then
+    begin
+    enable (previousscreen_fn)
+    enable(nextscreen_fn)
+    enable(back_fn)
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    enable (previousscreen_fn)
+    enable(nextscreen_fn)
+    enable(back_fn)
+    disable(accept_fn)
+    if function one of "delete", "DELETE" then
+        begin
+        access agqprotect, agqprotect:app_no   = agqcontractor:app_no,
+                           agqprotect:prem_no  = agqcontractor:prem_no,
+                           agqprotect:build_no = agqcontractor:build_no, generic
+
+        if agqprotect:app_no   = agqcontractor:app_no and
+           agqprotect:prem_no  = agqcontractor:prem_no and
+           agqprotect:build_no = agqcontractor:build_no then
+            delete agqprotect
+
+        access agqprotective, agqprotective:app_no   = agqcontractor:app_no,
+                              agqprotective:prem_no  = agqcontractor:prem_no,
+                              agqprotective:build_no = agqcontractor:build_no, generic
+
+        if agqprotective:app_no   = agqcontractor:app_no and
+           agqprotective:prem_no  = agqcontractor:prem_no and
+           agqprotective:build_no = agqcontractor:build_no then
+            delete agqprotective
+
+        end
+
+    If FUNCTION one of "ADD", "NEW" Then
+        Begin
+        If agqCONTRACTOR:FIRE_ALARM = 1 Then
+            Begin
+            Display Modal Screen "agtmt701f"
+            With Initial Function "ADD|BACK"
+            End
+
+        If agqCONTRACTOR:BURGLARY_ALARM = 1 Then
+            Begin
+            Display Modal Screen "agtmt701g"
+            With Initial Function "ADD|BACK"
+            End
+        End
+
+    If FUNCTION one of "CHANGE", "CHG" Then
+        Begin
+        If agqCONTRACTOR:FIRE_ALARM = 1 and
+           l_fire_alarm = 0 Then
+            Begin
+            Display Modal Screen "agtmt701f"
+            With Initial Function "ADD|BACK"
+            End
+
+        If agqCONTRACTOR:BURGLARY_ALARM = 1 and
+           l_burglar_alarm = 0 Then
+            Begin
+            Display Modal Screen "agtmt701g"
+            With Initial Function "ADD|BACK"
+            End
+
+        If agqCONTRACTOR:FIRE_ALARM = 0 and
+           l_fire_alarm = 1 Then
+            Begin
+            access agqprotective, agqprotective:app_no   = agqcontractor:app_no,
+                                  agqprotective:prem_no  = agqcontractor:prem_no,
+                                  agqprotective:build_no = agqcontractor:build_no, generic
+
+            if agqprotective:app_no   = agqcontractor:app_no and
+               agqprotective:prem_no  = agqcontractor:prem_no and
+               agqprotective:build_no = agqcontractor:build_no then
+                delete agqprotective
+            end
+
+        If agqCONTRACTOR:BURGLARY_ALARM = 0 and
+           l_burglar_alarm = 1 Then
+            Begin
+            access agqprotect, agqprotect:app_no   = agqcontractor:app_no,
+                               agqprotect:prem_no  = agqcontractor:prem_no,
+                               agqprotect:build_no = agqcontractor:build_no, generic
+
+            if agqprotect:app_no   = agqcontractor:app_no and
+               agqprotect:prem_no  = agqcontractor:prem_no and
+               agqprotect:build_no = agqcontractor:build_no then
+                delete agqprotect
+            end
+        End
+
+
+    do update_endorsements
+    end
+
+screen exit
+if function one of "EXIT", "BACK" and
+   g_inquiry not one of "Y" then
+    function = "update_totals"
+
+procedure definition
+
+procedure display_popup
+begin
+display modal screen l_screen
+
+end
+
+Procedure UPDATE_ENDORSEMENTS
+Begin
+Access SCSRATES, Set SCSRATES:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                     SCSRATES:STATE            = agqCONTRACTOR:STATE,
+                     SCSRATES:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS, Generic
+
+while SCSRATES:RECORD_KEY       = "RT" and
+      SCSRATES:COMPANY_ID       = agqcontractor:COMPANY_ID and
+      SCSRATES:STATE            = agqCONTRACTOR:STATE and
+      SCSRATES:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+    begin
+    If agqcontractor:EFF_DATE >= SCSRATES:EFF_DATE Then
+        Begin
+        L_CODE_1 = SCSRATES:FIRE_CODE
+        L_CODE_2 = SCSRATES:BURGLARY_CODE
+        L_CODE_3 = SCSRATES:GLASS_CODE -- exterior glass
+        L_CODE_4 = SCSRATES:MONEY_CODE[1]
+        L_CODE_5 = SCSRATES:MONEY_CODE[2]
+        L_CODE_6 = SCSRATES:WATER_BKUP_CODE
+        L_CODE_7 = SCSRATES:ACV_CODE
+        L_CODE_8 = SCSRATES:MONEY_CODE[3]
+        End
+
+    Next SCSRATES
+    End
+
+If L_CODE_1 <> "" Then
+    Begin
+    -- fire
+    L_CODE = L_CODE_1
+    Do ACCESS_agqEND
+    If L_ADD_ENDORSEMENT = "Y" And
+       agqCONTRACTOR:FIRE_ALARM = 1 Then
+        Do ADD_agqEND
+    If L_ADD_ENDORSEMENT = "N" And
+       agqCONTRACTOR:FIRE_ALARM = 0 Then
+        Do DELETE_agqEND
+    End
+
+If L_CODE_2 <> "" Then
+    Begin
+    -- burglary alarm
+    L_CODE = L_CODE_2
+    Do ACCESS_agqEND
+    If L_ADD_ENDORSEMENT = "Y" And
+       agqCONTRACTOR:BURGLARY_ALARM = 1 Then
+        Do ADD_agqEND
+    If L_ADD_ENDORSEMENT = "N" And
+       agqCONTRACTOR:BURGLARY_ALARM = 0 Then
+        Do DELETE_agqEND
+    End
+
+If L_CODE_3 <> "" Then
+    Begin
+    -- glass code
+    L_CODE = L_CODE_3
+    Do ACCESS_agqEND
+    If L_ADD_ENDORSEMENT = "Y" And
+       agqcontractor:EXTERIOR_GLASS <> 0 Then
+        Do ADD_agqEND
+    If L_ADD_ENDORSEMENT = "N" And
+       agqcontractor:EXTERIOR_GLASS = 0 Then
+        Do DELETE_agqEND
+    End
+
+If L_CODE_6 <> "" Then
+    Begin
+    -- waterbkup
+    L_CODE = L_CODE_6
+    Do ACCESS_agqEND
+    If L_ADD_ENDORSEMENT = "Y" And
+       agqcontractor:LIMIT_WATER_BKUP = 1 Then
+        Do ADD_agqEND
+    If L_ADD_ENDORSEMENT = "N" And
+       agqcontractor:LIMIT_WATER_BKUP = 0 Then
+        Do DELETE_agqEND
+    End
+
+If L_CODE_7 <> "" Then
+    Begin
+    -- ACV basis
+    L_CODE = L_CODE_7
+    Do ACCESS_agqEND
+    If (L_ADD_ENDORSEMENT = "Y" And
+       (agqcontractor:CONTENTS_ACV = 1 Or
+       agqcontractor:BUILDING_ACV = 1)) Then
+        Do ADD_agqEND
+    If L_ADD_ENDORSEMENT = "N" And
+       agqcontractor:CONTENTS_ACV = 0 And
+       agqcontractor:BUILDING_ACV = 0 Then
+        Do DELETE_agqEND
+    End
+
+If L_CODE_4 <> "" Then
+    Begin
+    -- money
+    L_CODE = L_CODE_4
+    Do ACCESS_agqEND
+    If L_ADD_ENDORSEMENT = "Y" And
+       agqcontractor:MONEY_LIMIT_ON <> 0 Then
+        Do ADD_agqEND
+    If L_ADD_ENDORSEMENT = "N" And
+       agqcontractor:MONEY_LIMIT_ON = 0 Then
+        Do DELETE_agqEND
+    End
+
+If L_CODE_5 <> "" Then
+    Begin
+    -- money
+    L_CODE = L_CODE_5
+    Do ACCESS_agqEND
+    If L_ADD_ENDORSEMENT = "Y" And
+       agqcontractor:MONEY_LIMIT_ON <> 0 Then
+        Do ADD_agqEND
+    If L_ADD_ENDORSEMENT = "N" And
+       agqcontractor:MONEY_LIMIT_ON = 0 Then
+        Do DELETE_agqEND
+    End
+
+If L_CODE_8 <> "" Then
+    Begin
+    -- money
+    L_CODE = L_CODE_8
+    Do ACCESS_agqEND
+    If L_ADD_ENDORSEMENT = "Y" And
+       agqcontractor:MONEY_LIMIT_ON <> 0 Then
+        Do ADD_agqEND
+    If L_ADD_ENDORSEMENT = "N" And
+       agqcontractor:MONEY_LIMIT_ON = 0 Then
+        Do DELETE_agqEND
+    End
+
+End
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = agqCONTRACTOR:app_no ,
+                   agqEND:PREM_NO = agqCONTRACTOR:PREM_NO,
+                   agqEND:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqEND:app_no <> agqCONTRACTOR:app_no Or
+            agqEND:PREM_NO <> agqCONTRACTOR:PREM_NO Or
+            agqEND:BUILD_NO <> agqCONTRACTOR:BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ACCESS_agqEND_1
+Begin
+Access agqEND, Set agqEND:app_no = agqCONTRACTOR:app_no ,
+                   agqEND:PREM_NO  = 0,
+                   agqEND:BUILD_NO = 0, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqEND:app_no <> agqCONTRACTOR:app_no Or
+            agqEND:PREM_NO  <> 0 Or
+            agqEND:BUILD_NO <> 0
+
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = agqCONTRACTOR:app_no ,
+                   agqEND:PREM_NO = agqCONTRACTOR:PREM_NO,
+                   agqEND:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> agqCONTRACTOR:app_no Or
+            agqEND:PREM_NO <> agqCONTRACTOR:PREM_NO Or
+            agqEND:BUILD_NO <> agqCONTRACTOR:BUILD_NO
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqCONTRACTOR:COMPANY_ID,
+                      SFSOPTEND:STATE = agqCONTRACTOR:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqCONTRACTOR:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqCONTRACTOR:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqCONTRACTOR:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqCONTRACTOR:LINE_OF_BUSINESS Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqcontractor:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqcontractor:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_form_edition <> "" then
+begin
+Add agqEND
+    Begin
+    agqEND:app_no             =       agqCONTRACTOR:app_no
+    agqEND:PREM_NO              =       agqCONTRACTOR:PREM_NO
+    agqEND:BUILD_NO             =       agqCONTRACTOR:BUILD_NO
+    agqEND:SUB_CODE             =       L_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+    agqEND:PREMIUM              =       0
+    End
+end
+
+End
+
+Procedure ADD_agqEND_1
+Begin
+Access agqEND, Set agqEND:app_no = agqCONTRACTOR:app_no ,
+                   agqEND:PREM_NO  = 0,
+                   agqEND:BUILD_NO = 0, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> agqCONTRACTOR:app_no Or
+            agqEND:PREM_NO  <> 0 Or
+            agqEND:BUILD_NO <> 0
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqCONTRACTOR:COMPANY_ID,
+                      SFSOPTEND:STATE = agqCONTRACTOR:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqCONTRACTOR:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqCONTRACTOR:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqCONTRACTOR:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqCONTRACTOR:LINE_OF_BUSINESS Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqcontractor:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqcontractor:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_form_edition <> "" then
+begin
+Add agqEND
+    Begin
+    agqEND:app_no             =       agqCONTRACTOR:app_no
+    agqEND:PREM_NO              =       0
+    agqEND:BUILD_NO             =       0
+    agqEND:SUB_CODE             =       L_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+    agqEND:PREMIUM              =       0
+    End
+end
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = agqCONTRACTOR:app_no ,
+                   agqEND:PREM_NO = agqCONTRACTOR:PREM_NO,
+                   agqEND:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqEND:app_no <> agqCONTRACTOR:app_no Or
+            agqEND:PREM_NO <> agqCONTRACTOR:PREM_NO Or
+            agqEND:BUILD_NO <> agqCONTRACTOR:BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+Procedure DELETE_agqEND_1
+Begin
+Access agqEND, Set agqEND:app_no = agqCONTRACTOR:app_no ,
+                   agqEND:PREM_NO  = 0,
+                   agqEND:BUILD_NO = 0, Generic
+
+Repeat Begin
+    Exit If agqEND:app_no <> agqCONTRACTOR:app_no Or
+            agqEND:PREM_NO  <> 0 Or
+            agqEND:BUILD_NO <> 0
+
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+End

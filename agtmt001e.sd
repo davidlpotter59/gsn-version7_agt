@@ -1,0 +1,340 @@
+%%
+Screen
+        Name         = "agtmt001e" ;
+        Type         = "Detail" ;
+        domain       = "Dummy";
+        ScreenSize   = "100x30"
+--        resizeable   = true
+        padcharacter = space;
+        Statusbar    = False
+        iconline     = 0
+--        Resizable    = True
+
+        global unsigned ascii number g_enhancement[1] ,
+                                     g_form[1] ,
+                                     g_line_of_business[4] ,
+                                     g_app_no[11];
+
+        global string g_portfolio[1] ;
+
+        local string l_company_id[10],
+                     l_username[15],
+                     l_screen_to_call[20],
+                     l_search_screen_to_call[20];
+
+        local unsigned ascii number l_line_of_business[4],
+                                    l_state[2],
+                                    l_agent_no[4];
+
+
+Functions
+
+        "func1" display l_screen_to_call ;
+
+        include "stdfunc7.inc"
+
+toolbar definition
+
+screen entry
+g_app_no = 0
+access sfsdefault, set sfsdefault:SFS_CODE = "SFS", generic
+
+l_username   = username
+l_company_id = sfsdefault:company_id
+l_state = sfsdefault:state
+
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if sfsemail:agent_no = 0 then
+    {
+    l_agent_no = 9999
+    }
+else
+    {
+    l_agent_no = sfsemail:agent_no
+    }
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = l_agent_no, exact
+
+if sfsagent:state <> 0 and
+   sfsemail:agent_no <> 0 then
+    l_state = sfsagent:state
+
+screen at 1,1 to 30,100  tagged main_screen
+    Properties
+        {
+        Layouttype = screen
+        layoutconstraints = stretch
+        bordercolor = "black"
+        borderwidth=2
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        scrollbarpolicy = asneeded
+        }
+    {
+
+    panel/hidden
+        {
+        Fields
+            function at 1,1 ;
+
+        }
+
+    panel at 1,1 to 2,100   tagged heading_line
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+
+    }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100
+                properties
+                    {
+                    iconname = ""
+                    }
+
+        }
+
+    panel at 3,1 to 4,100
+        Properties
+            {
+            LayoutType = screen
+            backgroundcolor = "Grey"
+            transparent = False
+            }
+        {
+        components
+            guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                    {
+                    text = "Commercial Lines..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                    }
+
+        }
+
+    Panel at 6,40 to 7,58 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_back_to_main_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "back"
+                        abort()
+                        }
+                    }
+        }
+
+    panel at 8,1 to 8,100 tagged line_panel_1
+        {
+        Components
+            line at 1,1 to 1,100
+                Properties
+                    {
+                    Linestyle = embossed
+                    Linewidth = 5
+                    Transparent = False
+                    Backgroundcolor = "black"
+                    foregroundcolor = "black"
+                    }
+        }
+
+    Panel at 10,10 to 12,35 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "lebins_bop.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        g_portfolio = "N"
+                        g_line_of_business = 5
+--                        l_line_of_business = 9996
+                        l_line_of_business = 5
+                        g_app_no           = 0
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 10,55 to 12,80 tagged button_panel
+        Properties
+            {
+            layouttype = column
+           }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "lebins_auto.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        g_portfolio = "N"
+                        g_line_of_business = 15
+--                        l_line_of_business = 9996
+                        l_line_of_business = 15
+                        g_app_no           = 0
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 15,10 to 17,35 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "lebins_wc.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        g_portfolio = "N"
+                        g_line_of_business = 9
+--                        l_line_of_business = 9996
+                        l_line_of_business = 9
+                        g_app_no           = 0
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 15,55 to 17,80 tagged button_panel
+        Properties
+            {
+            layouttype = column
+           }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "lebins_cpp.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        g_portfolio = "N"
+                        g_line_of_business = 8
+--                        l_line_of_business = 9996
+                        l_line_of_business = 8
+                        g_app_no           = 0
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 20,10 to 22,35 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "lebins_lmp.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        g_portfolio = "Y"
+                        g_line_of_business = 99
+--                        l_line_of_business = 9996
+                        l_line_of_business = 99
+                        g_app_no           = 0
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+}
+
+
+End

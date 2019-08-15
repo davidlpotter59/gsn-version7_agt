@@ -1,0 +1,1331 @@
+%%                 
+Screen
+        Name = "agtmt601a";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqvehicle" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ,
+                                     g_vehicle_no[4] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local tag l_tag[10] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_no_vehicles[4],
+                                    l_vehicle_no[4],
+                                    l_form[2],
+                                    l_limit[8],
+                                    l_mca301[1],
+                                    l_mca202[1],
+                                    l_mca301_prior[1],
+                                    l_mca202_prior[1],
+                                    l_mca201[1],
+                                    l_mca201_prior[1],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_server_name[100],
+                     l_code_2[7],
+                     l_current_web_page[100],
+                     l_web_site_address[100],
+                     l_system_id[15],
+                     l_username[15],
+                     l_screen[9],
+                     l_add_endorsement[1],
+                     l_Form_edition[25],
+                     l_filler[25],
+                     l_um_uim[3],
+                     l_record_key[2],
+                     L_COMPANY_ID[10] ,
+                     l_description[75] ;
+
+        Access agqvehicle,
+           Set agqvehicle:app_NO     = G_app_NO ,
+               agqvehicle:vehicle_no = g_vehicle_no ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+        "calc" display "agtmt602" tagged calc_fn ;
+        "func1" sequence "nofault" tagged no_fault_fn ;
+        "nofault" continue begin
+                           if agqvehicle:state = 37 then
+                               l_screen = "agtmt601k"
+                           else
+                               l_screen = "agtmt601e"
+                           function = "popup"
+                           end ;
+        "popup" display l_screen ;
+        "redisplay" display/noreturn "agtmt601a" ;
+--        forwardtab ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+l_username  = username
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = l_username, generic
+
+l_system_id = "cap"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqvehicle:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if sfsemail:agent_no <> 0 then
+    hide(antitheft_fn)
+
+l_server_name = sfsprofile:UNIX_SERVER                            --"http://192.168.1.197/"
+
+/*if l_company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "043webhelp_agtmt601a_scr_veh_coverage.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end*/
+
+do read_agqend1
+if l_mca301 <> 1 then
+    hide(popup_info_fn)
+
+l_username  = username
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if agqvehicle:type not one of 2 then
+    begin
+    hide(private_passenger_fn)
+    hide(antitheft_fn)
+    end
+
+if agqvehicle:state not one of 29 then
+    hide(antitheft_fn)
+
+if sfsemail:agent_no <> 0 then
+    begin
+    hide(antitheft_fn)
+    end
+
+Access Validation
+If agqvehicle:app_NO <> G_app_NO or
+   agqvehicle:vehicle_no <> g_vehicle_no Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "Vehicle Schedule of Coverages..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+
+Panel at 6,20 to 6,100 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,20
+          properties
+            {
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+        }
+
+Panel at 6,55 to 6,100
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,55 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt601a.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 9,1 to 9,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,5 to 1,16
+             properties
+               {
+                 text = "Vehicle No:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 1,26 to 1,43
+             properties
+               {
+                 text = "Number of Vehicles:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 1,52 to 1,64
+             properties
+               {
+                 text = "Vehicle Type:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+              }
+         }
+
+Panel at 9,15 to 9,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+____                       ____                 ____________________
+%%
+
+components
+
+Fields
+101     Begin
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            disable(calc_fn)
+            enable(accept_fn)
+            end
+        else
+            begin
+            enable(calc_fn)
+            disable(accept_fn)
+            end
+
+        access sfscompany,
+           set sfscompany:company_id = agqvehicle:company_id, generic
+
+        l_agent_no   = agqvehicle:agent_no
+        Access agsdefault_cap,
+           Set agsdefault_cap:COMPANY_ID       = agqvehicle:COMPANY_ID,
+               agsdefault_cap:state            = agqvehicle:state,
+               agsdefault_cap:agent_no         = agqvehicle:agent_no,
+               agsdefault_cap:LINE_OF_BUSINESS = agqvehicle:line_of_business, generic
+
+        End
+        agqvehicle:vehicle_no/displayonly/mask="ZZZZ" ;
+102     begin
+        access agqvehicle_alias, set agqvehicle_alias:app_no = g_app_no, generic
+
+        l_no_vehicles = 0
+        while agqvehicle_alias:app_no = g_app_no
+            begin
+            l_no_vehicles = l_no_vehicles + 1
+
+            next agqvehicle_alias
+            end
+        end
+        l_no_vehicles/displayonly/mask="ZZZZ" ;
+103     uppercase(castype:description) ;
+
+}
+
+Panel at 11,1 to 12,100 tagged popup_info_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,20 to 1,100 tagged popup_info_fn
+             properties
+               {
+                 text = "To edit a coverage's popup form, double-click on the colored form name"
+                 fontsize = 12
+                 fontname = "arial"
+                 fontstyle = bold
+--                 foregroundcolor    = "blue"
+               }
+           guidetext at 2,30 to 2,100 tagged popup_info_fn
+             properties
+               {
+                 text = "To delete a coverage, uncheck the box"
+                 fontsize = 12
+                 fontname = "arial"
+                 fontstyle = bold
+--                 foregroundcolor    = "blue"
+               }
+        }
+
+Panel at 13,5 to 15,51
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,51  tagged mca301_fn
+             properties
+               {
+                 text = "MCA301 - Additional Insured-Lessor:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+             events
+               {
+               mouseclicked
+                   {
+                   l_screen = "agtmt601h"
+                   do display_popup
+                   }
+                }
+           guidetext at 2,1 to 2,51  tagged private_passenger_fn
+             properties
+               {
+                 text = "MCA202 - Rental Reimbursement:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+
+
+        }
+
+Panel at 13,43 to 13,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_
+%%
+
+components
+
+Fields
+101     begin
+/*        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "044webhelp_agtmt601a_scr_veh_coverage_cbx_mca301.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }*/
+        do read_agqend1
+        l_mca301_prior = l_mca301
+        if l_mca301 = 1 then
+            begin
+            l_tag = tag("mca301_fn")
+            setproperty(l_tag,foregroundcolor,"blue")
+            end
+        end
+        l_mca301/checkbox/values="0,1"/tabstop
+        if l_mca301 = 1 and
+           l_mca301_prior = 0 then
+            begin
+            l_code = "MCA301"
+            do add_agqend1
+            display modal screen "agtmt601h"
+            end
+        if l_mca301 = 0 and
+           l_mca301_prior = 1 then
+            begin
+            l_code = "MCA301"
+            do delete_agqend1
+            do delete_agqaddin2
+            end;
+
+}
+
+Panel at 14,43 to 14,100 Tagged private_passenger_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_     # of Days:~~___ Amount Per Day:~~______
+%%
+
+components
+
+Fields
+101     begin
+        do read_agqend1
+        l_mca202_prior = l_mca202
+        end
+        l_mca202/checkbox/values="0,1"/tabstop
+        Hide If agqvehicle:ORIGINAL_COST = 0
+        if l_mca202 = 0 then
+            begin
+            agqvehicle:rental_days   = 0
+            agqvehicle:rental_amount = 0
+            end
+        if l_mca202 = 1 and
+           l_mca202_prior = 0 then
+            begin
+            l_code = "MCA202"
+            do add_agqend1
+            end
+        if l_mca202 = 0 and
+           l_mca202_prior = 1 then
+            begin
+            l_code = "MCA202"
+            do delete_agqend1
+            end;
+102     begin
+        if function one of "CHANGE", "CHG" then
+            begin
+            if l_mca202 = 1 then
+                begin
+                if agqvehicle:rental_days = 0 then
+                    agqvehicle:rental_days   = 30
+                if agqvehicle:rental_amount = 0 then
+                    begin
+                    if agqvehicle:company_id = "FARMERS" then
+                        agqvehicle:rental_amount = 30
+                    else
+                        agqvehicle:rental_amount = 15
+                    end
+                end
+            end
+        end
+        agqvehicle:RENTAL_DAYS/default/tabstop
+        Hide If agqvehicle:ORIGINAL_COST = 0
+        hide if l_mca202 = 0
+        If agqvehicle:RENTAL_DAYS = 0 then
+--           agqvehicle:RENTAL_DAYS <> 0 Then
+--            Error "Invalid Days Entered"
+
+        if agqvehicle:rental_days = 0 then
+            agqvehicle:rental_amount = 0
+
+        if agqvehicle:rental_days > 30 then--and
+--           sfsemail:agent_no <> 0 then
+            begin
+            agqvehicle:rental_days = 30
+            error "The value you entered exceeds maximum allowed limits. Contact your UW to obtain permission for higher value"
+            end ;
+103     agqvehicle:RENTAL_AMOUNT/default/tabstop
+        Hide If agqvehicle:RENTAL_DAYS = 0
+        hide if l_mca202 = 0
+        If agqvehicle:RENTAL_AMOUNT = 0 Then
+            Error "Invalid Amount Entered"
+        if agqvehicle:rental_amount > 30 then--and
+--           sfsemail:agent_no <> 0 then
+            begin
+            agqvehicle:rental_amount = 30
+            error "The value you entered exceeds maximum allowed limits. Contact your UW to obtain permission for higher value"
+            end ;
+
+}
+
+Panel at 17,5 to 17,100 tagged private_passenger_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_~~Towing
+
+%%
+
+components
+
+Fields
+101     /*begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+                l_current_web_page = "050webhelp_agtmt601a_scr_veh_coverage_cbx_towing.htm"
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        end*/
+        agqvehicle:TOWING/checkbox/values="N,Y"/tabstop
+        hide if agqvehicle:type not one of 2
+        hide if agqvehicle:comp_deductible = 0 and
+                agqvehicle:coll_deductible = 0 ;
+
+}
+
+Panel at 21,5 to 23,100 tagged antitheft_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_~~Category~I~antitheft~devices         _~~Category~III~antitheft~or~vehicle~recovery
+_~~Category~II~antitheft~devices        _~~Category~IV~antitheft~or~vehicle~recovery
+__ No. Safety Features
+
+%%
+
+components
+
+Fields
+101     /*begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            {
+            if l_company_id = "FLEMINGTON" then
+                begin
+--            l_current_web_page = "webhelp_agtmt601a_scr_veh_coverage_cbx_towing.htm"
+                l_current_web_page = ""
+                do change_current_browser(l_server_name,l_current_web_page)
+                end
+            }
+        end*/
+        agqvehicle:ANTITHEFT[1]/checkbox/values="N,Y"/tabstop
+        hide if agqvehicle:type not one of 2
+        Hide If agqvehicle:STATE <> 29 ;
+201     agqvehicle:ANTITHEFT[2]/checkbox/values="N,Y"/tabstop
+        hide if agqvehicle:type not one of 2
+        Hide If agqvehicle:STATE <> 29 ;
+102     agqvehicle:ANTITHEFT[3]/checkbox/values="N,Y"/tabstop
+        hide if agqvehicle:type not one of 2
+        Hide If agqvehicle:STATE <> 29 ;
+202     agqvehicle:ANTITHEFT[4]/checkbox/values="N,Y"/tabstop
+        hide if agqvehicle:type not one of 2
+        Hide If agqvehicle:STATE <> 29 ;
+301     agqvehicle:SAFETY/tabstop
+        hide if agqvehicle:type not one of 2
+        Hide If agqvehicle:STATE <> 29 ;
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,1 to 26,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,5    tagged no_fault_fn
+        Properties {
+                Iconname = "btn_no_fault_pip.bmp"
+                }
+        Events  {
+                Action = no_fault_fn
+                }
+
+        Button at 1,75   tagged calc_fn
+        Properties {
+                Iconname = "btn_view_summary_totals.bmp"
+                }
+        Events  {
+                Action = calc_fn
+                }
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+/*panel at 27,1 to 32,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+} */
+
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    enable(calc_fn)
+    disable(accept_fn)
+    end
+
+if abort = "YES" then
+    begin
+    enable(calc_fn)
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(calc_fn)
+
+    access agqnonowned, set agqnonowned:app_no = g_app_no, generic
+
+    if agqnonowned:app_no = g_app_no then
+        begin
+        change agqnonowned
+            begin
+            agqnonowned:state        = agqvehicle:state
+            agqnonowned:liability    = agqmaster:liability
+            switch(agqmaster:if_any)
+              case 1  : agqnonowned:if_any = "Y"
+              default : agqnonowned:if_any = "N"
+              end
+            agqnonowned:cost_of_hire = agqmaster:cost_of_hire
+            if agqmaster:hired_comp <> 0 then
+                begin
+                agqnonowned:comp            = "Y"
+                agqnonowned:comp_deductible = agqmaster:hired_comp
+                end
+            else
+                begin
+                agqnonowned:comp            = "N"
+                agqnonowned:comp_deductible = 0
+                end
+            if agqmaster:hired_coll <> 0 then
+                begin
+                agqnonowned:coll            = "Y"
+                agqnonowned:coll_deductible = agqmaster:hired_coll
+                end
+            else
+                begin
+                agqnonowned:coll            = "N"
+                agqnonowned:coll_deductible = 0
+                end
+            switch(agqmaster:nonowned_auto)
+              case 1  : agqnonowned:nonowned_auto_applicable = "Y"
+              default : agqnonowned:nonowned_auto_applicable = "N"
+              end
+            agqnonowned:no_employees             = agqmaster:no_employees
+            agqnonowned:funeral_medical_payments = "N"
+            end
+        end
+    else
+        begin
+        add agqnonowned
+            begin
+            agqnonowned:app_no       = g_app_no
+            agqnonowned:state        = agqvehicle:state
+            agqnonowned:liability    = agqmaster:liability
+            switch(agqmaster:if_any)
+              case 1  : agqnonowned:if_any = "Y"
+              default : agqnonowned:if_any = "N"
+              end
+            agqnonowned:cost_of_hire = agqmaster:cost_of_hire
+            if agqmaster:hired_comp <> 0 then
+                begin
+                agqnonowned:comp            = "Y"
+                agqnonowned:comp_deductible = agqmaster:hired_comp
+                end
+            else
+                begin
+                agqnonowned:comp            = "N"
+                agqnonowned:comp_deductible = 0
+                end
+            if agqmaster:hired_coll <> 0 then
+                begin
+                agqnonowned:coll            = "Y"
+                agqnonowned:coll_deductible = agqmaster:hired_coll
+                end
+            else
+                begin
+                agqnonowned:coll            = "N"
+                agqnonowned:coll_deductible = 0
+                end
+            switch(agqmaster:nonowned_auto)
+              case 1  : agqnonowned:nonowned_auto_applicable = "Y"
+              default : agqnonowned:nonowned_auto_applicable = "N"
+              end
+            agqnonowned:no_employees             = agqmaster:no_employees
+            agqnonowned:funeral_medical_payments = "N"
+            end
+        end
+
+    L_RECORD_KEY = "NS"
+    l_limit      = agqmaster:um_uim_limit[1]
+    l_um_uim     = "UM"
+    Access casnonstacked, Set casnonstacked:COMPANY_ID       = agqvehicle:COMPANY_ID,
+                              casnonstacked:STATE            = agqvehicle:state,
+                              casnonstacked:LINE_OF_BUSINESS = agqvehicle:line_of_business,
+                              casnonstacked:um_uim           = l_um_uim,
+                              casnonstacked:limit            = l_limit, Generic
+
+    while casnonstacked:RECORD_KEY       = L_RECORD_KEY and
+          casnonstacked:COMPANY_ID       = agqvehicle:COMPANY_ID and
+          casnonstacked:STATE            = agqvehicle:state and
+          casnonstacked:LINE_OF_BUSINESS = agqvehicle:line_of_business and
+          casnonstacked:um_uim           = l_um_uim and
+          casnonstacked:limit            = l_limit
+        begin
+        If agqvehicle:EFF_DATE >= casnonstacked:EFF_DATE Then
+            Begin
+            l_code_1 = casnonstacked:code
+            End
+
+        Next casnonstacked
+        End
+
+    if l_code_1 <> "" then
+        begin
+        L_CODE = L_CODE_1
+        Do ACCESS_AGQEND1
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqmaster:um_uim_limit[1] <> 0 and
+           agqmaster:non_stacked = "N" Then
+            Do ADD_AGQEND1
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqmaster:um_uim_limit[1] = 0) or
+           (l_add_endorsement = "N" and
+           agqmaster:non_stacked <> "N")) Then
+            Do DELETE_AGQEND1
+        end
+
+    L_RECORD_KEY = "NS"
+    l_limit      = agqmaster:um_uim_limit[2]
+    l_um_uim     = "UIM"
+    Access casnonstacked, Set casnonstacked:COMPANY_ID       = agqvehicle:COMPANY_ID,
+                              casnonstacked:STATE            = agqvehicle:state,
+                              casnonstacked:LINE_OF_BUSINESS = agqvehicle:line_of_business,
+                              casnonstacked:um_uim           = l_um_uim,
+                              casnonstacked:limit            = l_limit, Generic
+
+    while casnonstacked:RECORD_KEY       = L_RECORD_KEY and
+          casnonstacked:COMPANY_ID       = agqvehicle:COMPANY_ID and
+          casnonstacked:STATE            = agqvehicle:state and
+          casnonstacked:LINE_OF_BUSINESS = agqvehicle:line_of_business and
+          casnonstacked:um_uim           = l_um_uim and
+          casnonstacked:limit            = l_limit
+        begin
+        If agqvehicle:EFF_DATE >= casnonstacked:EFF_DATE Then
+            Begin
+            l_code_1 = casnonstacked:code
+            End
+
+        Next casnonstacked
+        End
+
+    if l_code_1 <> "" then
+        begin
+        L_CODE = L_CODE_1
+        Do ACCESS_AGQEND1
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqmaster:um_uim_limit[2] <> 0 and
+           agqmaster:non_stacked = "N" Then
+            Do ADD_AGQEND1
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqmaster:um_uim_limit[2] = 0) or
+           (l_add_endorsement = "N" and
+           agqmaster:non_stacked <> "N")) Then
+            Do DELETE_AGQEND1
+        end
+
+    L_RECORD_KEY = "ST"
+    l_limit      = agqmaster:um_uim_limit[1]
+    l_um_uim     = "UM"
+    Access casstacked, Set casstacked:COMPANY_ID       = agqvehicle:COMPANY_ID,
+                           casstacked:STATE            = agqvehicle:state,
+                           casstacked:LINE_OF_BUSINESS = agqvehicle:line_of_business,
+                           casstacked:um_uim           = l_um_uim,
+                           casstacked:limit            = l_limit, Generic
+
+    while casstacked:RECORD_KEY       = L_RECORD_KEY and
+          casstacked:COMPANY_ID       = agqvehicle:COMPANY_ID and
+          casstacked:STATE            = agqvehicle:state and
+          casstacked:LINE_OF_BUSINESS = agqvehicle:line_of_business and
+          casstacked:um_uim           = l_um_uim and
+          casstacked:limit            = l_limit
+        begin
+        If agqvehicle:EFF_DATE >= casstacked:EFF_DATE Then
+            Begin
+            l_code_1 = casstacked:code
+            End
+
+        Next casstacked
+        End
+
+    if l_code_1 <> "" then
+        begin
+        L_CODE = L_CODE_1
+        Do ACCESS_AGQEND1
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqmaster:um_uim_limit[1] <> 0 and
+           agqmaster:non_stacked = "S" Then
+            Do ADD_AGQEND1
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqmaster:um_uim_limit[1] = 0) or
+           (l_add_endorsement = "N" and
+           agqmaster:non_stacked <> "S")) Then
+            Do DELETE_AGQEND1
+        end
+
+    L_RECORD_KEY = "ST"
+    l_limit      = agqmaster:um_uim_limit[2]
+    l_um_uim     = "UIM"
+    Access casstacked, Set casstacked:COMPANY_ID       = agqvehicle:COMPANY_ID,
+                           casstacked:STATE            = agqvehicle:state,
+                           casstacked:LINE_OF_BUSINESS = agqvehicle:line_of_business,
+                           casstacked:um_uim           = l_um_uim,
+                           casstacked:limit            = l_limit, Generic
+
+    while casstacked:RECORD_KEY       = L_RECORD_KEY and
+          casstacked:COMPANY_ID       = agqvehicle:COMPANY_ID and
+          casstacked:STATE            = agqvehicle:state and
+          casstacked:LINE_OF_BUSINESS = agqvehicle:line_of_business and
+          casstacked:um_uim           = l_um_uim and
+          casstacked:limit            = l_limit
+        begin
+        If agqvehicle:EFF_DATE >= casstacked:EFF_DATE Then
+            Begin
+            l_code_1 = casstacked:code
+            End
+
+        Next casstacked
+        End
+
+    if l_code_1 <> "" then
+        begin
+        L_CODE = L_CODE_1
+        Do ACCESS_AGQEND1
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqmaster:um_uim_limit[2] <> 0 and
+           agqmaster:non_stacked = "S" Then
+            Do ADD_AGQEND1
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqmaster:um_uim_limit[2] = 0) or
+           (l_add_endorsement = "N" and
+           agqmaster:non_stacked <> "S")) Then
+            Do DELETE_AGQEND1
+        end
+
+    l_record_key = "NO"
+    l_filler     = ""/raw
+    access casnonowned, set casnonowned:company_id       = agqvehicle:company_id,
+                            casnonowned:state            = agqvehicle:state,
+                            casnonowned:line_of_business = agqvehicle:line_of_business,
+                            casnonowned:filler           = l_filler, generic
+
+    l_code_1 = ""
+    while casnonowned:record_key       = l_record_key and
+          casnonowned:company_id       = agqvehicle:company_id and
+          casnonowned:state            = agqvehicle:state and
+          casnonowned:line_of_business = agqvehicle:line_of_business and
+          casnonowned:filler           = l_filler
+            begin
+            if agqvehicle:eff_date >= casnonowned:eff_date then
+                begin
+                l_code_1 = casnonowned:employee_insured_code
+                l_code_2 = casnonowned:additional_insured_code
+
+                end
+
+            next casnonowned
+            end
+
+    if l_code_1 <> "" then
+        begin
+        L_CODE = l_code_1
+        Do ACCESS_AGQEND1
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqnonowned:EMPLOYEES_AS_INSUREDS = "Y" Then
+            Do ADD_AGQEND1
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqnonowned:EMPLOYEES_AS_INSUREDS  = "N") or
+           function = "DELETE") Then
+            Do DELETE_AGQEND1
+        end
+
+    if l_code_2 <> "" then
+        begin
+        L_CODE = l_code_2
+        Do ACCESS_AGQEND1
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqnonowned:additional_insured = "Y" Then
+            Do ADD_AGQEND1
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqnonowned:additional_insured = "N") or
+           function = "DELETE") Then
+            Do DELETE_AGQEND1
+        end
+
+    l_record_key = "HI"
+    l_filler = ""/raw
+    access cashired, set cashired:company_id       = agqvehicle:company_id,
+                         cashired:state            = agqvehicle:state,
+                         cashired:line_of_business = agqvehicle:line_of_business,
+                         cashired:filler           = l_filler, generic
+
+    l_code_1 = ""
+    while cashired:record_key       = l_record_key and
+          cashired:company_id       = agqvehicle:company_id and
+          cashired:state            = agqvehicle:state and
+          cashired:line_of_business = agqvehicle:line_of_business and
+          cashired:filler           = l_filler
+            begin
+            if agqvehicle:eff_date >= cashired:eff_date then
+                begin
+                l_code_1 = cashired:physical_damage_code
+
+                end
+
+            next cashired
+            end
+
+    if l_code_1 <> "" then
+        begin
+        l_code = l_code_1
+        Do ACCESS_AGQEND1
+        If (L_ADD_ENDORSEMENT = "Y" And
+           (agqnonowned:comp  = "Y" or
+           agqnonowned:coll   = "Y")) Then
+            Do ADD_AGQEND1
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqnonowned:comp  = "N" and
+           agqnonowned:coll  = "N") or
+           function = "DELETE") Then
+            Do DELETE_AGQEND1
+        end
+
+    end
+    function = "redisplay"
+
+screen exit
+if l_mca301 = 1 then
+    begin
+    access agqvehicle_alias, set agqvehicle_alias:app_no     = agqvehicle:app_no,
+                                 agqvehicle_alias:vehicle_no = agqvehicle:vehicle_no, generic
+
+    if agqvehicle_alias:app_no     = agqvehicle:app_no and
+       agqvehicle_alias:vehicle_no = agqvehicle:vehicle_no then
+        begin
+        change agqvehicle_alias
+            begin
+            agqvehicle_alias:additional_insured = "Y"
+            end
+        end
+    end
+else
+    begin
+    access agqvehicle_alias, set agqvehicle_alias:app_no     = agqvehicle:app_no,
+                                 agqvehicle_alias:vehicle_no = agqvehicle:vehicle_no, generic
+
+    if agqvehicle_alias:app_no     = agqvehicle:app_no and
+       agqvehicle_alias:vehicle_no = agqvehicle:vehicle_no then
+        begin
+        change agqvehicle_alias
+            begin
+            agqvehicle_alias:additional_insured = "N"
+            end
+        end
+    end
+
+Procedure Definition
+
+/*procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END*/
+
+procedure display_popup
+begin
+display modal screen l_screen
+
+end
+
+Procedure ACCESS_agqend1
+Begin
+Access agqend1, Set agqend1:app_no     = G_app_no,
+                    agqend1:vehicle_no = g_vehicle_no, generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqend1:app_no     = G_app_no and
+      agqend1:vehicle_no = g_vehicle_no
+    begin
+    If agqend1:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend1
+    End
+
+End
+
+Procedure ACCESS_agqendorse2
+Begin
+Access agqendorse2, Set agqendorse2:app_no     = G_app_no,
+                        agqendorse2:vehicle_no = g_vehicle_no,
+                        agqendorse2:code       = g_code, generic
+
+if agqendorse2:app_no     = G_app_no and
+   agqendorse2:vehicle_no = g_vehicle_no and
+   agqendorse2:code       = g_code then
+    begin
+    l_limit = agqendorse2:limit
+    end
+
+End
+
+Procedure ADD_agqend1
+Begin
+Access agqend1, Set agqend1:app_no     = G_app_no ,
+                    agqend1:VEHICLE_NO = g_vehicle_no, Generic
+
+L_SUB_CODE = 0
+while agqend1:app_no     = g_app_no and
+      agqend1:VEHICLE_NO = g_vehicle_no
+    begin
+    L_SUB_CODE = agqend1:SUB_CODE
+
+    Next agqend1
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqvehicle:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqvehicle:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqvehicle:line_of_business,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqvehicle:COMPANY_ID and
+      SFSOPTEND:STATE            = agqvehicle:state and
+      SFSOPTEND:LINE_OF_BUSINESS = agqvehicle:line_of_business and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqvehicle:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqvehicle:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_form_edition <> "" then
+    begin
+    Add agqend1
+        Begin
+        agqend1:app_no               =       g_app_no
+        agqend1:VEHICLE_NO           =       g_vehicle_no
+        agqend1:SUB_CODE             =       L_SUB_CODE
+        agqend1:CODE                 =       L_CODE
+        agqend1:FORM_EDITION         =       L_FORM_EDITION
+        agqend1:DESCRIPTION          =       L_DESCRIPTION
+        agqend1:PREMIUM              =       0
+        End
+    end
+
+End
+
+Procedure DELETE_agqend1
+Begin
+Access agqend1, Set agqend1:app_no     = g_app_no ,
+                    agqend1:VEHICLE_NO = g_vehicle_no, Generic
+
+while agqend1:app_no     = g_app_no and
+      agqend1:VEHICLE_NO = g_vehicle_no
+    begin
+    If agqend1:CODE = L_CODE Then
+        Delete agqend1
+
+    Next agqend1
+    End
+
+End
+
+procedure update_agqendorse2
+begin
+Access agqendorse2, Set agqendorse2:app_no     = G_app_no,
+                        agqendorse2:vehicle_no = g_vehicle_no,
+                        agqendorse2:code       = g_code, generic
+
+if agqendorse2:app_no     = G_app_no and
+   agqendorse2:vehicle_no = g_vehicle_no and
+   agqendorse2:code       = g_code then
+    begin
+    change agqendorse2
+        begin
+        agqendorse2:limit = l_limit
+        end
+    end
+else
+    begin
+    add agqendorse2
+        begin
+        agqendorse2:app_no     = g_app_no
+        agqendorse2:vehicle_no = g_vehicle_no
+        agqendorse2:code       = g_code
+        agqendorse2:sub_code   = 10
+        agqendorse2:limit      = l_limit
+        end
+    end
+
+end
+
+Procedure delete_agqendorse2
+Begin
+Access agqendorse2, Set agqendorse2:app_no     = G_app_no,
+                        agqendorse2:vehicle_no = g_vehicle_no,
+                        agqendorse2:code       = g_code, generic
+
+if agqendorse2:app_no     = G_app_no and
+   agqendorse2:vehicle_no = g_vehicle_no and
+   agqendorse2:code       = g_code then
+    begin
+    delete agqendorse2
+    end
+
+End
+
+procedure read_agqend1
+begin
+access agqend1, set agqend1:app_no     = g_app_no,
+                    agqend1:vehicle_no = g_vehicle_no, generic
+
+l_mca301 = 0
+l_mca202 = 0
+l_mca201 = 0
+while agqend1:app_no     = g_app_no and
+      agqend1:vehicle_no = g_vehicle_no
+    begin
+    if agqend1:code = "MCA301" then
+        l_mca301 = 1
+    if agqend1:code = "MCA202" then
+        l_mca202 = 1
+    if agqend1:code = "MCA201" then
+        l_mca201 = 1
+
+    next agqend1
+    end
+
+end
+
+Procedure delete_agqaddin2
+Begin
+Access agqaddin2, Set agqaddin2:app_no     = G_app_no,
+                      agqaddin2:vehicle_no = g_vehicle_no, generic
+
+while agqaddin2:app_no     = G_app_no and
+      agqaddin2:vehicle_no = g_vehicle_no
+    begin
+    delete agqaddin2
+
+    Next agqaddin2
+    End
+
+End
+
+End

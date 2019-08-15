@@ -1,0 +1,519 @@
+%%                 
+Screen
+        Name = "agtmt1000g";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Domain="agqpersonal" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_form[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        tag l_tag[13] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_no_families[1],
+                                    l_line_of_business[4],
+                                    l_remove_form[1],
+                                    l_table[1],
+                                    l_nonowned_factor[5]=0/dec=3,
+                                    l_fpl01_form[1],
+                                    l_increase_cov_c[8]=0/dec=4,
+                                    l_structures_limit[8]=0,
+                                    l_limit[8],
+                                    l_dwelling_limit[8],
+                                    l_contents_limit[8],
+                                    l_allow_agent_to_view[1],
+                                    l_no_units[2],
+                                    L_STATE[2],
+                                    l_hurricane[5],
+                                    l_agent_no[4],
+                                    l_default_loss_limit[8],
+                                    l_default_contents_limit[8],
+                                    l_new_home_discount_factor[4]=0/dec=3,
+                                    l_plspreprinted_alarm_factor[8]=0/dec=4,
+                                    l_new_home_year[4],
+                                    l_new_year_2[2],
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_continue_3[2]="",
+                     l_owner_occupied[1]="",
+                     l_ok_to_add_sal01[1]="Y",
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_continue_4[2]="",
+                     l_new_home_discount[1],
+                     l_user_id[15],
+                     l_mpl13[1],
+                     l_record_key[2],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_code_8[7],
+                     l_code_9[7],
+                     l_code_10[7],
+                     l_code_11[7],
+                     l_code_12[7],
+                     l_code_13[7],
+                     l_code_14[7],
+                     l_code_15[7],
+                     l_code_16[7],
+                     l_code_17[7],
+                     l_code_18[7],
+                     l_code_19[7],
+                     l_code_20[7],
+                     l_code_21[7],
+                     l_code_22[7],
+                     l_code_23[7],
+                     l_code_24[7],
+                     l_code_25[7],
+                     l_code_26[7],
+                     l_code_27[7],
+                     l_code_28[7],
+                     l_code_29[7],
+                     l_code_30[7],
+                     l_mho45[1],
+                     l_included[8]="Included",
+                     l_mpl49[1],
+                     l_mpl47[1],
+                     l_system_id[15],
+                     l_user_id_1[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ,
+                     l_updated[1] ;
+
+        local date l_sal_eff_date[8] ,
+                   l_eff_date[8] ,
+                   l_companion_discount_date[8] ;
+
+        Access agqpersonal,
+           Set agqpersonal:app_NO = G_app_NO ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden/autoupdate ;
+        "calc" display "agtmt1200" tagged calc_fn ;
+        "redisplay" display/noreturn "agtmt1000g" ;
+        "func1" display/noreturn "agtmt1000" tagged nextscreen_fn;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access sfsline, set sfsline:company_id       = agqpersonal:company_id,
+                    sfsline:line_of_business = agqpersonal:line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+access sfsemail, set sfsemail:company_id = agqpersonal:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "plp"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqpersonal:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : switch(g_form)
+                  case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                  case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                  case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                  default : begin
+                            setproperty(t_mho3,iconname,"")
+                            setproperty(t_mho4,iconname,"")
+                            setproperty(t_mho6,iconname,"")
+                            end
+                  end
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_user_id = username
+access sfsprofile,
+   set sfsprofile:user_id  = l_user_id, generic
+
+If SFSPROFILE:USER_ID <> l_user_id Then
+    Begin
+    l_user_id = "default"/raw
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = l_user_id, generic
+    End
+
+access sfsdefault, set sfsdefault:SFS_CODE = "SFS", generic
+
+l_company_id = sfsdefault:company_id
+
+l_user_id_1 = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_user_id_1, generic
+
+if sfsemail:agent_no = 0 then
+    {
+    l_agent_no = 9999
+    }
+else
+    {
+    l_agent_no = sfsemail:agent_no
+    }
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = l_agent_no, exact
+
+l_state = sfsagent:state
+if g_line_of_business = 14 and
+   l_state = 29 then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "nj_preferred.htm"
+    l_tag = tag("nj_preferred")
+    do change_current_browser(l_server_name,l_current_web_page,l_tag)
+    hide(nj_premier)
+    hide(md_preferred)
+    end
+else
+if g_line_of_business = 44 and
+   l_state = 19 then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "md_preferred.htm"
+    l_tag = tag("md_preferred")
+    do change_current_browser(l_server_name,l_current_web_page,l_tag)
+    hide(nj_premier)
+    hide(nj_preferred)
+    end
+else
+if g_line_of_business = 24 and
+   l_state = 29 then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "nj_premier.htm"
+    l_tag = tag("nj_premier")
+    do change_current_browser(l_server_name,l_current_web_page,l_tag)
+    hide(nj_preferred)
+    hide(md_preferred)
+    end
+
+Access Validation
+If agqpersonal:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+
+Properties
+    {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+    }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "Guidelines..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3,1 to 4,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1.5,30 tagged continue_fn
+            properties
+                {
+                Iconname = "continue.bmp"
+                }
+            Events
+                {
+                action = nextscreen_fn
+                }
+        Button at 1.5,60   tagged calc_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+    Panel at 3,94 to 4,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 4.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt1000g.sd"
+                      fontsize = 9
+                    }
+      }
+
+/*   panel at 6,1 to 6,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }*/
+
+panel at 6,1 to 26,100
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "#ADD8E6"
+          scrollbarpolicy=asneeded
+        }
+{
+      Components
+         browser at 1,5 to 17,95  tagged nj_preferred
+             properties {
+                          url = ""
+                        }
+         browser at 1,5 to 17,95  tagged nj_premier
+             properties {
+                          url = ""
+                        }
+         browser at 1,5 to 17,95  tagged md_preferred
+             properties {
+                          url = ""
+                        }
+}
+
+
+/*-- draw a line
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }*/
+
+/*-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }*/
+
+
+
+
+}
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page, tag p_tag)
+BEGIN
+    l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+    setproperty(p_tag,url,trun(l_web_site_address))
+END
+
+End

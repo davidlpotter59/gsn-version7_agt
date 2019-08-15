@@ -1,0 +1,676 @@
+%%
+/*
+Date Written: July 18, 2006
+
+Name: agqmca202_011997.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+07/18/2006            DWR     new form Version with New naming convention
+===========================
+*/
+
+Program
+  Name = "agqmca202_011997";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[19] = "agqmca202_011997.cq";
+ String L_COPY_NAME[20] ;
+ String L_AGQLOCATION_ZIP;
+ String L_capaddlinsured_ZIP;
+ unsigned ascii number l_app_no[11] ;
+ unsigned ascii number l_vehicle_no[4] ;
+ Unsigned ascii number l_max_lines;
+ Unsigned Ascii Number L_YEAR[4];
+ Unsigned Ascii number L_LINE_OF_BUSINESS[4];
+ Unsigned ascii number l_found[1];
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_STATE[2]=0;
+ Unsigned Ascii Number L_LOOP;
+ wdate L_EFF_DATE;
+ Unsigned Ascii Number L_PAGE_NUMBER;
+ Unsigned Ascii Number L_TOTAL_VEHICLE_PER_PAGE = 54;
+ Unsigned Ascii Number L_FIRST_PAGE_TOTAL_VEHICLE = 34;
+ Unsigned Ascii Number L_TOTAL_VEHICLE;
+ Unsigned Ascii Number L_LINE_COUNTER;
+ Unsigned Ascii Number L_MAX_LINE = 60;
+ Unsigned Ascii Number L_PAGE_NUMER = 1;
+ Unsigned Ascii Number L_PRINTED_VEHICLE_ON_PAGE = 0;
+ Unsigned Ascii Number L_TOTAL_PREMIUM;
+ Unsigned Ascii Number l_total_any_period;
+
+
+   Include "csfonts.inc"
+   Include "swsut100.var"
+   Include "swsut200.var"
+   Include "swsut300.var"
+   Include "line_spacing.var"
+
+Initialization
+l_app_no     = val(commandline[1,11])
+l_vehicle_no = val(commandline[12,15])
+
+write("%c%n",1005,l_app_no)
+write("%c%n",1015,l_vehicle_no)
+Deletefile (L_FILE_NAME)
+
+Access agqNAME,
+   Set agqNAME:app_no = l_app_no, generic
+
+Access agqvehicle,
+   Set agqvehicle:app_no = l_app_no,
+       agqvehicle:vehicle_no = l_vehicle_no, generic
+
+   Include "swsut100.inc"
+   I_CODE = "MCA202"
+   Include "swsut200.inc"
+
+L_STATE            = agqvehicle:STATE
+L_COMPANY_ID       = agqvehicle:COMPANY_ID
+L_LINE_OF_BUSINESS = agqvehicle:LINE_OF_BUSINESS
+
+Access SFSOPTEND,
+   Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+       SFSOPTEND:STATE            = L_STATE,
+       SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+       SFSOPTEND:CODE             = I_CODE, generic
+
+ While SFSOPTEND:COMPANY_ID       = L_COMPANY_ID and
+       SFSOPTEND:STATE            = L_STATE and
+       SFSOPTEND:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS and
+       SFSOPTEND:CODE             = I_CODE
+
+   {  --start of sfsoptend check
+     If (agqvehicle:eff_date >= sfsoptend:eff_date and
+        (agqvehicle:eff_date < sfsoptend:exp_date or
+         sfsoptend:exp_date = 0)) then
+       {
+         l_eff_date = sfsoptend:eff_date
+       }
+     next sfsoptend
+
+   }
+
+Access SFSOPTEND,
+   Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+       SFSOPTEND:STATE            = L_STATE,
+       SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+       SFSOPTEND:CODE             = I_CODE,
+       SFSOPTEND:EFF_DATE         = L_EFF_DATE, exact
+
+If sfsoptend:edition <> 0 then
+   {
+     Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+     Writefile(L_FILE_NAME,"%s","<033>&a420h7080V")
+     Writefile(L_FILE_NAME,"%s","Ed. ")
+     Writefile(L_FILE_NAME,"%n",sfsoptend:edition)
+   }
+
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+ Writefile(L_FILE_NAME,"%s","<033>&a420h7200V")
+ Writefile(L_FILE_NAME,"%s",l_copyright_6)
+ Writefile(L_FILE_NAME,"%s"," ")
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+ Writefile(L_FILE_NAME,"%s",sfsoptend:COPYRIGHT)
+ Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+ Writefile(L_FILE_NAME,"%s","<033>&a4300h120V")
+ Writefile(L_FILE_NAME,"%s",Trun(SFSOPTEND:FORM_PRINT))
+ Writefile(L_FILE_NAME,"%s"," ")
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+ Writefile(L_FILE_NAME,"%s",SFSOPTEND:EDITION_PRINT)
+
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+140V")
+ Writefile(L_FILE_NAME,"%s","RENTAL REIMBURSEMENT")
+ L_LINE_COUNTER = L_LINE_COUNTER +1
+
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+ Writefile(L_FILE_NAME,"%s","This endorsement extends the policy to provide coverage for reimbursement of rental expenses due to loss to a covered auto. The ")
+ L_LINE_COUNTER = L_LINE_COUNTER +1
+
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+ Writefile(L_FILE_NAME,"%s","required information may be shown below or elsewhere in the policy.")
+ L_LINE_COUNTER = L_LINE_COUNTER +2
+
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+ Writefile(L_FILE_NAME,"%s","The provisions of this endorsement apply only when the endorsement number is listed in the Declarations.")
+ L_LINE_COUNTER = L_LINE_COUNTER +1
+
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+140V")
+ Writefile(L_FILE_NAME,"%s","Except as provided below, all other provisions in this policy are unchanged.")
+ L_LINE_COUNTER = L_LINE_COUNTER +1
+
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+100V")
+ Writefile(L_FILE_NAME,"%s","<033>&a90h-60V<033>*c5400h5v0P")--Horizontal Line
+ L_LINE_COUNTER = L_LINE_COUNTER +1
+
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+160V")
+ Writefile(L_FILE_NAME,"%s","Policy # ")
+ Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+ Writefile(L_FILE_NAME,"%n",l_app_no)
+ L_LINE_COUNTER = L_LINE_COUNTER +2
+
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+240V")
+ Writefile(L_FILE_NAME,"%s","SCHEDULE")
+ L_LINE_COUNTER = L_LINE_COUNTER +2
+
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+160V")
+ Writefile(L_FILE_NAME,"%s","Description of Covered ")
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+ Writefile(L_FILE_NAME,"%s","Autos ")
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+ Writefile(L_FILE_NAME,"%s","Insured for Rental Reimbursement:")
+ L_LINE_COUNTER = L_LINE_COUNTER +2
+
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+ Writefile(L_FILE_NAME,"%s","Vehicle Number")
+ Writefile(L_FILE_NAME,"%s","<033>&a1000h+0V")
+ Writefile(L_FILE_NAME,"%s","Year")
+ Writefile(L_FILE_NAME,"%s","<033>&a1300h+0V")
+ Writefile(L_FILE_NAME,"%s","Make")
+ Writefile(L_FILE_NAME,"%s","<033>&a2320h+0V")
+ Writefile(L_FILE_NAME,"%s","Model")
+ Writefile(L_FILE_NAME,"%s","<033>&a4200h+120V")
+ L_LINE_COUNTER = L_LINE_COUNTER +1
+
+ while agqvehicle:app_no = l_app_no and
+       agqvehicle:vehicle_no = l_vehicle_no
+   {
+     If agqvehicle:rental_days > 0 then
+       {
+          --check the number of vehicles printed and make sure that
+          --the form fields are inserted when needed
+          If ((L_PRINTED_VEHICLE_ON_PAGE = L_FIRST_PAGE_TOTAL_VEHICLE) And
+              (L_PAGE_NUMER = 1)) Or
+             ((L_PRINTED_VEHICLE_ON_PAGE = L_TOTAL_VEHICLE_PER_PAGE) And
+              (L_PAGE_NUMER > 1)) Then
+            {
+              Writefile(L_FILE_NAME,"%s","<FF>")
+              L_PAGE_NUMER = L_PAGE_NUMER + 1
+              L_PRINTED_VEHICLE_ON_PAGE = 0
+              L_LINE_COUNTER = 0
+            }
+          Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+          Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+          Writefile(L_FILE_NAME,"%n",agqVEHICLE:VEHICLE_NO)
+          Writefile(L_FILE_NAME,"%s","<033>&a1000h+0V")
+          Writefile(L_FILE_NAME,"%n",agqVEHICLE:YEAR)
+          Writefile(L_FILE_NAME,"%s","<033>&a1300h+0V")
+          Writefile(L_FILE_NAME,"%s",agqVEHICLE:MAKE)
+          Writefile(L_FILE_NAME,"%s","<033>&a2320h+0V")
+          Writefile(L_FILE_NAME,"%s",agqVEHICLE:MODEL)
+          Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+          L_LINE_COUNTER = L_LINE_COUNTER +1
+          L_PRINTED_VEHICLE_ON_PAGE = L_PRINTED_VEHICLE_ON_PAGE + 1
+          L_TOTAL_VEHICLE = L_TOTAL_VEHICLE + 1
+        }
+    next agqvehicle
+  }
+
+ --vertical line
+ Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+ Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V<033>*c5a190b0P")
+
+ --vertical Line
+ Writefile(L_FILE_NAME,"%s","<033>&a4700h+0V<033>*c5a190b0P")
+
+ --horizontal line
+ Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V<033>*c2500h5v0P")
+ Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+ L_LINE_COUNTER = L_LINE_COUNTER +1
+
+    --The following will check the total number of vehicles and calculate if there
+    --is enough room on page for the chart. If not will place top part of chart
+    --on new page.
+
+   If (L_LINE_COUNTER + L_TOTAL_VEHICLE + 5 > L_MAX_LINE ) Then
+     {
+       Writefile(L_FILE_NAME ,"%s","<FF>")
+       L_LINE_COUNTER = 0
+     }
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3100h+0V")
+   Writefile(L_FILE_NAME,"%s","Maximum Limits")
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a2200h+30V<033>*c2500h5v0P")--horizontal Line
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+   L_LINE_COUNTER = L_LINE_COUNTER +1
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a1500h+0V")
+   Writefile(L_FILE_NAME,"%s","Described")
+   Writefile(L_FILE_NAME,"%s","<033>&a3100h+0V")
+   Writefile(L_FILE_NAME,"%s","Total Number ")
+   Writefile(L_FILE_NAME,"%s","<033>&a3900h+0V")
+   Writefile(L_FILE_NAME,"%s","Total Limit Any")
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+   L_LINE_COUNTER = L_LINE_COUNTER +1
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+   Writefile(L_FILE_NAME,"%s","Coverage")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a1420h+0V")
+   Writefile(L_FILE_NAME,"%s","Auto ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","Number")
+   Writefile(L_FILE_NAME,"%s","<033>&a2400h+0V")
+   Writefile(L_FILE_NAME,"%s","Per Day")
+   Writefile(L_FILE_NAME,"%s","<033>&a3250h+0V")
+   Writefile(L_FILE_NAME,"%s","of Days")
+   Writefile(L_FILE_NAME,"%s","<033>&a4000h+0V")
+   Writefile(L_FILE_NAME,"%s","One Period")
+   Writefile(L_FILE_NAME,"%s","<033>&a4900h+0V")
+   Writefile(L_FILE_NAME,"%s","Premium")
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+60V<033>*c5400h5v0P")--horizontal Line
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+   L_LINE_COUNTER = L_LINE_COUNTER +1
+
+   --the folloowing will place second part of chart starting with Collision onto
+   --a new page if the total number of vehicles under Comprehensive fills
+   --the first page
+
+   If (L_LINE_COUNTER + L_TOTAL_VEHICLE + 1 > L_MAX_LINE ) Then
+     {
+       Writefile(L_FILE_NAME ,"%s","<FF>")
+       L_LINE_COUNTER = 0
+     }
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+0V")
+   Writefile(L_FILE_NAME,"%s","Comprehensive -")
+   L_LINE_COUNTER = L_LINE_COUNTER +1
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+   Writefile(L_FILE_NAME,"%s","Coverage F")
+
+   Access agqvehicle,
+      Set agqvehicle:app_no    = l_app_no ,
+          agqvehicle:vehicle_no = l_vehicle_no, generic
+
+    while agqvehicle:app_no    = l_app_no  and
+          agqvehicle:vehicle_no = l_vehicle_no
+      {
+        If agqvehicle:rental_days > 0 then
+          {
+            --check the number of vehicles printed and make sure that
+            --the form fields are inserted when needed
+            If ((L_PRINTED_VEHICLE_ON_PAGE = L_FIRST_PAGE_TOTAL_VEHICLE) And
+                (L_PAGE_NUMER = 1)) Or
+                ((L_PRINTED_VEHICLE_ON_PAGE = L_TOTAL_VEHICLE_PER_PAGE) And
+                (L_PAGE_NUMER > 1)) Then
+              {
+                Writefile(L_FILE_NAME,"%s","<FF>")
+                L_PAGE_NUMER = L_PAGE_NUMER + 1
+                L_PRINTED_VEHICLE_ON_PAGE = 0
+                L_LINE_COUNTER = 0
+              }
+
+            l_total_any_period = agqVEHICLE:RENTAL_AMOUNT *
+                                 agqVEHICLE:RENTAL_DAYS
+
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a1650h+0V")
+            Writefile(L_FILE_NAME,"%n",agqVEHICLE:VEHICLE_NO)
+            Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+            Writefile(L_FILE_NAME,"%s","$")
+            Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+            Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:RENTAL_AMOUNT,"ZZZ,ZZZ"))
+            Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+            Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:RENTAL_DAYS,"Z,ZZZ"))
+            Writefile(L_FILE_NAME,"%s","<033>&a3900h+0V")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+            Writefile(L_FILE_NAME,"%s","$")
+
+            Writefile(L_FILE_NAME,"%s",Str(l_total_any_period,"Z,ZZZ"))
+
+            Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+            Writefile(L_FILE_NAME,"%s","$")
+            Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+            Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[15],"ZZZ,ZZZ"))
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER +1
+            L_PRINTED_VEHICLE_ON_PAGE = L_PRINTED_VEHICLE_ON_PAGE + 1
+          }
+         next agqvehicle
+       }
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a90h-90V<033>*c5400h5v0P")--horizontal Line
+   L_LINE_COUNTER = L_LINE_COUNTER +1
+
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+   Writefile(L_FILE_NAME,"%s","Collision -")
+   L_LINE_COUNTER = L_LINE_COUNTER +1
+
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+   Writefile(L_FILE_NAME,"%s","Coverage G")
+
+   Access agqvehicle,
+      Set agqvehicle:app_no    = l_app_no,
+          agqvehicle:vehicle_no = l_vehicle_no, generic
+
+           --check the number of vehicles printed and make sure that
+              --the form fields are inserted when needed
+   while agqvehicle:app_no    = l_app_no and
+         agqvehicle:vehicle_no = l_vehicle_no
+     {
+       If agqvehicle:rental_days > 0 then
+         {
+           If ((L_PRINTED_VEHICLE_ON_PAGE = L_FIRST_PAGE_TOTAL_VEHICLE) And
+           (L_PAGE_NUMER = 1)) Or
+           ((L_PRINTED_VEHICLE_ON_PAGE = L_TOTAL_VEHICLE_PER_PAGE) And
+           (L_PAGE_NUMER > 1)) Then
+             {
+               Writefile(L_FILE_NAME,"%s","<FF>")
+               L_PAGE_NUMER = L_PAGE_NUMER + 1
+               L_PRINTED_VEHICLE_ON_PAGE = 0
+               L_LINE_COUNTER = 0
+             }
+
+            l_total_any_period = agqVEHICLE:RENTAL_AMOUNT *
+                                 agqVEHICLE:RENTAL_DAYS
+
+           Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+           Writefile(L_FILE_NAME,"%s","<033>&a1650h+0V")
+           Writefile(L_FILE_NAME,"%n",agqVEHICLE:VEHICLE_NO)
+           Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+           Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+           Writefile(L_FILE_NAME,"%s","$")
+           Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+           Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:RENTAL_AMOUNT,"ZZZ,ZZZ"))
+           Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+           Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+           Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:RENTAL_DAYS,"Z,ZZZ"))
+           Writefile(L_FILE_NAME,"%s","<033>&a3900h+0V")
+           Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+           Writefile(L_FILE_NAME,"%s","$")
+           Writefile(L_FILE_NAME,"%s",Str(l_total_any_period,"Z,ZZZ"))
+           Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+           Writefile(L_FILE_NAME,"%s","$")
+           Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+           Writefile(L_FILE_NAME,"%s",Str(agqVEHICLE:VEHICLE_TOTALS[16],"ZZZ,ZZZ"))
+           Writefile(L_FILE_NAME,"%s","<NL>")
+           L_LINE_COUNTER = L_LINE_COUNTER +1
+           L_PRINTED_VEHICLE_ON_PAGE = L_PRINTED_VEHICLE_ON_PAGE + 1
+        }
+       next agqvehicle
+     }
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a90h-90V<033>*c5400h5v0P")--horizontal Line
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+120V")
+   L_LINE_COUNTER = L_LINE_COUNTER +1
+
+   --the following Access statement reaccesses agqVEHICLE since the above
+   --loop places you past the first vehicle number
+   Access agqVEHICLE,
+      Set agqVEHICLE:app_no    = l_app_no,
+          agqvehicle:vehicle_no = l_vehicle_no, generic
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a4000h+0V")
+   Writefile(L_FILE_NAME,"%s","Total Premium")
+
+   While agqVEHICLE:app_no    = l_app_no and
+         agqvehicle:vehicle_no = l_vehicle_no
+     {
+       L_TOTAL_PREMIUM = L_TOTAL_PREMIUM + agqVEHICLE:VEHICLE_TOTALS[9]
+       Next agqVEHICLE
+     }
+   Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","$")
+   Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+   Writefile(L_FILE_NAME,"%s",Str(L_TOTAL_PREMIUM,"ZZZ,ZZZ"))
+   Writefile(L_FILE_NAME,"%s","<033>&a90h+240V")
+   L_LINE_COUNTER = L_LINE_COUNTER +2
+
+   --the form from here down is done left to right instead of down each column
+   --In order to allow the form to flow if data pushes bottom of form to next page
+
+   If L_LINE_COUNTER + 24 > L_MAX_LINE Then
+     {
+       Writefile(L_FILE_NAME ,"%s","<FF>")
+       L_LINE_COUNTER =0
+     }
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+   Writefile(L_FILE_NAME,"%s","COVERAGE MODIFICATION")
+   Writefile(L_FILE_NAME,"%s","<033>&f0S")
+   Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+   Writefile(L_FILE_NAME,"%s","A.")
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+0V")
+   Writefile(L_FILE_NAME,"%s","Coverage")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+   Writefile(L_FILE_NAME,"%s","For the covered ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","autos ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","described in the Schedule of this")
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+   Writefile(L_FILE_NAME,"%s","endorsement, ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","we ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","will pay to reimburse ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","you ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","for expenses")
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+   Writefile(L_FILE_NAME,"%s","incurred by ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","you ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","for rental of a substitute ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","auto ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","because of")
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+   Writefile(L_FILE_NAME,"%s","otherwise covered comprehensive or collision ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","loss ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","to ")
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+   Writefile(L_FILE_NAME,"%s","such covered ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","auto.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+   Writefile(L_FILE_NAME,"%s","This coverage does not apply while there are reserve or")
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+   Writefile(L_FILE_NAME,"%s","spare ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","autos ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","available to ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","you ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","to use in ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","your ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","business /")
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+   Writefile(L_FILE_NAME,"%s","operations.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a200h+200V")
+   Writefile(L_FILE_NAME,"%s","B.")
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+0V")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","The PART III D - HOW ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","LOSSES ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","ARE SETTLED")
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+   Writefile(L_FILE_NAME,"%s","Condition is amended by the addition of the following:")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a400h+120V")
+   Writefile(L_FILE_NAME,"%s","1.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a600h+0V")
+   Writefile(L_FILE_NAME,"%s","We ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","will pay only for those expenses incurred for a")
+   Writefile(L_FILE_NAME,"%s","<033>&a600h+120V")
+   Writefile(L_FILE_NAME,"%s","period beginning 24 hours after the ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","loss ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","and ending at")
+   Writefile(L_FILE_NAME,"%s","<033>&a600h+120V")
+   Writefile(L_FILE_NAME,"%s","the shorter period of time determined by the lesser of ")
+   Writefile(L_FILE_NAME,"%s","<033>&a600h+120V")
+   Writefile(L_FILE_NAME,"%s","either:")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a600h+120V")
+   Writefile(L_FILE_NAME,"%s","a.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a800h+0V")
+   Writefile(L_FILE_NAME,"%s","The number of days reasonably required to")
+   Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+   Writefile(L_FILE_NAME,"%s","repair or replace the covered ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","auto. ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","If the ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","loss ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","is ")
+   Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+   Writefile(L_FILE_NAME,"%s","caused by theft, this number is added to the")
+   Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+   Writefile(L_FILE_NAME,"%s","number of days that it takes to locate the covered")
+   Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","auto ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","and return it to ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","you.")
+
+   Writefile(L_FILE_NAME,"%s","<033>&f1S")
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+   Writefile(L_FILE_NAME,"%s","b.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3400h+0V")
+   Writefile(L_FILE_NAME,"%s","The maximum number of days shown in the")
+   Writefile(L_FILE_NAME,"%s","<033>&a3400h+120V")
+   Writefile(L_FILE_NAME,"%s","Schedule of this endorsement.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3000h+180V")
+   Writefile(L_FILE_NAME,"%s","2.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+   Writefile(L_FILE_NAME,"%s","Our ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","maximum liability for this coverage is the lesser")
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+   Writefile(L_FILE_NAME,"%s","of the following amounts:")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+   Writefile(L_FILE_NAME,"%s","a.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3400h+0V")
+   Writefile(L_FILE_NAME,"%s","The actual necessary and reasonable expenses")
+   Writefile(L_FILE_NAME,"%s","<033>&a3400h+120V")
+   Writefile(L_FILE_NAME,"%s","incurred, subject to the per day limit shown in ")
+   Writefile(L_FILE_NAME,"%s","<033>&a3400h+120V")
+   Writefile(L_FILE_NAME,"%s","the Schedule of this endorsement; or")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+140V")
+   Writefile(L_FILE_NAME,"%s","b.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3400h+0V")
+   Writefile(L_FILE_NAME,"%s","The maximum total limit shown in the Schedule")
+   Writefile(L_FILE_NAME,"%s","<033>&a3400h+120V")
+   Writefile(L_FILE_NAME,"%s","of this endorsement.")
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+180V")
+   Writefile(L_FILE_NAME,"%s","The described period is not limited by expiration of")
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+   Writefile(L_FILE_NAME,"%s","the policy term.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3000h+180V")
+   Writefile(L_FILE_NAME,"%s","3.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+   Writefile(L_FILE_NAME,"%s","If the ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","loss ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","is caused by the theft of a covered ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+   Writefile(L_FILE_NAME,"%s","private ")
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+   Writefile(L_FILE_NAME,"%s","passenger type auto, we ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","will pay under this coverage ")
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+   Writefile(L_FILE_NAME,"%s","only for those rental reimbursement expenses that are ")
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+   Writefile(L_FILE_NAME,"%s","not covered under the PART III B - ")
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+   Writefile(L_FILE_NAME,"%s","TRANSPORTATION EXPENSE SUPPLEMENTAL ")
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+   Writefile(L_FILE_NAME,"%s","COVERAGE.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3000h+180V")
+   Writefile(L_FILE_NAME,"%s","4.")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+   Writefile(L_FILE_NAME,"%s","This rental reimbursement coverage is an additional ")
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+   Writefile(L_FILE_NAME,"%s","amount of insurance. No deductible applies to this ")
+   Writefile(L_FILE_NAME,"%s","<033>&a3200h+120V")
+   Writefile(L_FILE_NAME,"%s","coverage.")
+
+  If l_page_number > 1 then
+    {
+       Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+       Writefile(L_FILE_NAME,"%s","<033>&a2800h7200V")
+       Writefile(L_FILE_NAME,"%s","- ")
+       Writefile(L_FILE_NAME,"%n",L_PAGE_NUMBER + 1)
+       Writefile(L_FILE_NAME,"%s"," -")
+    }
+
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+   Writefile(L_FILE_NAME,"%s","<033>&a4300h7200V")
+   Writefile(L_FILE_NAME,"%s",Trun(SFSOPTEND:FORM_PRINT))
+   Writefile(L_FILE_NAME,"%s"," ")
+   Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_7)
+   Writefile(L_FILE_NAME,"%s",SFSOPTEND:EDITION_PRINT)
+   Writefile(L_FILE_NAME,"%s","<FF>")
+
+update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+End

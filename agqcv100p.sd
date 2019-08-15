@@ -1,0 +1,445 @@
+%%
+Program
+        Name = "agqcv100p" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+         Global Unsigned Ascii Number g_app_no[11] ,
+                                      G_QUOTE_NO[8] ;
+
+         global string g_company[10] ;
+
+         local unsigned ascii number l_county_have_city[1] ;
+
+         String L_PROCEDURE[20] ,
+                L_QUOTE_NO[8] ,
+                l_enter[1],
+                L_NEW_QUOTE_NO[8] ;
+
+Initialisation
+g_app_no   = val(commandline[1,11])
+G_QUOTE_NO = Val(commandline[12,19])
+
+-- plqpersonal FILE UPDATE LOGIC
+
+L_PROCEDURE = "plqpersonal FILE UPDATE"
+
+Access agqpersonal_alias, Set agqpersonal_alias:app_no = g_app_no, generic
+
+Repeat Begin
+    Exit If agqpersonal_alias:app_no <> g_app_no
+
+    Add PLQPERSONAL
+        Begin
+        PLQPERSONAL:QUOTE_NO                  = G_QUOTE_NO
+        PLQPERSONAL:PREM_NO                   = agqpersonal_alias:PREM_NO
+        PLQPERSONAL:BUILD_NO                  = agqpersonal_alias:BUILD_NO
+        plqpersonal:record_rdf                = agqpersonal_alias:record_rdf/raw
+        plqpersonal:windstorm_loss_mitigation = agqpersonal_alias:windstorm_loss_mitigation
+        plqpersonal:remove_mpl12              = agqpersonal_alias:remove_mpl12
+        plqpersonal:ifa_companion_discount    = agqpersonal_alias:ifa_companion_discount
+        plqpersonal:ifa_policy_no             = agqpersonal_alias:ifa_policy_no
+        plqpersonal:ifa_eff_date              = agqpersonal_alias:ifa_eff_date
+        plqpersonal:ifa_credit                = agqpersonal_alias:ifa_credit
+        plqpersonal:alarm_option_8            = agqpersonal_alias:alarm_option_8
+        plqpersonal:alarm_factor_8            = agqpersonal_alias:alarm_factor_8
+        plqpersonal:book_roll                 = agqpersonal_alias:book_roll
+        plqpersonal:none_apply                = agqpersonal_alias:none_apply
+        end
+
+    l_county_have_city = agqpersonal:county_have_city
+    Next agqpersonal_alias
+    End
+
+-- plqpersonal FILE UPDATE LOGIC
+
+L_PROCEDURE = "plqpersonal1 FILE UPDATE"
+
+Access agqpersonal_alias, Set agqpersonal_alias:app_no = g_app_no, generic
+
+Repeat Begin
+    Exit If agqpersonal_alias:app_no <> g_app_no
+
+    Add PLQPERSONAL1
+        Begin
+        PLQPERSONAL1:QUOTE_NO                  = G_QUOTE_NO
+        PLQPERSONAL1:PREM_NO                   = agqpersonal_alias:PREM_NO
+        PLQPERSONAL1:BUILD_NO                  = agqpersonal_alias:BUILD_NO
+        plqpersonal1:other_companion_credit_co = agqpersonal_alias:other_companion_co_name/raw
+        plqpersonal1:other_companion_credit    = agqpersonal_alias:other_companion_auto_credit
+        plqpersonal1:other_companion_5_credit  = agqpersonal_alias:other_companion_5_credit
+        plqpersonal1:other_companion_policy_no = agqpersonal_alias:other_companion_policy_no/raw
+        plqpersonal1:other_companion_eff_date  = agqpersonal_alias:other_companion_eff_date
+        plqpersonal1:other_companion_percent   = agqpersonal_alias:other_companion_percent
+        plqpersonal1:expansion                 = ""/raw
+        end
+
+    Next agqpersonal_alias
+    End
+
+-- plqpersonal2 FILE UPDATE LOGIC
+
+L_PROCEDURE = "plqpersonal2 FILE UPDATE"
+
+Access agqpersonal2_alias, Set agqpersonal2_alias:app_no = g_app_no, generic
+
+If agqpersonal2_alias:app_no = g_app_no then
+    begin
+    Add PLQpersonal2
+        Begin
+        PLQpersonal2:QUOTE_NO               = G_QUOTE_NO
+        PLQpersonal2:PREM_NO                = agqpersonal2_alias:PREM_NO
+        PLQpersonal2:BUILD_NO               = agqpersonal2_alias:BUILD_NO
+        PLQpersonal2:RECORD_RDF             = agqpersonal2_alias:RECORD_RDF/raw
+        plqpersonal2:county_have_city       = l_county_have_city
+        end
+    End
+
+-- plqaddin FILE UPDATE LOGIC
+
+L_PROCEDURE = "plqaddin FILE UPDATE"
+
+Access agqaddin1_alias, Set agqaddin1_alias:app_no = g_app_no, generic
+
+Repeat Begin
+    Exit If agqaddin1_alias:app_no <> g_app_no
+
+    Add PLQADDIN
+        Begin
+        PLQADDIN:QUOTE_NO               = G_QUOTE_NO
+        PLQADDIN:PREM_NO                = agqaddin1_alias:PREM_NO
+        PLQADDIN:BUILD_NO               = agqaddin1_alias:BUILD_NO
+        PLQADDIN:SUB_CODE               = agqaddin1_alias:SUB_CODE
+        PLQADDIN:RECORD_RDF             = agqaddin1_alias:RECORD_RDF/raw
+        End
+
+    Next agqaddin1_alias
+    End
+
+L_PROCEDURE = "plqaddprem FILE UPDATE"
+
+Access agqaddprem_alias, Set agqaddprem_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqaddprem_alias:app_no <> g_app_no
+
+    Add PLQADDPREM
+        Begin
+        PLQADDPREM:QUOTE_NO               = G_QUOTE_NO
+        PLQADDPREM:PREM_NO                = agqaddprem_alias:PREM_NO
+        PLQADDPREM:BUILD_NO               = agqaddprem_alias:BUILD_NO
+        PLQADDPREM:SUB_CODE               = agqaddprem_alias:SUB_CODE
+        PLQADDPREM:RECORD_RDF             = agqaddprem_alias:RECORD_RDF/raw
+        End
+
+    Next agqaddprem_alias
+    End
+
+L_PROCEDURE = "plqdaycare FILE UPDATE"
+
+Access agqdaycare_alias, Set agqdaycare_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqdaycare_alias:app_no <> g_app_no
+
+    Add PLQdaycare
+        Begin
+        PLQdaycare:QUOTE_NO               = G_QUOTE_NO
+        PLQdaycare:PREM_NO                = agqdaycare_alias:PREM_NO
+        PLQdaycare:BUILD_NO               = agqdaycare_alias:BUILD_NO
+        PLQdaycare:SUB_CODE               = agqdaycare_alias:SUB_CODE
+        PLQdaycare:RECORD_RDF             = agqdaycare_alias:RECORD_RDF/raw
+        End
+
+    Next agqdaycare_alias
+    End
+
+Access agqdesc1_alias, Set agqdesc1_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqdesc1_alias:app_no <> g_app_no
+
+    Add PLQDESC
+        Begin
+        PLQDESC:QUOTE_NO               = G_QUOTE_NO
+        PLQDESC:PREM_NO                = agqdesc1_alias:PREM_NO
+        PLQDESC:BUILD_NO               = agqdesc1_alias:BUILD_NO
+        PLQDESC:CODE                   = agqdesc1_alias:CODE/raw
+        PLQDESC:ARTICLE                = agqdesc1_alias:ARTICLE/raw
+        PLQDESC:SUB_CODE               = agqdesc1_alias:SUB_CODE
+        PLQDESC:RECORD_RDF             = agqdesc1_alias:RECORD_RDF/raw
+        End
+
+    Next agqdesc1_alias
+    End
+
+Access agqendorse1_alias, Set agqendorse1_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqendorse1_alias:app_no <> g_app_no
+
+    Add PLQENDORSE
+        Begin
+        PLQENDORSE:QUOTE_NO               = G_QUOTE_NO
+        PLQENDORSE:PREM_NO                = agqendorse1_alias:PREM_NO
+        PLQENDORSE:BUILD_NO               = agqendorse1_alias:BUILD_NO
+        PLQENDORSE:CODE                   = agqendorse1_alias:CODE
+        PLQENDORSE:SUB_CODE               = agqendorse1_alias:SUB_CODE
+        PLQENDORSE:RECORD_RDF             = agqendorse1_alias:RECORD_RDF/raw
+        End
+
+    Next agqendorse1_alias
+    End
+
+/*Access agqschedule_alias, Set agqschedule_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqschedule_alias:app_no <> g_app_no
+    Add PLQSCHEDULE
+      Begin
+        PLQSCHEDULE:QUOTE_NO               = G_QUOTE_NO
+        PLQSCHEDULE:PREM_NO                = agqschedule_alias:PREM_NO
+        PLQSCHEDULE:BUILD_NO               = agqschedule_alias:BUILD_NO
+        plqschedule:code                   = agqschedule_alias:code
+        PLQSCHEDULE:SUB_CODE               = agqschedule_alias:SUB_CODE
+        PLQSCHEDULE:RECORD_RDF             = agqschedule_alias:RECORD_RDF/raw
+      End
+
+    Next agqschedule_alias
+    End*/
+
+Access agqfarmliab_alias, Set agqfarmliab_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqfarmliab_alias:app_no <> g_app_no
+
+    Add PLQFARMLIAB
+        Begin
+        PLQFARMLIAB:QUOTE_NO               = G_QUOTE_NO
+        PLQFARMLIAB:PREM_NO                = agqfarmliab_alias:PREM_NO
+        PLQFARMLIAB:BUILD_NO               = agqfarmliab_alias:BUILD_NO
+        PLQFARMLIAB:RECORD_RDF             = agqfarmliab_alias:RECORD_RDF/raw
+        End
+
+    Next agqfarmliab_alias
+    End
+
+Access agqtotals_alias, Set agqtotals_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqtotals_alias:app_no <> g_app_no
+
+    Add PLQTOTALS
+        Begin
+        PLQTOTALS:QUOTE_NO               = G_QUOTE_NO
+        PLQTOTALS:PREM_NO                = agqtotals_alias:PREM_NO
+        PLQTOTALS:BUILD_NO               = agqtotals_alias:BUILD_NO
+        PLQTOTALS:RECORD_RDF             = agqtotals_alias:RECORD_RDF/raw
+        End
+
+    Next agqtotals_alias
+    End
+
+Access agqoutboard_alias, Set agqoutboard_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqoutboard_alias:app_no <> g_app_no
+
+    Add PLQOUTBOARD
+        Begin
+        PLQOUTBOARD:QUOTE_NO               = G_QUOTE_NO
+        PLQOUTBOARD:PREM_NO                = agqoutboard_alias:PREM_NO
+        PLQOUTBOARD:BUILD_NO               = agqoutboard_alias:BUILD_NO
+        PLQOUTBOARD:SUB_CODE               = agqoutboard_alias:SUB_CODE
+        PLQOUTBOARD:RECORD_RDF             = agqoutboard_alias:RECORD_RDF/raw
+        End
+
+    Next agqoutboard_alias
+    End
+
+Access agqhomebus_alias, Set agqhomebus_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqhomebus_alias:app_no <> g_app_no
+
+    Add PLQHOMEBUS
+        Begin
+        PLQHOMEBUS:QUOTE_NO               = G_QUOTE_NO
+        PLQHOMEBUS:PREM_NO                = agqhomebus_alias:PREM_NO
+        PLQHOMEBUS:BUILD_NO               = agqhomebus_alias:BUILD_NO
+        PLQHOMEBUS:SUB_CODE               = agqhomebus_alias:SUB_CODE
+        PLQHOMEBUS:RECORD_RDF             = agqhomebus_alias:RECORD_RDF/raw
+        End
+
+    Next agqhomebus_alias
+    End
+
+Access agqhomeaddin_alias, Set agqhomeaddin_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqhomeaddin_alias:app_no <> g_app_no
+
+    Add PLQHOMEADDIN
+        Begin
+        PLQHOMEADDIN:QUOTE_NO               = G_QUOTE_NO
+        PLQHOMEADDIN:PREM_NO                = agqhomeaddin_alias:PREM_NO
+        PLQHOMEADDIN:BUILD_NO               = agqhomeaddin_alias:BUILD_NO
+        PLQHOMEADDIN:TYPE                   = agqhomeaddin_alias:TYPE
+        PLQHOMEADDIN:SUB_CODE               = agqhomeaddin_alias:SUB_CODE
+        PLQHOMEADDIN:RECORD_RDF             = agqhomeaddin_alias:RECORD_RDF/raw
+        End
+
+    Next agqhomeaddin_alias
+    End
+
+-- plqstructures FILE UPDATE LOGIC
+
+L_PROCEDURE = "plqstructures FILE UPDATE"
+
+Access agqstructures_alias, Set agqstructures_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqstructures_alias:app_no <> g_app_no
+
+    Add PLQSTRUCTURES
+        Begin
+        PLQSTRUCTURES:QUOTE_NO               = G_QUOTE_NO
+        PLQSTRUCTURES:PREM_NO                = agqstructures_alias:PREM_NO
+        PLQSTRUCTURES:BUILD_NO               = agqstructures_alias:BUILD_NO
+        PLQSTRUCTURES:CODE                   = agqstructures_alias:CODE/raw
+        PLQSTRUCTURES:RECORD_RDF             = agqstructures_alias:RECORD_RDF/raw
+        End
+
+    Next agqstructures_alias
+    End
+
+-- plqstructloc FILE UPDATE LOGIC
+
+L_PROCEDURE = "plqstructloc FILE UPDATE"
+
+Access agqstructloc_alias, Set agqstructloc_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqstructloc_alias:app_no <> g_app_no
+
+    Add PLQSTRUCTLOC
+        Begin
+        PLQSTRUCTLOC:QUOTE_NO               = G_QUOTE_NO
+        PLQSTRUCTLOC:PREM_NO                = agqstructloc_alias:PREM_NO
+        PLQSTRUCTLOC:BUILD_NO               = agqstructloc_alias:BUILD_NO
+        PLQSTRUCTLOC:CODE                   = agqstructloc_alias:CODE/raw
+        PLQSTRUCTLOC:SUB_CODE               = agqstructloc_alias:SUB_CODE
+        PLQSTRUCTLOC:RECORD_RDF             = agqstructloc_alias:RECORD_RDF/raw
+        End
+
+    Next agqstructloc_alias
+    End
+
+-- plqumbrella FILE UPDATE LOGIC
+
+L_PROCEDURE = "plqumbrella FILE UPDATE"
+
+Access agqumbrella_alias, Set agqumbrella_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqumbrella_alias:app_no <> g_app_no
+
+    Add PLQUMBRELLA
+        Begin
+        PLQUMBRELLA:QUOTE_NO               = G_QUOTE_NO
+        PLQUMBRELLA:RECORD_RDF             = agqumbrella_alias:RECORD_RDF/raw
+        End
+
+    Next agqumbrella_alias
+    End
+
+/*L_PROCEDURE = "plqumdesc FILE UPDATE"
+
+Access agqumdesc_alias, Set agqumdesc_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqumdesc_alias:app_no <> g_app_no
+
+    Add PLQUMDESC
+        Begin
+        PLQUMDESC:QUOTE_NO               = G_QUOTE_NO
+        PLQUMDESC:SUB_CODE               = agqumdesc_alias:SUB_CODE
+        PLQUMDESC:RECORD_RDF             = agqumdesc_alias:RECORD_RDF/raw
+        End
+
+    Next agqumdesc_alias
+    End*/
+
+-- plqumdetail
+
+L_PROCEDURE = "plqumdetail FILE UPDATE"
+
+Access agqumdetail_alias, Set agqumdetail_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqumdetail_alias:app_no <> g_app_no
+
+    Add PLQUMDETAIL
+        Begin
+        PLQUMDETAIL:QUOTE_NO               = G_QUOTE_NO
+        PLQUMDETAIL:SUB_CODE               = agqumdetail_alias:SUB_CODE
+        PLQUMDETAIL:RECORD_RDF             = agqumdetail_alias:RECORD_RDF/raw
+        End
+
+    Next agqumdetail_alias
+    End
+
+-- plqwatercraft FILE UPDATE LOGIC
+
+L_PROCEDURE = "plqwatercraft FILE UPDATE"
+
+Access agqwatercraft_alias, Set agqwatercraft_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqwatercraft_alias:app_no <> g_app_no
+
+    Add PLQWATERCRAFT
+        Begin
+        PLQWATERCRAFT:QUOTE_NO               = G_QUOTE_NO
+        PLQWATERCRAFT:PREM_NO                = agqwatercraft_alias:PREM_NO
+        PLQWATERCRAFT:BUILD_NO               = agqwatercraft_alias:BUILD_NO
+        PLQWATERCRAFT:SUB_CODE               = agqwatercraft_alias:SUB_CODE
+        PLQWATERCRAFT:RECORD_RDF             = agqwatercraft_alias:RECORD_RDF/raw
+        End
+
+    Next agqwatercraft_alias
+    End
+
+-- plqworkerscomp FILE UPDATE LOGIC
+
+L_PROCEDURE = "plqworkerscomp FILE UPDATE"
+
+Access agqworkerscomp_alias,
+   Set agqworkerscomp_alias:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqworkerscomp_alias:app_no <> g_app_no
+
+    Add PLQWORKERSCOMP
+        Begin
+        PLQWORKERSCOMP:QUOTE_NO               = G_QUOTE_NO
+        PLQWORKERSCOMP:PREM_NO                = agqworkerscomp_alias:PREM_NO
+        PLQWORKERSCOMP:BUILD_NO               = agqworkerscomp_alias:BUILD_NO
+        PLQWORKERSCOMP:RECORD_RDF             = agqworkerscomp_alias:RECORD_RDF/raw
+        End
+
+    Next agqworkerscomp_alias
+    End
+
+Update
+
+Errors
+Writefile("agqcv100p.err","<NL>")
+Writefile("agqcv100p.err","%S",L_PROCEDURE)
+Writefile("agqcv100p.err","<NL>")
+Writefile("agqcv100p.err","%N%S agqcv100p errors ",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv100p.err","<NL>")
+Writefile("agqcv100p.err","<NL>")
+
+End

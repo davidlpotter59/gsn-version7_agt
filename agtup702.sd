@@ -1,0 +1,3729 @@
+%%
+Program
+        Name = "agtup702" ;
+        Type = "file" ;
+        Padcharacter = Space ;
+        Domain = "sfsdefault" ;
+
+        Global Unsigned Ascii Number g_app_no[11] ,
+                                     G_PREM_NO[4] ,
+                                     G_BUILD_NO[4] ,
+                                     G_STATE[2] ,
+                                     g_deductible[5] ;
+
+        global string g_code[7] ;
+
+        wdate l_eff_date1;
+
+        rwdate l_eff_date2;
+
+        Local Signed Ascii Number L_PREM[8]=0 ,
+                                  L_LOC_TOTAL[8]=0 ,
+                                  l_other_totals[8]=0,
+                                  L_END_PREMIUM[8]=0 ,
+                                  l_end_premium_3[6],
+                                  l_end_premium_2[6],
+                                  l_end_limit_3[5],
+                                  l_end_limit_2[5],
+                                  l_scheduled_Property[9],
+                                  l_unscheduled_Property[9],
+                                  l_scheduled_property_limit[8],
+                                  l_package_mod[4]/dec=3,
+                                  l_owners[2]=0,
+                                  L_IRPM_TOTAL[6]=0 ,
+                                  L_MISC_PREMIUM[8]=0 ,
+                                  L_TOTAL[8]=0 ,
+                                  L_TOTAL_1[8]=0,
+                                  L_TOTAL_2[8]=0,
+                                  L_TOTAL_END[8]=0 ,
+                                  L_COMM[8]=0/dec=4 ,
+                                  L_PACKAGE[8]=0/dec=4 ,
+                                  L_IRPM[8]=0/dec=4 ,
+                                  l_irpm_property_total[8],
+                                  l_property_irpm[6],
+                                  l_inland_irpm[6],
+                                  l_liability_irpm[6],
+                                  l_irpm_difference[3],
+                                  L_INSTALLMENT[4]=0 ,
+                                  L_RATE_FACTOR[1]=0/dec=2 ,
+                                  L_CREDIT_FACTOR[8]=0/dec=4 ,
+                                  L_FINAL_TOTAL[8]=0 ,
+                                  l_final_total1[8]=0,
+                                  L_WORKERS_COMP_TOTAL[8]=0,
+                                  L_UMBRELLA_TOTAL[8]=0,
+                                  L_INLAND_TOTAL[8]=0,
+                                  L_LIABILITY_TOTAL[8]=0,
+                                  l_additionalclass_premium[9]=0,
+                                  L_MAX_CREDITS[6]=0/decimals=4;
+
+        Local Unsigned Ascii Number L_MINIMUM[4]=0 ,
+                                    l_rate_only_once[1]=0,
+                                    l_total_all_locations[8],
+                                    l_rate_money_once[1]=0,
+                                    l_additional_class_doonlyonce[1],
+                                    l_counter[2],
+                                    L_TERRITORY_BUILDING[5]=0/decimals=3 ,
+                                    L_TERRITORY_CONTENTS[5]=0/decimals=3,
+                                    L_TERRITORY_EXPANDED[5]=0/decimals=3,
+                                    l_territory_sub_code[4]=10,
+                                    l_zipcode[9]=0,
+                                    l_property_endorsement_total[8],
+                                    l_liability_endorsement_total[8],
+                                    l_only_once[1]=0,
+                                    l_only_once1[1]=0,
+                                    l_only_once2[1]=0,
+                                    l_liability_found[1],
+                                    l_tpd6_terrorism_premium[8]/decimals=0,
+                                    l_total_payroll_premium[8],
+                                    L_CSEXEC_NUMBER[12] ,
+                                    l_computer_charge_per[4],
+                                    l_per_payroll[4],
+                                    L_TYPE[1]=0,
+                                    l_hvac_class_code[5],
+                                    l_found1[1]=0,
+                                    l_building_rate1[6]/dec=2,
+                                    l_rate1[6]/dec=2,
+                                    l_loop[4],
+                                    l_identity_theft[4]=0,
+                                    l_identity_factor[8]=0/dec=4,
+                                    l_system_rate[1]=0,
+                                    L_INCREASE_COV_C[8]=0/decimals=4,
+                                    l_total_additional_insured[3],
+                                    l_employee_charge[4]=0,
+                                    l_employee_deduct_factor[4]=0/dec=3,
+                                    l_employee_minimum[4]=0,
+                                    l_plumbing_hvac_factor[5]/dec=3,
+                                    l_csl_factor[6]/dec=3,
+                                    l_total_payroll[8],
+                                    l_no_employees[6]=0,
+                                    l_employee_limit[8]=0,
+                                    l_property_found[1]=0,
+                                    l_premium_1[6]=0,
+                                    l_premium_2[6]=0,
+                                    l_premium_3[6]=0,
+                                    l_premium_4[6]=0,
+                                    l_premium_5[6]=0,
+                                    l_premium_6[6]=0,
+                                    l_premium_7[6]=0,
+                                    l_premium_8[6]=0,
+                                    l_loss_limit[8]=0,
+                                    L_AR_LIMIT[8]=0,
+                                    L_TOTAL_LIABILITY[8]=0,
+                                    L_VALUE_LIMIT[8]=0,
+                                    l_not_subject_to_irpm[6],
+                                    I_CSEXEC_NUMBER[12] ,
+                                    L_SUB[2]=0,
+                                    L_EDP_LIMIT[8]=0,
+                                    L_SURCHARGE[6]=0,
+                                    L_SURCHARGE_FACTOR[8]=0/dec=6,
+                                    L_SURCHARGE_MINIMUM[2]=0,
+                                    L_GROUP[2]=0,
+                                    l_rate_manual_only_once[1]=0,
+                                    L_ZERO_LIMIT[8]=0,
+                                    L_TERRITORY_FACTOR[5]=0/decimals=3,
+                                    L_LIAB_DEDUCT_CREDIT[6]=0/decimals=4,
+                                    L_INLAND_MARINE_MINIMUM[4]=0,
+                                    L_IM_MINIMUM_TOTAL[4]=0 ;
+
+        Local String L_MISC[1]="N" ,
+                     l_add_endorsement[1],
+                     l_code_4[7],
+                     l_str_zipcode[9]="",
+                     l_code_5[7],
+                     L_MINIMUM_APPLIES[1]="N" ,
+                     L_CSEXEC_APPLICATION[25]="" ,
+                     l_default_form[30],
+                     l_policy_wide_first[1]="Y",
+                     l_reinsurance[1]="",
+                     l_display_field[1]="",
+                     l_first_deductible[1]="Y",
+                     L_CORRECT[1]="N",
+                     L_PRO_RATE="PRO RATA" ,
+                     L_USERNAME[15] ,
+                     l_filler[30],
+                     L_EC[1]="N",
+                     L_RECORD_KEY[2],
+                     L_VMM[1]="N",
+                     L_CODE[7],
+                     L_FIRST[1]="Y",
+                     l_first_helper[1]="Y",
+                     L_ENDORSEMENT_MPL47[1]="N",
+                     L_ENDORSEMENT_MPL49[1]="N",
+                     L_INLAND_MARINE_CODE[1]="N",
+                     L_INLAND_MARINE_UPDATED[1]="N",
+                     L_INSTALLMENT_WORDING[20]="Installment Charge",
+                     L_AGQEND_MINIMUM_PREMIUM[1]="N",
+                     L_ARTICLE[20] ,
+                     L_DWELLING[1]="N",
+                     L_FORM_EDITION[25],
+                     l_enter[1],
+                     l_waive_first[1]="Y",
+                     L_DESCRIPTION[75],
+                     L_MP[3]="MP" ;
+
+        local date l_surcharge_date[8] ;
+
+        Unsigned Ascii Number L_TERRORISM_PREMIUM[8]/decimals =0;
+        Unsigned Ascii Number L_TERROR_PERCENTAGE[5]/decimals=4;
+        Unsigned Ascii Number L_TERROR_MINIMUM[3];
+        Unsigned Ascii Number L_FOUND[1];
+        Unsigned Ascii Number L_SUB_CODE[4],
+                              l_flat_charge[5];
+        Wdate L_TERROR_EFF_DATE;
+        wdate l_sfspackage_eff_date;
+
+        Local Mmddyyyy Date L_CORRECT_DATE[8] ;
+        Local String L_FIRST_TIME[1]="Y";
+        Unsigned Ascii Number L_HOLD_PAYMENT_PLAN[4]=0;
+        Signed Ascii Number L_SUB_TOTAL[9]=0/decimals=2;
+        Unsigned Ascii Number L_PREM_NO[4];
+        Unsigned Ascii Number L_BUILD_NO[4],
+                              l_off_prem_limit[8];
+
+        Include "scsrate.var"
+
+        access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+screen entry
+G_APP_NO     = val(commandline[1,11])
+g_deductible = val(commandline[12,16])
+
+do location_total
+Access agqcontractor, Set agqcontractor:app_no = g_app_no, generic
+
+do policy_totals
+
+update
+
+procedure definition
+
+procedure location_total
+begin
+Access agqcontractor, Set agqcontractor:app_no   = g_app_no, generic
+
+while agqcontractor:app_no   = g_app_no
+    begin
+    access agqname, set agqname:app_no = g_app_no, generic
+
+    do check_for_default_form
+    Access SCSDEFAULT, Set SCSDEFAULT:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                           SCSDEFAULT:STATE            = agqCONTRACTOR:STATE,
+                           SCSDEFAULT:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                           scsdefault:filler           = l_default_form, generic
+
+    access agsdefault_scp, set agsdefault_scp:company_id = agqcontractor:company_id,
+                               agsdefault_scp:state = agqcontractor:state,
+                               agsdefault_scp:agent_no = agqcontractor:agent_no,
+                               agsdefault_scp:line_of_business = agqcontractor:line_of_business,
+                               agsdefault_scp:form = agqcontractor:form, generic
+
+    l_deductible = g_deductible
+    Do MINIMUM_PREMIUMS
+    Do LOC_TOTAL
+
+    do update_totals
+
+    next agqcontractor
+    end
+
+end
+
+procedure policy_totals
+begin
+Do TOTALS
+Do FINAL_TOTAL
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+If agqCONTRACTOR:REMOVE_TERROR_FORM = 0 and
+   agqmaster:exclude_terrorism = 0 Then  --they may want to r
+    begin
+    L_TERRORISM_PREMIUM = 0
+    Do GET_TERRORISM_PREMIUM
+    If L_IRPM_TOTAL <> 0 Then
+        L_final_total1 = L_IRPM_TOTAL + L_TERRORISM_PREMIUM
+    Else
+        L_FINAL_TOTAL1 = L_FINAL_TOTAL + L_TERRORISM_PREMIUM
+
+    Access agqMASTER, Set agqMASTER:app_no = G_app_no, Generic
+
+    Change agqMASTER
+        Begin
+        agqMASTER:TERRORISM_PREMIUM = l_terrorism_premium
+        agqmaster:total[16] = l_final_total1
+        End
+    end
+Else
+    Begin
+    do remove_terrorism_form
+    If L_IRPM_TOTAL <> 0 Then
+        L_final_total1 = L_IRPM_TOTAL
+    Else
+        L_FINAL_TOTAL1 = L_FINAL_TOTAL
+
+    if l_irpm_total <> 0 then
+        l_tpd6_terrorism_premium = l_irpm_total * l_terror_percentage
+    else
+        L_tpd6_TERRORISM_PREMIUM = L_FINAL_TOTAL * L_TERROR_PERCENTAGE
+
+    If L_tpd6_TERRORISM_PREMIUM <= L_TERROR_MINIMUM Then
+        begin
+        L_tpd6_TERRORISM_PREMIUM = L_TERROR_MINIMUM
+        end
+
+    Access agqMASTER, Set agqMASTER:app_no = G_app_no, Generic
+
+    Change agqMASTER
+        Begin
+        agqMASTER:TERRORISM_PREMIUM = 0
+        agqmaster:tpd6_terrorism_premium = l_tpd6_terrorism_premium
+        agqmaster:total[16] = l_final_total1
+        End
+    End
+
+do identity_theft
+do pliga
+Access AGQMASTER, set AGQMASTER:app_no = G_app_no, Generic
+
+if agqmaster:app_no = g_app_no then
+    begin
+    Change AGQMASTER
+        Begin
+        AGQMASTER:total[7] = L_identity_theft
+        End
+    end
+
+do update_policy_totals
+end
+
+procedure update_totals
+begin
+access agqtotals, set agqtotals:app_no     = agqcontractor:app_no,
+                      agqtotals:prem_no    = agqcontractor:prem_no,
+                      agqtotals:build_no   = agqcontractor:build_no,
+                      agqtotals:deductible = l_deductible, generic
+
+if agqtotals:app_no     = agqcontractor:app_no and
+   agqtotals:prem_no    = agqcontractor:prem_no and
+   agqtotals:build_no   = agqcontractor:build_no and
+   agqtotals:deductible = l_deductible then
+    begin
+    change agqtotals
+        begin
+        agqtotals:deductible_premium          = l_loc_total
+        end
+    end
+else
+    begin
+    add agqtotals
+        begin
+        agqtotals:app_no                      = agqcontractor:app_no
+        agqtotals:prem_no                     = agqcontractor:prem_no
+        agqtotals:build_no                    = agqcontractor:build_no
+        agqtotals:deductible                  = l_deductible
+        agqtotals:deductible_premium          = l_loc_total
+        end
+    end
+
+l_total_all_locations = l_loc_total +
+                        l_total_all_locations
+End
+
+
+procedure update_policy_totals
+begin
+l_total_all_locations = l_total_all_locations
+access agqtotals, set agqtotals:app_no     = agqcontractor:app_no,
+                      agqtotals:prem_no    = 0,
+                      agqtotals:build_no   = 0,
+                      agqtotals:deductible = l_deductible, generic
+
+if agqtotals:app_no     = agqcontractor:app_no and
+   agqtotals:prem_no    = 0 and
+   agqtotals:build_no   = 0 and
+   agqtotals:deductible = l_deductible then
+    begin
+    change agqtotals
+        begin
+        agqtotals:deductible_premium            = l_total_all_locations
+        agqtotals:terrorism_premium             = l_terrorism_premium
+        agqtotals:pliga                         = l_surcharge
+        agqtotals:identity_theft                = l_identity_theft
+--        agqtotals:minimum_premium               = l_agqtotals_minimum
+        end
+    end
+else
+    begin
+    add agqtotals
+        begin
+        agqtotals:app_no                        = agqcontractor:app_no
+        agqtotals:prem_no                       = 0
+        agqtotals:build_no                      = 0
+        agqtotals:deductible                    = l_deductible
+        agqtotals:deductible_premium            = l_total_all_locations
+        agqtotals:terrorism_premium             = l_terrorism_premium
+        agqtotals:pliga                         = l_surcharge
+        agqtotals:identity_theft                = l_identity_theft
+--        agqtotals:minimum_premium               = l_agqtotals_minimum
+        end
+    end
+
+End
+
+procedure pliga
+begin
+access sfssurcharge,
+   set sfssurcharge:company_id = agqcontractor:company_id,
+       sfssurcharge:state = agqcontractor:state,
+       sfssurcharge:line_of_business = agqcontractor:line_of_business, generic
+
+l_surcharge_date = 0
+while sfssurcharge:company_id = agqcontractor:company_id and
+      sfssurcharge:state = agqcontractor:state and
+      sfssurcharge:line_of_business = agqcontractor:line_of_business
+  begin
+        if (agqcontractor:eff_date >= sfssurcharge:eff_date and
+           (l_surcharge_date < sfssurcharge:eff_date or
+           l_surcharge_date = 0)) then
+            begin
+            l_surcharge_date    = sfssurcharge:eff_date
+            l_surcharge_factor  = sfssurcharge:surcharge_factor
+            l_surcharge_minimum = sfssurcharge:minimum_premium
+            end
+        next sfssurcharge
+  end
+
+if agqcontractor:eff_date >= 02.01.2015 then
+    L_SURCHARGE = (L_FINAL_TOTAL + l_irpm_total + l_identity_theft + l_terrorism_premium) * L_SURCHARGE_FACTOR
+else
+    L_SURCHARGE = (L_FINAL_TOTAL + l_irpm_total + l_identity_theft) * L_SURCHARGE_FACTOR
+
+If L_SURCHARGE < L_SURCHARGE_MINIMUM Then
+    L_SURCHARGE = L_SURCHARGE_MINIMUM
+
+If agqmaster:app_no = agqCONTRACTOR:app_no Then
+    Change agqmaster
+      Begin
+      agqmaster:surcharge = l_surcharge
+      end
+end
+
+
+procedure check_for_default_form
+
+BEGIN
+  Access agqend,
+     Set agqend:app_no = agqCONTRACTOR:app_no,
+         agqend:PREM_NO = agqCONTRACTOR:PREM_NO,
+         agqend:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+  while agqend:app_no = agqCONTRACTOR:app_no and
+        agqend:PREM_NO  = agqCONTRACTOR:PREM_NO and
+        agqend:BUILD_NO = agqCONTRACTOR:BUILD_NO
+    Begin
+      if agqend:code one of "MSC711" then
+        {
+          l_default_form = "MSC711D"
+        }
+      else
+        if agqend:code one of "MSC712" then
+          {
+            l_default_form = "MSC712D"
+          }
+      next agqend
+    END
+END
+
+Procedure GET_TERRORISM_PREMIUM
+
+Begin
+  Do ACCESS_SFSMSOTERROR
+  If L_TERROR_PERCENTAGE <> 0 Then
+    Begin
+      L_TERRORISM_PREMIUM = L_FINAL_TOTAL * L_TERROR_PERCENTAGE
+      If L_TERRORISM_PREMIUM <= L_TERROR_MINIMUM Then
+        Begin
+          L_TERRORISM_PREMIUM = L_TERROR_MINIMUM
+        End
+      Do ADD_TERRORISM_ENDORSEMENT
+    End
+End
+
+procedure remove_terrorism_form
+
+begin
+  Do ACCESS_SFSMSOTERROR
+  Access agqend,
+     Set agqend:app_no = G_app_no, Generic
+
+  While agqend:app_no = G_app_no
+    Begin
+      If agqend:CODE = SFSMSOTERROR:TERRORISM_FORM_TO_ADD Then
+        Delete agqend
+      If agqend:CODE = SFSMSOTERROR:TERRORISM_FORM_TO_REMOVE Then
+        Delete agqend
+      if agqend:code = Uppercase(sfsmsoterror:tpd_forms_to_print[2]) then
+        delete agqend
+
+    Next agqend
+  End
+
+  Access agqend,
+     Set agqend:app_no = G_app_no, Generic
+
+  Do SUBCODE
+  L_CODE = SFSMSOTERROR:TERRORISM_FORM_TO_REMOVE
+  Do ACCESS_KEY
+
+  Add agqend
+    Begin
+      agqend:app_no             = G_app_no
+      agqend:PREM_NO              = 0
+      agqend:BUILD_NO             = 0
+      agqend:SUB_CODE             = L_SUB_CODE
+      agqend:CODE                 = L_CODE
+      agqend:FORM_EDITION         = L_FORM_EDITION
+      agqend:PREMIUM              = 0
+      agqend:DESCRIPTION          = L_DESCRIPTION
+      agqend:policy_wide_form     = 1
+      agqend:terrorism_form       = 1
+    End
+
+end
+
+procedure access_scstrigger
+
+BEGIN
+  l_state = agqcontractor:state
+  Access scstrigger,
+     Set scstrigger:COMPANY_ID       = l_COMPANY_ID,
+         scstrigger:STATE            = L_STATE,
+         scstrigger:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS, Generic
+
+  while scstrigger:COMPANY_ID       = l_COMPANY_ID and
+        scstrigger:STATE            = L_STATE and
+        scstrigger:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS
+    {
+      If agqcontractor:EFF_DATE >= scstrigger:rate_DATE Then
+        Begin
+          l_eff_date2 = scstrigger:rate_date
+        End
+      Next scstrigger
+    }
+
+  Access scstrigger,
+     Set scstrigger:COMPANY_ID       = l_COMPANY_ID,
+         scstrigger:STATE            = L_STATE,
+         scstrigger:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS,
+         scstrigger:rate_date        = l_eff_date2, exact
+END
+
+Procedure ADD_TERRORISM_ENDORSEMENT
+
+Begin
+  Access agqend,
+     Set agqend:app_no = G_app_no, Generic
+
+  L_FOUND = 0
+  While agqend:app_no = G_app_no
+    Begin
+      If agqend:CODE = SFSMSOTERROR:TERRORISM_FORM_TO_ADD Then
+        {
+          Delete agqend
+        }
+      if agqend:code = sfsmsoterror:terrorism_form_to_remove then
+        {
+          delete agqend
+        }
+      if agqend:code = Uppercase(sfsmsoterror:tpd_forms_to_print[2]) then
+        {
+          delete agqend
+        }
+
+      Next agqend
+    End
+
+  Access agqend,
+     Set agqend:app_no = G_app_no, Generic
+
+  Do SUBCODE
+  L_CODE = SFSMSOTERROR:TERRORISM_FORM_TO_ADD
+  Do ACCESS_KEY
+
+  Add agqend
+    Begin
+      agqend:app_no             = G_app_no
+      agqend:PREM_NO              = 0
+      agqend:BUILD_NO             = 0
+      agqend:SUB_CODE             = L_SUB_CODE
+      agqend:CODE                 = SFSMSOTERROR:TERRORISM_FORM_TO_ADD
+      agqend:FORM_EDITION         = L_FORM_EDITION
+      agqend:PREMIUM              = L_TERRORISM_PREMIUM
+      agqend:DESCRIPTION          = L_DESCRIPTION
+      agqend:policy_wide_form     = 1
+      agqend:terrorism_form       = 1
+    End
+
+  Access agqmaster,
+     Set agqmaster:app_no = G_app_no, Generic
+
+  Change agqmaster
+    Begin
+      agqmaster:TERRORISM_PREMIUM = L_TERRORISM_PREMIUM
+    End
+End
+
+Procedure ACCESS_SFSMSOTERROR
+Begin
+L_STATE = agqCONTRACTOR:STATE
+Access SFSMSOTERROR, Set SFSMSOTERROR:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                         SFSMSOTERROR:STATE            = L_STATE,
+                         SFSMSOTERROR:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS, Generic
+
+While SFSMSOTERROR:COMPANY_ID       = agqcontractor:COMPANY_ID And
+      SFSMSOTERROR:STATE            = L_STATE And
+      SFSMSOTERROR:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+        Begin
+        If agqcontractor:EFF_DATE >= SFSMSOTERROR:EFF_DATE Then
+            Begin
+            L_TERROR_EFF_DATE   = SFSMSOTERROR:EFF_DATE
+            L_TERROR_PERCENTAGE = SFSMSOTERROR:PERCENTAGE
+            L_TERROR_MINIMUM    = SFSMSOTERROR:MINIMUM_PREMIUM
+            End
+
+        Next SFSMSOTERROR
+        End
+
+Access SFSMSOTERROR, Set SFSMSOTERROR:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                         SFSMSOTERROR:STATE            = L_STATE,
+                         SFSMSOTERROR:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                         SFSMSOTERROR:EFF_DATE         = L_TERROR_EFF_DATE, Exact
+End
+
+Procedure ACCESS_KEY
+
+Begin
+L_STATE = agqCONTRACTOR:STATE
+Access SFSOPTEND,
+   Set SFSOPTEND:COMPANY_ID       = agqcontractor:COMPANY_ID ,
+       SFSOPTEND:STATE            = L_STATE,
+       SFSOPTEND:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+       SFSOPTEND:CODE             = L_CODE, Generic
+
+While SFSOPTEND:COMPANY_ID       = agqcontractor:COMPANY_ID And
+      SFSOPTEND:STATE            = L_STATE And
+      SFSOPTEND:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS And
+      SFSOPTEND:CODE             = L_CODE
+  Begin
+    If (agqcontractor:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqcontractor:eff_date <= sfsoptend:exp_date or
+        sfsoptend:exp_date = 0)) Then
+      Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+      End
+    Next SFSOPTEND
+  End
+End
+
+Procedure SUBCODE
+Begin
+Access agqend_ALIAS,
+   Set agqend_ALIAS:app_no    = agqend:app_no ,
+       agqend_ALIAS:PREM_NO     = 0,
+       agqend_ALIAS:BUILD_NO    = 0, Generic
+
+L_SUB_CODE = 0
+while agqend_ALIAS:app_no = agqend:app_no and
+      agqend_ALIAS:PREM_NO  = 0 and
+      agqend_ALIAS:BUILD_NO = 0
+   begin
+   L_SUB_CODE = agqend_ALIAS:SUB_CODE
+
+   Next agqend_ALIAS
+   End
+
+l_sub_code = l_sub_code + 10
+End
+
+Procedure SUBCODE1
+
+Begin
+Access agqend,
+   Set agqend:app_no    = g_app_no ,
+       agqend:PREM_NO     = g_prem_no,
+       agqend:BUILD_NO    = g_build_no, Generic
+
+L_SUB_CODE = 0
+while agqend:app_no = agqend:app_no and
+      agqend:PREM_NO  = g_prem_no and
+      agqend:BUILD_NO = g_build_no
+   begin
+   L_SUB_CODE = agqend:SUB_CODE
+
+   Next agqend
+   End
+
+l_sub_code = l_sub_code + 10
+End
+
+
+procedure delos_liability_flat
+BEGIN
+L_STATE = agqCONTRACTOR:STATE
+
+access scspayrollcharge,
+     set scspayrollcharge:company_id       = agqcontractor:company_id,
+         scspayrollcharge:state            = l_state,
+         scspayrollcharge:line_of_business = agqcontractor:line_of_business, generic
+
+while scspayrollcharge:company_id       = agqcontractor:company_id and
+      scspayrollcharge:state            = l_state and
+      scspayrollcharge:line_of_business = agqcontractor:line_of_business
+    {
+    If (agqcontractor:EFF_DATE >= scspayrollcharge:EFF_DATE and
+       (agqcontractor:eff_date <= scspayrollcharge:exp_date or
+       scspayrollcharge:exp_date = 0)) Then
+        {
+        l_eff_date = scspayrollcharge:eff_date
+        }
+
+    next scspayrollcharge
+    }
+
+access scspayrollcharge,
+     set scspayrollcharge:company_id       = agqcontractor:company_id,
+         scspayrollcharge:state            = l_state,
+         scspayrollcharge:line_of_business = agqcontractor:line_of_business,
+         scspayrollcharge:eff_date         = L_eff_date, generic
+
+l_flat_charge    = scspayrollcharge:flat_charge
+while scspayrollcharge:company_id       = agqcontractor:company_id and
+      scspayrollcharge:state            = l_state and
+      scspayrollcharge:line_of_business = agqcontractor:line_of_business and
+      scspayrollcharge:eff_date         = L_eff_date
+    {
+    if scspayrollcharge:payroll_amount < l_total_payroll then
+        {
+        l_flat_charge = scspayrollcharge:flat_charge
+        }
+
+    next scspayrollcharge
+    }
+
+END
+
+procedure check_for_plumber_hvac_class_code
+BEGIN
+do get_hvac_factor_and_class_code
+
+Access agqclasscode_alias,
+     Set agqclasscode_alias:app_no = agqCONTRACTOR:app_no, generic
+
+while agqclasscode_alias:app_no = agqcontractor:app_no
+    {
+    if agqclasscode_alias:class_code one of l_hvac_class_code, 1980 and
+       agqliablimits:SPECIAL_PROGRAM_AGGREGATE one of 1 then
+        {
+        l_found1 = 1
+        }
+
+    next agqclasscode_alias
+    }
+
+if l_found1 one of 0 then  --class code 1980, 5980, was not on the policy must sethvac factor to 1
+    {
+    l_plumbing_hvac_factor = 1
+    }
+
+END
+
+procedure get_hvac_factor_and_class_code
+BEGIN
+Access SCSRATES,
+     Set SCSRATES:COMPANY_ID       = agqcontractor:COMPANY_ID,
+         SCSRATES:STATE            = L_STATE,
+         SCSRATES:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS, Generic
+
+L_RECORD_KEY = "RT"
+While SCSRATES:RECORD_KEY       = L_RECORD_KEY And
+      SCSRATES:COMPANY_ID       = agqcontractor:COMPANY_ID And
+      SCSRATES:STATE            = L_STATE And
+      SCSRATES:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+    Begin
+    If agqcontractor:EFF_DATE >= SCSRATES:EFF_DATE then                  --correct term is fou
+        {
+        l_plumbing_hvac_factor = SCSRATES:SPECIAL_PROGRAM_AGGREGATE_FACTOR
+        l_hvac_class_code      = scsrates:SPEC_CLASS_CODE_FOR_AGGR
+        }
+
+    Next SCSRATES
+    End
+
+if l_plumbing_hvac_factor = 0 then  --prevent have a factor of zero means scsrates needs a factor.
+    {
+    l_plumbing_hvac_factor = 1
+    }
+
+END
+
+Procedure identity_theft
+begin
+  Access agqcontractor_ALIAS,
+     Set agqcontractor_ALIAS:app_no = G_app_no,
+         agqcontractor_ALIAS:PREM_NO  = G_PREM_NO,
+         agqcontractor_ALIAS:BUILD_NO = G_BUILD_NO, Exact
+
+  L_STATE = agqcontractor_ALIAS:STATE
+  access scsrates,
+     set scsrates:company_id = agqcontractor:company_id,
+         scsrates:state = agqcontractor:state,
+         scsrates:line_of_business = agqcontractor:line_of_business, generic
+
+  while scsrates:company_id = agqcontractor:company_id and
+        scsrates:state = agqcontractor:state and
+        scsrates:line_of_business = agqcontractor:line_of_business
+    begin
+      if agqcontractor:eff_date >= scsrates:eff_date then
+        begin
+          l_identity_factor = scsrates:identity_factor
+        end
+      next scsrates
+    end
+  if l_irpm_total <> 0 then
+    {
+      l_identity_theft = (l_final_total + L_TERRORISM_PREMIUM + L_IRPM_TOTAL) * l_identity_factor
+    }
+  Else
+    {
+      l_identity_theft = (L_FINAL_TOTAL + L_TERRORISM_PREMIUM) * l_identity_factor
+    }
+end
+
+procedure rate_delos_liability_once
+
+BEGIN
+  Access agqCLASSCODE,
+     Set agqCLASSCODE:app_no = agqCONTRACTOR:app_no,
+         agqCLASSCODE:PREM_NO  = agqCONTRACTOR:PREM_NO,
+         agqCLASSCODE:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+  while agqclasscode:app_no = agqcontractor:app_no and
+        agqclasscode:prem_no  = agqcontractor:prem_no and
+        agqclasscode:build_no = agqcontractor:build_no
+    begin
+      l_class_code = agqclasscode:class_code
+      access scsclasscode,
+         set scsclasscode:company_id       = agqcontractor:company_id,
+             scsclasscode:state            = agqcontractor:state,
+             scsclasscode:line_of_business = agqcontractor:line_of_business,
+             scsclasscode:class_code       = l_class_code, generic
+
+      while scsclasscode:company_id       = agqcontractor:company_id and
+            scsclasscode:state            = agqcontractor:state and
+            scsclasscode:line_of_business = agqcontractor:line_of_business and
+            scsclasscode:class_code       = l_class_code
+        begin
+          if (agqcontractor:eff_date >= scsclasscode:eff_date and
+             (agqcontractor:eff_date <= scsclasscode:exp_date or
+             scsclasscode:exp_date = 0)) then
+            {
+              change agqclasscode
+                begin
+                  agqclasscode:property_rate_group = scsclasscode:property_rate_group
+                  agqclasscode:liability_prem_no   = scsclasscode:liability_prem_no
+                  agqclasscode:print_class_code    = scsclasscode:print_class_code
+                end
+            }
+          next scsclasscode
+        end
+      next agqclasscode
+    end
+
+Access agqCLASSCODE,
+   Set agqCLASSCODE:app_no = agqCONTRACTOR:app_no,
+       agqCLASSCODE:PREM_NO  = agqCONTRACTOR:PREM_NO,
+       agqCLASSCODE:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+Access agqLIABLIMITS,
+   Set agqLIABLIMITS:app_no = agqCONTRACTOR:app_no, Generic
+
+if agqLIABLIMITS:app_no = agqCONTRACTOR:app_no then
+  {
+    l_rate_manual_only_once = 1  --does this only once
+    if agqliablimits:WAIVE_DEDUCTIBLE one of 0 then
+      {
+        L_WAIVE_DEDUCTIBLE = 0
+        change agqliablimits
+          BEGIN
+            waive_deductible_charge = 0
+         END
+      }
+    ELSE
+      {
+        if l_waive_first = "Y" then
+          {
+            l_waive_first = "N"
+            change agqliablimits
+              BEGIN
+                waive_deductible_charge = l_waive_deductible
+              END
+            l_total_liability = L_TOTAL_LIABILITY + l_waive_deductible
+            l_not_subject_TO_IRPM = l_not_subject_TO_IRPM + L_WAIVE_DEDUCTIBLE
+          }
+      }
+
+  If agqLIABLIMITS:OCCURRENCE <> 0 then
+    Begin
+      Access agqCONTRACTOR_ALT,
+         Set agqCONTRACTOR_ALT:app_no = agqCONTRACTOR:app_no,
+             agqcontractor_alt:prem_no  = agqcontractor:prem_no,
+             agqcontractor_alt:build_no = agqcontractor:build_no, Generic
+
+      do check_for_plumber_hvac_class_code   --see if hvac/plumber class in found and then apply factor
+
+      While agqCONTRACTOR_ALT:app_no = agqCONTRACTOR:app_no and
+            agqcontractor_alt:prem_no  = agqcontractor:prem_no and
+            agqcontractor_alt:build_no = agqcontractor:build_no
+        {
+          Access agqCLASSCODE,
+             Set agqCLASSCODE:app_no = agqCONTRACTOR_alt:app_no,
+                 agqCLASSCODE:PREM_NO  = agqCONTRACTOR_alt:PREM_NO,
+                 agqCLASSCODE:BUILD_NO = agqCONTRACTOR_alt:BUILD_NO, Generic
+
+          while agqclasscode:app_no = agqcontractor_alt:app_no and
+                agqclasscode:prem_no  = agqcontractor_alt:prem_no and
+                agqclasscode:build_no = agqcontractor_alt:build_no
+            begin
+              l_class_code = agqclasscode:class_code
+              access scsclasscode,
+                 set scsclasscode:company_id       = agqcontractor:company_id,
+                     scsclasscode:state            = agqcontractor:state,
+                     scsclasscode:line_of_business = agqcontractor:line_of_business,
+                     scsclasscode:class_code       = l_class_code, generic
+
+              while scsclasscode:company_id       = agqcontractor:company_id and
+                    scsclasscode:state            = agqcontractor:state and
+                    scsclasscode:line_of_business = agqcontractor:line_of_business and
+                    scsclasscode:class_code       = l_class_code
+                begin
+                  if (agqcontractor:eff_date >= scsclasscode:eff_date and
+                     (agqcontractor:eff_date <= scsclasscode:exp_date or
+                      scsclasscode:exp_date = 0)) then
+                    {
+                      l_per_payroll = scsclasscode:per_payroll
+                      Access agqLIABLIMITS,
+                         Set agqLIABLIMITS:app_no = agqCONTRACTOR_alt:app_no, Generic
+
+                      l_occurrence = agqliablimits:occurrence
+                   --   write("%c%S%n",01001,"l_occurance",L_occurrence)
+                      for l_loop = 1 to 3
+                        {
+                          if l_occurrence = scsclasscode:csl_limit[l_loop] then
+                            {
+                              l_csl_factor = scsclasscode:csl_factor[l_loop]
+                   --         Write("%c"%s","<033>&a200h+120V")
+                   --         write("%c%S%n",02001,"Rate Per 100:",L_csl_factor)
+                            }
+                        }
+                    }
+                  next scsclasscode
+                end
+              do check_for_liability_and_property  --must have liability and property to have this package mod
+              do get_package_mod_factor
+              change agqclasscode   --update the payroll_premium for each class code
+                BEGIN
+                  agqclasscode:per_payroll     = l_per_payroll
+                  agqclasscode:csl_factor      = l_csl_factor
+                  agqclasscode:hvac_factor     = l_plumbing_hvac_factor
+                  agqclasscode:payroll_premium = agqclasscode:payroll_amount divide l_per_payroll * l_csl_factor * l_package_mod  * l_plumbing_hvac_factor
+                  agqclasscode:package_mod     = l_package_mod
+                  l_total_liability = l_total_liability + agqclasscode:payroll_premium   --payrol flat charge added in yet
+                  -- write("%c%S%n",03001,"payroll_premium",agqclasscode:payroll_amount divide l_per_payroll)
+                  l_total_payroll_premium = l_total_payroll_premium + agqclasscode:payroll_premium
+
+                  l_total_payroll = l_total_payroll + agqclasscode:payroll_amount
+                END
+              next agqclasscode
+            end
+          next agqcontractor_alt
+        }
+
+
+      -- l_rate_manual_only_once = 1
+          Access agqadditionalCLASS,
+             Set agqadditionalCLASS:app_no = agqCONTRACTOR:app_no, Generic
+
+          while agqadditionalclass:app_no = agqCONTRACTOR:app_no
+            BEGIN
+              if agqadditionalclass:exposure_type one of "P" then   --payroll needs to be added in on manual rating
+                {
+                  l_total_payroll = l_total_payroll + agqadditionalclass:exposure_base
+                }
+              next agqadditionalclass
+            end
+
+      Access agqCLASSCODE,
+         Set agqCLASSCODE:app_no = agqCONTRACTOR:app_no,
+             agqCLASSCODE:PREM_NO  = agqCONTRACTOR:PREM_NO,
+             agqCLASSCODE:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+      Do Delos_liability_flat  --get flat charge after all the payrolls for all class codes are added together.
+      do check_for_liability_and_property  --must have liability and property to have this package mod
+      do get_package_mod_factor
+      access agqmaster,
+         set agqmaster:app_no = g_app_no, generic
+
+      if agqmaster:app_no = agqcontractor:app_no then   --getting liability premium total and saving it to agqmaster:other_total[1]
+        {
+          change agqmaster
+            begin
+              agqmaster:other_totals[1] = l_total_liability     --WAIVE AMOUNT IS ALREADY ADDED IN
+              if l_only_once one of 0 then
+                {
+                  l_only_once = 1
+                  l_not_subject_to_irpm = l_not_subject_to_irpm + l_flat_charge
+                }
+              agqmaster:other_totals[2] = l_flat_charge                                --payroll flat charge
+            end
+        }
+    End
+  }
+END
+
+procedure Get_territory_factor
+
+BEGIN
+  L_TERRITORY_BUILDING = 0
+  L_TERRITORY_CONTENTS = 0
+  L_TERRITORY_EXPANDED = 0
+  access agqlocation,
+     set agqlocation:app_no = agqcontractor:app_no,
+         agqlocation:prem_no  = agqcontractor:prem_no,
+         agqlocation:build_no = agqcontractor:build_no, generic
+
+  access sfsterritory,
+     set sfsterritory:company_id       = l_company_Id,
+         sfsterritory:state            = l_state,
+         sfsterritory:line_of_business = l_line_of_business,
+         sfsterritory:county           = agqcontractor:county,
+         sfsterritory:territory        = agqcontractor:county, generic
+
+  l_territory   = sfsterritory:territory_group[1]
+  l_str_zipcode = str(agqcontractor:zipcode[1,5])
+  l_zipcode     = val(l_str_zipcode)
+  L_EFF_DATE    = agqcontractor:EFF_DATE
+/*  write("<014>")
+  write("%c%s%s",01001,"company",L_COMPANY_ID)
+  write("%c%s%n",02001,"state",L_STATE)
+  write("%c%s%n",03001,"lob",L_LINE_OF_BUSINESS)
+  write("%c%s%n",04001,"l_zipcode",l_zipcode)
+  write("%c%s%n",05001,"l_territory",L_TERRITORY)
+  write("%c%s%n",06001,"l_territory_sub-code",l_territory_sub_code)*/
+  include "sfsterritory1.inc"
+  if l_territory_building = 0 then
+    begin
+      include "sfsterrfactor.inc"
+--      write("%c%s%n",01001,"contents_RATE",L_TERRITORY_CONTENTS)
+--      write("%c%s%n",02001,"property_RATE",L_TERRITORY_building)
+    end
+END
+
+Procedure LOC_TOTAL
+
+Begin
+access agqmaster, set agqmaster:app_no = agqcontractor:app_no, generic
+
+if agqmaster:form <> agqcontractor:form then
+    begin
+    change agqmaster
+        begin
+        agqmaster:form = agqcontractor:form
+        end
+    end
+
+  L_COMPANY_ID       = agqcontractor:COMPANY_ID
+  L_STATE            = agqCONTRACTOR:STATE
+  L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+
+  Do MISC_RATES  --get local varibles that are declared
+  Access agqLIABLIMITS,
+     Set agqLIABLIMITS:app_no = agqCONTRACTOR:app_no, exact
+
+  if agqliablimits:app_no = agqCONTRACTOR:app_no and l_rate_only_once = 0 Then
+    {
+      l_rate_only_once = 1
+      do rate_delos_liability_once
+    }
+
+If agqCONTRACTOR:BUILDING_LIMIT <> 0 Then
+  Begin
+    L_PREMIUM = 0
+    L_COVERAGE = "A"
+    L_LIMIT = agqCONTRACTOR:BUILDING_LIMIT
+    Do CALC_PROPERTY_PREM
+--    write("%c%s%n",01001,"property_RATE",L_PROPERTY_RATE)
+    L_INFLATION_GUARD = agqCONTRACTOR:INFLATION_GUARD[1]
+    Do INFLATION_GUARD
+--    write("%c%s%n",01021,"inflation_RATE",L_inflation_factor)
+    Do ALARM_DISCOUNT
+--    write("%c%s%n",01041,"fire_factor-->",L_fire_factor)
+    Do DEDUCTIBLE
+--    write("%c%s%n",01061,"deductible",l_deductible_factor)
+    Do WIND_DEDUCTIBLE
+
+    L_COMPANY_ID       = agqcontractor:COMPANY_ID
+    L_STATE            = agqCONTRACTOR:STATE
+    L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+    do check_for_liability_and_property  --must have liability and property to have this package mod
+    do get_package_mod_factor
+
+--    write("%c%s%n",02001,"L_packagemod",l_package_mod)
+--    write("%c%s%n",1005,"territory factor",agqcontractor:RATING_TERRITORY_FACTOR)
+    L_PREMIUM = ((agqCONTRACTOR:BUILDING_LIMIT Divide L_PER) * L_PROPERTY_RATE)
+    l_building_rate = l_property_rate
+
+    if l_state one of 29,7 then
+      {
+        L_PREMIUM = L_PREMIUM * L_DEDUCTIBLE_FACTOR * l_package_mod * agqcontractor:RATING_TERRITORY_FACTOR * L_WIND_DEDUCT_FACTOR *
+                L_INFLATION_FACTOR * L_FIRE_FACTOR * agqcontractor:special_exposure_factor
+      }
+    else
+      {
+        do Get_territory_factor
+        L_PREMIUM = L_PREMIUM * L_DEDUCTIBLE_FACTOR * l_package_mod * l_territory_building  * L_WIND_DEDUCT_FACTOR *
+                L_INFLATION_FACTOR * L_FIRE_FACTOR
+      }
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:BUILDING_PREMIUM = L_PREMIUM
+   --     write("%c%s-->%n",03041,"agqcontractor_alias:BUILDING_PREMIUM",l_premium)
+        L_BUILDING_PREMIUM = L_BUILDING_PREMIUM + L_PREMIUM
+      End
+  End
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:BUILDING_PREMIUM = 0
+        L_BUILDING_PREMIUM = 0
+        End
+    End
+
+If agqCONTRACTOR:PROPERTY_LIMIT <> 0 Then
+  Begin
+    L_PREMIUM = 0
+    l_deductible_factor = 1
+    l_wind_deduct_factor = 1
+    l_inflation_factor  = 1
+    l_fire_factor       = 1
+    l_package_mod       = 1
+    l_burglary_factor    = 1
+    L_COVERAGE = "B"
+    L_LIMIT = agqCONTRACTOR:PROPERTY_LIMIT
+    Do CALC_PROPERTY_PREM
+--    write("%c%s%n",18001,"L_PROPERTY_RATE",L_PROPERTY_RATE)
+    L_INFLATION_GUARD = agqCONTRACTOR:INFLATION_GUARD[2]
+    Do INFLATION_GUARD
+    Do ALARM_DISCOUNT
+--    write("%c%s%n",18041,"L_fire_factor",L_fire_factor)
+    Do DEDUCTIBLE
+--    write("%c%s%n",18061,"L_deductible",l_deductible_factor)
+    Do WIND_DEDUCTIBLE
+--    write("%c%s%n",19061,"L_wind",l_wind_deduct_factor)
+    do check_for_liability_and_property  --must have liability and property to have this package mod
+    do get_package_mod_factor
+--    write("%c%s%n",18025,"packagemod",l_package_mod)
+    l_property_rate_1 = l_property_rate
+    if l_state one of 29,7 then
+      {
+        l_property_adjustments = l_property_rate * l_deductible_factor * l_wind_deduct_factor *
+                             l_inflation_factor * l_fire_factor * agqcontractor:RATING_TERRITORY_FACTOR *
+                             l_package_mod * agqcontractor:special_exposure_factor
+      }
+    else
+      {
+        do Get_territory_factor
+
+--        write("%c%s%n",19021,"RATING_TERRITORY_FACTOR",l_territory_contents)
+        l_property_adjustments = l_property_rate * l_deductible_factor * l_wind_deduct_factor *
+                             l_inflation_factor * l_fire_factor * L_TERRITORY_CONTENTS *
+                             l_package_mod
+--        write("%c%s%n",20001,"l_property_adjustment",l_property_adjustments)
+      }
+--    write("%c%s%n",19001,"L_wind_factor",l_wind_deduct_factor)
+--    write("%c%s%n",19061,"L_burglary_factor",l_burglary_factor)
+--    write("%c%s%n",20031,"L_fire_factor",l_fire_factor)
+--    write("%c%s%n",20061,"L_inflation_factor",l_inflation_factor)
+--    write("%c%s%n",20001,"L_property_adjustments",l_property_adjustments)
+    L_PREMIUM = (agqCONTRACTOR:PROPERTY_LIMIT Divide L_PER) * L_PROPERTY_adjustments
+
+--    write("%c%s%n",17041,"L_premium",l_premium)
+
+    If agqmaster:FORM = 3 Then   --expanded coverage
+      Begin
+        Access agqCLASSCODE,
+           Set agqCLASSCODE:app_no = agqCONTRACTOR:app_no,
+               agqCLASSCODE:PREM_NO  = agqCONTRACTOR:PREM_NO,
+               agqCLASSCODE:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+        L_LIMIT = agqCONTRACTOR:PROPERTY_LIMIT
+        l_deductible_factor = 1
+        l_wind_deduct_factor = 1
+        l_inflation_factor  = 1
+        l_fire_factor       = 1
+        l_package_mod       = 1
+        l_burglary_factor    = 1
+
+        Do CALC_EXPANDED
+        Do ALARM_DISCOUNT
+--        write("%c%s%n%s%n",18021,"L_alarm_factor",L_fire_factor,"-->",l_BURGLARY_factor)
+        Do DEDUCTIBLE
+--        write("%c%s%n",18067,"deductible",l_deductible_factor)
+        do check_for_liability_and_property  --must have liability and property to have this package mod
+        do get_package_mod_factor
+--        write("%c%s%n",18001,"L_packagemod",l_package_mod)
+--        write("%c%s%n",18041,"L_expanded_premium",l_expanded_premium)
+--        write("%c%s%n",19051,"L_fire_factor",l_fire_factor)
+
+        if l_state one of 29,7 then
+          {
+            l_expanded_premium = L_expanded_premium * l_deductible_factor *
+                                 agqcontractor:RATING_TERRITORY_FACTOR * l_package_mod * L_BURGLARY_FACTOR *
+                                 agqcontractor:special_exposure_factor
+          }
+        else
+          {
+            do Get_territory_factor
+--            write("%c%s%n",19001,"terr factor",L_TERRITORY_EXPANDED)
+            l_expanded_premium = L_expanded_premium * l_deductible_factor *
+                                 L_TERRITORY_EXPANDED * l_package_mod * L_BURGLARY_FACTOR
+          }
+--        write("%c%s%n",19021,"L_expanded_premium",l_expanded_premium)
+      End
+
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:PROPERTY_RATE = L_PROPERTY_RATE
+        agqCONTRACTOR_ALIAS:PROPERTY_PREMIUM = L_PREMIUM
+        L_PROPERTY_PREMIUM =  L_PROPERTY_PREMIUM + L_PREMIUM
+        If agqmaster:FORM = 3 Then
+          Begin
+            agqCONTRACTOR_ALIAS:PROPERTY_PREMIUM = l_premium
+            agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM = L_EXPANDED_PREMIUM
+            L_PROPERTY_PREMIUM =  L_PROPERTY_PREMIUM + l_expanded_premium
+          End
+        Else
+          {
+            agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM = 0
+          }
+        End
+    End
+Else
+  Begin
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:PROPERTY_PREMIUM = 0
+        agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM = 0
+        L_PROPERTY_PREMIUM = 0
+        L_EXPANDED_PREMIUM = 0
+      End
+  End
+
+
+If agqcontractor:delete_loss_limit one of 1 then
+  {
+--    write("%c%s%n",19021,"agqCONTRACTOR:property_PREMIUM",agqCONTRACTOR:property_PREMIUM)
+--    write("%c%s%n",20021,"agqCONTRACTOR:expanded_PREMIUM",agqCONTRACTOR:expanded_PREMIUM)
+    if agqCONTRACTOR:BUILDING_PREMIUM >= (agqCONTRACTOR:property_PREMIUM + agqCONTRACTOR:EXPANDED_PREMIUM) and
+       agqCONTRACTOR:BUILDING_PREMIUM > 0 then
+      {
+        change agqcontractor_alias
+          {
+            agqcontractor_alias:loss_premium = agqCONTRACTOR:building_PREMIUM * (1 - l_coverage_d) * -1
+          }
+      }
+    Else
+      {
+        if agqCONTRACTOR:BUILding_PREMIUM < (agqCONTRACtoR:property_PREMIUM + agqCONTRACTOR:EXPANDED_PREMIUM) and
+           agqCONTRACTOR:property_premium + agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM > 0 then
+          {
+            change agqcontractor_alias
+              {
+                agqcontractor_alias:loss_premium = (agqCONTRACTOR:property_PREMIUM + agqCONTRACTOR:EXPANDED_PREMIUM) * (1 - l_coverage_d)  * -1
+              }
+          }
+      }
+  }
+else
+  {
+    change agqcontractor_alias
+      {
+        agqcontractor_alias:loss_premium = 0
+      }
+  }
+
+
+If agqCONTRACTOR:PERSONAL_LIMIT <> 0 Then
+  Begin
+    L_PREMIUM = 0
+    L_COVERAGE = "B"
+--    write("%c%s%n",19001,"L_personal_limit",agqCONTRACTOR:PERSONAL_LIMIT)
+    L_LIMIT = agqCONTRACTOR:PERSONAL_LIMIT
+--    write("%c%s%n",19031,"L_personal_limit",L_limit)
+    Do CALC_PROPERTY_PREM
+--    write("%c%s%n",19001,"L_PROPERTY_RATE",L_PROPERTY_RATE)
+    L_INFLATION_GUARD = agqCONTRACTOR:INFLATION_GUARD[2]
+    Do INFLATION_GUARD
+    Do ALARM_DISCOUNT
+--    write("%c%s%n%s%n",19041,"L_alarm_factor",L_fire_factor,"-->",l_BURGLARY_factor)
+    Do DEDUCTIBLE
+--    write("%c%s%n",19051,"L_deductible",l_deductible_factor)
+    Do WIND_DEDUCTIBLE
+
+    L_COMPANY_ID       = agqcontractor:COMPANY_ID
+    L_STATE            = agqCONTRACTOR:STATE
+    L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+    do check_for_liability_and_property  --must have liability and property to have this package mod
+    do get_package_mod_factor
+    if l_state one of 29,7 then
+      {
+        l_property_adjustments = l_property_rate * l_deductible_factor * l_wind_deduct_factor *
+                             l_inflation_factor * l_fire_factor * agqcontractor:RATING_TERRITORY_FACTOR *
+                             l_package_mod * agqcontractor:special_exposure_factor
+      }
+    else
+      {
+        do Get_territory_factor
+        l_property_adjustments = l_property_rate * l_deductible_factor * l_wind_deduct_factor *
+                             l_inflation_factor * l_fire_factor * L_TERRITORY_contents *
+                             l_package_mod
+      }
+
+
+    L_PREMIUM = (agqCONTRACTOR:personal_LIMIT Divide L_PER) * L_PROPERTY_adjustments
+
+    If agqmaster:FORM = 3 Then
+      Begin
+        Access agqCLASSCODE,
+           Set agqCLASSCODE:app_no = agqCONTRACTOR:app_no,
+               agqCLASSCODE:PREM_NO = agqCONTRACTOR:PREM_NO,
+               agqCLASSCODE:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+--        write("%c%s%n",19001,"L_personal_limit",agqCONTRACTOR:PERSONAL_LIMIT)
+        L_LIMIT = agqCONTRACTOR:PERSONAL_LIMIT
+--        write("%c%s%n",19031,"L_personal_limit",L_limit)
+
+        Do CALC_EXPANDED
+--        write("%c%s%n",20061,"l_calcexpanded",l_expanded_premium)
+        Do ALARM_DISCOUNT
+--        write("%c%s%n",19001,"L_fire_factor",l_fire_factor)
+--        write("%c%s%n",19021,"l_burglary_factor",l_burglary_factor)
+        Do DEDUCTIBLE
+--        write("%c%s%n",19041,"l_deductible",l_deductible_factor)
+        do check_for_liability_and_property  --must have liability and property to have this package mod
+        do get_package_mod_factor
+--        write("%c%s%n",19061,"l_package_mod",l_package_mod)
+--        write("%c%s%n",17001,"RATING_TERRITORY_FACTOR",agqcontractor:RATING_TERRITORY_FACTOR)
+        if l_state one of 29,7 then
+          {
+            l_expanded_premium = L_expanded_premium * l_deductible_factor * agqcontractor:special_exposure_factor *
+                                 agqcontractor:RATING_TERRITORY_FACTOR * l_package_mod * L_BURGLARY_FACTOR
+          }
+        else
+          {
+            do Get_territory_factor
+            l_expanded_premium = L_expanded_premium * l_deductible_factor *
+                                 L_TERRITORY_EXPANDED * l_package_mod * L_BURGLARY_FACTOR
+          }
+--        write("%c%s%n",20001,"afterl_expanded_premium",l_expanded_premium)
+      End
+
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:PERSONAL_PREMIUM = L_PREMIUM
+        agqcontractor_alias:EXPANDED_PREMIUM_personal_prop = l_EXPANDED_PREMIUM
+        L_PERSONAL_PREMIUM =  L_PERSONAL_PREMIUM + L_PREMIUM + l_expanded_premium
+      End
+  End
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:PERSONAL_PREMIUM = 0
+        agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM_PERSONAL_PROP = 0
+        L_PERSONAL_PREMIUM = 0
+        L_EXPANDED_PREMIUM = 0
+      End
+    End
+
+If agqCONTRACTOR_ALIAS:COMPUTER_LIMIT <> scsdefault:computer_coverage Then
+    Begin
+      L_PREMIUM = (agqCONTRACTOR:COMPUTER_LIMIT - scsdefault:computer_coverage) Divide L_COMPUTER_PER *
+                   l_computer_charge_per
+      l_property_endorsement_total = l_property_endorsement_total + l_premium
+--      write("%cproperty_total-->%n<--",11001,l_property_endorsement_total)
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:COMPUTER_PREMIUM = L_PREMIUM
+        End
+    End
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:COMPUTER_PREMIUM = 0
+        End
+    End
+
+If agqCONTRACTOR_ALIAS:EMPLOYEE_DISHONESTY <> SCSDEFAULT:employee_dishonesty Then
+  Begin
+    Do RATE_EMPLOYEE_DISHONESTY
+    L_PREMIUM = L_EMPLOYEE_RATE
+    If agqCONTRACTOR_ALIAS:NUMBER_OF_EMPLOYEES > L_NUMBER_EMPLOYEES Then
+        L_PREMIUM = (L_PREMIUM + ((agqCONTRACTOR_ALIAS:NUMBER_OF_EMPLOYEES -
+                    L_NUMBER_EMPLOYEES) * L_EMPLOYEE_OVER_5))
+
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:EMPLOYEE_DIS_PREMIUM = L_PREMIUM
+      End
+    End
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:EMPLOYEE_DIS_PREMIUM = 0
+      End
+    End
+
+If agqCONTRACTOR:PROPERTY_LIMIT <> 0 And
+   agqmaster:FORM <> 4 Then
+  {
+    Do RATE_MONEY
+  }
+Else
+  Begin
+    Access agqMONEY,
+       Set agqMONEY:app_no = agqCONTRACTOR:app_no, Generic
+
+    If agqMONEY:app_no = agqCONTRACTOR:app_no Then
+      BEGIN
+        Change agqMONEY
+          Begin
+            agqMONEY:MONEY_PREMIUM = 0
+          End
+      END
+  End
+
+If agqCONTRACTOR:AR_LIMIT <> SCSDEFAULT:AR_LIMIT Then
+  Begin
+    Do RATE_AR
+  End
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:AR_PREMIUM = 0
+        End
+    End
+
+If agqCONTRACTOR:PERSONAL_EFFECTS <> SCSDEFAULT:PERSONAL_EFFECTS Then
+    Begin
+    Do RATE_PERSONAL_EFFECTS
+    End
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                    agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                    agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:PERSONAL_EFFECTS_PREMIUM = 0
+        End
+    End
+
+If agqCONTRACTOR:DEBRIS_LIMIT <> SCSDEFAULT:DEBRIS_LIMIT And
+   agqmaster:FORM < 4 Then
+    Begin
+    Do RATE_DEBRIS
+    End
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                    agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                    agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:DEBRIS_PREMIUM = 0
+        End
+    End
+
+If agqCONTRACTOR:EXTERIOR_GLASS <> 0 Then
+    Do RATE_EXTERIOR_GLASS
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:EXTERIOR_GLASS_PREM = 0
+        End
+    End
+
+If agqCONTRACTOR:GLASS_LIMIT <> SCSDEFAULT:GLASS_LIMIT Then
+    Do RATE_GLASS
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                    agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                    agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:GLASS_PREMIUM = 0
+        End
+    End
+
+If agqCONTRACTOR:SIGNS_ATTACHED_LIMIT <> SCSDEFAULT:SIGNS_ATTACHED_LIMIT Then
+    Do RATE_SIGNS
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                    agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                    agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:SIGNS_ATTACHED_PREM = 0
+        End
+    End
+
+If agqCONTRACTOR:SIGNS_NOT_ATTACHED_LIMIT <> SCSDEFAULT:SIGNS_NOT_ATTACHED_LIMIT Then
+    Do RATE_SIGNS_NOT_ATTACHED
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                    agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                    agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:SIGNS_NOT_PREMIUM = 0
+        End
+    End
+
+If agqCONTRACTOR:VALUABLE_PAPERS <> SCSDEFAULT:VALUABLE_PAPERS Then
+    Begin
+    Do RATE_VALUABLE_PAPERS
+    End
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                    agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                    agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:VALUABLE_PAPERS_PREMIUM = 0
+        End
+    End
+
+If agqcontractor:OFF_PREM_limit  <> SCSDEFAULT:OFF_PREM_LIMIT Then
+  {
+    Do RATE_OFF_PREMISES
+  }
+Else
+  Begin
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqcontractor_alias
+        Begin
+          agqcontractor_alias:OFF_PREM_PREMIUM  = 0
+        End
+   End
+
+If agqCONTRACTOR:BUILDING_CODE_LAW <> SCSDEFAULT:BUILDING_CODE Then
+  BEGIN
+    Do RATE_BUILDING_CODE
+  end
+Else
+    Begin
+      Access agqCONTRACTOR_ALIAS,
+         Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+             agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+             agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:BUILDING_CODE_PREMIUM = 0
+        End
+    End
+
+--delos does not change this water backup
+/*If agqCONTRACTOR:WATER_BKUP_LIMIT <> scsdefault:water_limit Then
+  {
+    Do RATE_WATERBACKUP
+  }
+Else
+  Begin
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:WATER_BKUP_PREMIUM = 0
+      End
+  End
+*/
+
+
+/*If agqCONTRACTOR:BUILDING_ACV = 1 Then                             --delos does not charge for acv just list MCP523
+
+
+  --Do RATE_ACV_BUILDING
+Else
+  Begin
+    Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                    agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                    agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:BUILDING_ACV_PREMIUM = 0
+        End
+  End
+
+If agqCONTRACTOR:CONTENTS_ACV = 1 Then                             --delos does not charge for acv just list MCP523
+--  Do RATE_ACV_CONTENTS
+Else
+    Begin
+    Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                    agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                    agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:CONTENTS_ACV_PREMIUM = 0
+        End
+    End
+*/
+
+If agqLIABLIMITS:FIRE_LEGAL <> SCSDEFAULT:FIRE_LEGAL and
+   l_only_once1 one of 0 Then
+  {
+    Do RATE_FIRE_LEGAL
+  }
+Else
+  Begin
+    Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                    agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                    agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        agqCONTRACTOR_ALIAS:FIRE_PREMIUM = 0
+        End
+  End
+
+l_end_premium = 0
+if l_policy_wide_first = "Y" then
+    begin
+    Access agqend,
+       Set agqend:app_no = agqCONTRACTOR:app_no,
+           agqend:PREM_NO  = 0,
+           agqend:BUILD_NO = 0, Generic
+
+    L_agqend_MINIMUM_PREMIUM = "N"
+    L_INLAND_TOTAL = 0
+    L_INLAND_MARINE_CODE = ""
+    Repeat Begin
+        Exit If agqend:app_no <> agqCONTRACTOR:app_no Or
+                agqend:PREM_NO  <> 0 or
+                agqend:BUILD_NO <> 0
+
+        L_agqend_MINIMUM_PREMIUM = "N"
+        L_INLAND_MARINE_CODE = "N"
+        L_UPDATE_SFPEND_PREMIUM = 0
+        L_CODE = agqend:CODE
+        l_sub_code = agqend:sub_Code
+        Do RATE_ENDORSEMENTS
+
+
+        Change agqend
+            Begin
+            agqend:PREMIUM = L_UPDATE_SFPEND_PREMIUM
+            agqend:INLAND_MARINE_CODE = L_INLAND_MARINE_CODE
+            If L_agqend_MINIMUM_PREMIUM = "Y" Then
+                agqend:MINIMUM_PREMIUM = "Y"
+            Else
+                agqend:MINIMUM_PREMIUM = "N"
+            End
+        L_END_PREMIUM = L_END_PREMIUM + L_UPDATE_SFPEND_PREMIUM
+
+        Next agqend
+        End
+
+    l_policy_wide_first = "N"
+    end
+
+Access agqend,
+   Set agqend:app_no = agqCONTRACTOR:app_no,
+       agqend:PREM_NO = agqCONTRACTOR:PREM_NO,
+       agqend:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+L_agqend_MINIMUM_PREMIUM = "N"
+--L_INLAND_TOTAL = 0
+L_INLAND_MARINE_CODE = ""
+Repeat Begin
+    Exit If agqend:app_no <> agqCONTRACTOR:app_no Or
+            agqend:PREM_NO <> agqCONTRACTOR:PREM_NO Or
+            agqend:BUILD_NO <> agqCONTRACTOR:BUILD_NO
+
+    L_agqend_MINIMUM_PREMIUM = "N"
+    L_INLAND_MARINE_CODE = "N"
+    L_UPDATE_SFPEND_PREMIUM = 0
+    L_CODE = agqend:CODE
+    l_sub_code = agqend:sub_Code
+    Do RATE_ENDORSEMENTS
+    Change agqend
+      Begin
+        agqend:PREMIUM = L_UPDATE_SFPEND_PREMIUM
+        agqend:INLAND_MARINE_CODE = L_INLAND_MARINE_CODE
+        If L_agqend_MINIMUM_PREMIUM = "Y" Then
+            agqend:MINIMUM_PREMIUM = "Y"
+        Else
+            agqend:MINIMUM_PREMIUM = "N"
+      End
+    L_END_PREMIUM = L_END_PREMIUM + L_UPDATE_SFPEND_PREMIUM
+
+Next agqend
+End
+
+If L_INLAND_TOTAL >= L_INLAND_MARINE_MINIMUM And
+   L_INLAND_TOTAL <> 0 Then
+    Begin
+    Access agqend, Set agqend:app_no = agqCONTRACTOR:app_no,
+                       agqend:PREM_NO = agqCONTRACTOR:PREM_NO,
+                       agqend:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Repeat Begin
+        Exit If agqend:app_no <> agqCONTRACTOR:app_no Or
+                agqend:PREM_NO <> agqCONTRACTOR:PREM_NO Or
+                agqend:BUILD_NO <> agqCONTRACTOR:BUILD_NO
+
+        If agqend:INLAND_MARINE_CODE = "Y" And
+           agqend:MINIMUM_PREMIUM = "Y" Then
+            Begin
+            Change agqend
+                Begin
+                agqend:MINIMUM_PREMIUM = "N"
+                End
+            End
+        Next agqend
+        End
+
+    End
+
+If L_INLAND_TOTAL < L_INLAND_MARINE_MINIMUM And
+   L_INLAND_TOTAL <> 0 Then
+    Begin
+    L_INLAND_MARINE_UPDATED = "N"
+    Access agqend,
+       Set agqend:app_no = agqCONTRACTOR:app_no,
+           agqend:PREM_NO = agqCONTRACTOR:PREM_NO,
+           agqend:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    Repeat Begin
+        Exit If agqend:app_no <> agqCONTRACTOR:app_no Or
+                agqend:PREM_NO <> agqCONTRACTOR:PREM_NO Or
+                agqend:BUILD_NO <> agqCONTRACTOR:BUILD_NO
+
+        If agqend:INLAND_MARINE_CODE = "Y" And
+           L_INLAND_MARINE_UPDATED = "N" Then
+            Begin
+            Change agqend
+                Begin
+                L_END_PREMIUM = L_END_PREMIUM - agqend:PREMIUM
+                L_INLAND_MARINE_UPDATED = "Y"
+                agqend:PREMIUM = ((L_INLAND_MARINE_MINIMUM - L_INLAND_TOTAL) +
+                                 agqend:PREMIUM)
+                L_END_PREMIUM = L_END_PREMIUM + agqend:PREMIUM
+                agqend:MINIMUM_PREMIUM = "Y"
+                End
+            End
+
+        Next agqend
+        End
+
+    L_INLAND_TOTAL = L_INLAND_MARINE_MINIMUM
+    End
+
+Access agqmisc,
+   Set agqmisc:app_no = G_app_no, Generic
+
+L_MISC_PREMIUM = 0
+If L_MISC <> "Y" Then
+  Begin
+    Repeat Begin
+        Exit If agqmisc:app_no <> G_app_no
+
+        L_MISC_PREMIUM = L_MISC_PREMIUM + agqmisc:PREMIUM
+        L_MISC = "Y"
+
+    Next agqmisc
+    End
+  End
+
+
+--manual rating of policies
+    access agqadditionalclass,
+       set agqadditionalclass:app_no = agqCONTRACTOR:app_no, Generic
+
+    l_additionalclass_premium = 0
+    while agqadditionalclass:app_no = agqCONTRACTOR:app_no
+      {
+        l_additionalclass_premium = l_additionalclass_premium + agqadditionalclass:premium
+        next agqadditionalclass
+      }
+
+
+Access agqmaster,
+   Set agqmaster:app_no = G_app_no, Generic
+
+change agqmaster
+  begin
+    agqmaster:other_totals[3] = l_additionalclass_premium
+  end
+
+Access agqMONEY,
+   Set agqMONEY:app_no = agqCONTRACTOR:app_no, Generic
+
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+       agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If L_FIRST = "Y" Then
+  BEGIN
+    L_FIRST = "N"
+    Change agqCONTRACTOR_ALIAS
+      {
+        If agqCONTRACTOR_ALIAS:BUILDING_LIMIT <> 0 Or
+           agqCONTRACTOR_ALIAS:PROPERTY_LIMIT <> 0 Then
+          Begin
+            agqCONTRACTOR_ALIAS:PROPERTY_TOTAL =
+            agqCONTRACTOR_ALIAS:BUILDING_PREMIUM  +
+            agqCONTRACTOR_ALIAS:PROPERTY_PREMIUM  +
+            agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM  +
+            agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM_PERSONAL_PROP  +
+            agqCONTRACTOR_ALIAS:PERSONAL_PREMIUM  +
+            agqCONTRACTOR_ALIAS:LOSS_PREMIUM +
+            agqCONTRACTOR_ALIAS:BUILDING_ACV_PREMIUM +
+            agqCONTRACTOR_ALIAS:CONTENTS_ACV_PREMIUM +
+            agqCONTRACTOR_ALIAS:AR_PREMIUM +
+            agqCONTRACTOR_ALIAS:GLASS_PREMIUM +
+            agqCONTRACTOR_ALIAS:SIGNS_ATTACHED_PREM +
+            agqCONTRACTOR_ALIAS:SIGNS_NOT_PREMIUM +
+            agqCONTRACTOR_ALIAS:BUILDING_CODE_PREMIUM +
+            agqCONTRACTOR_ALIAS:OFF_PREM_PREMIUM +
+            agqCONTRACTOR_ALIAS:DEBRIS_PREMIUM +
+            agqCONTRACTOR_ALIAS:OUTDOOR_GLASS_PREMIUM +
+            agqCONTRACTOR_ALIAS:OUTDOOR_PROPERTY_PREMIUM +
+            agqCONTRACTOR_ALIAS:PERSONAL_EFFECTS_PREMIUM +
+            agqCONTRACTOR_ALIAS:VALUABLE_PAPERS_PREMIUM +
+            agqMONEY:MONEY_PREMIUM +
+            agqCONTRACTOR_ALIAS:EMPLOYEE_DIS_PREMIUM +
+            agqCONTRACTOR_ALIAS:COMPUTER_PREMIUM +
+            agqCONTRACTOR_ALIAS:WATER_BKUP_PREMIUM +
+            agqCONTRACTOR_ALIAS:EXTERIOR_GLASS_PREM +
+            L_MISC_PREMIUM +
+            L_END_PREMIUM
+          End
+        else
+          Begin
+            agqcontractor_alias:property_total = 0
+            l_total_liability  =  l_total_liability +
+                                  L_MISC_PREMIUM +
+                                  L_END_PREMIUM
+          End
+      }
+    L_LOC_TOTAL = agqCONTRACTOR_ALIAS:BUILDING_PREMIUM  +
+                  agqCONTRACTOR_ALIAS:PROPERTY_PREMIUM  +
+                  agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM  +
+                  agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM_PERSONAL_PROP  +
+                  agqCONTRACTOR_ALIAS:PERSONAL_PREMIUM  +
+                  agqCONTRACTOR_ALIAS:LOSS_PREMIUM +             --  liability              flat charge
+                  agqCONTRACTOR_ALIAS:LIABILITY_PREMIUM + agqmaster:other_totals[1] + agqmaster:other_totals[2] +
+                  agqCONTRACTOR_ALIAS:INDEPENDENT_CONTRACT_PREMIUM +
+                  agqCONTRACTOR_ALIAS:FIRE_PREMIUM +
+                  agqCONTRACTOR_ALIAS:BUILDING_ACV_PREMIUM +
+                  agqCONTRACTOR_ALIAS:CONTENTS_ACV_PREMIUM +
+                  agqCONTRACTOR_ALIAS:AR_PREMIUM +
+                  agqCONTRACTOR_ALIAS:GLASS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:SIGNS_ATTACHED_PREM +
+                  agqCONTRACTOR_ALIAS:SIGNS_NOT_PREMIUM +
+                  agqCONTRACTOR_ALIAS:BUILDING_CODE_PREMIUM +
+                  agqCONTRACTOR_ALIAS:OFF_PREM_PREMIUM +
+                  agqCONTRACTOR_ALIAS:DEBRIS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:OUTDOOR_GLASS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:OUTDOOR_PROPERTY_PREMIUM +
+                  agqCONTRACTOR_ALIAS:PERSONAL_EFFECTS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:VALUABLE_PAPERS_PREMIUM + agqMONEY:MONEY_PREMIUM +
+                  agqCONTRACTOR_ALIAS:EMPLOYEE_DIS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:COMPUTER_PREMIUM +
+                  agqCONTRACTOR_ALIAS:WATER_BKUP_PREMIUM +
+                  agqCONTRACTOR_ALIAS:EXTERIOR_GLASS_PREM +
+                  L_MISC_PREMIUM +
+                  l_additionalclass_premium +
+                  L_END_PREMIUM
+--        write("%c%s",08001," ")
+--        write("%cl_loc_total%n",08031,l_loc_total)
+--        pause(1000)
+
+  END
+Else  --not first
+  Begin
+--    write("%csecond pausel%n",05031,l_loc_total)
+--    pause(5000)
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        If agqCONTRACTOR_ALIAS:BUILDING_LIMIT <> 0 Or
+           agqCONTRACTOR_ALIAS:PROPERTY_LIMIT <> 0 Then
+          Begin
+            agqCONTRACTOR_ALIAS:PROPERTY_TOTAL =
+            agqCONTRACTOR_ALIAS:BUILDING_PREMIUM  +
+            agqCONTRACTOR_ALIAS:PROPERTY_PREMIUM  +
+            agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM  +
+            agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM_PERSONAL_PROP  +
+            agqCONTRACTOR_ALIAS:PERSONAL_PREMIUM  +
+            agqCONTRACTOR_ALIAS:LOSS_PREMIUM +
+            agqCONTRACTOR_ALIAS:BUILDING_ACV_PREMIUM +
+            agqCONTRACTOR_ALIAS:CONTENTS_ACV_PREMIUM +
+            agqCONTRACTOR_ALIAS:AR_PREMIUM +
+            agqCONTRACTOR_ALIAS:GLASS_PREMIUM +
+            agqCONTRACTOR_ALIAS:SIGNS_ATTACHED_PREM +
+            agqCONTRACTOR_ALIAS:SIGNS_NOT_PREMIUM +
+            agqCONTRACTOR_ALIAS:BUILDING_CODE_PREMIUM +
+            agqCONTRACTOR_ALIAS:OFF_PREM_PREMIUM +
+            agqCONTRACTOR_ALIAS:DEBRIS_PREMIUM +
+            agqCONTRACTOR_ALIAS:OUTDOOR_GLASS_PREMIUM +
+            agqCONTRACTOR_ALIAS:OUTDOOR_PROPERTY_PREMIUM +
+            agqCONTRACTOR_ALIAS:PERSONAL_EFFECTS_PREMIUM +
+            agqCONTRACTOR_ALIAS:VALUABLE_PAPERS_PREMIUM +
+            agqCONTRACTOR_ALIAS:EMPLOYEE_DIS_PREMIUM +
+            agqCONTRACTOR_ALIAS:COMPUTER_PREMIUM +
+            agqCONTRACTOR_ALIAS:WATER_BKUP_PREMIUM +
+            agqCONTRACTOR_ALIAS:EXTERIOR_GLASS_PREM +
+            L_MISC_PREMIUM +
+            L_END_PREMIUM
+          End
+        else
+          Begin
+            agqcontractor_alias:property_total = 0
+            l_total_liability = l_total_liability +
+                                L_MISC_PREMIUM +
+                                L_END_PREMIUM
+          End
+      End
+--    write("%cwhy am i in here l_loc_total%n",06031,l_loc_total)
+    L_LOC_TOTAL = agqCONTRACTOR_ALIAS:BUILDING_PREMIUM  +
+                  agqCONTRACTOR_ALIAS:PROPERTY_PREMIUM  +
+                  agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM  +
+                  agqCONTRACTOR_ALIAS:EXPANDED_PREMIUM_PERSONAL_PROP  +
+                  agqCONTRACTOR_ALIAS:PERSONAL_PREMIUM  +
+                  agqCONTRACTOR_ALIAS:LIABILITY_PREMIUM +
+                  agqCONTRACTOR_ALIAS:INDEPENDENT_CONTRACT_PREMIUM +
+                  agqCONTRACTOR_ALIAS:FIRE_PREMIUM +
+                  agqCONTRACTOR_ALIAS:LOSS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:BUILDING_ACV_PREMIUM +
+                  agqCONTRACTOR_ALIAS:CONTENTS_ACV_PREMIUM +
+                  agqCONTRACTOR_ALIAS:AR_PREMIUM +
+                  agqCONTRACTOR_ALIAS:GLASS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:SIGNS_ATTACHED_PREM +
+                  agqCONTRACTOR_ALIAS:SIGNS_NOT_PREMIUM +
+                  agqCONTRACTOR_ALIAS:BUILDING_CODE_PREMIUM +
+                  agqCONTRACTOR_ALIAS:OFF_PREM_PREMIUM +
+                  agqCONTRACTOR_ALIAS:DEBRIS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:OUTDOOR_GLASS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:OUTDOOR_PROPERTY_PREMIUM +
+                  agqCONTRACTOR_ALIAS:PERSONAL_EFFECTS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:VALUABLE_PAPERS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:EMPLOYEE_DIS_PREMIUM +
+                  agqCONTRACTOR_ALIAS:COMPUTER_PREMIUM +
+                  agqCONTRACTOR_ALIAS:WATER_BKUP_PREMIUM +
+                  agqCONTRACTOR_ALIAS:EXTERIOR_GLASS_PREM +
+                  L_MISC_PREMIUM +
+                  L_END_PREMIUM
+  End
+--write("%c%s%n",01001,"the loc total is at this point",l_loc_total)
+--read(10,1,"press enter to continue",l_enter,1)
+Do GET_RATE
+
+/* end of loc total */
+End
+
+Procedure MISC_RATES
+Begin
+L_RECORD_KEY = "RT"
+L_COMPANY_ID = agqcontractor:COMPANY_ID
+L_STATE = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+L_EFF_DATE = agqcontractor:EFF_DATE
+
+Include "scsrates.pro"
+
+End
+
+Procedure CALC_PROPERTY_PREM
+Begin
+L_RECORD_KEY       = "PP"
+L_COMPANY_ID       = agqcontractor:COMPANY_ID
+L_STATE            = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+L_FORM             = agqmaster:FORM
+L_PROTECTION       = agqCONTRACTOR:PROTECTION
+L_EFF_DATE         = agqcontractor:EFF_DATE
+Switch(agqCONTRACTOR:RATING_TYPE)
+  Case 4       : L_TYPE = 2
+  Case 5, 6, 7 : L_TYPE = 3
+  Default      : L_TYPE = agqCONTRACTOR:RATING_TYPE
+  End
+L_CONSTRUCTION = agqCONTRACTOR:CONSTRUCTION
+
+Include "scsprop.pro"
+
+End
+
+Procedure DEDUCTIBLE
+Begin
+L_COMPANY_ID       = agqcontractor:COMPANY_ID
+L_STATE            = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+--L_DEDUCTIBLE       = agqCONTRACTOR:DEDUCTIBLE
+L_LIMIT            = 99999999
+L_EFF_DATE         = agqcontractor:EFF_DATE
+Include "scsdeduct.pro"
+End
+
+Procedure LIABILITY_DEDUCTIBLE
+Begin
+L_COMPANY_ID = agqcontractor:COMPANY_ID
+L_STATE = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+L_DEDUCTIBLE = agqLIABLIMITS:LIAB_DEDUCTIBLE
+L_LIMIT = 99999998
+L_EFF_DATE = agqcontractor:EFF_DATE
+
+Include "scsdeduct1.pro"
+
+l_deductible = g_deductible
+
+End
+
+procedure get_package_mod_factor
+
+BEGIN
+  if l_liability_found = 1 and l_property_found = 1 then              --change this to 1 after liability is completed
+    {
+      access sfspackage,
+         set sfspackage:company_id       = l_company_id,
+             sfspackage:state            = l_state,
+             sfspackage:line_of_business = l_line_of_business, generic
+
+      while sfspackage:company_id       = l_company_id and
+            sfspackage:state            = l_state and
+            sfspackage:line_of_business = l_line_of_business
+        {
+          l_sfspackage_eff_date = sfspackage:eff_date
+          next sfspackage
+        }
+      access sfspackage,
+         set sfspackage:company_id       = l_company_id,
+             sfspackage:state            = l_state,
+             sfspackage:line_of_business = l_line_of_business,
+             sfspackage:eff_date         = l_sfspackage_eff_date, exact
+      l_package_mod = sfspackage:package_mod
+    }
+  else
+    {
+      l_package_mod = 1
+    }
+--  Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+--  writefile(l_file_name,"L_packagemod:%n",l_package_mod)
+
+END
+
+procedure check_for_liability_and_property
+
+Begin
+  access agqliablimits,
+     set agqliablimits:app_no = g_app_no, exact
+  l_liability_found = 0
+  if agqliablimits:app_no = g_app_no then
+    {
+      if agqLIABLIMITS:OCCURRENCE <> 0 or
+         agqLIABLIMITS:GENERAL_AGGREGATE <> 0 or
+         agqLIABLIMITS:AGGREGATE <> 0 or
+         agqLIABLIMITS:MEDICAL_PAYMENTS <> 0 or
+         agqLIABLIMITS:FIRE_LEGAL <> 0 then
+        {
+          l_liability_found = 1
+        }
+    }
+  if agqcontractor:building_limit > 0 or
+     agqCONTRACTOR:PROPERTY_LIMIT > 0 or
+     agqCONTRACTOR:PERSONAL_LIMIT > 0 then
+    {
+      l_property_found = 1
+    }
+END
+
+
+Procedure ACCESS_agqend_1
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqend:app_no = G_app_no and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+    begin
+    If agqend:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend
+    End
+
+End
+
+Procedure ADD_agqend_1
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO  = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+L_SUB_CODE = 0
+while agqend:app_no = G_app_no and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+    begin
+    L_SUB_CODE = agqend:SUB_CODE
+
+    Next agqend
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+l_state = agqcontractor:state
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqcontractor:company_id,
+                      SFSOPTEND:STATE            = l_STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqcontractor:line_of_business,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqcontractor:company_id and
+      SFSOPTEND:STATE            = L_STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqcontractor:line_of_business and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqcontractor:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqcontractor:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqend
+    Begin
+    agqend:app_no             =       G_app_no
+    agqend:PREM_NO              =       0
+    agqend:BUILD_NO             =       0
+    agqend:SUB_CODE             =       L_SUB_CODE
+    agqend:CODE                 =       L_CODE
+    agqend:FORM_EDITION         =       L_FORM_EDITION
+    agqend:DESCRIPTION          =       L_DESCRIPTION
+    agqend:PREMIUM              =       0
+    agqend:lob_end_code         =       "X"
+    End
+
+End
+
+Procedure DELETE_agqend_1
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO  = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+while agqend:app_no = G_app_no and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+    begin
+    If agqend:CODE = L_CODE Then
+        Delete agqend
+
+    Next agqend
+    End
+
+End
+
+Procedure WIND_DEDUCTIBLE
+Begin
+L_COMPANY_ID = agqcontractor:COMPANY_ID
+L_STATE = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+L_DEDUCTIBLE = agqCONTRACTOR:DEDUCTIBLE
+L_WIND_DEDUCTIBLE = agqCONTRACTOR:WIND_DEDUCTIBLE
+L_EFF_DATE = agqcontractor:EFF_DATE
+
+Include "scswinddeduct.pro"
+
+If L_WIND_DEDUCT_FACTOR = 0 Then
+    L_WIND_DEDUCT_FACTOR = 1.00
+
+l_deductible = g_deductible
+End
+
+Procedure INFLATION_GUARD
+Begin
+L_COMPANY_ID = agqcontractor:COMPANY_ID
+L_STATE = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+L_EFF_DATE = agqcontractor:EFF_DATE
+
+Include "scsinflation.pro"
+
+End
+
+Procedure ALARM_DISCOUNT
+
+Begin
+  L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+  L_BURGLARY_FACTOR = 1
+  l_fire_factor = 1
+
+  Access SCSRATES,
+     Set SCSRATES:COMPANY_ID       = agqcontractor:COMPANY_ID,
+         SCSRATES:STATE            = L_STATE,
+         SCSRATES:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS, Generic
+--  write("%c%s%s",19001,"L_FILLER-->",l_FILLER)
+--  write("%c%s%d",20031,"L_EFF_DATE-->",l_EFF_DATE)
+--  write("%c%s%n",21001,"L_LINE_OF_BUSINESS-->",l_line_of_business)
+--  write("%c%s%n",21061,"STATE-->",agqcontractor:state)
+--  write("%c%s%s",21031,"COMPANY_ID-->",L_COMPANY_ID)
+--  write("%c%s%n",22031,"fire_factor-->",scsrates:fire_factor)
+  L_RECORD_KEY = "RT"
+  While SCSRATES:RECORD_KEY       = L_RECORD_KEY And
+        SCSRATES:COMPANY_ID       = agqcontractor:COMPANY_ID And
+        SCSRATES:STATE            = L_STATE And
+        SCSRATES:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+    Begin
+      If agqcontractor:EFF_DATE >= SCSRATES:EFF_DATE then
+        {      --correct term is found
+          If agqCONTRACTOR:FIRE_ALARM = 1 Then
+            Begin
+              l_fire_factor = SCSRATES:FIRE_FACTOR
+              if l_fire_factor = 0 then
+                {
+                  l_fire_factor = 1
+                }
+            end
+          else
+            {
+              l_fire_factor = 1
+            }
+         If agqCONTRACTOR:BURGLARY_ALARM = 1 Then
+           Begin
+             if agqcontractor:EXCLUDING_THEFT not one of 1 then   --makes sure that theft is not waived
+               {
+                 L_BURGLARY_FACTOR =  SCSRATES:BURGLARY_FACTOR
+                 if L_BURGLARY_FACTOR = 0 then
+                   {
+                     L_BURGLARY_FACTOR = 1
+                   }
+               }
+             else
+               {
+                 L_BURGLARY_FACTOR = 1
+               }
+           END
+         else
+           {
+             l_burglary_factor = 1
+           }
+        }
+      next scsrates
+    END
+End
+
+Procedure CALC_EXPANDED
+
+Begin
+L_EXPANDED_PREMIUM = 0
+L_RECORD_KEY = "EP"
+L_COMPANY_ID       = agqcontractor:COMPANY_ID
+L_STATE            = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+L_EFF_DATE         = agqcontractor:EFF_DATE
+--write("%c%s%n",16001,"l_limit",l_limit)
+--pause(3000)
+Switch(agqCONTRACTOR:RATING_TYPE)
+  Case 4       : L_TYPE = 2
+  Case 5, 6, 7 : L_TYPE = 3
+  Default      : L_TYPE = agqCONTRACTOR:RATING_TYPE
+  End
+
+--write("%c%s%n",16031,"l_limit",l_limit)
+Include "scsexpanded.pro"
+--   write("%c%s%n",24001,"L_expanded_premium",l_expanded_premium)
+
+If L_TYPE = 1 Then
+  Begin
+    L_EXPANDED_PREMIUM = L_OFFICE_ADDITIONAL
+  End
+Else
+  Begin
+    L_RECORD_KEY = "ET"
+    L_COUNTY = agqCONTRACTOR:COUNTY
+    Include "scsexpandterr.pro"
+
+  --  write("%c%s%n",22031,"L_expanded_terr",l_expanded_terr)
+
+    L_EXPANDED_PREMIUM = L_EXPANDED_PREMIUM * L_EXPANDED_TERR
+  --  write("%c%s%n",23001,"L_expanded_premium",l_expanded_premium)
+
+  End
+
+If agqCONTRACTOR:EXCLUDING_THEFT = 0 Then
+  {
+    L_EXCLUDE_THEFT_FACTOR = 1.00
+  }
+If agqCONTRACTOR:LIMIT_THEFT = 0 Then
+  {
+    L_LIMIT_THEFT_FACTOR = 1.00
+  }
+
+L_EXPANDED_PREMIUM = L_EXPANDED_PREMIUM * L_EXCLUDE_THEFT_FACTOR * L_LIMIT_THEFT_FACTOR
+
+End
+
+Procedure RATE_EMPLOYEE_DISHONESTY
+
+Begin
+L_COMPANY_ID = agqcontractor:COMPANY_ID
+L_STATE = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+L_EFF_DATE = agqcontractor:EFF_DATE
+L_LIMIT = agqCONTRACTOR:EMPLOYEE_DISHONESTY
+
+Include "scsempldis.pro"
+
+End
+
+Procedure RATE_MONEY
+
+Begin
+Access agqMONEY,
+   Set agqMONEY:app_no = agqCONTRACTOR:app_no, Generic
+
+L_COMPANY_ID = agqcontractor:COMPANY_ID
+L_STATE = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+L_EFF_DATE = agqcontractor:EFF_DATE
+L_TERRITORY = 999
+L_MONEY_LIMITS = agqMONEY:MONEY_LIMITS
+
+Include "scsmoney.pro"
+
+If agqMONEY:app_no = agqCONTRACTOR:app_no and l_rate_money_once = 0 Then
+  Change agqMONEY
+    Begin
+      l_rate_money_once = 1
+      agqMONEY:MONEY_PREMIUM = L_MONEY_CHARGE_3
+      l_property_endorsement_total = l_property_endorsement_total + agqmoney:Money_premium
+--      write("%cproperty_total-->%n<--%n",10001,l_property_endorsement_total,agqcontractor:prem_no)
+    End
+End
+
+Procedure RATE_AR
+
+Begin
+  Access agqCONTRACTOR_ALIAS,
+     Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+         agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+         agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+  access scsrates,
+     set scsrates:company_id       = agqcontractor:company_id,
+         scsrates:state            = agqcontractor:state,
+         scsrates:line_of_business = agqcontractor:line_of_business, generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+  {
+    Change agqCONTRACTOR_ALIAS
+      BEGIN
+        If agqCONTRACTOR_ALIAS:AR_LIMIT <> SCSDEFAULT:AR_LIMIT Then
+          {
+            agqCONTRACTOR_ALIAS:AR_PREMIUM = agqCONTRACTOR_ALIAS:PROPERTY_RATE * scsrates:AR_FACTOR *
+                                                ((agqcontractor_alias:ar_limit - scsdefault:ar_limit) divide
+                                                scsrates:ar_per)
+            l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:AR_PREMIUM
+ --           write("%cproperty_total NOT13-->%n<--",09001,l_property_endorsement_total)
+          }
+      END
+
+  }
+End
+
+Procedure RATE_PERSONAL_EFFECTS
+Begin
+Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        If agqCONTRACTOR_ALIAS:PERSONAL_EFFECTS <> SCSDEFAULT:PERSONAL_EFFECTS Then
+          {
+            agqCONTRACTOR_ALIAS:PERSONAL_EFFECTS_PREMIUM =
+                                             (agqCONTRACTOR_ALIAS:PROPERTY_RATE *
+                                             ((agqCONTRACTOR_ALIAS:PERSONAL_EFFECTS -
+                                             SCSDEFAULT:PERSONAL_EFFECTS)
+                                             Divide L_AR_PER))-- uses the same limit as A/R
+            l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:PERSONAL_EFFECTS_PREMIUM
+--                write("%cproperty_total NOT11-->%n<--",09001,l_property_endorsement_total)
+          }
+        End
+
+End
+
+Procedure RATE_DEBRIS
+Begin
+Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        If agqCONTRACTOR_ALIAS:DEBRIS_LIMIT <> SCSDEFAULT:DEBRIS_LIMIT Then
+          {
+            agqCONTRACTOR_ALIAS:DEBRIS_PREMIUM = (((agqCONTRACTOR_ALIAS:DEBRIS_LIMIT -
+                                                 SCSDEFAULT:DEBRIS_LIMIT) Divide
+                                                 L_DEBRIS_PER) * L_DEBRIS_RATE)
+            l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:DEBRIS_PREMIUM
+--                write("%cproperty_total NOT10-->%n<--",09001,l_property_endorsement_total)
+          }
+        End
+
+End
+
+Procedure RATE_EXTERIOR_GLASS
+Begin
+Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+  Change agqCONTRACTOR_ALIAS
+    Begin
+      agqCONTRACTOR_ALIAS:EXTERIOR_GLASS_PREM = ((agqCONTRACTOR_ALIAS:EXTERIOR_GLASS
+                                                  Divide L_GLASS_PER) *
+                                                  L_GLASS_CHARGE)
+      l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:EXTERIOR_GLASS_PREM
+   --       write("%cproperty_total NOT9-->%n<--",09001,l_property_endorsement_total)
+    End
+
+End
+
+Procedure RATE_GLASS
+
+Begin
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+       agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+    Change agqCONTRACTOR_ALIAS
+        Begin
+          agqCONTRACTOR_ALIAS:GLASS_PREMIUM = ((agqCONTRACTOR_ALIAS:GLASS_LIMIT
+                                            Divide L_GLASS_PER) *
+                                            L_GLASS_CHARGE)
+          l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:GLASS_PREMIUM
+--              write("%cproperty_total NOT7-->%n<--",09001,l_property_endorsement_total)
+        End
+
+End
+
+Procedure RATE_SIGNS
+Begin
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+       agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+  Change agqCONTRACTOR_ALIAS
+    Begin
+      agqCONTRACTOR_ALIAS:SIGNS_ATTACHED_PREM = (((agqCONTRACTOR_ALIAS:SIGNS_ATTACHED_LIMIT -
+                                                 SCSDEFAULT:SIGNS_ATTACHED_LIMIT)
+                                                  Divide L_SIGNS_PER) * L_SIGNS_CHARGE)
+      l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:SIGNS_ATTACHED_PREM
+--          write("%cproperty_total NOT6-->%n<--",09001,l_property_endorsement_total)
+    End
+
+End
+
+Procedure RATE_SIGNS_NOT_ATTACHED
+Begin
+Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:SIGNS_NOT_PREMIUM = (((agqCONTRACTOR_ALIAS:SIGNS_NOT_ATTACHED_LIMIT -
+                                                  SCSDEFAULT:SIGNS_NOT_ATTACHED_LIMIT)
+                                                  Divide L_SIGNS_PER) * L_SIGNS_CHARGE)
+        l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:SIGNS_NOT_PREMIUM
+--        write("%cproperty_total NOT5-->%n<--",09001,l_property_endorsement_total)
+      End
+
+End
+
+Procedure RATE_VALUABLE_PAPERS
+
+Begin
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+       agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+  {
+    Change agqCONTRACTOR_ALIAS
+        Begin
+        If agqCONTRACTOR_ALIAS:VALUABLE_PAPERS <> SCSDEFAULT:VALUABLE_PAPERS Then
+            agqCONTRACTOR_ALIAS:VALUABLE_PAPERS_PREMIUM = (agqCONTRACTOR_ALIAS:PROPERTY_RATE *
+                                                (((agqCONTRACTOR_ALIAS:VALUABLE_PAPERS
+                                                - SCSDEFAULT:VALUABLE_PAPERS) Divide
+                                                L_VALUABLE_PER) * L_VALUABLE_FACTOR))
+          l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:VALUABLE_PAPERS_PREMIUM
+--          write("%cproperty_total NOT3-->%n<--",09001,l_property_endorsement_total)
+        End
+  }
+
+End
+
+Procedure RATE_BUILDING_CODE
+Begin
+Access SCSRATES,
+   Set SCSRATES:COMPANY_ID = agqcontractor:COMPANY_ID,
+       SCSRATES:STATE = agqCONTRACTOR:STATE,
+       SCSRATES:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS, Generic
+
+While SCSRATES:RECORD_KEY = "RT" And
+      SCSRATES:COMPANY_ID = agqcontractor:COMPANY_ID And
+      SCSRATES:STATE = agqCONTRACTOR:STATE And
+      SCSRATES:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+        Begin
+        If agqcontractor:EFF_DATE >= SCSRATES:EFF_DATE Then
+            Begin
+            L_FACTOR_2 = SCSRATES:BUILDING_CODE_DELETE
+            L_FACTOR_1 = SCSRATES:BUILDING_CODE_FACTOR
+            L_BUILDING_CODE_PER = SCSRATES:BUILDING_CODE_PER
+            End
+
+        Next SCSRATES
+        End
+
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+       agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        If agqCONTRACTOR_ALIAS:BUILDING_CODE_LAW = 0 Then
+          {
+            agqCONTRACTOR_ALIAS:BUILDING_CODE_PREMIUM = ((agqCONTRACTOR_ALIAS:BUILDING_PREMIUM *
+                                                        L_FACTOR_2) -
+                                                        agqCONTRACTOR_ALIAS:BUILDING_PREMIUM)
+          }
+        Else
+          Begin
+            L_BUILDING_CODE_FACTOR = ((((agqCONTRACTOR_ALIAS:BUILDING_CODE_LAW -
+                                      L_BUILDING_CODE_PER) Divide
+                                      L_BUILDING_CODE_PER) * L_FACTOR_1) + 1)
+            L_BUILDING_CODE_PREM = agqCONTRACTOR_ALIAS:BUILDING_PREMIUM * L_BUILDING_CODE_FACTOR
+            agqCONTRACTOR_ALIAS:BUILDING_CODE_PREMIUM = L_BUILDING_CODE_PREM -
+                                              agqCONTRACTOR_ALIAS:BUILDING_PREMIUM
+          End
+        l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:BUILDING_CODE_PREMIUM
+      End
+End
+
+/*Procedure RATE_WATERBACKUP
+
+Begin
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+       agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+    Change agqCONTRACTOR_ALIAS
+        Begin
+          if agqcontractor_alias:WATER_BKUP_LIMIT > scsdefault:water_limit then
+            Begin
+              agqcontractor_alias:water_bkup_premium = (agqcontractor_alias:water_bkup_limit - scsdefault:water_limit) divide 1000 * L_WATER_BKUP_CHARGE
+            End
+          Else
+            Begin
+              agqCONTRACTOR_ALIAS:WATER_BKUP_PREMIUM = 0
+            End
+
+        End
+
+End
+*/
+
+Procedure RATE_ACV_BUILDING
+Begin
+Access agqCONTRACTOR_ALIAS, Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+                                agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+                                agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+  Change agqCONTRACTOR_ALIAS
+    Begin
+      agqCONTRACTOR_ALIAS:BUILDING_ACV_PREMIUM =
+                            ((agqCONTRACTOR_ALIAS:BUILDING_PREMIUM *
+                            L_BUILDING_ACV) -
+                            agqCONTRACTOR_ALIAS:BUILDING_PREMIUM)
+    l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:BUILDING_ACV_PREMIUM
+--    write("%cproperty_total NOT3-->%n<--",09001,l_property_endorsement_total)
+  End
+End
+
+Procedure RATE_ACV_CONTENTS
+
+Begin
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+       agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+  Change agqCONTRACTOR_ALIAS
+    Begin
+      agqCONTRACTOR_ALIAS:CONTENTS_ACV_PREMIUM =
+                          ((agqCONTRACTOR_ALIAS:PROPERTY_PREMIUM *
+                            L_CONTENTS_ACV) -
+                            agqCONTRACTOR_ALIAS:PROPERTY_PREMIUM)
+      l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:CONTENTS_ACV_PREMIUM
+--      write("%cproperty_total NOT-->%n<--",09001,l_property_endorsement_total)
+    End
+End
+
+Procedure RATE_OFF_PREMISES
+
+Begin
+l_off_prem_limit = 0    --they charge per thousand over the default msc711 msc712 that they put in at start of quote
+Access SCSOFFPREM,
+   Set SCSOFFPREM:COMPANY_ID       = agqcontractor:COMPANY_ID,
+       SCSOFFPREM:STATE            = agqCONTRACTOR:STATE,
+       SCSOFFPREM:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+       SCSOFFPREM:LIMIT            = l_OFF_PREM_LIMIT, Generic
+
+while SCSOFFPREM:COMPANY_ID       = agqcontractor:COMPANY_ID and
+      SCSOFFPREM:STATE            = agqCONTRACTOR:STATE and
+      SCSOFFPREM:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS and
+      SCSOFFPREM:LIMIT            = l_OFF_PREM_LIMIT
+  {
+    If agqcontractor:EFF_DATE >= SCSOFFPREM:EFF_DATE Then
+      Begin
+        L_CHARGE = SCSOFFPREM:CHARGE
+      End
+    Next SCSOFFPREM
+  }
+
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+       agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:off_prem_limit > SCSDEFAULT:off_prem_limit Then
+  {
+    If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+       agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO And
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+      Change agqCONTRACTOR_ALIAS
+        Begin
+          agqCONTRACTOR_ALIAS:OFF_PREM_PREMIUM = (agqCONTRACTOR_ALIAS:off_prem_limit - SCSDEFAULT:off_prem_limit)
+                                                 divide 1000 * l_charge
+          l_property_endorsement_total = l_property_endorsement_total + agqCONTRACTOR_ALIAS:OFF_PREM_PREMIUM
+--          write("%cproperty_total NOT-->%n<--",09001,l_property_endorsement_total)
+        End
+  }
+End
+
+Procedure RATE_FIRE_LEGAL
+Begin
+L_COMPANY_ID = agqcontractor:COMPANY_ID
+L_STATE = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+L_EFF_DATE = agqcontractor:EFF_DATE
+L_FIRE_LIMIT = agqLIABLIMITS:FIRE_LEGAL
+L_RECORD_KEY = "FL"
+
+Include "scsfire.inc"
+
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+       agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:FIRE_PREMIUM = L_FIRE_RATE
+      End
+    l_total_liability = l_total_liability + l_Fire_rate
+
+  if l_only_once1 one of 0 then
+    {
+      l_only_once1 = 1
+      l_not_subject_to_irpm = l_not_subject_to_irpm + l_fire_rate
+    }
+End
+
+Procedure ACCESS_LOSSCOST
+Begin
+L_COMPANY_ID = agqcontractor:COMPANY_ID
+L_STATE = agqCONTRACTOR:STATE
+L_LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+Access SFSLOSSCOST, Set SFSLOSSCOST:COMPANY_ID = L_COMPANY_ID,
+                        SFSLOSSCOST:STATE = L_STATE,
+                        SFSLOSSCOST:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS, Generic
+
+Repeat Begin
+   Exit If SFSLOSSCOST:COMPANY_ID <> L_COMPANY_ID Or
+           SFSLOSSCOST:STATE <> L_STATE Or
+           SFSLOSSCOST:LINE_OF_BUSINESS <> L_LINE_OF_BUSINESS
+
+   If agqcontractor:EFF_DATE >= SFSLOSSCOST:EFF_DATE Then
+       L_LOSS_COST = SFSLOSSCOST:RATE
+
+Next SFSLOSSCOST
+End
+
+If L_LOSS_COST = 0 Then
+    L_LOSS_COST = 1.0000
+
+/* end of access_sfslosscost */
+End
+
+Procedure GET_RATE
+Begin
+Access agqlocation,
+   Set agqlocation:app_no = agqCONTRACTOR:app_no,
+       agqlocation:PREM_NO = agqCONTRACTOR:PREM_NO,
+       agqlocation:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqlocation:app_no = agqCONTRACTOR:app_no And
+   agqlocation:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqlocation:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+    Change agqlocation
+        Begin
+        agqlocation:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+        agqlocation:STATE = agqCONTRACTOR:STATE
+        agqlocation:COUNTY = agqCONTRACTOR:COUNTY
+        agqlocation:TRANS_CODE = 10
+        agqlocation:TRANS_DATE = agqcontractor:entry_date
+        agqlocation:EFF_DATE = agqcontractor:EFF_DATE
+        agqlocation:EXP_DATE = agqcontractor:EXP_DATE
+        agqlocation:LIMIT_CODE[1] = "A"
+        agqlocation:LIMIT[1] = agqCONTRACTOR:BUILDING_LIMIT
+        agqlocation:LIMIT_CODE[2] = "B"
+        agqlocation:LIMIT[2] = agqCONTRACTOR:PROPERTY_LIMIT
+        agqlocation:LIMIT_CODE[3] = "C"
+        agqlocation:LIMIT[3] = agqCONTRACTOR:PERSONAL_LIMIT
+        agqlocation:LIMIT_CODE[4] = "D"
+        agqlocation:LIMIT[4] = agqCONTRACTOR:LOSS_LIMIT
+        agqlocation:LIMIT_CODE[5] = "E"
+        agqlocation:LIMIT[5] = agqLIABLIMITS:OCCURRENCE
+        agqlocation:LIMIT_CODE[6] = "F"
+        agqlocation:LIMIT[6] = agqLIABLIMITS:MEDICAL_PAYMENTS
+        agqlocation:LIMIT_CODE[10] = "T"
+        agqlocation:LIMIT[10] = agqCONTRACTOR:BUILDING_LIMIT +
+                                agqCONTRACTOR:PROPERTY_LIMIT +
+                                agqCONTRACTOR:PERSONAL_LIMIT +
+                                agqCONTRACTOR:LOSS_LIMIT
+        agqlocation:PREMIUM[10] = L_LOC_TOTAL
+        End
+
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+       agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO,
+       agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+If agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no And
+   agqCONTRACTOR_ALIAS:PREM_NO = agqCONTRACTOR:PREM_NO And
+   agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO Then
+    Change agqCONTRACTOR_ALIAS
+      Begin
+        agqCONTRACTOR_ALIAS:SCP_TOTAL = L_LOC_TOTAL
+      End
+
+L_TOTAL = l_total + L_LOC_TOTAL
+
+/* end of get rate */
+End
+
+Procedure MINIMUM_PREMIUMS
+
+Begin
+
+Access SFSCONTROL,
+   Set SFSCONTROL:COMPANY_ID       = agqcontractor:COMPANY_ID,
+       SFSCONTROL:STATE            = agqCONTRACTOR:STATE,
+       SFSCONTROL:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS, Approximate
+
+Repeat Begin
+    Exit If SFSCONTROL:COMPANY_ID       <> agqcontractor:COMPANY_ID Or
+            SFSCONTROL:STATE            <> agqCONTRACTOR:STATE Or
+            SFSCONTROL:LINE_OF_BUSINESS <> agqcontractor:LINE_OF_BUSINESS
+
+    If agqcontractor:EFF_DATE >= SFSCONTROL:EFF_DATE Then
+        Begin
+        L_MINIMUM = SFSCONTROL:MINIMUM_PREMIUM
+        L_INLAND_MARINE_MINIMUM = SFSCONTROL:INLAND_MARINE_PREMIUM
+        End
+
+    Next SFSCONTROL
+    End
+End
+
+Procedure TOTALS
+Begin
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no, generic
+
+l_total = 0
+while agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no
+  begin
+
+    l_total = l_total + agqcontractor_alias:scp_total
+--    write("%cscp_total-->%n<--",05001,agqcontractor_alias:scp_total)
+ --   write("%cl_total-->%n<--",06001,l_total)
+    next agqcontractor_alias
+  end
+
+
+L_MINIMUM_APPLIES = "N"
+If L_TOTAL < L_MINIMUM Then
+    Begin
+    L_TOTAL = L_MINIMUM
+    L_MINIMUM_APPLIES = "Y"
+    if l_property_total = 0 then
+        l_total_liability = l_minimum
+    else
+    if l_property_total <> 0 then
+        begin
+        l_property_total = l_minimum - l_total_liability
+        end
+    End
+
+End
+
+Procedure FINAL_TOTAL
+Begin
+L_EFF_DATE_1 = Dateadd(agqcontractor:EFF_DATE,0,1)
+If agqcontractor:EXP_DATE < L_EFF_DATE_1 Then
+  Begin
+    L_DAYS_RATE = L_TOTAL Divide 365
+    L_DAYS = agqcontractor:EXP_DATE - agqcontractor:EFF_DATE
+    L_PRO_RATA_PREMIUM = L_DAYS * L_DAYS_RATE
+    L_TOTAL = L_PRO_RATA_PREMIUM
+  End
+
+If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+    L_FINAL_TOTAL = L_TOTAL + L_INSTALLMENT
+Else
+    L_FINAL_TOTAL = L_TOTAL
+
+-- if minimum premium not irpm allowed
+If L_MINIMUM_APPLIES = "Y" And
+   agqmaster:IRPM <> 0 Then
+  Begin
+    Access agqmaster,
+       Set agqmaster:app_no = G_app_no, Exact
+
+    If agqmaster:app_no = G_app_no Then
+      Change agqmaster
+        Begin
+          agqmaster:IRPM = 0
+        End
+  End
+
+L_RATE_FACTOR = 0.01
+L_IRPM = 1 + (agqmaster:IRPM * L_RATE_FACTOR)
+If L_IRPM = 0 Then
+  {
+    L_IRPM = 1
+  }
+    If agqmaster:IRPM <> 0 Then
+      Begin
+        L_IRPM_TOTAL = ((L_TOTAL - l_not_subject_to_irpm) * L_IRPM) - (L_TOTAL - l_not_subject_to_irpm)
+
+
+ /*       l_irpm_property_total  = (L_BUILDING_PREMIUM + L_PROPERTY_PREMIUM + L_PERSONAL_PREMIUM + l_property_endorsement_total)
+        l_property_irpm        = (l_irpm_property_total * l_irpm) - l_irpm_property_total
+        l_inland_irpm          = (L_INLAND_TOTAL * l_irpm) - L_INLAND_TOTAL
+        l_liability_irpm       = (l_total - l_irpm_property_total - l_inland_total - l_not_subject_to_irpm) * l_irpm -
+                                 (l_total - l_irpm_property_total - l_inland_total - l_not_subject_to_irpm)
+
+--        write("%c%s%n",22001,"l_irpm_property_total",l_irpm_property_total)
+        write("%c%s%n",23001,"l_liability_irpm",l_liability_irpm)
+        write("%c%s%n",23031,"l_inland_irpm",l_inland_irpm)
+        write("%c%s%n",23061,"l_property_irpm",l_property_irpm)
+
+        write("%c%s%n",22001,"l_irpm_total",l_irpm_total)
+        if (l_property_irpm + l_inland_irpm + l_liability_irpm) <> l_irpm_total then
+          {
+            if l_irpm < 0 then
+              {
+                l_irpm_difference = l_irpm_total + (l_property_irpm + l_inland_irpm + l_liability_irpm)
+              }
+            else
+              {
+                l_irpm_difference = l_irpm_total - (l_property_irpm + l_inland_irpm + l_liability_irpm)
+              }
+        --    write("%c%s%n",22001,"l_irpm_total",l_irpm_total)
+            write("%c%s%n",22030,"l_indv_total",(l_property_irpm + l_inland_irpm + l_liability_irpm))
+            write("%c%s%n",22060,"l_irpm_difference",l_irpm_difference)
+            if l_liability_irpm <> 0 then
+              {
+                l_liability_irpm = l_liability_irpm - l_irpm_difference
+              }
+            else
+              if l_property_irpm <> 0 then
+                {
+                  l_property_irpm = l_property_irpm - l_irpm_difference
+                }
+              else
+                {
+                  l_inland_irpm = l_inland_irpm - l_irpm_difference
+                }
+            write("%c%s%n",24001,"l_liability_irpm",l_liability_irpm)
+            write("%c%s%n",24031,"l_inland_irpm",l_inland_irpm)
+            write("%c%s%n",24061,"l_property_irpm",l_property_irpm)
+          }
+
+        */
+--        write("%c%s%n",23001,"l_property_irpm",l_property_irpm)
+--        write("%c%s%n",23021,"other_totals",agqmaster:other_totals[2])
+--        write("%c%s%n",23041,"l_total",L_TOTAL)
+--        write("%c%s%n",24001,"l_total",((L_TOTAL - l_fire_rate) - agqmaster:other_totals[2]))
+
+--        write("%c%s%n",24061,"l_irpm_total",L_irpm_total)
+      End
+
+
+/*access sfssurcharge,
+   set sfssurcharge:company_id       = agqcontractor:company_id,
+       sfssurcharge:state            = agqcontractor:state,
+       sfssurcharge:line_of_business = agqcontractor:line_of_business, generic
+
+l_surcharge_date = 0
+while sfssurcharge:company_id       = agqcontractor:company_id and
+      sfssurcharge:state            = agqcontractor:state and
+      sfssurcharge:line_of_business = agqcontractor:line_of_business
+        begin
+        if (agqcontractor:eff_date >= sfssurcharge:eff_date and
+           (l_surcharge_date < sfssurcharge:eff_date or
+           l_surcharge_date = 0)) then
+            begin
+            l_surcharge_date    = sfssurcharge:eff_date
+            l_surcharge_factor  = sfssurcharge:surcharge_factor
+            l_surcharge_minimum = sfssurcharge:minimum_premium
+            end
+        next sfssurcharge
+        end
+
+--write("%c%s%n",14061,"l_irpm_total",L_irpm_total)
+--write("%c%s%n",15061,"l_identity_theft",agqmaster:total[7])
+--write("%c%s%n",16061,"l_final_total",L_final_total)
+
+L_SURCHARGE = (L_FINAL_TOTAL + agqmaster:total[7] + l_IRPM_TOTAL) * L_SURCHARGE_FACTOR
+
+If L_SURCHARGE < L_SURCHARGE_MINIMUM Then
+    L_SURCHARGE = L_SURCHARGE_MINIMUM*/
+
+L_COMPANY_ID = agqcontractor:COMPANY_ID
+
+Access agqmaster,
+   Set agqmaster:app_no = agqCONTRACTOR:app_no, Exact
+
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no, Generic
+
+L_PROPERTY_TOTAL = 0
+While agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no
+    Begin
+    L_PROPERTY_TOTAL = L_PROPERTY_TOTAL +
+                       agqCONTRACTOR_ALIAS:PROPERTY_TOTAL
+
+    Next agqCONTRACTOR_ALIAS
+    End
+
+Access agqCONTRACTOR_ALIAS,
+   Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no, Generic
+
+If agqmaster:app_no = agqCONTRACTOR:app_no Then
+    Change agqmaster
+      Begin
+        -- need these totals for inquiry purposes
+        agqmaster:TOTAL[3] = L_BUILDING_PREMIUM
+        agqmaster:TOTAL[4] = L_PROPERTY_PREMIUM
+        agqmaster:TOTAL[5] = L_PERSONAL_PREMIUM
+        agqmaster:TOTAL[6] = L_LOSS_PREMIUM
+        agqmaster:total[7] = l_identity_theft
+        agqmaster:TOTAL[9] = L_INLAND_TOTAL
+--        write("%c%n",01003,l_property_endorsement_total)
+        agqmaster:total[10] = L_BUILDING_PREMIUM + L_PROPERTY_PREMIUM + L_PERSONAL_PREMIUM + l_property_endorsement_total   --property
+        agqmaster:TOTAL[17] = L_TOTAL
+        agqmaster:TOTAL[18] = L_FINAL_TOTAL
+        agqmaster:TOTAL[19] = L_IRPM_TOTAL
+        agqmaster:TOTAL[20] = L_FINAL_TOTAL + l_irpm_total + L_SURCHARGE
+        agqmaster:AMT_DUE_TOTAL[20] = L_FINAL_TOTAL + l_irpm_total + L_SURCHARGE
+        agqmaster:TOTAL[1] = L_FINAL_TOTAL + l_irpm_total - l_terrorism_premium - l_identity_theft
+
+        agqmaster:RAW_PREMIUM_AMT_DUE = L_TOTAL * L_IRPM
+        agqmaster:INSTALLMENT_CHARGE = L_INSTALLMENT
+        If L_MINIMUM_APPLIES = "Y" Then
+            agqmaster:MINIMUM_PREM_APPLIES = "Y"
+        agqmaster:SURCHARGE = L_SURCHARGE
+        End
+
+  Access agqCONTRACTOR_ALIAS,
+     Set agqCONTRACTOR_ALIAS:app_no = g_app_no, generic
+
+  while agqcontractor_alias:app_no = g_app_no
+    begin
+      Change agqCONTRACTOR_ALIAS
+        Begin
+          agqcontractor_alias:breakout_property_subline = 1
+        end
+      next agqcontractor_alias
+    end
+
+/* end of final total */
+End
+
+Procedure RATE_ENDORSEMENTS
+Begin
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqcontractor:COMPANY_ID,
+                      SFSOPTEND:STATE = agqCONTRACTOR:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqcontractor:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqCONTRACTOR:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqcontractor:LINE_OF_BUSINESS Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqcontractor:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqcontractor:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+      Begin
+        L_END_FACTOR    = SFSOPTEND:PREMIUM_1[1]
+        L_END_LIMIT     = SFSOPTEND:LIMIT[1]
+        L_END_PREMIUM1  = SFSOPTEND:PREMIUM_1[1]
+        l_end_limit_2   = sfsoptend:limit[2]
+        l_end_premium_2 = SFSOPTEND:PREMIUM_1[2]
+        L_END_PREMIUM_3 = SFSOPTEND:PREMIUM_1[3]
+        l_end_limit_3   = sfsoptend:limit[3]
+
+        l_system_rate  = sfsoptend:system_rate
+        if l_code = "MCL328" then
+          {
+            l_loop = 1
+            while sfsoptend:limit[l_loop] <= l_total_payroll and
+                  l_loop <= 4
+              {
+                l_end_premium1 = SFSOPTEND:PREMIUM_1[l_loop]
+                l_loop = l_loop + 1
+              }
+            l_liability_endorsement_total = l_liability_endorsement_total + l_end_premium1
+          }
+        if l_code one of "MSC715", "MSC715D" then
+          {
+            l_end_premium1 = l_end_premium1
+            if l_only_once2
+             one of 0 then
+              {
+                l_only_once2 = 1
+                l_not_subject_TO_IRPM = l_not_subject_TO_IRPM + L_END_PREMIUM1
+              }
+          }
+
+        if l_code = "MCP141" then
+          begin
+            Access agqendorse3,
+               Set agqendorse3:app_no = agqcontractor:app_no,
+                   agqendorse3:PREM_NO  = agqCONTRACTOR:PREM_NO,
+                   agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                   agqendorse3:CODE     = L_CODE, Generic
+
+            switch(agqendorse3:limit[1])
+              case 10000 : l_end_premium1 = sfsoptend:premium_1[1]
+              case 25000 : l_end_premium1 = sfsoptend:premium_1[2]
+              default    : l_end_premium1 = sfsoptend:premium_1[3]
+              end
+            l_property_endorsement_total = l_property_endorsement_total + l_end_premium1
+          end
+
+        if l_code one of "MCL412","MCL426" then
+          {
+            if agqLIABLIMITS:OCCURRENCE = L_END_LIMIT then
+              {
+                l_end_premium1 = SFSOPTEND:PREMIUM_1[1]
+              }
+            ELSE
+              if agqLIABLIMITS:OCCURRENCE =  SFSOPTEND:LIMIT[2] then
+                {
+                  l_end_premium1 = SFSOPTEND:PREMIUM_1[2]
+                }
+              ELSE
+                if agqLIABLIMITS:OCCURRENCE =  SFSOPTEND:LIMIT[3] then
+                  {
+                    l_end_premium1 = SFSOPTEND:PREMIUM_1[3]
+                  }
+
+            if l_code one of "MCL426" then
+              {
+                Access agqendorse3,
+                   Set agqendorse3:app_no = agqcontractor:app_no,
+                       agqendorse3:PREM_NO  = agqCONTRACTOR:PREM_NO,
+                       agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                       agqendorse3:CODE     = L_CODE, Generic
+
+                if agqendorse3:app_no = agqcontractor:app_no and
+                   agqendorse3:PREM_NO  = agqCONTRACTOR:PREM_NO and
+                   agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_No and
+                   agqendorse3:CODE     = L_CODE then
+                  change agqendorse3
+                    begin
+                      agqendorse3:premium[1] = l_end_premium1   --fills in data automatically
+                    end
+
+              }
+            if l_code one of "MCL412","MCL426" then
+              {
+                l_not_subject_to_irpm = l_not_subject_to_irpm + l_end_premium1
+              }
+            l_liability_endorsement_total = l_liability_endorsement_total + l_end_premium1
+          }
+        if l_code one of "MSC713", "MSC713D" then
+          {
+            Access agqendorse3,
+               Set agqendorse3:app_no = agqcontractor:app_no,
+                   agqendorse3:PREM_NO  = agqCONTRACTOR:PREM_NO,
+                   agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                   agqendorse3:CODE     = L_CODE, Generic
+
+            while agqendorse3:app_no = agqcontractor:app_no and
+                  agqendorse3:PREM_NO  = agqCONTRACTOR:PREM_NO and
+                  agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO and
+                  agqendorse3:CODE     = L_CODE
+              {
+                l_scheduled_property_limit = l_scheduled_property_limit + agqendorse3:limit[1]
+                next agqendorse3
+              }
+            l_end_premium1 = l_scheduled_property_limit divide l_end_limit * l_end_factor
+--            write("%cbefore adding in msc713%n",04001,l_property_endorsement_total)
+            l_property_endorsement_total = l_property_endorsement_total + l_end_premium1
+          }
+        if l_code = "MCP173" then
+          begin
+            Access agqendorse3,
+               Set agqendorse3:app_no = agqcontractor:app_no,
+                   agqendorse3:PREM_NO  = agqCONTRACTOR:PREM_NO,
+                   agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                   agqendorse3:CODE     = L_CODE, Generic
+
+            if agqendorse3:app_no = agqcontractor:app_no and
+               agqendorse3:PREM_NO  = agqCONTRACTOR:PREM_NO and
+               agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_No and
+               agqendorse3:CODE     = L_CODE then
+              {
+                switch(agqendorse3:limit[1])
+                  case 10000 : switch(agqendorse3:limit[2])
+                                 case 2000  : l_end_premium1 = sfsoptend:premium_1[1]
+                                 case 5000  : l_end_premium1 = sfsoptend:premium_1[2]
+                                 case 10000 : l_end_premium1 = sfsoptend:premium_1[3]
+                               end
+                  default    : l_end_premium1 = sfsoptend:premium_1[4]
+                end
+                l_property_endorsement_total = l_property_endorsement_total + l_end_premium1
+              }
+          end
+        if L_code one of "SIR002" then
+          {
+            l_end_premium1 = L_FINAL_TOTAL * L_END_FACTOR
+          }
+
+        if l_code = "GIM121" then    --delos
+          {  --unscheduled property is 35 per 1000
+             --scheduled property is 60 for first $15000 and $20 per 1000 above 15000
+            Access agqendorse3,
+               Set agqendorse3:app_no = agqcontractor:app_no,
+                   agqendorse3:PREM_NO  = agqCONTRACTOR:PREM_NO,
+                   agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                   agqendorse3:CODE     = L_CODE, Generic
+
+            if agqendorse3:limit[1] > l_end_limit_3 then
+              {
+                l_unscheduled_Property = ((agqendorse3:limit[1] - l_end_limit_3) divide l_end_limit) * l_end_premium_2 + l_end_premium_3
+              }
+            else
+              {
+                l_unscheduled_property = l_end_premium_3  --not over 15000 only charge flat charge
+              }
+--            write("%c%n",1005,agqendorse3:limit[1] div l_end_limit)
+--            write("%c%n",1015,l_end_factor)
+--            write("%c%n",1025,l_unscheduled_property)
+            Access agqdesc3,
+               Set agqdesc3:app_no = agqcontractor:app_no,
+                   agqdesc3:PREM_NO  = agqCONTRACTOR:PREM_NO,
+                   agqdesc3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                   agqdesc3:CODE     = L_CODE, Generic
+            l_scheduled_property = 0
+            while agqdesc3:app_no = agqcontractor:app_no and
+                  agqdesc3:PREM_NO  = agqCONTRACTOR:PREM_NO and
+                  agqdesc3:BUILD_NO = agqCONTRACTOR:BUILD_NO and
+                  agqdesc3:CODE     = L_CODE
+              {
+                l_scheduled_property_limit = l_scheduled_property_limit + agqdesc3:limit
+                next agqdesc3
+              }
+            l_scheduled_Property = l_scheduled_property_limit divide l_end_limit * l_end_premium1
+
+            l_end_premium1 = l_scheduled_property + l_unscheduled_property
+            l_inland_total = l_inland_total + l_end_premium1
+--            write("%c%n",2005,l_scheduled_property)
+--           write("%c%n",2015,l_unscheduled_property)
+          }
+      End
+
+    Next SFSOPTEND
+    End
+
+IF L_CODE ONE OF "MCL309", "MCL310", "MCL311", "MCL312", "MCL313", "MCL322", "MCL324", "MCL326" then
+  {
+    l_not_subject_TO_IRPM = l_not_subject_TO_IRPM + L_END_PREMIUM1
+    l_liability_endorsement_total = l_liability_endorsement_total + l_end_premium1
+  }
+l_update_sfpend_premium = l_end_premium1
+
+if l_code one of "SCP100", "MCL328" then
+  {
+    l_update_sfpend_premium = l_end_premium1
+  }
+
+If L_CODE = "MIM100" Then
+  Begin
+    Access agqendorse3, Set agqendorse3:app_no = agqcontractor:app_no,
+                           agqendorse3:PREM_NO  = agqCONTRACTOR:PREM_NO,
+                           agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                           agqendorse3:CODE     = L_CODE, Generic
+
+    if agqendorse3:total_premium <> 0 then
+        l_update_sfpend_premium = agqendorse3:total_premium
+    else
+    if agqendorse3:premium[1] <> 0 then
+        l_update_sfpend_premium = agqendorse3:premium[1]
+    else
+        begin
+        if l_property_adjustments = 0 then
+            l_property_adjustments = 1.00
+        L_COMPUTER_FACTOR       = L_PROPERTY_RATE * L_PROPERTY_ADJUSTMENTS
+        L_UPDATE_SFPEND_PREMIUM = ((L_property_rate * l_property_adjustments) *
+                                  ((agqendorse3:LIMIT[1] +
+                                  agqendorse3:LIMIT[2]) Divide L_END_LIMIT))
+        End
+
+    L_INLAND_TOTAL = L_INLAND_TOTAL + L_UPDATE_SFPEND_PREMIUM
+    L_INLAND_MARINE_CODE = "Y"
+    End
+
+If L_CODE = "MCM841" Then
+    Begin
+    L_UPDATE_SFPEND_PREMIUM = 0
+    Access agqendorse3, Set agqendorse3:app_no = agqcontractor:app_no,
+                           agqendorse3:PREM_NO  = agqCONTRACTOR:PREM_NO,
+                           agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                           agqendorse3:CODE     = L_CODE, Generic
+
+    l_limit = agqendorse3:limit[1]
+    l_state = agqcontractor:state
+    access scsumuim, set scsumuim:company_id       = agqcontractor:company_id,
+                         scsumuim:state            = l_state,
+                         scsumuim:line_of_business = agqcontractor:line_of_business,
+                         scsumuim:limit            = l_limit, generic
+
+    while scsumuim:company_id       = agqcontractor:company_id and
+          scsumuim:state            = l_state and
+          scsumuim:line_of_business = agqcontractor:line_of_business and
+          scsumuim:limit            = l_limit
+            begin
+            if agqcontractor:eff_date >= scsumuim:eff_date then
+                begin
+                l_update_sfpend_premium = scsumuim:charge
+                end
+
+            next scsumuim
+            end
+
+    End
+
+if l_code = "MCL425" then
+    Begin
+    Access agqendorse3, Set agqendorse3:app_no = agqcontractor:app_no,
+                           agqendorse3:PREM_NO  = agqcontractor:PREM_NO,
+                           agqendorse3:BUILD_NO = agqcontractor:BUILD_NO,
+                           agqendorse3:CODE     = L_CODE, Generic
+
+    l_company_id       = agqcontractor:company_id
+    l_state            = agqcontractor:state
+    l_line_of_business = agqcontractor:line_of_business
+    l_employee_limit   = agqendorse3:limit[1]
+    l_deductible       = agqendorse3:deductible[1]
+    l_no_employees     = agqendorse3:no_employees[1]
+    l_eff_date         = agqcontractor:eff_date
+
+    access scsemployee, set scsemployee:company_id       = l_company_id,
+                            scsemployee:state            = l_state,
+                            scsemployee:line_of_business = l_line_of_business, generic
+
+    while scsemployee:company_id       = l_company_id and
+          scsemployee:state            = l_state and
+          scsemployee:line_of_business = l_line_of_business
+            begin
+            if l_eff_date >= scsemployee:rate_date then
+                begin
+                switch(l_employee_limit)
+                  case 25000 : begin
+                               if l_no_employees < 26 then
+                                   l_employee_charge = scsemployee:charge[1]
+                               else
+                               if l_no_employees < 101 then
+                                   l_employee_charge = scsemployee:charge[2]
+                               else
+                                   l_employee_charge = scsemployee:charge[3]
+                               end
+                  case 50000 : begin
+                               if l_no_employees < 26 then
+                                   l_employee_charge = scsemployee:charge[4]
+                               else
+                               if l_no_employees < 101 then
+                                   l_employee_charge = scsemployee:charge[5]
+                               else
+                                   l_employee_charge = scsemployee:charge[6]
+                               end
+                  case 100000 : begin
+                                if l_no_employees < 26 then
+                                   l_employee_charge = scsemployee:charge[7]
+                                else
+                                if l_no_employees < 101 then
+                                    l_employee_charge = scsemployee:charge[8]
+                                else
+                                    l_employee_charge = scsemployee:charge[9]
+                                end
+                  case 500000 : begin
+                                if l_no_employees < 26 then
+                                    l_employee_charge = scsemployee:charge[10]
+                                else
+                                if l_no_employees < 101 then
+                                    l_employee_charge = scsemployee:charge[11]
+                                else
+                                    l_employee_charge = scsemployee:charge[12]
+                                end
+                   default    : begin
+                                if l_no_employees < 26 then
+                                    l_employee_charge = scsemployee:charge[13]
+                                else
+                                if l_no_employees < 101 then
+                                    l_employee_charge = scsemployee:charge[14]
+                                else
+                                    l_employee_charge = scsemployee:charge[15]
+                                end
+                   end
+
+                switch(l_deductible)
+                  case 1000 : l_employee_deduct_factor = scsemployee:deductible_factor[1]
+                  case 2500 : l_employee_deduct_factor = scsemployee:deductible_factor[2]
+                  case 5000 : l_employee_deduct_factor = scsemployee:deductible_factor[3]
+                  default   : l_employee_deduct_factor = scsemployee:deductible_factor[4]
+                  end
+
+               l_employee_minimum = scsemployee:minimum_premium
+                end
+
+            next scsemployee
+            end
+
+    l_update_sfpend_premium = l_employee_charge *
+                              l_employee_deduct_factor
+    if l_update_sfpend_premium < l_employee_minimum then
+        l_update_sfpend_premium = l_employee_minimum
+      l_liability_endorsement_total = l_liability_endorsement_total + l_update_sfpend_premium
+
+    l_deductible = g_deductible
+    end
+
+If L_CODE one of "MCL317","MCL320" then
+  Begin
+    Access agqaddin3,
+       Set agqaddin3:app_no = agqCONTRACTOR:app_no,
+           agqaddin3:PREM_NO  = agqCONTRACTOR:PREM_NO,
+           agqaddin3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+           agqaddin3:CODE     = L_CODE, Generic
+
+    Access agqCONTRACTOR_ALIAS,
+       Set agqCONTRACTOR_ALIAS:app_no = agqCONTRACTOR:app_no,
+           agqCONTRACTOR_ALIAS:PREM_NO  = agqCONTRACTOR:PREM_NO,
+           agqCONTRACTOR_ALIAS:BUILD_NO = agqCONTRACTOR:BUILD_NO, Generic
+
+    If agqaddin3:TOTAL_PREMIUM <> 0 Then
+      {
+        L_UPDATE_SFPEND_PREMIUM = agqaddin3:TOTAL_PREMIUM
+      }
+    Else
+      begin
+        if sfscompany:special_territory_rating = 1 then
+            l_update_sfpend_premium = l_end_factor
+        else
+        if l_end_factor <> 0 then
+            begin
+            L_UPDATE_SFPEND_PREMIUM = L_addl_LIABILITY *
+                                      L_END_FACTOR
+            end
+      end
+      l_not_subject_TO_IRPM = l_not_subject_TO_IRPM + L_UPDATE_SFPEND_PREMIUM
+      l_liability_endorsement_total = l_liability_endorsement_total + l_update_sfpend_premium
+  End
+
+
+if l_code one of "MIM121" then
+    begin
+    Access agqendorse3, Set agqendorse3:app_no = G_app_no,
+                           agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO,
+                           agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                           agqendorse3:CODE = L_CODE, Generic
+
+    L_UPDATE_SFPEND_PREMIUM = 0
+    While agqendorse3:app_no = G_app_no And
+          agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO And
+          agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO And
+          agqendorse3:CODE = L_CODE
+            begin
+            if agqendorse3:premium[1] <> 0 or
+               agqendorse3:premium[2] <> 0 then
+                begin
+                l_update_sfpend_premium = agqendorse3:premium[1] +
+                                          agqendorse3:premium[2] +
+                                          l_update_sfpend_premium
+                end
+            else
+                begin
+                if agqendorse3:limit[1] > l_end_limit_1 then
+                    l_update_sfpend_premium = (((agqendorse3:limit[1] - l_end_limit_1)
+                                              divide l_end_limit) *
+                                              l_end_premium1)
+                end
+
+
+            next agqendorse3
+            end
+
+    L_INLAND_TOTAL = L_INLAND_TOTAL + L_UPDATE_SFPEND_PREMIUM
+    L_INLAND_MARINE_CODE = "Y"
+    end
+
+if l_code one of "MIM011" then
+    begin
+    Access agqendorse3, Set agqendorse3:app_no = G_app_no,
+                           agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO,
+                           agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                           agqendorse3:CODE = L_CODE, Generic
+
+    L_UPDATE_SFPEND_PREMIUM = 0
+    l_premium_1 = 0
+    l_premium_2 = 0
+    l_premium_3 = 0
+    l_premium_4 = 0
+    l_premium_5 = 0
+    l_premium_6 = 0
+    l_premium_7 = 0
+    l_premium_8 = 0
+    While agqendorse3:app_no = G_app_no And
+          agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO And
+          agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO And
+          agqendorse3:CODE = L_CODE
+            begin
+            if agqendorse3:limit[2] <> 0 then
+                l_premium_1 = ((agqendorse3:limit[2] divide 100) *
+                              agqendorse3:rate[1])
+            if agqendorse3:limit[3] <> 0 then
+                l_premium_2 = ((agqendorse3:limit[3] divide 100) *
+                              agqendorse3:rate[2])
+            if agqendorse3:limit[4] <> 0 then
+                l_premium_3 = ((agqendorse3:limit[4] divide 100) *
+                              agqendorse3:rate[3])
+            if agqendorse3:limit[5] <> 0 then
+                l_premium_4 = ((agqendorse3:limit[5] divide 100) *
+                              agqendorse3:rate[4])
+            if agqendorse3:limit[6] <> 0 then
+                l_premium_5 = ((agqendorse3:limit[6] divide 100) *
+                              agqendorse3:rate[5])
+            if agqendorse3:limit[7] <> 0 then
+                l_premium_6 = ((agqendorse3:limit[7] divide 100) *
+                              agqendorse3:rate[6])
+            if agqendorse3:limit[8] <> 0 then
+                l_premium_7 = ((agqendorse3:limit[8] divide 100) *
+                              agqendorse3:rate[7])
+            if agqendorse3:limit[9] <> 0 then
+                l_premium_8 = ((agqendorse3:limit[9] divide 100) *
+                              agqendorse3:rate[8])
+
+            next agqendorse3
+            end
+
+    l_update_sfpend_premium = l_premium_1 + l_premium_2 + l_premium_3 +
+                              l_premium_4 + l_premium_5 + l_premium_6 +
+                              l_premium_7 + l_premium_8
+
+    L_INLAND_TOTAL = L_INLAND_TOTAL + L_UPDATE_SFPEND_PREMIUM
+    L_INLAND_MARINE_CODE = "Y"
+    end
+
+if l_code one of "MIM013", "MIM110" then
+    begin
+    Access agqendorse3, Set agqendorse3:app_no = G_app_no,
+                           agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO,
+                           agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                           agqendorse3:CODE = L_CODE, Generic
+
+    L_UPDATE_SFPEND_PREMIUM = 0
+    While agqendorse3:app_no = G_app_no And
+          agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO And
+          agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO And
+          agqendorse3:CODE = L_CODE
+            begin
+            l_update_sfpend_premium = ((agqendorse3:limit[1] divide 100) *
+                                      agqendorse3:rate[1])
+
+            next agqendorse3
+            end
+
+    L_INLAND_TOTAL = L_INLAND_TOTAL + L_UPDATE_SFPEND_PREMIUM
+    L_INLAND_MARINE_CODE = "Y"
+    end
+
+If L_CODE One Of "MCL410", "MCL411", "MCL510"  Then
+  Begin
+    Access agqendorse3,
+       Set agqendorse3:app_no = G_app_no,
+           agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO,
+           agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+           agqendorse3:CODE = L_CODE, Generic
+
+    L_UPDATE_SFPEND_PREMIUM = 0
+    While agqendorse3:app_no = G_app_no And
+          agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO And
+          agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO And
+          agqendorse3:CODE = L_CODE
+            Begin
+            L_UPDATE_SFPEND_PREMIUM = L_UPDATE_SFPEND_PREMIUM + agqendorse3:TOTAL_PREMIUM
+
+
+            Next agqendorse3
+            End
+    l_liability_endorsement_total = l_liability_endorsement_total + l_update_sfpend_premium
+  End
+
+
+
+If L_CODE One Of "FM101" Then
+    Begin
+    L_UPDATE_SFPEND_PREMIUM = 0
+    Access agqendorse3, Set agqendorse3:app_no = G_app_no,
+                           agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO,
+                           agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                           agqendorse3:CODE = L_CODE, Generic
+
+    While agqendorse3:app_no = G_app_no And
+          agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO And
+          agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO And
+          agqendorse3:CODE = L_CODE
+            Begin
+            L_UPDATE_SFPEND_PREMIUM = agqendorse3:PREMIUM[1]  +
+                                      L_UPDATE_SFPEND_PREMIUM
+            Next agqendorse3
+            End
+    end
+
+If L_CODE One Of "MIM112", "IM7005", "IM7015", "IM7105", "IM7205", "IM7206",
+                 "IM7506", "IM7006", "PTF100", "MIM116", "MIM012" Then
+    Begin
+    L_UPDATE_SFPEND_PREMIUM = 0
+    Access agqendorse3,
+       Set agqendorse3:app_no = G_app_no,
+           agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO,
+           agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+           agqendorse3:CODE = L_CODE, Generic
+
+    While agqendorse3:app_no = G_app_no And
+          agqendorse3:PREM_NO = agqCONTRACTOR:PREM_NO And
+          agqendorse3:BUILD_NO = agqCONTRACTOR:BUILD_NO And
+          agqendorse3:CODE = L_CODE
+            Begin
+            L_UPDATE_SFPEND_PREMIUM = agqendorse3:TOTAL_PREMIUM  +
+                                      L_UPDATE_SFPEND_PREMIUM
+            Next agqendorse3
+            End
+
+    Access agqdesc3, Set agqdesc3:app_no = G_app_no,
+                        agqdesc3:PREM_NO = agqCONTRACTOR:PREM_NO,
+                        agqdesc3:BUILD_NO = agqCONTRACTOR:BUILD_NO,
+                        agqdesc3:CODE = L_CODE, Generic
+
+    While agqdesc3:app_no = G_app_no And
+          agqdesc3:PREM_NO = agqCONTRACTOR:PREM_NO And
+          agqdesc3:BUILD_NO = agqCONTRACTOR:BUILD_NO And
+          agqdesc3:CODE = L_CODE
+            Begin
+            If agqdesc3:TOTAL_PREMIUM <> 0 Then
+                Begin
+                L_UPDATE_SFPEND_PREMIUM = agqdesc3:TOTAL_PREMIUM  +
+                                          L_UPDATE_SFPEND_PREMIUM
+                End
+
+            Next agqdesc3
+            End
+
+    L_INLAND_TOTAL = L_INLAND_TOTAL + L_UPDATE_SFPEND_PREMIUM
+    L_INLAND_MARINE_CODE = "Y"
+
+    End
+
+If L_CODE one of "MCL502" Then
+    Begin
+    L_UPDATE_SFPEND_PREMIUM = L_END_PREMIUM1
+    End
+
+End
+
+End

@@ -1,0 +1,2061 @@
+%%
+Screen
+        Name = "agtmt702" ;
+        Type = "Multiline" ;
+        Repeat LINE_ITEMS, 40 times down ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+--        Windowtitle = "%a    %s Location Totals - Ver. 7.00     %m" ;
+        Domain = "agqcontractor" ;
+        showunusedrecords=false
+        autoscroll=true
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+        Global Unsigned Ascii Number g_enhancement[1] ;
+
+        global signed ascii number g_final_total[8] ,
+                                   g_total[8] ,
+                                   g_surcharge[8],
+                                   g_terrorism[8] ,
+                                   g_boiler[8],
+                                   g_territory[8],
+                                   g_irpm[8],
+                                   g_printers_credit[8],
+                                   g_total_printers[8],
+                                   g_buyback_option[8],
+                                   g_fungi_mold[8] ;
+
+        global string g_inquiry[1] ;
+
+        local array[6] of unsigned ascii number l_deductible_1[5] ,
+                                                l_total_ded[8],
+                                                l_location_deduct[8];
+
+        local tag l_tag[8] ;
+
+        Local array[50] of signed ascii number l_original_bop_premium[9] ;
+
+        local array[50] of unsigned ascii number l_original_building_premium[6] ,
+                                                 l_original_property_premium[6],
+                                                 l_original_property_special[6] ,
+                                                 l_original_liability_charge[4] ;
+
+        local array[9] of string l_ded_wording[3],
+                                 l_premium_wording[7];
+
+        rwdate l_bu1526_eff_date;
+
+        array[9] of tag l_the_tag[15] ;
+
+        Local Signed Ascii Number   L_PREM[8]=0 ,
+                                    L_LOC_TOTAL[8]=0 ,
+                                    L_LOC_TOTAL_1[8]=0 ,
+                                    L_LOC_TOTAL_2[8]=0,
+                                    l_loc_total_3[8]=0,
+                                    l_sign_of_irpm[2]=0,
+                                    L_END_PREMIUM[8]=0 ,
+                                    l_hired_nonowned_premium[6]=0,
+                                    l_adjustment_to_meet_minimum[8]=0,
+                                    l_bop_premium[9]=0,
+                                    l_hold_bop_premium[9]=0,
+                                    l_total_printers[8]=0,
+                                    l_printers_total[8]=0,
+                                    L_IRPM_TOTAL[6]=0 ,
+                                    l_class_code[5],
+                                    l_irpm_credit[6]=0,
+                                    l_premium[9]=0 ,
+                                    l_reins_premium[9]=0,
+                                    L_MISC_PREMIUM[8]=0 ,
+                                    L_OPTIONAL[8]=0 ,
+                                    L_PRINTERS_PERCENT[4]=0/decimals=2,
+                                    L_PRINTERS_CREDIT[6]=0 ,
+                                    L_PERCENT_OCCUPIED[3]=0,
+                                    L_BOILERS_MINIMUM[8]=0,
+                                    L_BUYBACK_OPTION_TOTAL[8]=0,
+                                    l_fungi_total[8]=0,
+                                    L_TOTAL[8]=0 ,
+                                    l_other_premium[8]=0,
+                                    l_hold_minimum_premium[8]=0,
+                                    l_policy_level_minimum[8]=0,
+                                    L_TOTAL_1[8]=0,
+                                    l_total_6[8]=0,
+                                    L_TOTAL_2[8]=0,
+                                    l_total_3[8]=0,
+                                    L_TERRITORY_RATING[8]=0,
+                                    L_BOILER_PREM_TOTAL[8]=0 ,
+                                    l_boiler_printer_total[8]=0,
+                                    L_TOTAL_END[8]=0 ,
+                                    L_COMM[8]=0/dec=4 ,
+                                    L_PACKAGE[8]=0/dec=3 ,
+                                    L_IRPM[8]=0/dec=4 ,
+                                    l_package_deviation[4]=0/dec=2,
+                                    L_INSTALLMENT[4]=0 ,
+                                    L_RATE_FACTOR[1]=0/dec=2 ,
+                                    L_CREDIT_FACTOR[8]=0/dec=3 ,
+                                    L_FINAL_TOTAL[8]=0 ,
+                                    L_BOILER_PREM[6]=0,
+                                    L_MAX_CREDITS[6]=0/decimals=3,
+                                    l_location_new_total[8]=0,
+                                    L_BPSCREDITS_MAXIMUM[3]=0/decimals=2 ;
+
+        Local Unsigned Ascii Number L_MINIMUM[4]=0 ,
+                                    l_row[1],
+                                    l_col[2],
+                                    l_exclude_terrorism[1],
+                                    l_prior_terrorism[1],
+                                    l_remove_form[1],
+                                    l_deductible_checkbox[1],
+                                    l_bu2510_premium[5]=0,
+                                    l_bu2597_premium[5]=0,
+                                    i_comm[4]=0/dec=2,
+                                    i_habitational_comm[4]=0/dec=2,
+                                    i_renewal_comm[4]=0/dec=2,
+                                    i_identity_theft_comm[4]=0/dec=2,
+                                    i_boiler_comm[4]=0/dec=2,
+                                    i_wc_premium_amount[6]=0,
+                                    l_zipcode[9]=0,
+                                    l_territory_sub_code[4]=10,
+                                    l_identity_theft[4]=0,
+                                    l_identity_factor[8]=0/dec=4,
+                                    l_total_basic_premium[8]=0,
+                                    l_total_basic_premium_1[8]=0,
+                                    l_val_zipcode[9],
+                                    l_tier[2]=0,
+                                    l_tier_factor[6]=0/dec=4,
+                                    l_bu1526_factor[4]/dec=3,
+                                    l_minimum_1[4]=0,
+                                    l_minimum_boiler[4]=0,
+                                    l_no_locations[2]=0,
+                                    l_count_locations[2]=0,
+                                    L_CSEXEC_NUMBER[12] ,
+                                    l_off_premises_limit[8]=0,
+                                    l_off_premises_premium[6]=0,
+                                    l_location_credit[2]=0,
+                                    l_liability_code[1]=0,
+                                    l_fuel_pump_charge[3]=0,
+                                    l_liability_charge_2[4]=0,
+                                    l_liability_charge_3[4]=0,
+                                    l_Fire_premium[6]=0,
+                                    l_location_count[2]=0,
+                                    L_OFF_PREMISE_PREM[6] ,
+                                    l_employee_limit[8],
+                                    l_bop_building_premium[6]=0,
+                                    l_bop_property_premium[6]=0,
+                                    l_bop_special_premium[6]=0,
+                                    l_sub[2]=0,
+                                    l_sub_1[2]=0,
+                                    l_minimum_premium_rating[2]=0,
+                                    l_change_minimum_rating[1]=0,
+                                    l_liability_rate_or_charge[1]=0,
+                                    l_mp_building_property[1]=0,
+                                    L_FMA_FACTOR[4]=0/decimals=2,
+                                    l_apt_comm_rate[4]=0/dec=2,
+                                    l_fungi_factor[6]=0/dec=4,
+                                    l_fungi_minimum[4]=0,
+                                    l_location_premium_10[8]=0,
+                                    l_agqmaster_total_10[8]=0,
+                                    l_location_premium_11[8]=0,
+                                    l_rating_territory_factor[5]=0/dec=3,
+                                    l_printer[4]=0,
+                                    l_eq_construction[1]=0,
+                                    l_eq_building_rate[5]=0/dec=3,
+                                    l_eq_contents_rate[5]=0/dec=3,
+                                    l_eq_deductible[5]=0,
+                                    l_deductible_rate[4]=0/dec=2,
+                                    l_deductible_per[2]=0 ,
+                                    l_eq_deduct_rate[4]=0/dec=2 ,
+                                    L_TYPE[1]=0,
+                                    l_reins_factor[5]=0/dec=4,
+                                    l_reins_limit[8]=0,
+                                    l_reins_limit1[8]=0,
+                                    L_AGENT_COMM[4]=0/decimals=2,
+                                    L_CUSTOMER_ADJ_RATE[8]=0/decimals=4,
+                                    L_CUSTOMER_ADJ_RATE_SPECIAL[8]=0/decimals=4,
+                                    L_LOSS_INCOME_FACTOR_1[3]=0/decimals=2,
+                                    L_AR_LIMIT[8]=0,
+                                    L_AR_LIMIT_1[8]=0,
+                                    L_UTILITY_LIMIT[8]=0,
+                                    L_COMPUTER_LIMIT[8]=0,
+                                    L_MECHANICAL_LIMIT[8]=0,
+                                    L_EMPLOYEE_DIS_LIMIT[8]=0,
+                                    l_reins_co[6]=0,
+                                    L_EXTERIOR_SIGNS_LIMIT[8]=0,
+                                    L_INDOOR_GLASS_LIMIT[8]=0,
+                                    L_TERRITORY_BOILER_MINIMUM[8]=0,
+                                    L_COUNT[2]=0,
+                                    L_WATER_BKUP_LIMIT[8]=0,
+                                    L_VALUE_LIMIT[8]=0,
+                                    L_VALUE_LIMIT_1[8]=0,
+                                    I_CSEXEC_NUMBER[12] ,
+                                    L_EDP_LIMIT[8]=0,
+                                    L_SURCHARGE[6]=0,
+                                    L_SURCHARGE_FACTOR[8]=0/dec=6,
+                                    L_SURCHARGE_MINIMUM[2]=0,
+                                    L_BOILERS_PREM[6]=0,
+                                    L_RECEIPTS[8]=0,
+                                    L_RECEIPTS_LIMIT[8]=0,
+                                    L_RECEIPTS_CHARGE[4]=0,
+                                    L_PRINTERS_ERROR[4]=0;
+        Unsigned Ascii Number L_TERRORISM_PREMIUM[8]/decimals =0;
+        Unsigned Ascii Number L_TERROR_PERCENTAGE[5]/decimals=4;
+        Unsigned Ascii Number L_TERROR_MINIMUM[3],
+                              l_tpd6_terrorism_premium[8]/decimals=0 ;
+        Unsigned Ascii Number L_FOUND[1];
+        Unsigned Ascii Number L_SUB_CODE[4];
+        Unsigned Ascii Number L_PREM_NO[4];
+        Wdate L_TERROR_EFF_DATE;
+
+        local date l_surcharge_date[8] ,
+                   l_hold_date[8] ;
+
+        local signed ascii number l_eq_building_premium[9]=0/dec=2,
+                                  l_eq_contents_premium[9]=0/dec=2 ;
+
+        Local String L_MISC[1]="N" ,
+                     L_MINIMUM_APPLIES[1]="N" ,
+                     l_janitorial[1]="N",
+                     l_commandline[19]="",
+                     l_property[1],
+                     l_continue_2[3],
+                     l_first_loc[1]="Y",
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_str_zipcode[9]="",
+                     L_CSEXEC_APPLICATION[25]="" ,
+                     l_user_id[15]="",
+                     l_lob_code[10]="",
+                     l_app[3]="",
+                     l_display_field[1],
+                     l_minimum_premium_wording[16]="Minimum Premium:",
+                     l_territory_wording[10]="Territory:",
+                     l_property_exists[1],
+                     L_PRO_RATE="PRO RATA" ,
+                     l_bu2597_mp[1]="N",
+                     L_DESCRIPTION[75],
+                     l_split_comm[1],
+                     L_FORM_EDITION[25],
+                     l_form_file_name[20],
+                     L_FIRST[1]="Y",
+                     l_delete_hired_nonowned[1],
+                     l_extend_hired_nonowned[1],
+                     l_liability_first[1]="Y",
+                     L_REPORT[15],
+                     L_COPY_NAME[20],
+                     l_class_desc[40],
+                     l_boiler_added[1]="N",
+                     l_policy_wide_first[1]="Y",
+                     l_string_printers_credit[16]="Printers Credit:",
+                     l_string_printers_total[15]="Printers Total:",
+                     L_DEC[15] ,
+                     L_MACRO[15] ,
+                     L_FMA[1]="N",
+                     L_SCREEN[15] ,
+                     l_screen_1[9],
+                     L_SPRINKLERED[1]="N",
+                     L_INSTALLMENT_WORDING[21]="Installment Charge:",
+                     L_BUYBACK[1]="N",
+                     L_NO_RATING_FOR_LOCATION[1]="N",
+                     L_MP[3]="MP" ;
+
+        Local String L_FIRST_TIME[1]="Y";
+        Unsigned Ascii Number L_HOLD_PAYMENT_PLAN[4]=0;
+        String L_ENTER[1];
+        Signed Ascii Number L_SUB_TOTAL[9]=0/decimals=2;
+        Unsigned Ascii Number L_BUILD[4];
+
+        Include "boprate.var"
+
+        Include "print.var"
+
+        Include "virtualdecs.var"
+
+        Access agqcontractor, Set agqcontractor:app_NO = G_app_NO, approximate ;
+
+        scrollmessage = "" ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+
+                include "styles.inc"
+                Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+                repeated displayonly field style {backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay"  display/noreturn "agtmt702" ;
+        "displayit"  display "agtmt701" tagged rating_info_fn;
+        "func4" display "agtmt701a" tagged class_code_fn ;
+        "func5" display "agtmt701d" tagged optional_info_fn ;
+        "func6" display "agtmt701c" tagged supplemental_info_fn;
+        "func7" display "agtmt720" tagged submit_fn ;
+        "func8" display "agtmt702a" tagged irpm_fn ;
+        "func9" display "agtmt701b" tagged liability_fn ;
+        "chgform" sequence "form" tagged change_form_fn ;
+        "form" continue begin
+                       do change_form
+                       function = "redisplay"
+                       end ;
+
+        "func1" sequence "worksheet"  tagged worksheet_fn ;
+        "worksheet" continue begin
+                             do create_macro
+                             end  ;
+
+        "func2" sequence "quoteletter"  tagged quote_letter_fn ;
+        "quoteletter" continue begin
+                               do print_quote_letter
+                               end ;
+
+        "back" display/noreturn "agtmt001"  tagged back_fn;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+--                                "set_info_box" { setproperty(display_information_box, text, event.value) }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+access agqname, set agqname:app_no = g_app_no, generic
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 and
+   agqcontractor:company_id = "FLEMINGTON" then
+    disable(submit_fn)
+
+if agqname:quote_no <> 0 and
+   sfsemail:agent_no <> 0 and
+   agqcontractor:company_id = "FARMERS" then
+    disable(submit_fn)
+
+l_user_id = username
+access sfsemail, set sfsemail:company_id = agqcontractor:company_id,
+                     sfsemail:user_id    = l_user_id, generic
+
+if agqname:quote_no <> 0 and
+   sfsemail:agent_no <> 0 then
+    disable(submit_fn)
+
+if sfsemail:agent_no <> 0 and
+   agqname:quote_no = 0 then
+    hide(quote_letter_fn)
+
+--if sfsemail:agent_no <> 0 then
+--    hide(irpm_fn)
+
+access agqcontractor_alias, set agqcontractor_alias:app_no = g_app_no, generic
+
+l_property_exists = "N"
+while agqcontractor_alias:app_no = g_app_no
+    begin
+    if agqcontractor_alias:form one of 1, 2, 3 then
+        l_property_exists = "Y"
+
+    next agqcontractor_alias
+    end
+
+if l_property_exists = "N" then
+    begin
+    hide(property_fn)
+    disable(supplemental_info_fn)
+    end
+else
+    begin
+    hide(liability_fn)
+    enable(supplemental_info_fn)
+    end
+
+do check_agqtotals
+Access SFSLINE, Set SFSLINE:COMPANY_ID = agqcontractor:company_id,
+                    SFSLINE:LINE_OF_BUSINESS = agqcontractor:line_of_business,
+                    SFSLINE:LOB_SUBLINE = "00",Generic
+
+l_total       = 0
+l_total_3     = 0
+l_sub         = 0
+l_sub_1       = 0
+l_loc_total_1 = 0
+l_loc_total_2 = 0
+l_loc_total_3 = 0
+l_count_locations = 0
+l_territory_Rating = 0
+
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+else
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_prop_summary.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+if agqcontractor:form = 2 then
+    begin
+    hide(btn_basic)
+    end
+else
+if agqcontractor:form = 3 then
+    begin
+    hide(btn_expanded)
+    end
+else
+    begin
+    hide(btn_basic)
+    hide(btn_expanded)
+    end
+
+if agqname:quote_no <> 0 and
+   sfsdefault:company_id = "FARMERS" then
+    begin
+    hide(btn_basic)
+    hide(btn_expanded)
+    end
+
+
+Access Validation
+If agqcontractor:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,105
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Proposal Summary..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+        event
+                {
+                mouseclicked = ""
+                }
+
+}
+
+Panel at 3.45,75 to 4.45, 100 Tagged quote_no
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101    agqcontractor:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+--          backgroundcolor = "#ADD8E6"
+        }
+{
+Components
+
+        Button at 1.5,2   tagged add_fn
+        Properties {
+                Iconname = "btn_view_print_worksheet.bmp"
+                }
+        Events  {
+                Action = worksheet_fn
+                }
+
+        Button at 1.5,35 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+
+        Button at 1.5, 60 tagged quote_letter_fn
+        Properties {
+                Iconname = "btn_view_print_proposal.bmp"
+                }
+        Events  {
+                Action = quote_letter_fn
+                }
+    }
+
+Panel at 7,1 to 7,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+--          backgroundcolor = "#ADD8E6"
+        }
+{
+Components
+
+        Button at 1,35   tagged btn_basic
+        Properties {
+                Iconname = "btn_basic.bmp"
+                }
+        Events  {
+                Action = change_form_fn
+                }
+
+        Button at 1,35   tagged btn_expanded
+        Properties {
+                Iconname = "btn_expanded.bmp"
+                }
+        Events  {
+                Action = change_form_fn
+                }
+
+}
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt702.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 8,1 to 8,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+
+Panel at 9,2 to 9,23
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,23
+             properties
+               {
+                 text = "Policy Coverage Form:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 9,19 to 9,35 Tagged rating_pl
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+__________
+%%
+
+components
+
+fields
+101     begin
+        access sfsform, set sfsform:company_id       = agqcontractor:company_id,
+                            sfsform:state            = agqcontractor:state,
+                            sfsform:line_of_business = agqcontractor:line_of_business,
+                            sfsform:policy_form      = agqcontractor:form, generic
+
+        end
+        sfsform:description ;
+}
+
+Panel at 9,30 to 9,45
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,15
+             properties
+               {
+                 text = "Occurrence:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 9,41 to 9,51 Tagged rating_pl
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+__________
+%%
+
+components
+
+fields
+101     begin
+        access agqliablimits, set agqliablimits:app_no = g_app_no, generic
+
+        end
+        agqliablimits:occurrence ;
+
+}
+
+Panel at 9,53 to 9,71
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,20
+             properties
+               {
+                 text = "Liability Deductible:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 9,69 to 9,75 Tagged rating_pl
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_____
+%%
+
+components
+
+fields
+101     agqliablimits:liab_deductible ;
+
+}
+
+Panel at 9,76 to 9,90
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,18
+             properties
+               {
+                 text = "Exclude Terrorism:"
+                 fontsize = 12
+                 fontstyle = BOLD
+                 fontname = "arial"
+               }
+        }
+
+Panel at 9,90 to 9,100 Tagged rating_pl
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_
+%%
+
+components
+
+fields
+101     begin
+            access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+            l_exclude_terrorism = agqmaster:exclude_terrorism
+            l_prior_terrorism = l_exclude_terrorism
+        end
+        l_exclude_terrorism/checkbox/values="0,1"/default;
+101     begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        if agqmaster:app_no = g_app_no then
+            begin
+            change agqmaster
+                begin
+                agqmaster:exclude_terrorism = l_exclude_terrorism
+                end
+            end
+
+        Access agqcontractor_ALIAS, Set agqcontractor_ALIAS:app_NO = G_app_NO, generic
+
+        while agqcontractor_alias:app_no = g_app_no
+            begin
+            change agqcontractor_alias
+                begin
+                agqcontractor_alias:remove_terror_Form = l_exclude_terrorism
+                end
+
+            next agqcontractor_alias
+            end
+        end
+        l_exclude_terrorism/displayonly/checkbox/values="0,1" ;
+
+}
+
+Panel at 10,1 to 11,95  tagged liability_fn
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,22 to 1,25
+             properties
+               {
+                 text = "Loc"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 1,27 to 1,31
+             properties
+               {
+                 text = "Build"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 2,22 to 2,25
+             properties
+               {
+                 text = "    No"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 2,27 to 2,31
+             properties
+               {
+                 text = "    No"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 2,37 to 2,60
+             properties
+               {
+                 text = "Class Code Description"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 2,65 to 2,72
+             properties
+               {
+                 text = "Premium"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+scrollpanel at 13,22 to 15,73 tagged liability_fn
+properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+
+Panel
+properties
+        {
+--        scrollbarpolicy = asneeded
+        }
+{
+%%
+____ ____ ______________________________ ___________
+%%
+
+components
+
+fields
+0101    agqcontractor:prem_no/displayonly  tagged LINE_ITEMS;
+0102    agqcontractor:build_no/displayonly tagged LINE_ITEMS ;
+0103    begin
+        do read_sfsdeductible_1
+        l_class_code = agqclasscode:class_code
+        access scsclasscode, set scsclasscode:company_id       = agqcontractor:company_id,
+                                 scsclasscode:state            = agqcontractor:state,
+                                 scsclasscode:line_of_business = agqcontractor:line_of_business,
+                                 scsclasscode:class_code       = l_class_code, generic
+
+        l_class_desc = ""
+        while scsclasscode:company_id       = agqcontractor:company_id and
+              scsclasscode:state            = agqcontractor:state and
+              scsclasscode:line_of_business = agqcontractor:line_of_business and
+              scsclasscode:class_code       = l_class_code
+            begin
+            l_class_desc = scsclasscode:description
+
+            next scsclasscode
+            end
+        end
+        l_class_desc/displayonly  tagged LINE_ITEMS ;
+0104    begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        end
+        agqmaster:total[1]/displayonly/mask="Z,ZZZ,ZZZ" tagged LINE_ITEMS;
+
+}
+
+}
+
+Panel at 17,1 to 18, 120 Tagged liability_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        foregroundcolor    = "blue"
+        }
+event
+        {
+        mouseclicked = ""
+        }
+{
+%%
+                                              Policy Premium: ___________
+%%
+
+components
+
+fields
+101     begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        l_total = agqmaster:total[1] +
+                  agqmaster:terrorism_premium +
+                  agqmaster:total[7] +
+                  agqmaster:surcharge
+        l_tag = tag("totals_fn")
+        setproperty(l_tag,foregroundcolor,"blue")
+        end
+        l_total/displayonly/mask="ZZZ,ZZZ,ZZZ" tagged totals_fn;
+
+}
+
+scrollPanel at 10,1 to 18,105 tagged property_fn
+properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+
+Panel
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+--borderstyle=lowered
+layoutconstraints = "north"
+        }
+{
+%%
+                         [R _            _            _            _            _            _      R]
+        Loc   Bldg     _____ ___    _____ ___    _____ ___    _____ ___    _____ ___    _____ ___
+         No     No        _______      _______      _______      _______      _______      _______
+
+%%
+
+components
+
+fields
+0201    begin
+            do read_sfsdeductible
+            l_the_tag[1]         = tag("deductible_1")
+            l_ded_wording[1]     = "Ded"
+            l_premium_wording[1] = "Premium"
+            if l_deductible_checkbox = 1 then
+                begin
+                do display_blue(l_the_tag[1],"blue")
+                end
+        end
+        l_deductible_1[1]/displayonly/showasguidetext tagged deductible_1;
+0202    l_ded_wording[1]/showasguidetext/displayonly tagged deductible_1 ;
+0301    l_premium_wording[1]/showasguidetext/displayonly tagged deductible_1 ;
+0203    begin
+            l_the_tag[2]         = tag("deductible_2")
+            l_ded_wording[2]     = "Ded"
+            l_premium_wording[2] = "Premium"
+            if l_deductible_checkbox = 2 then
+                begin
+                do display_blue(l_the_tag[2],"blue")
+                end
+        end
+        l_deductible_1[2]/displayonly/showasguidetext tagged deductible_2;
+0204    l_ded_wording[2]/showasguidetext/displayonly tagged deductible_2 ;
+0302    l_premium_wording[2]/showasguidetext/displayonly tagged deductible_2 ;
+0205    begin
+            l_the_tag[3]         = tag("deductible_3")
+            l_ded_wording[3]     = "Ded"
+            l_premium_wording[3] = "Premium"
+            if l_deductible_checkbox = 3 then
+                begin
+                do display_blue(l_the_tag[3],"blue")
+                end
+        end
+        l_deductible_1[3]/displayonly/showasguidetext tagged deductible_3;
+0206    l_ded_wording[3]/showasguidetext/displayonly tagged deductible_3 ;
+0303    l_premium_wording[3]/showasguidetext/displayonly tagged deductible_3 ;
+0207    begin
+            l_the_tag[4]         = tag("deductible_4")
+            l_ded_wording[4]     = "Ded"
+            l_premium_wording[4] = "Premium"
+            if l_deductible_checkbox = 4 then
+                begin
+                do display_blue(l_the_tag[4],"blue")
+                end
+        end
+        l_deductible_1[4]/displayonly/showasguidetext tagged deductible_4;
+0208    l_ded_wording[4]/showasguidetext/displayonly tagged deductible_4 ;
+0304    l_premium_wording[4]/showasguidetext/displayonly tagged deductible_4 ;
+0209    begin
+            l_the_tag[5]         = tag("deductible_5")
+            l_ded_wording[5]     = "Ded"
+            l_premium_wording[5] = "Premium"
+            if l_deductible_checkbox = 5 then
+                begin
+                do display_blue(l_the_tag[5],"blue")
+                end
+        end
+        l_deductible_1[5]/displayonly/showasguidetext tagged deductible_5;
+0210    l_ded_wording[5]/showasguidetext/displayonly tagged deductible_5 ;
+0305    l_premium_wording[5]/showasguidetext/displayonly tagged deductible_5 ;
+0211    begin
+            l_the_tag[6]         = tag("deductible_6")
+            l_ded_wording[6]     = "Ded"
+            l_premium_wording[6] = "Premium"
+            if l_deductible_checkbox = 6 then
+                begin
+                do display_blue(l_the_tag[6],"blue")
+                end
+        end
+        l_deductible_1[6]/displayonly/showasguidetext tagged deductible_6;
+0212    l_ded_wording[6]/showasguidetext/displayonly tagged deductible_6 ;
+0306    l_premium_wording[6]/showasguidetext/displayonly tagged deductible_6 ;
+
+0101    l_deductible_checkbox/values="1,2,3,4,5,6"/default
+        do update_agqmaster;
+
+}
+
+panel at 3,1 to 7,105 --tagged LINE_ITEMS
+Properties
+        {
+--        borderstyle = button
+--      scrollbarpolicy=asneeded
+        }
+{
+%%
+       ____   ____      _________   __________   __________   _________   __________   ___________
+%%
+
+components
+
+fields
+0101    begin
+        access agqtotals, set agqtotals:app_no   = g_app_no,
+                              agqtotals:prem_no  = agqcontractor:prem_no,
+                              agqtotals:build_no = agqcontractor:build_no, generic
+
+        while agqtotals:app_no   = g_app_no and
+              agqtotals:prem_no  = agqcontractor:prem_no and
+              agqtotals:build_no = agqcontractor:build_no
+                begin
+                switch(agqtotals:deductible)
+                  case 500  : l_sub = 1
+                  case 1000 : l_sub = 2
+                  case 1500 : l_sub = 3
+                  case 2000 : l_sub = 4
+                  case 2500 : l_sub = 5
+                  case 3000 : l_sub = 6
+                  end
+
+                l_location_deduct[l_sub] = agqtotals:deductible_premium
+
+                next agqtotals
+                end
+        end
+        agqcontractor:prem_no/displayonly    tagged LINE_ITEMS;
+0102    agqcontractor:build_no/displayonly   tagged LINE_ITEMS;
+0103    l_location_deduct[1]/displayonly  tagged LINE_ITEMS ;
+0104    l_location_deduct[2]/displayonly  tagged LINE_ITEMS ;
+0105    l_location_deduct[3]/displayonly  tagged LINE_ITEMS ;
+0106    l_location_deduct[4]/displayonly  tagged LINE_ITEMS ;
+0107    l_location_deduct[5]/displayonly  tagged LINE_ITEMS ;
+0108    l_location_deduct[6]/displayonly  tagged LINE_ITEMS ;
+
+}
+
+}
+
+Panel at 17,1 to 17, 105 Tagged property_fn
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        foregroundcolor    = "blue"
+        }
+event
+        {
+        mouseclicked = ""
+        }
+{
+%%
+     Policy Premium:    _________   __________   __________   __________   __________   __________
+%%
+
+components
+
+fields
+101     begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        if agqmaster:app_no = g_app_no then
+            begin
+            change agqmaster
+                begin
+                if agqmaster:delete_hired_nonowned = "" then
+                    agqmaster:delete_hired_nonowned = "N"
+                if agqmaster:extend_hired_nonowned = "" then
+                    agqmaster:extend_hired_nonowned = "N"
+                end
+            end
+        access agqtotals, set agqtotals:app_no   = g_app_no,
+                              agqtotals:prem_no  = 0,
+                              agqtotals:build_no = 0, generic
+
+        l_total_ded[1] = 0
+        l_total_ded[2] = 0
+        l_total_ded[3] = 0
+        l_total_ded[4] = 0
+        l_total_ded[5] = 0
+        l_total_ded[6] = 0
+        while agqtotals:app_no   = g_app_no and
+              agqtotals:prem_no  = 0 and
+              agqtotals:build_no = 0
+          begin
+                switch(agqtotals:deductible)
+                  case 500  : l_sub = 1
+                  case 1000 : l_sub = 2
+                  case 1500 : l_sub = 3
+                  case 2000 : l_sub = 4
+                  case 2500 : l_sub = 5
+                  case 3000 : l_sub = 6
+                  end
+
+                access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+                if agqtotals:minimum_premium <> 0 then
+                    begin
+                    l_total_ded[l_sub]   = agqtotals:minimum_premium +
+                                           agqtotals:terrorism_premium +
+                                           agqtotals:pliga
+                    end
+                else
+                    {
+                    if agqmaster:irpm < 0 then
+                        {
+                        l_sign_of_irpm = -1
+                        l_irpm = (1 + (agqmaster:irpm * 0.01))
+                        l_irpm_total = agqmaster:total[19]
+                        l_total_ded[l_sub] = agqtotals:deductible_premium +
+                                             l_irpm_total +
+                                             agqtotals:terrorism_premium +
+                                             agqtotals:boiler_premium +
+                                             agqtotals:pliga +
+                                             agqtotals:printers_premium +
+                                             agqtotals:adjustment_to_meet_minimum +
+                                             agqtotals:identity_theft +
+                                             agqtotals:enhancement_premium +
+                                             agqtotals:fungi_total
+                        }
+                    else
+                        {
+                        l_sign_of_irpm = 1
+                        l_irpm = (1 + (agqmaster:irpm * 0.01))
+                        if agqmaster:irpm one of 0 then
+                            begin
+                            l_irpm_total = 0
+--                            l_irpm = 1.00
+                            end
+                        else
+                            begin
+                            l_irpm_total = agqmaster:total[19]
+                            end
+                        l_total_ded[l_sub] = agqtotals:deductible_premium +
+                                             l_irpm_total +
+                                             agqtotals:terrorism_premium +
+                                             agqtotals:boiler_premium +
+                                             agqtotals:pliga +
+                                             agqtotals:printers_premium +
+                                             agqtotals:adjustment_to_meet_minimum +
+                                             agqtotals:identity_theft +
+                                             agqtotals:fungi_total +
+                                             agqtotals:enhancement_premium
+
+                        }
+
+
+                    }
+                next agqtotals
+          end
+        end
+        l_total_ded[1]/displayonly  tagged deductible_1
+        event
+        {
+        mouseclicked = ""
+        }    ;
+102     l_total_ded[2]/displayonly tagged deductible_2 ;
+103     l_total_ded[3]/displayonly tagged deductible_3 ;
+104     l_total_ded[4]/displayonly tagged deductible_4 ;
+105     l_total_ded[5]/displayonly tagged deductible_5 ;
+106     l_total_ded[6]/displayonly tagged deductible_6 ;
+
+}
+
+Panel at 18,10 to 18,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,30 to 1,100
+             properties
+               {
+                 text = "(Equipment Breakdown and Identity Theft are included unless excluded)"
+                 fontsize = 14
+                 fontname = "arial"
+                 foregroundcolor    = "blue"
+               }
+        }
+
+Panel at 19,10 to 19,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,42 to 1,100
+             properties
+               {
+                 text = "(Terrorism excluded unless included)"
+                 fontsize = 14
+                 fontname = "arial"
+                 foregroundcolor    = "blue"
+               }
+        }
+
+Panel at 19,5 to 20,6 tagged irpm_fn
+    Properties
+        {
+        layouttype = column
+        }
+    {
+    Components
+        Button at 1,1
+            Properties {
+                Iconname = "btn_irpm.bmp"
+                }
+            Events  {
+                Action = irpm_fn
+                }
+    }
+
+Panel at 19,10 to 20,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 2,2 to 2,100
+             properties
+               {
+                 text = "Must have underwriter approval"
+                 fontsize = 14
+                 fontname = "arial"
+                 foregroundcolor    = "blue"
+               }
+        }
+
+-- draw a line
+panel at 21,1 to 21,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 22,2 to 22,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged rating_info
+            Properties
+                {
+                Iconname = "btn_rating_infomation.bmp"
+                }
+            Events
+                {
+                Action
+                        {
+                           do get_heading("Rating Information . . .")
+                           function = "displayit"
+                           abort()
+                        }
+
+                }
+        }
+
+Panel at 22,35 to 22,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1    tagged class_code_fn
+        Properties {
+                Iconname = "btn_class_code.bmp"
+                }
+        Events  {
+                Action = class_code_fn
+                }
+
+}
+
+Panel at 23.5,2 to 24,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1    tagged optional_info
+        Properties {
+                Iconname = "btn_opt_endt.bmp"
+                }
+        Events  {
+                Action = optional_info_fn
+                }
+
+        }
+
+Panel at 23.5,35 to 24,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1     tagged supplemental_info
+        Properties {
+                Iconname = "btn_supp_coverages.bmp"
+                }
+        Events  {
+                Action = supplemental_info_fn
+                }
+
+}
+
+
+Panel at 22,68 to 22,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1    tagged liablity_fn
+        Properties {
+                Iconname = "btn_liability.bmp"
+                }
+        Events  {
+                Action = liability_fn
+                }
+
+}
+
+panel at 25,1 to 25,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 26,10 to 26,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+
+        }
+
+Panel at 26,70 to 26,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged submit_info
+        Properties {
+  --              Text = "Submit to Underwriting"
+                Iconname = "btn_app_entry.bmp"
+                }
+        Events  {
+                Action = submit_fn
+                }
+
+}
+
+panel at 27,1 to 33,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+
+}
+
+procedure definition
+
+procedure change_form
+begin
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+if agqmaster:app_no = g_app_no then
+    begin
+    change agqmaster
+        begin
+        if agqmaster:form = 2 then
+            begin
+            agqmaster:form = 3
+            end
+        else
+        if agqmaster:form = 3 then
+            begin
+            agqmaster:form = 2
+            end
+        end
+    end
+
+access agqcontractor_alias, set agqcontractor_alias:app_no = g_app_no, generic
+
+while agqcontractor_alias:app_no = g_app_no
+    begin
+    change agqcontractor_alias
+        begin
+        if agqcontractor_alias:form = 2 then
+            begin
+            agqcontractor_alias:form = 3
+            end
+        else
+        if agqcontractor_alias:form = 3 then
+            begin
+            agqcontractor_alias:form = 2
+            end
+        end
+
+    next agqcontractor_alias
+    end
+
+if sfscompany:debug_mode = 0 then
+    proc("cli csbatch agtup702 %s",str(g_app_no,11))/noconsole
+else
+    proc("cli csbatch agtup702 %s",str(g_app_no,11))
+end
+
+
+procedure update_exclusion
+begin
+access agqcontractor_alias, set agqcontractor_alias:app_no = g_APP_NO, generic
+
+l_remove_form = 0
+while agqcontractor_alias:app_no = g_APP_NO
+        begin
+        if agqcontractor_alias:remove_terror_Form = 1 then
+            l_remove_form = 1
+
+        next agqcontractor_alias
+        end
+
+end
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+
+procedure update_agqmaster
+begin
+access agqcontractor_alias, set agqcontractor_alias:app_no = g_app_no, generic
+
+while agqcontractor_alias:app_no = g_app_no
+    begin
+    change agqcontractor_alias
+        begin
+        if l_deductible_checkbox = 1 and
+           agqcontractor_alias:deductible <> l_deductible_1[1] then
+            begin
+            agqcontractor_alias:deductible = l_deductible_1[1]
+            end
+        else
+        if l_deductible_checkbox = 2 and
+           agqcontractor_alias:deductible <> l_deductible_1[2] then
+            begin
+            agqcontractor_alias:deductible = l_deductible_1[2]
+            end
+        else
+        if l_deductible_checkbox = 3 and
+           agqcontractor_alias:deductible <> l_deductible_1[3] then
+            begin
+            agqcontractor_alias:deductible = l_deductible_1[3]
+            end
+        else
+        if l_deductible_checkbox = 4 and
+           agqcontractor_alias:deductible <> l_deductible_1[4] then
+            begin
+            agqcontractor_alias:deductible = l_deductible_1[4]
+            end
+        else
+        if l_deductible_checkbox = 5 and
+           agqcontractor_alias:deductible <> l_deductible_1[5] then
+            begin
+            agqcontractor_alias:deductible = l_deductible_1[5]
+            end
+        else
+        if l_deductible_checkbox = 6 and
+           agqcontractor_alias:deductible <> l_deductible_1[6] then
+            begin
+            agqcontractor_alias:deductible = l_deductible_1[6]
+            end
+        end
+
+    next agqcontractor_alias
+    end
+
+function = "redisplay"
+end
+
+procedure display_blue(tag l_tag, string l_color)
+begin
+    setproperty(l_tag,foregroundcolor,l_color)
+end
+
+procedure check_agqtotals
+begin
+access agqtotals, set agqtotals:app_no = g_app_no, generic
+
+while agqtotals:app_no = g_app_no
+    begin
+    access agqcontractor_alias, set agqcontractor_alias:app_no   = agqtotals:app_no,
+                                 agqcontractor_alias:prem_no  = agqtotals:prem_no,
+                                 agqcontractor_alias:build_no = agqtotals:build_no, generic
+
+    if agqtotals:prem_no <> agqcontractor_alias:prem_no or
+       agqtotals:build_no <> agqcontractor_alias:build_no then
+        delete agqtotals
+
+    next agqtotals
+    end
+
+end
+
+procedure get_heading(string l_display_heading)
+
+begin
+  postevent("agtmt010b","set_info_box",l_display_heading)
+end
+
+
+procedure back_a_screen
+begin
+  postevent("agtmt010","REMOVE_SCREEN")
+  function = "func25"
+end
+
+procedure read_sfsdeductible
+begin
+access sfscompany, set sfscompany:company_id = agqcontractor:company_id, generic
+
+access sfsdeductible, set sfsdeductible:company_id       = agqcontractor:company_id,
+                          sfsdeductible:state            = agqcontractor:state,
+                          sfsdeductible:line_of_business = agqcontractor:line_of_business, generic
+
+l_sub = 0
+while sfsdeductible:company_id       = agqcontractor:company_id and
+      sfsdeductible:state            = agqcontractor:state and
+      sfsdeductible:line_of_business = agqcontractor:line_of_business
+        begin
+        if agqcontractor:eff_date >= sfsdeductible:eff_date then
+            begin
+            if sfsdeductible:show_in_activehelp = 1 and
+               sfsdeductible:liability = 0 then
+                begin
+                l_sub = l_sub + 1
+                l_deductible_1[l_sub] = sfsdeductible:deductible
+                if agqcontractor:deductible = l_deductible_1[l_sub] then
+                    l_deductible_checkbox = l_sub
+                if function <> "CHANGE" then
+                    begin
+                    if sfscompany:debug_mode = 0 then
+                        proc("cli csbatch agtup702 %s %s",str(g_app_no,11),str(l_deductible_1[l_sub]))/noconsole
+                    else
+                        proc("cli csbatch agtup702 %s %s",str(g_app_no,11),str(l_deductible_1[l_sub]))
+                    end
+                end
+            end
+
+        next sfsdeductible
+        end
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+if function <> "CHANGE" then
+    begin
+    l_deductible = agqcontractor:deductible
+    if sfscompany:debug_mode = 0 then
+        proc("cli csbatch agtup702 %s %s",str(g_app_no,11),str(l_deductible))/noconsole
+    else
+        proc("cli csbatch agtup702 %s %s",str(g_app_no,11),str(l_deductible))
+    end
+
+end
+
+procedure read_sfsdeductible_1
+begin
+if function <> "CHANGE" or
+   l_prior_terrorism <> l_exclude_terrorism then
+    begin
+    l_deductible = 0
+    if sfscompany:debug_mode = 0 then
+        proc("cli csbatch agtup702 %s %s",str(g_app_no,11),str(l_deductible))/noconsole
+    else
+        proc("cli csbatch agtup702 %s %s",str(g_app_no,11),str(l_deductible))
+    end
+
+end
+
+procedure location_credit
+begin
+access agqcontractor_alias, set agqcontractor_alias:app_no = agqcontractor:app_no, generic
+
+l_location_count = 0
+while agqcontractor_alias:app_no = agqcontractor:app_no
+    begin
+    if l_prem_no <> agqcontractor_alias:prem_no then
+        begin
+        l_prem_no = agqcontractor_alias:prem_no
+        l_location_count = l_location_count + 1
+        end
+
+    next agqcontractor_alias
+    end
+
+if l_location_count > 10 then
+    l_location_count = 10
+access bpslocation, set bpslocation:company_id       = agqcontractor:company_id,
+                        bpslocation:state            = agqcontractor:state,
+                        bpslocation:line_of_business = agqcontractor:line_of_business,
+                        bpslocation:no_locations     = l_location_count, generic
+
+while bpslocation:company_id       = agqcontractor:company_id and
+      bpslocation:state            = agqcontractor:state and
+      bpslocation:line_of_business = agqcontractor:line_of_business and
+      bpslocation:no_locations     = l_location_count
+        begin
+        if (agqcontractor:eff_date >= bpslocation:eff_date and
+           (agqcontractor:eff_date <= bpslocation:exp_date or
+           bpslocation:exp_date = 0)) then
+            begin
+            if sfsline:lob_code one of "CPORTFOLIO" then
+                begin
+                access agqmastsupp, set agqmastsupp:app_no = agqcontractor:app_no,
+                                        agqmastsupp:line_of_business = agqcontractor:line_of_business, generic
+
+                if agqmastsupp:override_location_credit = 0 then
+                    begin
+                    change agqmastsupp
+                        begin
+                        agqmastsupp:location_credit = bpslocation:credit
+                        end
+                    end
+                end
+            else
+                begin
+                access agqmaster, set agqmaster:app_no = agqcontractor:app_no, exact
+
+                if agqmaster:override_location_credit = 0 then
+                    begin
+                    change agqmaster
+                        begin
+                        agqmaster:location_credit = bpslocation:credit
+                        end
+                    end
+                end
+            end
+
+        next bpslocation
+        end
+
+end
+
+procedure print_quote_letter
+begin
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+proc("cli csbatch agqmso004 %s",str(g_app_no,11))/noconsole
+Proc("cli joinit agqmso004.cq %s<nl>",l_dec)/noconsole
+
+access sfscompany, set sfscompany:company_id = agqcontractor:company_id, generic
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+while agqend:app_no = g_app_no
+    begin
+    if agqend:code = "MSC711" then
+        begin
+        l_form_file_name = "agqsiscds01"
+        l_commandline = str(g_app_no,11) + str(agqend:prem_no,4) + str(agqend:build_no,4)
+        if l_form_file_name <> "" then
+            begin
+            proc("cli csbatch %s %s",trun(l_form_file_name),l_commandline)/noconsole
+            Proc("cli joinit %s.cq %s<nl>",trun(l_form_file_name),l_dec)/noconsole
+            end
+        end
+    else
+    if agqend:code = "MSC712" then
+        begin
+        l_form_file_name = "agqsiscds02"
+        l_commandline = str(g_app_no,11) + str(agqend:prem_no,4) + str(agqend:build_no,4)
+        if l_form_file_name <> "" then
+            begin
+            proc("cli csbatch %s %s",trun(l_form_file_name),l_commandline)/noconsole
+            Proc("cli joinit %s.cq %s<nl>",trun(l_form_file_name),l_dec)/noconsole
+            end
+        end
+
+    next agqend
+    end
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+while agqend:app_no = g_app_no
+    begin
+    if agqend:prem_no = 0 then
+        access agqcontractor_alias, set agqcontractor_alias:app_no   = g_app_no, generic
+    else
+        access agqcontractor_alias, set agqcontractor_alias:app_no   = g_app_no,
+                                        agqcontractor_alias:prem_no  = agqend:prem_no,
+                                        agqcontractor_alias:build_no = agqend:build_no, generic
+
+    l_code = agqend:code
+    l_class_code = 99998
+    access sfspolicywideoptend, set sfspolicywideoptend:company_id       = agqcontractor_alias:company_id,
+                                    sfspolicywideoptend:state            = agqcontractor_alias:state,
+                                    sfspolicywideoptend:line_of_business = agqcontractor_alias:line_of_business,
+                                    sfspolicywideoptend:class_code       = l_class_code,
+                                    sfspolicywideoptend:code             = l_code, generic
+
+    l_form_file_name = ""
+    while sfspolicywideoptend:company_id       = agqcontractor_alias:company_id and
+          sfspolicywideoptend:state            = agqcontractor_alias:state and
+          sfspolicywideoptend:line_of_business = agqcontractor_alias:line_of_business and
+          sfspolicywideoptend:class_code       = l_class_code and
+          sfspolicywideoptend:code             = l_code
+        begin
+        if (agqcontractor:eff_date >= sfspolicywideoptend:eff_date and
+           (agqcontractor:eff_date <= sfspolicywideoptend:exp_date or
+           sfspolicywideoptend:exp_date = 0)) then
+            begin
+            l_form_file_name = sfspolicywideoptend:form_file_name
+            end
+
+        next sfspolicywideoptend
+        end
+
+    l_commandline = str(g_app_no,11) + str(agqend:prem_no,4) + str(agqend:build_no,4)
+    if l_form_file_name <> "" then
+        begin
+        proc("cli csbatch %s %s",trun(l_form_file_name),l_commandline)/noconsole
+        Proc("cli joinit %s.cq %s<nl>",trun(l_form_file_name),l_dec)/noconsole
+        end
+
+    next agqend
+    end
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+if agqapplication:app_no = g_app_no then
+    begin
+    proc("cli csbatch agqmso002 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso002.cq %s<nl>",l_dec)/noconsole
+    end
+
+L_LOB_CODE = SFSLINE:LOB_CODE
+Access SCIPSCONTROL, Set SCIPSCONTROL:COMPANY_ID = agqcontractor:COMPANY_ID,
+                         SCIPSCONTROL:STATE      = agqcontractor:STATE,
+                         SCIPSCONTROL:LOB_CODE   = L_LOB_CODE,Exact
+
+if agqcontractor:company_id = "FARMERS" then
+    begin
+    proc(":cli csbatch tpd4q %s",str(g_app_no,11))/noconsole
+    Proc(":cli joinit tpd4q.cq %s<nl>",l_dec)/noconsole
+    end
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+    Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+    Proc("chmod 777 %s ",L_DEC_PDF)
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+end
+
+Procedure CREATE_MACRO
+Begin
+Do REFRESH_WORK_FILES
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+L_USERNAME = USERNAME
+I_REPORTA = "agqpr700"
+I_REPORT = "agqpr700.cq"
+I_REPORT_CQE = "agqpr700.cqe"
+I_APP = "agq"
+l_app = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF = L_APP+Str(I_CSEXEC_NUMBER)+".txt"
+I_PARAMETER = I_APP+Str(I_CSEXEC_NUMBER)+".par"
+I_MACROA = I_APP+Str(I_CSEXEC_NUMBER)
+I_MACRO = I_APP+Str(I_CSEXEC_NUMBER)+".mf"
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+if agqprint1:app_no <> g_app_no then
+    begin
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+else
+    begin
+    delete agqprint1
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+
+Deletefile(I_MACRO)
+Writefile(I_MACRO,"clear list<nl>")
+Writefile(I_MACRO,"clear find<nl>")
+Writefile(I_MACRO,"clear sum<nl>")
+Writefile(I_MACRO,"run agqpr700<nl>")
+Writefile(I_MACRO,"cli rm agqpr700.cq<nl>")
+Writefile(I_MACRO,"rsave agqpr700<nl>")
+Writefile(I_MACRO,"cli joinit agqpr700.cq %s<nl>",L_DEC)
+Closefile(I_MACRO)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc("cli cq %s",I_MACRO)/noconsole
+Else
+    Proc("cli cq %s",I_MACRO)
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)/noconsole
+    Proc("cli chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("cli rm %s",L_DEC)/noconsole
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)
+    Proc("cli chmod 777 %s ",L_DEC_PDF)
+    Proc("cli rm %s",L_DEC)
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client/noconsole
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+delete agqprint1
+
+Do REFRESH_WORK_FILES
+End
+
+Procedure REFRESH_WORK_FILES
+Begin
+Proc ("cli agqprint1.mk")/noconsole
+End
+
+
+end

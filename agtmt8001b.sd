@@ -1,0 +1,1470 @@
+%% 
+Screen
+        Name = "agtmt8001b"
+        Type = "Multiline"
+        Domain = "sfspolicywideoptend"
+        Resizeable = True
+        ScreenSize = "95X32"
+        Repeat T_REPEATED,100 times down, wrap across ;
+        Iconline = 0
+        Statusbar = false
+        HighLightRecord = True
+        HighlightField = False
+        ShowUnusedRecords = False
+        Scrollprompt = ""
+        Autoscroll = True
+
+        Global Unsigned Ascii Number g_app_no[11] ;
+        Global Unsigned Ascii Number g_prem_no[4] ;
+        Global Unsigned Ascii Number g_build_no[4] ;
+        Global Unsigned Ascii Number g_state[2] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+
+        Global String g_code[7] ,
+                      g_first[1] ,
+                      g_company_id[10] ;
+
+        Local UNSIGNED ASCII Number l_selected[1] ,
+                                    l_limit[8] ,
+                                    l_state[2] ,
+                                    l_line_of_business[4],
+                                    l_last_prem_no[4],
+                                    l_last_build_no[4],
+                                    l_first_prem_no[4],
+                                    l_first_build_no[4],
+                                    l_no_locations[2]=0 ;
+
+        local string l_first[1] ,
+                     l_inland_exists[1] ,
+                     l_company_id[10],
+                     l_first_str_location[8],
+                     l_last_str_location[8],
+                     l_str_location[8],
+                     l_first_location[1]="Y",
+                     l_enter,
+                     l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7];
+
+        -- Returns the default selected value
+        Number Function getSelected(Number, String)
+
+        -- Returns Y if subscreen is complete else returns N
+        String Function isPopupComplete(Number, String)
+
+        -- Returns Y if the endorsement exists else returns N
+        String Function endorsementExists(Number, String)
+
+Style Definition
+
+        Include "styles.inc"
+
+        Style {
+                ContentAlignment = Left
+                BackgroundColor = "#ffffff"
+                BorderStyle = None
+                Transparent = False
+        } Tagged T_LISTBOX_FIELD_STYLE
+
+Functions
+
+        "redisplay" display/noreturn "agtmt8001b" ;
+        "func1" display/noreturn "agtmt8001" tagged calc_fn ;
+        change   tagged change_fn ;
+        print    tagged print_fn ;
+        next tagged next_fn ;
+        previous tagged previous_fn ;
+
+        ReAccess ;
+
+        "DISPLAY_ENDORSEMENT_SCREEN"
+                ReAccess/KeepSelection {
+                                        g_code = sfspolicywideoptend:CODE
+                                        if sfspolicywideoptend:popup_screen <> "" then
+                                            Display Modal Screen trun(sfspolicywideoptend:popup_screen)
+--                                        do addadditional(agqgeneral1:app_no, sfspolicywideoptend:code)
+                } ;
+
+        "TOGGLE_ENDORSEMENT"
+                ReAccess/KeepSelection {
+                                       -- If the enforsement is not selected ?
+                                       If getSelected(agqgeneral1:app_no, sfspolicywideoptend:CODE) = 0 Then
+                                           {
+                                           -- Endorsement not selected, so select it
+                                           Do ToggleEndorsement(agqgeneral1:app_no, sfspolicywideoptend:CODE, /*sfspolicywideoptend:LOCATION_SPECIFIC,*/ 1)
+
+                                           -- We have selected the endorsement, so display the popup screen
+                                           Function = "DISPLAY_ENDORSEMENT_SCREEN"
+                                           Abort()
+                                           }
+                                       Else
+                                           {
+                                           -- Endorsement is selected, so deselect it
+                                           Do ToggleEndorsement(agqgeneral1:app_no, sfspolicywideoptend:CODE, /*sfspolicywideoptend:LOCATION_SPECIFIC,*/ 0)
+                                           }
+                } ;
+
+Event Definition
+        windowclosed {
+                     -- do nothing
+                     }
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+if l_first = "" then
+    begin
+    function = "redisplay"
+    l_first = "N"
+    end
+
+access agqname, set agqname:app_no = g_app_no, exact
+
+Access agqgeneral1, Set agqgeneral1:app_no = g_app_no, Generic
+
+Access sfspolicywideoptend,
+        Set sfspolicywideoptend:COMPANY_ID       = agqgeneral1:COMPANY_ID,
+        Set sfspolicywideoptend:STATE            = agqgeneral1:STATE,
+        Set sfspolicywideoptend:LINE_OF_BUSINESS = agqgeneral1:RATING_LINE_OF_BUSINESS, generic
+
+Function = "REACCESS"
+
+Access Validation
+access agqname, set agqname:app_no = g_app_no, exact
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+Access agqgeneral1, Set agqgeneral1:app_no = g_app_no,
+                        agqgeneral1:prem_no = g_prem_no,
+                        agqgeneral1:build_no = g_build_no, Generic
+
+access sfsoptend, set sfsoptend:company_id = agqgeneral1:company_id,
+                      sfsoptend:state = agqgeneral1:state,
+                      sfsoptend:line_of_business = agqgeneral1:rating_line_of_business,
+                      sfsoptend:code = sfspolicywideoptend:code, generic
+
+skip if sfsoptend:end_lob_code not one of "P"
+
+skip if sfspolicywideoptend:class_code not one of 99999
+
+-- Get the selected default
+l_selected = getSelected(agqgeneral1:app_no, sfspolicywideoptend:CODE)
+
+/*access agqgeneral1_alias, set agqgeneral1_alias:app_no = g_app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqgeneral1_alias:app_no = g_app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqgeneral1_alias:prem_no) +
+                               str(agqgeneral1_alias:build_no)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqgeneral1_alias:prem_no) +
+                           str(agqgeneral1_alias:build_no)
+    l_no_locations  = l_no_locations + 1
+
+    next agqgeneral1_alias
+    end
+
+l_str_location = str(agqgeneral1:prem_no) +
+                 str(agqgeneral1:build_no)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end*/
+
+Screen
+
+Tagged MAIN_SCREEN
+    Properties {
+               Layouttype = Column
+               BorderStyle = None
+               BorderPadding = 5
+               LayoutGap = 5
+               Backgroundimagename = "quotebackground.jpg"
+               }
+{
+
+Panel/Hidden
+    Properties {
+               LayoutType = Row
+               }
+
+    {
+        Fields
+            Function
+                Properties {
+                           Editable = False
+                           }
+                Events     {
+                           !SPACE {
+                                  EVENT.CONSUMED = TRUE
+                                  Function = "TOGGLE_ENDORSEMENT"
+                                  Abort()
+                                  }
+                            } ;
+
+            sfspolicywideoptend:COMPANY_ID ;
+
+            sfspolicywideoptend:STATE ;
+
+            sfspolicywideoptend:LINE_OF_BUSINESS ;
+
+    }
+
+Panel Tagged T_HEADING_PANEL
+    Properties {
+               Layouttype = Row
+               }
+{
+    Components
+        Guidetext at 1,1
+            Properties {
+                       Iconname = "qp_logo.gif"
+                       }
+}
+
+Panel to 2,1
+    Properties {
+               LayoutType = Row
+               Backgroundcolor = "Grey"
+               Transparent = False
+               BorderPadding = 5
+               BorderStyle = None
+               }
+{
+    Panel
+        Properties {
+                   LayoutType = Row
+                   LayoutConstraints = STRETCH
+                   }
+    {
+        Components
+            Guidetext tagged display_information_box
+                Properties {
+                           Text = "Property Information - Optional Endorsements..."
+                           Fontsize = 18
+                           Fontstyle = BOLD
+                           Transparent = False
+                           Fontname = "arial"
+                           Backgroundcolor = "Grey"
+                           }
+
+            Guidetext
+                Properties {
+                           LayoutConstraints = STRETCH
+                           }
+    }
+
+Panel
+    Properties {
+               LayoutType = Row
+               LayoutAlignment = Middle
+               LayoutPreferredSize = True
+               }
+{
+    Components
+        Guidetext
+            Properties {
+                       Text = "App No: "
+                       }
+
+            Fields
+                agqgeneral1:app_no/displayonly ;
+            }
+
+}
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = row
+               layoutalignment = right
+               }
+    {
+    Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 4.45,91
+        Properties
+            {
+            layouttype = row
+            layoutalignment = right
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt8001b.sd"
+                      fontsize = 9
+                    }
+      }
+
+/*Panel at 5,1 to 5,100 Tagged location
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        guidetext at 1,24 to 1,36
+            properties {
+                       text = "Location No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+
+        guidetext at 1,44 to 1,56
+            properties {
+                       text = "Building No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+    }*/
+
+Panel at 4,33 to 4,100 Tagged rating_pl
+        Properties
+            {
+            layouttype = screen
+            }
+{
+%%
+Location No: ____    Building No: ____
+
+%%
+
+components
+
+fields
+101   agqgeneral1:prem_no/displayonly ;
+102   agqgeneral1:build_no/displayonly ;
+
+}
+
+SplitPanel
+        Properties {
+                LayoutType = Column
+                LayoutConstraints = STRETCH
+--                LayoutGap = 5
+        }
+        {Panel
+                Properties {
+                        LayoutType = Border
+                        LayoutConstraints = STRETCH
+                        ScrollbarPolicy = AsNeeded
+                        BorderStyle = Plain
+                }
+
+                {Panel to 1,50
+                        Tagged T_REPEATED
+                        Properties {
+                                Layouttype = Row
+                                Transparent = True
+                        }
+
+                        {Fields
+
+                                trun(sfspolicywideoptend:policy_wide_form_desc) + " " + sfspolicywideoptend:FORM_PRINT/Style=T_LISTBOX_FIELD_STYLE to 1,40
+                                        Tagged REPEATED_LINES
+                                        Properties {
+                                                Transparent = true
+                                                Fontsize = 12
+                                                Fontstyle = BOLD
+                                                Fontname = "arial"
+                                                ForeGroundColor =
+                                                        (If l_selected = 1 and sfspolicywideoptend:popup_screen > "" Then
+                                                                If isPopupComplete(agqgeneral1:app_no, sfspolicywideoptend:CODE /*,sfspolicywideoptend:LOCATION_SPECIFIC*/) = "Y" Then
+                                                                        "blue"
+                                                                else
+                                                                        "red"
+
+                                                         Else
+                                                                "black"
+                                                        )
+
+                                                CursorShape = (If l_selected = 1 and sfspolicywideoptend:popup_screen > "" Then Hand Else Default)
+                                        }
+                                        Events {
+
+                                                MouseClicked {
+
+                                                        CurrentRecord = EVENT.LINE
+
+                                                        Function = "DISPLAY_ENDORSEMENT_SCREEN"
+                                                        Abort()
+                                                }
+                                        } ;
+
+                                l_selected/Style=T_LISTBOX_FIELD_STYLE/checkbox/values="0,1"/default to 1,5
+                                        Tagged REPEATED_LINES
+                                        Properties {
+                                                ContentAlignment = Middle
+                                                transparent = true
+                                        }
+                                        Events {
+                                                MouseClicked {
+
+                                                        CurrentRecord = EVENT.LINE
+
+                                                        Function = "TOGGLE_ENDORSEMENT"
+                                                        Abort()
+                                                }
+                                        } ;
+                        }
+                }
+
+Panel to 4,1
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,75   tagged calc_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = calc_fn
+                }
+/*    Button at 1,36    tagged previous_fn
+        Properties {
+                   Iconname = "btn_prev_loc.bmp"
+                   }
+        Events     {
+                   Action = previous_fn
+                   }
+
+    Button at 1,51 tagged next_fn
+        Properties {
+                   Iconname = "btn_next_loc.bmp"
+                   }
+        Events     {
+                   Action = next_fn
+                   }*/
+
+}
+
+/*        panel to 4,1
+                tagged ficof_fn
+                Properties {
+                        LayoutType = Border
+                        Transparent = False
+                        Backgroundcolor = "white"
+                        BorderStyle = Plain
+                }
+                {Components
+
+                        Browser at 1,1
+                                Tagged helper_tg
+                                Properties {
+                                        url = "http://12.192.232.8/14webhelp_agtmt1000b_scr_opt_endt.htm"
+                               }
+                }             */
+        }
+}
+
+Screen Exit
+
+Procedure Definition
+
+Number Function getSelected(Number A_app_no, String A_ENDORSEMENT_CODE) {
+
+-- THIS IS INEFFICIENT
+
+-- There appears to be no index on agqend to Access this by the
+-- relevant key values, maybe there aren't that many records to read ?
+
+        Local File F_agqend = Alias for agqend ;
+
+        Local Number l_isSelected = 0 ;
+
+        Access F_agqend,
+                Set F_agqend:app_no = A_app_no,
+                    f_agqend:prem_no = g_prem_no,
+                    f_agqend:build_no = g_build_no,
+                Generic
+
+        While F_agqend:app_no = A_app_no and
+              f_agqend:prem_no = g_prem_no and
+              f_agqend:build_no = g_build_no {
+
+                If F_agqend:CODE = A_ENDORSEMENT_CODE Then {
+                        l_isSelected = 1
+                        Exit
+                }
+
+                Next F_agqend
+        }
+
+        Return l_isSelected
+}
+
+String Function isPopupComplete(Number A_app_no, String A_ENDORSEMENT_CODE) {
+
+        Local File F_agqgeneral1 = Alias for agqgeneral1 ;
+        local file f_agqname = alias for agqname ;
+        Local File F_agqendorse5 = Alias for agqendorse5 ;
+
+        Local String l_isPopupComplete[1] = "N" ;
+
+        Local Unsigned ASCII Number l_prem_no ;
+        Local Unsigned ASCII Number l_build_no ;
+
+        Access F_agqgeneral1,
+                Set F_agqgeneral1:app_no = A_app_no,
+                Generic
+
+        Access F_agqname,
+                Set F_agqname:app_no = A_app_no,
+                Generic
+
+        access agqendorse5, set agqendorse5:app_no = a_app_no,
+                                agqendorse5:prem_no = g_prem_no,
+                                agqendorse5:build_no = g_build_no,
+                                agqendorse5:code = a_endorsement_code, generic
+
+        if agqendorse5:code = a_endorsement_code then
+            l_isPopupComplete = "Y"
+
+/*        if A_LOCATION_SPECIFIC = 0 then {
+            l_prem_no  = 0
+            l_build_no = 0
+        }
+        else*/ {
+            l_prem_no  = F_agqgeneral1:prem_no
+            l_build_no = F_agqgeneral1:build_no
+        }
+
+/*        Switch(A_ENDORSEMENT_CODE)
+
+                Case "MPL70" : {
+
+                        if ((F_agqgeneral1:alarm_option[1] <> 0 and F_agqgeneral1:alarm_factor[1] <> 0) or
+                            (F_agqgeneral1:alarm_option[2] <> 0 and F_agqgeneral1:alarm_factor[2] <> 0) or
+                            (F_agqgeneral1:alarm_option[3] <> 0 and F_agqgeneral1:alarm_factor[3] <> 0) or
+                            (F_agqgeneral1:alarm_option[4] <> 0 and F_agqgeneral1:alarm_factor[4] <> 0) or
+                            (F_agqgeneral1:alarm_option[5] <> 0 and F_agqgeneral1:alarm_factor[5] <> 0) or
+                            (F_agqgeneral1:alarm_option[6] <> 0 and F_agqgeneral1:alarm_factor[6] <> 0)) then
+                                l_isPopupComplete = "Y"
+                }
+
+            }
+
+        End   */
+
+        Return l_isPopupComplete
+
+}
+
+Procedure ToggleEndorsement(Number A_app_no, String A_ENDORSEMENT_CODE/*, Number A_LOCATION_SPECIFIC*/, Number A_SELECTED) {
+
+        Local File F_agqgeneral1 = Alias for agqgeneral1 ;
+
+        local file f_agqname = alias for agqname ;
+
+        local file f_agqend = alias for agqend ;
+
+        local file f_sfsline = alias for sfsline ;
+
+        Local String l_sal01_exists[1] ;
+        Local String l_sal61_exists[1] ;
+        Local String l_mpl61_exists[1] ;
+        Local String l_mpl180_exists[1] ;
+        Local String l_sal80_exists[1] ;
+        Local string l_mpl78_exists[1] ;
+        Local string l_mpl83_exists[1] ;
+        Local string l_mpl89_exists[1] ;
+        Local string l_inland_exists[1] ;
+
+        Local String l_OK[2] ;
+
+        Access F_agqgeneral1,
+                Set F_agqgeneral1:app_no = A_app_no,
+                    f_agqgeneral1:prem_no = g_prem_no,
+                    f_agqgeneral1:build_no = g_build_no,
+                Generic
+
+        access f_agqname,
+                set f_agqname:app_no = a_app_no, generic
+
+        access f_agqend, set f_agqend:app_no = a_app_no,
+                             f_agqend:prem_no = g_prem_no,
+                             f_agqend:build_no = g_build_no,  generic
+
+        l_sal01_exists = "N"
+        l_mpl61_exists = "N"
+        l_mpl180_exists = "N"
+        l_sal80_exists = "N"
+        l_mpl78_exists = "N"
+        l_mpl83_exists = "N"
+        l_mpl89_exists = "N"
+        l_inland_exists = "N"
+        l_sal61_exists = "N"
+        while f_agqend:app_no = a_app_no
+            begin
+            if f_agqend:code = "SAL61" then
+                l_sal61_exists = "Y"
+            if f_agqend:code = "SAL01" then
+                l_sal01_exists = "Y"
+            if f_agqend:code one of "MPL61", "SAL61" then
+                l_mpl61_exists = "Y"
+            if f_agqend:code one of "MPL180" then
+                l_mpl180_exists = "Y"
+            if f_agqend:code one of "SAL80" then
+                l_sal80_exists = "Y"
+            if f_agqend:code one of "MPL78" then
+                l_mpl78_exists = "Y"
+            if f_agqend:code one of "MPL83" then
+                l_mpl83_exists = "Y"
+            if f_agqend:code one of "MPL89" then
+                l_mpl89_exists = "Y"
+            if f_agqend:code one of "MPL15", "MPL16", "MPL17" then
+                l_inland_exists = "Y"
+
+            next f_agqend
+            end
+
+        Switch(A_SELECTED)
+
+                -- Enddorsement is selected
+                Case 1 : {
+/*                         If A_ENDORSEMENT_CODE = "MHO45" and
+                            f_agqgeneral1:company_id = "FARMERS" and
+                            f_agqgeneral1:owner_occupied = "N" and
+                            f_agqgeneral1:windstorm_loss_mitigation = 1 and
+                            f_agqgeneral1:form = 6 then
+                             {
+                             if F_agqgeneral1:app_no = A_app_no then
+                                {
+                                change F_agqgeneral1
+                                    {
+                                    F_agqgeneral1:WINDSTORM_LOSS_MITIGATION = 0
+                                    }
+                                }
+                             l_OK = dialog("MHO45","warning.bmp",trun("You can not add MHO 45 and have the windstorm credit, windstorm credit is being removed"),"OK")
+                             }
+
+                         If (A_ENDORSEMENT_CODE = "MPL46" and
+                            f_sfsline:lob_code one of "DWELLING" and
+                            f_agqname:eff_date >= 06.01.2009 and
+                            (f_agqgeneral1:owner_occupied = "N" or
+                            f_agqgeneral1:seasonal = "Y" or
+                            f_agqgeneral1:contents_limit = 0 or
+                            f_agqgeneral1:liability_limit = 0 or
+                            f_agqgeneral1:medical_limit = 0)) then
+                             {
+                             l_OK = dialog("MPL46","warning.bmp","Dwelling must be Primary Owner Occupied, with Contents and Liability Coverage's to be eligible for the MPL46","OK")
+                             }
+
+                         if a_endorsement_code one of "MPL61", "SAL61" and
+                            l_sal01_exists = "Y" then
+                             {
+                             error "You need to delete SAL01 before adding MPL61"
+                             }
+
+                         if a_endorsement_code one of "SAL01" and
+                            f_agqgeneral1:state = 19 and
+                            l_sal61_exists = "Y" then
+                             {
+                             error "You need to delete SAL61 before adding SAL01"
+                             }
+
+                         if a_endorsement_code one of "SAL02" and
+                            l_sal01_exists = "N" then
+                             {
+                             error "Not allowed to add without SAL01"
+                             }
+
+                         if a_endorsement_code one of "MPL47" and
+                            l_inland_exists = "Y" then
+                             {
+                             error "You need to use MPL49"
+                             }
+
+                         if a_endorsement_code one of "MPL49" and
+                            l_inland_exists = "N" then
+                             {
+                             error "You need to use MPL47"
+                             }
+
+                         if a_endorsement_code = "SAL01" and
+                            l_mpl61_exists = "Y" then
+                             {
+                             error "You need to delete MPL61 before adding SAL01"
+                             }
+
+                         if a_endorsement_code = "MPL83" and
+                            l_mpl78_exists = "Y" then
+                             {
+                             error "MPL78 exists on the policy you can not add MPL83 also"
+                             }
+
+                         if a_endorsement_code = "MPL78" and
+                            l_mpl83_exists = "Y" then
+                             {
+                             error "MPL83 exists on the policy you can not add MPL78 also"
+                             }
+
+                         if a_endorsement_code = "MPL88" and
+                            l_mpl89_exists = "N" then
+                             {
+                             error "Not allowed to add without MPL89"
+                             }
+
+                         if a_endorsement_code one of "MPL104", "MPL105" and
+                            l_mpl180_exists = "N" and
+                            f_agqgeneral1:state = 29 then
+                             {
+                             error "You can not add this form without adding MPL180"
+                             }
+
+                         if a_endorsement_code one of "MPL104", "MPL105" and
+                            l_sal80_exists = "N" and
+                            f_agqgeneral1:state = 19 then
+                             {
+                             error "You can not add this form without adding SAL80"
+                             }
+
+                         If A_ENDORSEMENT_CODE = "MPL12" Then
+                             {
+                             if F_agqgeneral1:app_no = A_app_no then
+                                 {
+                                 change F_agqgeneral1
+                                     {
+                                     F_agqgeneral1:REMOVE_MPL12 = 0
+                                     }
+                                 }
+                             }
+
+                         If A_ENDORSEMENT_CODE = "MDW30" Then
+                             {
+                             if F_agqgeneral1:app_no = A_app_no then
+                                 {
+                                 change F_agqgeneral1
+                                     {
+                                     F_agqgeneral1:exclude_theft = 0
+                                     }
+                                 }
+                             }
+
+                         If A_ENDORSEMENT_CODE = "MPL24" Then
+                             {
+                             if F_agqgeneral1:app_no = A_app_no then
+                                 {
+                                 change F_agqgeneral1
+                                     {
+                                     F_agqgeneral1:lead_paint_exclusion = 0
+                                     }
+                                 }
+                             }
+
+                         If A_ENDORSEMENT_CODE = "SAL04" Then
+                             {
+                             if F_agqgeneral1:app_no = A_app_no then
+                                 {
+                                 change F_agqgeneral1
+                                     {
+                                     F_agqgeneral1:remove_sal04 = 0
+                                     }
+                                 }
+                             }
+
+                        If A_ENDORSEMENT_CODE one of "SAL01", "FPL01" Then
+                            {
+                            if F_agqgeneral1:app_no = A_app_no then
+                                {
+                                change F_agqgeneral1
+                                    {
+                                    F_agqgeneral1:waive_sal01 = "N"
+                                    }
+                                }
+                            }
+
+                        If A_ENDORSEMENT_CODE one of "FPL02", "MPL720" Then
+                            {
+                            if F_agqgeneral1:app_no = A_app_no then
+                                {
+                                change F_agqgeneral1
+                                    {
+                                    F_agqgeneral1:delete_boiler = 0
+                                    }
+                                }
+                            }
+
+                         If A_ENDORSEMENT_CODE = "MPL126" Then
+                             {
+                             if F_agqgeneral1:app_no = A_app_no then
+                                 {
+                                 change F_agqgeneral1
+                                     {
+                                     F_agqgeneral1:fungi_mold_exclusion = 0
+                                     }
+                                 }
+                             }*/
+
+                        if sfspolicywideoptend:refer_to_company = 1 then
+                            warning "Refer to Company"
+                        do addEndorsements(A_app_no, A_ENDORSEMENT_CODE)
+                        }
+
+                -- Enddorsement is deselected
+                Case 0 : {
+
+/*                        If A_ENDORSEMENT_CODE = "MPL12" Then {
+
+                                if F_agqgeneral1:app_no = A_app_no then {
+
+                                        change F_agqgeneral1 {
+                                                F_agqgeneral1:REMOVE_MPL12 = 1
+                                        }
+                                }
+                        }
+                        If A_ENDORSEMENT_CODE = "MPL24" Then {
+
+                                if F_agqgeneral1:app_no = A_app_no then {
+
+                                        change F_agqgeneral1 {
+                                                F_agqgeneral1:lead_paint_exclusion = 1
+                                        }
+                                }
+                        }
+                        If A_ENDORSEMENT_CODE = "MDW30" Then {
+
+                                if F_agqgeneral1:app_no = A_app_no then {
+
+                                        change F_agqgeneral1 {
+                                                F_agqgeneral1:exclude_theft = 1
+                                        }
+                                }
+                        }
+                        If A_ENDORSEMENT_CODE = "SAL04" Then {
+
+                                if F_agqgeneral1:app_no = A_app_no then {
+
+                                        change F_agqgeneral1 {
+                                                F_agqgeneral1:remove_sal04 = 1
+                                        }
+                                }
+                        }
+
+                        If A_ENDORSEMENT_CODE = "MPL126" Then {
+
+                                if F_agqgeneral1:app_no = A_app_no then {
+
+                                        change F_agqgeneral1 {
+                                                F_agqgeneral1:fungi_mold_exclusion = 1
+                                        }
+                                }
+                        }
+
+                        If A_ENDORSEMENT_CODE one of "SAL01", "FPL01" Then {
+
+                                if F_agqgeneral1:app_no = A_app_no then {
+
+                                        change F_agqgeneral1 {
+                                                F_agqgeneral1:waive_sal01 = "Y"
+                                        }
+                                }
+                        }
+
+                        If A_ENDORSEMENT_CODE one of "MPL47", "MPL49" Then {
+
+                                if F_agqgeneral1:app_no = A_app_no then {
+
+                                        change F_agqgeneral1 {
+                                                F_agqgeneral1:remove_mpl47 = 1
+                                        }
+                                }
+                        }
+
+                        If A_ENDORSEMENT_CODE one of "MDL62" Then {
+
+                                if F_agqgeneral1:app_no = A_app_no then {
+
+                                        change F_agqgeneral1 {
+                                                F_agqgeneral1:remove_mdl62 = 1
+                                        }
+                                }
+                        }
+
+                        If A_ENDORSEMENT_CODE one of "MDL63" Then {
+
+                                if F_agqgeneral1:app_no = A_app_no then {
+
+                                        change F_agqgeneral1 {
+                                                F_agqgeneral1:remove_mdl63 = 1
+                                        }
+                                }
+                        }
+
+                        If A_ENDORSEMENT_CODE one of "FPL02", "MPL720" Then {
+
+                                if F_agqgeneral1:app_no = A_app_no then {
+
+                                        change F_agqgeneral1 {
+                                                F_agqgeneral1:delete_boiler = 1
+                                        }
+                                }
+                        }*/
+
+                        do delete_agqend(A_app_no, A_ENDORSEMENT_CODE)
+                }
+
+        End
+}
+
+/*procedure addadditional(Number A_app_no, String A_ENDORSEMENT_CODE)
+begin
+        Local File F_agqgeneral1 = Alias for agqgeneral1 ;
+        Local File F_agqend = Alias for agqend ;
+        local File F_agqname = Alias for agqname ;
+
+        Local Unsigned ASCII Number l_prem_no[4] ;
+        Local Unsigned ASCII Number l_build_no[4] ;
+        Local string l_continue_1[2] ;
+        local string l_code[7] ;
+        local string l_mpl49[1] ;
+        local string l_mpl47[1] ;
+        local string l_code_1[7] ;
+        local string l_code_2[7] ;
+        local string l_code_3[7] ;
+        local string l_access_code[7] ;
+        local unsigned ascii number l_state[2] ;
+        local string L_KEEP_MPL47 = "Y" ;
+        local string L_ADD_MPL47_MPL49 = "Y" ;
+        local unsigned ascii number l_increase_cov_c[8]=0/dec=4 ;
+
+        Access F_agqgeneral1,
+                Set F_agqgeneral1:app_no = A_app_no,
+                Generic
+
+        Access F_agqname,
+                Set F_agqname:app_no = A_app_no, generic
+
+        l_state = f_agqgeneral1:state
+        if A_ENDORSEMENT_CODE = "MPL123" then
+            begin
+            Access PLSPREPRINTED, Set PLSPREPRINTED:COMPANY_ID       = f_agqname:COMPANY_ID,
+                                      PLSPREPRINTED:STATE            = L_STATE,
+                                      PLSPREPRINTED:LINE_OF_BUSINESS = f_agqname:LINE_OF_BUSINESS, Generic
+
+            l_code_1 = ""
+            while PLSPREPRINTED:COMPANY_ID       = f_agqname:COMPANY_ID and
+                  PLSPREPRINTED:STATE            = l_STATE and
+                  PLSPREPRINTED:LINE_OF_BUSINESS = f_agqname:LINE_OF_BUSINESS
+                begin
+                If f_agqname:EFF_DATE >= PLSPREPRINTED:REFF_DATE Then
+                    Begin
+                    L_CODE_1 = PLSPREPRINTED:trigger_endorsements[19] -- mpl122
+                    l_code_2 = "MPL38"
+                    End
+
+                Next PLSPREPRINTED
+                End
+
+            If L_CODE_1 <> "" Then
+                Begin
+                If endorsementExists(A_app_no, L_CODE_1) = "N" Then
+                    begin
+                    Do add_agqend(A_app_no, l_CODE_1)
+                    do add_inland
+                    end
+                End
+
+            end
+
+        If A_ENDORSEMENT_CODE one of "MPL38", "MPL39" then
+            Begin
+            L_STATE = f_agqgeneral1:STATE
+            Access PLSHOMEBUS, Set PLSHOMEBUS:COMPANY_ID       = f_agqname:COMPANY_ID,
+                                   PLSHOMEBUS:STATE            = L_STATE,
+                                   PLSHOMEBUS:LINE_OF_BUSINESS = f_agqname:LINE_OF_BUSINESS, Generic
+
+            l_code_1 = ""
+            l_code_2 = ""
+            l_code_3 = ""
+            while PLSHOMEBUS:COMPANY_ID       = f_agqname:COMPANY_ID and
+                  PLSHOMEBUS:STATE            = L_STATE and
+                  PLSHOMEBUS:LINE_OF_BUSINESS = f_agqname:LINE_OF_BUSINESS
+                begin
+                If f_agqname:EFF_DATE >= PLSHOMEBUS:rEFF_DATE Then
+                    Begin
+                    L_CODE_1 = PLSHOMEBUS:MANDATORY_FORMS[1]
+                    L_CODE_2 = PLSHOMEBUS:MANDATORY_FORMS[2]
+                    L_CODE_3 = "MPL38  "
+                    End
+
+                Next PLSHOMEBUS
+                End
+
+            If L_CODE_1 <> "" Then
+                Begin
+                If endorsementExists(A_app_no, L_CODE_1) = "N" Then
+                    begin
+                    Do add_agqend(A_app_no, l_CODE_1)
+                    do add_inland
+                    end
+                End
+
+            If L_CODE_2 <> "" Then
+                Begin
+                If endorsementExists(A_app_no, L_CODE_2) = "N" Then
+                    begin
+                    Do add_agqend(A_app_no, l_CODE_2)
+                    do add_inland
+                    end
+                End
+
+            If L_CODE_3 <> "" Then
+                Begin
+                If endorsementExists(A_app_no, L_CODE_3) = "N" Then
+                    begin
+                    Do add_agqend(A_app_no, l_CODE_3)
+                    do add_inland
+                    end
+                End
+            end
+
+            If L_CODE_1 = "MPL47" Or
+               L_CODE_2 = "MPL47" Then
+                Begin
+                Access f_agqend, Set f_agqend:app_no = a_app_no, generic
+
+                L_KEEP_MPL47      = "Y"
+                L_ADD_MPL47_MPL49 = "Y"
+                while f_agqend:app_no = a_app_no
+                    begin
+                    If f_agqend:CODE = "MPL15" Or
+                       f_agqend:CODE = "MPL16" Or
+                       f_agqend:CODE = "MPL17" Then
+                        L_KEEP_MPL47 = "N"
+
+                   If f_agqend:CODE = "MPL47" Or
+                      f_agqend:CODE = "MPL49" Then
+                       Begin
+                       L_ADD_MPL47_MPL49 = "N"
+                       End
+
+                    Next f_agqend
+                    End
+
+                If L_KEEP_MPL47 = "N" Then
+                    Begin
+                    Access f_agqend, Set f_agqend:app_no = a_app_no, generic
+
+                    L_MPL49 = "N"
+                    while f_agqend:app_no = A_app_no
+                        begin
+                        If f_agqend:CODE = "MPL47" Then
+                            Begin
+                            If L_ADD_MPL47_MPL49 = "N" Then
+                                L_MPL49 = "Y"
+                            Else
+                                L_MPL49 = "N"
+                            Delete f_agqend
+                            End
+
+                        Next f_agqend
+                        End
+                    End
+
+                If L_MPL49 = "Y" Then
+                    Begin
+                    L_CODE = "MPL49"
+                    Do add_agqend(A_app_no, l_CODE)
+                    End
+
+                If L_CODE_1 = "MPL47" Then
+                    L_ACCESS_CODE = L_CODE_1
+                If L_CODE_2 = "MPL47" Then
+                    L_ACCESS_CODE = L_CODE_2
+                Access sfspolicywideoptend_alias, Set sfspolicywideoptend_alias:COMPANY_ID       = f_agqname:COMPANY_ID,
+                                            sfspolicywideoptend_alias:STATE            = L_STATE,
+                                            sfspolicywideoptend_alias:LINE_OF_BUSINESS = f_agqname:LINE_OF_BUSINESS,
+                                            sfspolicywideoptend_alias:CODE             = l_access_code, Generic
+
+                l_increase_cov_c = 0
+                while sfspolicywideoptend_alias:COMPANY_ID       = f_agqname:COMPANY_ID and
+                      sfspolicywideoptend_alias:STATE            = l_STATE and
+                      sfspolicywideoptend_alias:LINE_OF_BUSINESS = f_agqname:LINE_OF_BUSINESS and
+                      sfspolicywideoptend_alias:CODE             = l_access_code
+                        begin
+                        If (f_agqname:EFF_DATE >= sfspolicywideoptend:EFF_DATE and
+                           (f_agqname:eff_date <= sfspolicywideoptend:Exp_date or
+                           sfspolicywideoptend_alias:Exp_date = 0)) Then
+                            begin
+                            L_INCREASE_COV_C = sfspolicywideoptend_alias:PREMIUM_1[5]
+                            end
+
+                        Next sfspolicywideoptend_alias
+                        End
+
+                If f_agqgeneral1:app_no = a_app_no and
+                   l_increase_cov_c <> 0 then
+                    begin
+                    Change f_agqgeneral1
+                        Begin
+                        If f_agqgeneral1:FORM <> 4 And
+                           f_agqgeneral1:FORM <> 6 Then
+                            Begin
+                            L_LIMIT = (f_agqgeneral1:DWELLING_LIMIT *
+                                      (L_INCREASE_COV_C Divide 100))
+                            f_agqgeneral1:CONTENTS_LIMIT = L_LIMIT
+                            End
+                        End
+                    End
+
+                End
+
+end                */
+
+procedure addEndorsements(Number A_app_no, String A_ENDORSEMENT_CODE/*, Number A_LOCATION_SPECIFIC*/) {
+
+        Local File F_agqgeneral1 = Alias for agqgeneral1 ;
+        Local File F_agqend = Alias for agqend ;
+        local File F_agqname = Alias for agqname ;
+
+        Local Unsigned ASCII Number l_prem_no[4] ;
+        Local Unsigned ASCII Number l_build_no[4] ;
+        local unsigned ascii number l_state[2] ;
+        local unsigned ascii number l_increase_cov_c[8]=0/dec=4 ;
+        Local string l_continue_1[2] ;
+
+        Access F_agqgeneral1,
+                Set F_agqgeneral1:app_no = A_app_no,
+                Generic
+
+        Access F_agqname,
+                Set F_agqname:app_no = A_app_no, generic
+
+/*        if A_LOCATION_SPECIFIC = 0 then {
+                l_prem_no  = 0
+                l_build_no = 0
+        }
+        Else*/ {
+                l_prem_no  = F_agqgeneral1:PREM_NO
+                l_build_no = F_agqgeneral1:BUILD_NO
+        }
+
+        Access F_agqend,
+                Set F_agqend:app_no   = A_app_no ,
+                Set F_agqend:PREM_NO  = g_prem_no,
+                Set F_agqend:BUILD_NO = g_build_no,
+                Generic
+
+
+        l_state = f_agqgeneral1:state
+
+        If endorsementExists(A_app_no, A_ENDORSEMENT_CODE) = "N" Then
+                begin
+                Do add_agqend(A_app_no, A_ENDORSEMENT_CODE/*, A_LOCATION_SPECIFIC*/)
+                end
+
+/*        if A_ENDORSEMENT_CODE = "MPL47" then {
+
+                Access F_agqgeneral1,
+                        Set F_agqgeneral1:app_no = A_app_no,
+                        Generic
+
+                if F_agqgeneral1:app_no = A_app_no then {
+                        change F_agqgeneral1 {
+                                F_agqgeneral1:REMOVE_MPL47 = 0
+                        }
+                }
+        }
+
+        if A_ENDORSEMENT_CODE one of "FPL02", "MPL720" then {
+
+                Access F_agqgeneral1,
+                        Set F_agqgeneral1:app_no = A_app_no,
+                        Generic
+
+                While F_agqgeneral1:app_no = A_app_no {
+
+                        Change F_agqgeneral1 {
+                                F_agqgeneral1:DELETE_BOILER = 0
+                        }
+
+                        Next F_agqgeneral1
+
+                }
+        }
+
+        if a_endorsement_code one of "MPL47", "MPL49" then
+            begin
+            Access sfspolicywideoptend_alias, Set sfspolicywideoptend_alias:COMPANY_ID       = f_agqname:COMPANY_ID,
+                                        sfspolicywideoptend_alias:STATE            = L_STATE,
+                                        sfspolicywideoptend_alias:LINE_OF_BUSINESS = f_agqname:LINE_OF_BUSINESS,
+                                        sfspolicywideoptend_alias:CODE             = A_ENDORSEMENT_CODE, Generic
+
+            l_increase_cov_c = 0
+            while sfspolicywideoptend_alias:COMPANY_ID       = f_agqname:COMPANY_ID and
+                  sfspolicywideoptend_alias:STATE            = l_STATE and
+                  sfspolicywideoptend_alias:LINE_OF_BUSINESS = f_agqname:LINE_OF_BUSINESS and
+                  sfspolicywideoptend_alias:CODE             = A_ENDORSEMENT_CODE
+                    begin
+                    If (f_agqname:EFF_DATE >= sfspolicywideoptend:EFF_DATE and
+                       (f_agqname:eff_date <= sfspolicywideoptend:Exp_date or
+                       sfspolicywideoptend_alias:Exp_date = 0)) Then
+                        begin
+                        L_INCREASE_COV_C = sfspolicywideoptend_alias:PREMIUM_1[5]
+                        end
+
+                    Next sfspolicywideoptend_alias
+                    End
+
+            If f_agqgeneral1:app_no = a_app_no then
+                begin
+                Change f_agqgeneral1
+                    Begin
+                    If f_agqgeneral1:FORM <> 4 And
+                       f_agqgeneral1:FORM <> 6 Then
+                        Begin
+                        L_LIMIT = (f_agqgeneral1:DWELLING_LIMIT *
+                                  (L_INCREASE_COV_C Divide 100))
+                        f_agqgeneral1:CONTENTS_LIMIT = L_LIMIT
+                        End
+                    End
+                End
+            end  */
+}
+
+String Function endorsementExists(Number A_app_no, String A_ENDORSEMENT_CODE) {
+
+        Local File F_agqend = Alias for agqend ;
+        Local File F_agqgeneral1 = Alias for agqgeneral1 ;
+
+        Local String l_endorsementExists[1] = "N" ;
+
+        Access F_agqend,
+                Set F_agqend:app_no   = A_app_no ,
+                Generic
+
+        while F_agqend:app_no = A_app_no {
+
+                If F_agqend:CODE = A_ENDORSEMENT_CODE Then {
+                        l_endorsementExists = "Y"
+                        Exit
+                }
+
+                Next F_agqend
+        }
+
+        Return l_endorsementExists
+}
+
+Procedure add_agqend(Number A_app_no, String A_ENDORSEMENT_CODE/*, Number A_LOCATION_SPECIFIC*/) {
+
+Local File F_agqend = Alias for agqend ;
+Local File F_agqgeneral1 = Alias for agqgeneral1 ;
+Local File F_sfspolicywideoptend = Alias for sfspolicywideoptend ;
+Local File F_sfsoptend = Alias for sfsoptend ;
+local file f_agqname = Alias for agqname ;
+
+Local Unsigned ASCII Number l_subCode[4] ;
+local unsigned ascii number l_state[2] ;
+local unsigned ascii number l_increase_cov_c[8]=0/dec=4 ;
+
+Local Unsigned ASCII Number l_prem_no[4] ;
+Local Unsigned ASCII Number l_build_no[4] ;
+
+Local String l_formEdition[18] ;
+Local String l_description[55] ;
+
+Access F_agqgeneral1, Set F_agqgeneral1:app_no = A_app_no, Generic
+
+Access F_agqname, Set F_agqname:app_no = A_app_no, Generic
+
+l_prem_no  = F_agqgeneral1:prem_no
+l_build_no = F_agqgeneral1:build_no
+
+Access F_agqend,
+        Set F_agqend:app_no   = A_app_no ,
+        Set F_agqend:PREM_NO  = g_prem_no,
+        Set F_agqend:BUILD_NO = g_build_no,
+        Generic
+
+l_subCode = 0
+
+while F_agqend:app_no   = A_app_no and
+      F_agqend:PREM_NO  = g_prem_no and
+      F_agqend:BUILD_NO = g_build_no
+    {
+    l_subCode = F_agqend:SUB_CODE
+
+    Next F_agqend
+    }
+
+l_subCode = l_subCode + 10
+
+Access F_sfsoptend,
+        Set F_sfsoptend:COMPANY_ID   = F_agqgeneral1:COMPANY_ID,
+        F_sfsoptend:STATE            = F_agqgeneral1:STATE,
+        F_sfsoptend:LINE_OF_BUSINESS = F_agqgeneral1:rating_LINE_OF_BUSINESS,
+        F_sfsoptend:CODE             = A_ENDORSEMENT_CODE,
+        Generic
+
+while F_sfsoptend:COMPANY_ID       = F_agqgeneral1:COMPANY_ID and
+      F_sfsoptend:STATE            = F_agqgeneral1:STATE and
+      F_sfsoptend:LINE_OF_BUSINESS = F_agqgeneral1:rating_LINE_OF_BUSINESS and
+      F_sfsoptend:CODE             = A_ENDORSEMENT_CODE
+        {
+        If (F_agqname:eff_date >= f_sfsoptend:EFF_DATE and
+           (F_agqname:eff_date <= F_sfsoptend:EXP_DATE or
+           F_sfsoptend:EXP_DATE = 0)) Then
+               {
+               l_formEdition   = F_sfsoptend:form_edition
+               l_description    = F_sfsoptend:description
+               }
+
+        Next F_sfsoptend
+        }
+
+if l_formEdition <> "" then
+    {
+    Add F_agqend
+        {
+        F_agqend:app_no               =       A_app_no
+        F_agqend:PREM_NO              =       g_prem_no
+        F_agqend:BUILD_NO             =       g_build_no
+        F_agqend:SUB_CODE             =       l_subCode
+        F_agqend:CODE                 =       A_ENDORSEMENT_CODE
+        F_agqend:FORM_EDITION         =       l_formEdition
+        F_agqend:DESCRIPTION          =       l_description
+        F_agqend:PREMIUM              =       0
+        F_agqend:LOB_END_CODE         =       "P"
+        }
+    }
+
+}
+
+Procedure delete_agqend(Number A_app_no, String A_ENDORSEMENT_CODE/*, Number A_LOCATION_SPECIFIC*/) {
+
+        Local File F_agqend = Alias for agqend ;
+        Local File F_agqgeneral1 = Alias for agqgeneral1 ;
+        Local File F_agqname = Alias for agqname ;
+        Local File F_plsdefault = Alias for plsdefault ;
+        Local file f_sfsline = alias for sfsline ;
+
+        Local Unsigned ASCII Number l_prem_no[4] ;
+        Local Unsigned ASCII Number l_build_no[4] ;
+        Local Unsigned ascii number l_form[1] ;
+
+        Access F_agqgeneral1,
+                Set F_agqgeneral1:app_no = A_app_no,
+                Generic
+
+        access f_agqname,
+                set f_agqname:app_no = A_app_no, generic
+
+        l_prem_no  = F_agqgeneral1:PREM_NO
+        l_build_no = F_agqgeneral1:BUILD_NO
+
+         Access F_agqend,
+                Set F_agqend:app_no   = A_app_no ,
+                Set F_agqend:PREM_NO  = g_prem_no,
+                Set F_agqend:BUILD_NO = g_build_no, Generic
+
+            while F_agqend:app_no   = A_app_no and
+                  F_agqend:PREM_NO  = g_prem_no and
+                  F_agqend:BUILD_NO = g_build_no
+                {
+
+                If F_agqend:CODE = A_ENDORSEMENT_CODE Then
+                        Delete F_agqend
+
+                Next F_agqend
+                }
+
+
+}
+
+procedure delete_popup_files(Number A_app_no, String A_ENDORSEMENT_CODE/*, Number A_LOCATION_SPECIFIC*/) {
+
+        Local File F_agqendorse5 = Alias for agqendorse5 ;
+        Local File F_agqgeneral1 = Alias for agqgeneral1 ;
+
+        Local Unsigned ASCII Number l_prem_no[4] ;
+        Local Unsigned ASCII Number l_build_no[4] ;
+
+        Access F_agqgeneral1,
+                Set F_agqgeneral1:app_no = A_app_no,
+                Generic
+
+/*        if A_LOCATION_SPECIFIC = 0 then {
+                l_prem_no  = 0
+                l_build_no = 0
+        }
+        Else*/ {
+                l_prem_no  = F_agqgeneral1:PREM_NO
+                l_build_no = F_agqgeneral1:BUILD_NO
+        }
+
+        Access F_agqendorse5,
+                Set F_agqendorse5:app_no   = A_app_no,
+                Set F_agqendorse5:prem_no  = g_prem_no,
+                Set F_agqendorse5:build_no = g_build_no,
+                Set F_agqendorse5:code     = A_ENDORSEMENT_CODE,
+                Generic
+
+        while F_agqendorse5:app_no   = A_app_no and
+              F_agqendorse5:prem_no  = g_prem_no and
+              F_agqendorse5:build_no = g_build_no and
+              F_agqendorse5:code     = A_ENDORSEMENT_CODE {
+                        Delete F_agqendorse5
+                        Next F_agqendorse5
+        }
+
+
+}
+
+End

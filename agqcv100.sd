@@ -1,0 +1,1034 @@
+%%
+Program
+        Name = "agqcv100" ;
+        Type = "file" ;
+        Padcharacter = Space ;
+        Domain = "flat" ;
+
+        Global Unsigned Ascii Number G_POLICY_NO[9] ,
+                                     G_YEAR[4],
+                                     G_END_SEQUENCE[4],
+                                     G_QUOTE_NO[8] ,
+                                     G_PREM_NO[4],
+                                     G_BUILD_NO[4],
+                                     G_APP_NO[11],
+                                     G_LINE_OF_BUSINESS[4] ;
+
+        Local String L_QUOTE_STRING[19] ,
+                     L_CLOSE_QUOTE[1]="N",
+                     l_company_id[10]="",
+                     l_notes[100],
+                     l_enter[1],
+                     l_first_time[1],
+                     l_user_id[15],
+                     L_CODE[7] ;
+
+        local signed ascii number l_sub_total[9]=0/dec=2 ;
+
+        local unsigned ascii number l_line_of_business[4],
+                                    l_agent_no[4] ,
+                                    l_hold_payment_plan[4],
+                                    l_payment_plan[4],
+                                    l_installment[4],
+                                    l_form[1],
+                                    l_sub_code[4] ;
+
+        local date l_eff_date[8],
+                   l_exp_date[8] ;
+
+initialisation
+g_app_no   = val(commandline[1,11])
+g_quote_no = val(commandline[12,19])
+
+do update_files
+
+update
+
+Procedure Definition
+
+Procedure UPDATE_FILES
+Begin
+access agqname, set agqname:app_no = g_app_no, generic
+
+l_user_id = username
+access sfsemail, set sfsemail:company_id = agqname:company_id,
+                     sfsemail:user_id    = l_user_id, generic
+
+if agqname:line_of_business not one of 99 then
+    begin
+    access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+    if agqgeneral:app_no = g_app_no then
+        begin
+        l_company_id = agqgeneral:company_id
+        l_line_of_business = agqgeneral:line_of_business
+        end
+
+    access agqworkerscomp1, set agqworkerscomp1:app_no = g_app_no, generic
+
+    if agqworkerscomp1:app_no = g_app_no then
+        begin
+        l_company_id = agqworkerscomp1:company_id
+        l_line_of_business = agqworkerscomp1:line_of_business
+        end
+
+    access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+    if agqpersonal:app_no = g_app_no then
+        begin
+        l_company_id = agqpersonal:company_id
+        l_line_of_business = agqpersonal:line_of_business
+        end
+
+    access agqvehicle, set agqvehicle:app_no = g_app_no, generic
+
+    if agqvehicle:app_no = g_app_no then
+        begin
+        l_company_id = agqvehicle:company_id
+        l_line_of_business = agqvehicle:line_of_business
+        end
+
+    access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+    if agqcontractor:app_no = g_app_no then
+        begin
+        l_company_id = agqcontractor:company_id
+        l_line_of_business = agqcontractor:line_of_business
+        l_form = agqcontractor:form
+        end
+
+    if l_company_id = "" then
+        l_company_id = agqname:company_id
+    if l_line_of_business = 0 then
+        l_line_of_business = agqname:line_of_business
+    end
+else
+    begin
+    if l_company_id = "" then
+        l_company_id = agqname:company_id
+    if l_line_of_business = 0 then
+        l_line_of_business = agqname:line_of_business
+    end
+
+if l_form = 0 and
+   l_line_of_business one of 6, 36 and
+   l_company_id = "FLEMINGTON" then
+    begin
+    access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+    l_form = agqcontractor:form
+    end
+
+access sfscompany, set sfscompany:company_id = l_company_id, generic
+
+access sfsline, set sfsline:company_id       = l_company_id,
+                    sfsline:line_of_business = l_line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+L_CLOSE_QUOTE = "N"
+do update_agqname
+do update_agqmaster
+do update_agqamt
+if agqname:line_of_business = 99 then
+    do update_agqmastsupp
+do update_agqlocation
+do update_agqsupp
+do update_agqsupp1
+do update_agqend
+do update_agqend1
+do update_agqnotes
+do update_agqepl
+do update_agqproperty
+do update_agqcreditscore
+do update_agqmailingaddress
+do update_agqclaim
+do update_agqlosses
+do update_agqfobinfo
+do update_agqcreditdebit
+
+if l_line_of_business = 99 then
+    begin
+    access agqamt, set agqamt:app_no = g_app_no, generic
+
+    if agqamt:lob_totals[5] <> 0 then
+        do update_bop
+
+    if agqamt:lob_totals[1] <> 0 then
+        do update_cas
+
+    if agqamt:lob_totals[2] <> 0 then
+        do update_smp
+
+    if agqamt:lob_totals[3] <> 0 then
+        do update_wcp
+    end
+else
+    begin
+    Switch(SFSLINE:LOB_CODE)
+      Case "BOP"              : Do UPDATE_BOP
+      Case "AUTO"             : Do UPDATE_CAS
+      Case "SCP"              : Do UPDATE_SCS
+      Case "HOME", "DWELLING" : Do UPDATE_PLP
+      case "WORK"             : do update_WCP
+      default                 : do update_smp
+      End
+   end
+
+End
+
+Procedure UPDATE_BOP
+Begin
+
+L_QUOTE_STRING = str(g_app_no,11) + Str(G_QUOTE_NO,8)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv100b %s",L_QUOTE_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv100b %s",L_QUOTE_STRING)
+
+End
+
+Procedure UPDATE_SMP
+Begin
+
+L_QUOTE_STRING = str(g_app_no,11) + Str(G_QUOTE_NO,8)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    begin
+    Proc ("cli csbatch agqcv100smp %s",L_QUOTE_STRING)/noconsole
+    Proc ("cli csbatch agqcv101smp %s",L_QUOTE_STRING)/noconsole
+    end
+Else
+    begin
+    Proc ("cli csbatch agqcv100smp %s",L_QUOTE_STRING)
+    Proc ("cli csbatch agqcv101smp %s",L_QUOTE_STRING)
+    end
+
+End
+
+Procedure UPDATE_SCS
+Begin
+L_QUOTE_STRING = str(g_app_no,11) + Str(G_QUOTE_NO,8)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv100sc %s",L_QUOTE_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv100sc %s",L_QUOTE_STRING)
+
+if agqname:company_id = "FARMERS" then
+    begin
+    If SFSCOMPANY:DEBUG_MODE = 0 Then
+        Proc ("cli csbatch agqcv100scf %s",L_QUOTE_STRING)/noconsole
+    Else
+        Proc ("cli csbatch agqcv100scf %s",L_QUOTE_STRING)
+    end
+
+End
+
+Procedure UPDATE_CAS
+Begin
+L_QUOTE_STRING = str(g_app_no,11) + Str(G_QUOTE_NO,8)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv100a %s",L_QUOTE_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv100a %s",L_QUOTE_STRING)
+
+End
+
+Procedure UPDATE_PLP
+Begin
+L_QUOTE_STRING = str(g_app_no,11) + Str(G_QUOTE_NO,8)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv100p %s",L_QUOTE_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv100p %s",L_QUOTE_STRING)
+
+End
+
+Procedure UPDATE_WCP
+Begin
+L_QUOTE_STRING = str(g_app_no,11) + Str(G_QUOTE_NO,8)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv100w %s",L_QUOTE_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv100w %s",L_QUOTE_STRING)
+
+End
+
+procedure update_agqname
+begin
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:line_of_business not one of 99 then
+    begin
+    switch(sfsline:lob_code)
+      case "BOP"              : begin
+                                l_eff_date = agqgeneral:eff_date
+                                l_exp_date = agqgeneral:exp_date
+                                l_line_of_business = agqgeneral:line_of_business
+                                l_agent_no = agqgeneral:agent_no
+                                end
+      case "WORK"             : begin
+                                l_eff_date = agqworkerscomp1:eff_date
+                                l_exp_date = agqworkerscomp1:exp_date
+                                l_line_of_business = agqworkerscomp1:line_of_business
+                                l_agent_no = agqworkerscomp1:agent_no
+                                end
+      case "HOME", "DWELLING" : begin
+                                l_eff_date = agqpersonal:eff_date
+                                l_exp_date = agqpersonal:exp_date
+                                l_line_of_business = agqpersonal:line_of_business
+                                l_agent_no = agqpersonal:agent_no
+                                end
+      case "SCP"              : begin
+                                l_eff_date = agqcontractor:eff_date
+                                l_exp_date = agqcontractor:exp_date
+                                l_line_of_business = agqcontractor:line_of_business
+                                l_agent_no = agqcontractor:agent_no
+                                end
+      case "AUTO"             : begin
+                                l_eff_date = agqvehicle:eff_date
+                                l_exp_date = agqvehicle:exp_date
+                                l_line_of_business = agqvehicle:line_of_business
+                                l_agent_no = agqvehicle:agent_no
+                                end
+      default                 : begin
+                                l_eff_date = agqname:eff_date
+                                l_exp_date = agqname:exp_date
+                                l_line_of_business = agqname:line_of_business
+                                l_agent_no = agqname:agent_no
+                                end
+      end
+    end
+else
+    begin
+    l_eff_date = agqname:eff_date
+    l_exp_date = agqname:exp_date
+    l_line_of_business = agqname:line_of_business
+    l_agent_no = agqname:agent_no
+    end
+
+if agqname:company_id <> "GGUND" then
+    begin
+    do access_arspayplan
+    if arspayplan:manual_payment_plan = 0 then
+        Do INSTALLMENT
+    end
+
+if agqname:company_id = "GGUND" then
+    begin
+    access agqapplication_alt, set agqapplication_alt:app_no   = g_app_no,
+                                   agqapplication_alt:sub_code = 1, generic
+
+    l_payment_plan = agqapplication_alt:payment_plan
+    switch(l_line_of_business)
+      case 5  : l_sub_code = 35
+      default : l_sub_code = 34
+      end
+    access agqapplication, set agqapplication:app_no   = g_app_no,
+                               agqapplication:sub_code = l_sub_code, generic
+
+    end
+else
+    begin
+    access agqapplication, set agqapplication:app_no   = g_app_no,
+                               agqapplication:sub_code = 38, generic
+
+    l_payment_plan = agqname:payment_plan
+    end
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+access agqworkerscomp1, set agqworkerscomp1:app_no = g_app_no, generic
+
+Add sfqname
+    Begin
+    sfqname:QUOTE_NO          =       g_quote_no
+    sfqname:ACCOUNT_NUMBER    =       agqname:ACCOUNT_NUMBER
+    sfqname:NAME[1]           =       agqname:NAME[1]
+    sfqname:NAME[2]           =       agqname:NAME[2]
+    sfqname:NAME[3]           =       agqname:NAME[3]
+    sfqname:ADDRESS[1]        =       agqname:ADDRESS[1]
+    sfqname:ADDRESS[2]        =       agqname:ADDRESS[2]
+    sfqname:ADDRESS[3]        =       agqname:ADDRESS[3]
+    sfqname:CITY              =       agqname:CITY
+    sfqname:STR_STATE         =       agqname:STR_STATE
+    sfqname:STR_ZIPCODE       =       agqname:STR_ZIPCODE
+    sfqname:COMPANY_ID        =       agqname:COMPANY_ID
+    sfqname:TRANS_DATE        =       TODAYSDATE
+    sfqname:EFF_DATE          =       l_EFF_DATE
+    sfqname:EXP_DATE          =       l_EXP_DATE
+    sfqname:STATUS_DATE       =       agqname:STATUS_DATE
+    sfqname:ORIGINAL_EFF_DATE =       l_eff_date
+    sfqname:STATUS            =       agqname:STATUS/raw
+    sfqname:LINE_OF_BUSINESS  =       l_LINE_OF_BUSINESS
+    sfqname:SPEC_COMM_RATE    =       agqname:SPEC_COMM_RATE
+    sfqname:AGENT_NO          =       l_AGENT_NO
+    sfqname:PAYMENT_PLAN      =       l_payment_plan
+    sfqname:BILL_PLAN         =       agqname:BILL_PLAN
+    sfqname:previous_policy_no =      0
+    sfqname:REINSURANCE        =      agqname:REINSURANCE
+    sfqname:TRANS_CODE        =       agqname:TRANS_CODE
+    sfqname:CHECK_REFERENCE   =       agqname:CHECK_REFERENCE
+    sfqname:CONVERT_DATE      =       TODAYSDATE
+    sfqname:CONVERT_TIME      =       SYSTEMTIME
+    sfqname:USER_ID           =       USERNAME
+    sfqname:ACCOUNT_BILLING   =       agqname:ACCOUNT_BILLING
+    if sfqname:account_billing = "" then
+        sfqname:account_billing = "N"
+    sfqname:PRIMARY_ACCOUNT   =       agqname:PRIMARY_ACCOUNT
+    if sfqname:primary_account = "" then
+        sfqname:primary_account = "N"
+    sfqname:REASON_ID         =       agqname:REASON_ID/raw
+    sfqname:ADDRESS_SAME      =       agqname:ADDRESS_SAME/raw
+    if sfqname:address_same = "" then
+        sfqname:address_same = "N"
+    if agqapplication:contact_phone_no_1 <> "" then
+        sfqname:TELEPHONE     =       agqapplication:contact_phone_no_1
+    else
+        sfqname:TELEPHONE     =       agqname:TELEPHONE
+    sfqname:CODE              =       agqname:CODE/raw
+    sfqname:CHECK_RECEIVED    =       agqname:CHECK_RECEIVED
+    if sfqname:check_received = "" then
+        sfqname:check_received = "N"
+    sfqname:POL_YEAR          =       agqname:POL_YEAR - 1
+    sfqname:CURRENT_USER      =       ""/raw
+    sfqname:CLOSE_QUOTE       =       "N"
+    sfqname:NUMBER_OF_CLAIMS  =       agqname:NUMBER_OF_CLAIMS
+    sfqname:QUOTE_TYPE        =       "N"
+    sfqname:MANUAL_RENEW      =       agqname:MANUAL_RENEW
+    sfqname:SETUP_USER        =       username/raw
+    sfqname:SETUP_TIME        =       agqname:SETUP_TIME
+    sfqname:SETUP_DATE        =       agqname:SETUP_DATE
+    sfqname:PACKAGE           =       agqname:PACKAGE
+    sfqname:CREDIT_SCORE      =       agqname:CREDIT_SCORE
+    sfqname:POLICY_EFF_DATE   =       agqname:POLICY_EFF_DATE
+    sfqname:POLICY_EXP_DATE   =       agqname:POLICY_EXP_DATE
+    sfqname:previous_quote_no =       0
+    sfqname:app_no            =       g_app_no
+    sfqname:quoted_by_agent   =       1
+    sfqname:submitted_quote   =       1
+    if sfsemail:agent_no <> 0 then
+        sfqname:agent_issued  =       "Y"
+    else
+        sfqname:agent_issued  =       "N"
+    sfqname:EXPANSION         =       ""/raw
+    End
+
+access sfqemail, set sfqemail:quote_no = g_quote_no, generic
+
+if sfqemail:quote_no = g_quote_no then
+    begin
+    change sfqemail
+        begin
+        sfqemail:email_address    =       agqname:email_address/raw
+        sfqemail:expansion        =       ""/raw
+        end
+    end
+else
+    begin
+    add sfqemail
+        begin
+        sfqemail:quote_no         =       g_quote_no
+        sfqemail:email_address    =       agqname:email_address/raw
+        sfqemail:expansion        =       ""/raw
+        end
+    end
+
+end
+
+procedure update_agqmaster
+begin
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+Add SFQMASTER
+    Begin
+    SFQMASTER:QUOTE_NO              =       g_quote_no
+    SFQMASTER:AGENT_COMM            =       agqmaster:AGENT_COMM
+    SFQMASTER:SPECIAL_COMM          =       agqmaster:SPECIAL_COMM
+    SFQMASTER:SPLIT_COMM            =       agqmaster:SPLIT_COMM
+    SFQMASTER:PACKAGE_DEVIATION     =       agqmaster:PACKAGE_DEVIATION
+    SFQMASTER:IRPM                  =       agqmaster:IRPM
+    SFQMASTER:TRANS_DATE            =       TODAYSDATE
+    SFQMASTER:POLICY_NO             =       agqmaster:POLICY_NO
+    SFQMASTER:TOTAL[1]              =       agqmaster:TOTAL[1]
+    SFQMASTER:TOTAL[2]              =       agqmaster:TOTAL[2]
+    SFQMASTER:TOTAL[3]              =       agqmaster:TOTAL[3]
+    SFQMASTER:TOTAL[4]              =       agqmaster:TOTAL[4]
+    SFQMASTER:TOTAL[5]              =       agqmaster:TOTAL[5]
+    SFQMASTER:TOTAL[6]              =       agqmaster:TOTAL[6]
+    SFQMASTER:TOTAL[7]              =       agqmaster:TOTAL[7]
+    SFQMASTER:TOTAL[8]              =       agqmaster:TOTAL[8]
+    SFQMASTER:TOTAL[9]              =       agqmaster:TOTAL[9]
+    SFQMASTER:TOTAL[10]             =       agqmaster:TOTAL[10]
+    SFQMASTER:TOTAL[11]             =       agqmaster:TOTAL[11]
+    SFQMASTER:TOTAL[12]             =       agqmaster:TOTAL[12]
+    SFQMASTER:TOTAL[13]             =       agqmaster:TOTAL[13]
+    SFQMASTER:TOTAL[14]             =       agqmaster:TOTAL[14]
+    SFQMASTER:TOTAL[15]             =       agqmaster:TOTAL[15]
+    SFQMASTER:TOTAL[16]             =       agqmaster:TOTAL[16]
+    SFQMASTER:TOTAL[17]             =       agqmaster:TOTAL[17]
+    SFQMASTER:TOTAL[18]             =       agqmaster:TOTAL[18]
+    SFQMASTER:TOTAL[19]             =       agqmaster:TOTAL[19]
+    SFQMASTER:TOTAL[20]             =       agqmaster:TOTAL[20]
+    SFQMASTER:AMT_DUE_TOTAL[20]     =       agqmaster:AMT_DUE_TOTAL[20]
+    if l_company_id = "FLEMINGTON" and
+       l_line_of_business = 6 then
+        sfqmaster:form              =       l_form
+    else
+        sfqmaster:form              =       agqmaster:form
+    SFQMASTER:TRANS_CODE            =       agqmaster:TRANS_CODE
+    SFQMASTER:INSTALLMENT_CHARGE    =       agqmaster:INSTALLMENT_CHARGE
+    SFQMASTER:MINIMUM_PREM_APPLIES  =       agqmaster:MINIMUM_PREM_APPLIES
+    SFQMASTER:SURCHARGE             =       agqmaster:SURCHARGE
+    SFQMASTER:FORM_OF_BUSINESS      =       agqmaster:FORM_OF_BUSINESS
+    SFQMASTER:FOB_DESCRIPTION       =       agqmaster:FOB_DESCRIPTION/raw
+    SFQMASTER:DEDUCTIBLE            =       agqmaster:DEDUCTIBLE
+    SFQMASTER:LIABILITY_CODE        =       agqmaster:LIABILITY_CODE
+    SFQMASTER:MEDICAL_LIMIT         =       agqmaster:MEDICAL_LIMIT
+    SFQMASTER:PERSONAL_ADD_INJURY   =       agqmaster:PERSONAL_ADD_INJURY
+    SFQMASTER:GENERAL_AGGREGATE     =       agqmaster:GENERAL_AGGREGATE
+    SFQMASTER:OFF_PREMISES_LIMIT    =       agqmaster:OFF_PREMISES_LIMIT
+    SFQMASTER:OFF_PREMISES_PREMIUM  =       agqmaster:OFF_PREMISES_PREMIUM
+    SFQMASTER:DELETE_HIRED_NONOWNED =       agqmaster:DELETE_HIRED_NONOWNED
+    SFQMASTER:EXTEND_HIRED_NONOWNED =       agqmaster:EXTEND_HIRED_NONOWNED
+    SFQMASTER:HIRED_NONOWNED_PREMIUM =      agqmaster:HIRED_NONOWNED_PREMIUM
+    SFQMASTER:LOCATION_CREDIT       =       agqmaster:LOCATION_CREDIT
+    SFQMASTER:LIABILITY             =       agqmaster:LIABILITY
+    SFQMASTER:UM_UIM_LIMIT[1]       =       agqmaster:UM_UIM_LIMIT[1]
+    SFQMASTER:UM_UIM_LIMIT[2]       =       agqmaster:UM_UIM_LIMIT[2]
+    SFQMASTER:DELETE_NONOWNED_HIRED_CLASS = agqmaster:DELETE_NONOWNED_HIRED_CLASS
+    SFQMASTER:AMT_DUE_TOTAL[1]      =       agqmaster:AMT_DUE_TOTAL[1]
+    SFQMASTER:NON_STACKED           =       agqmaster:NON_STACKED
+    SFQMASTER:NON_FLEET             =       agqmaster:NON_FLEET
+    SFQMASTER:VEHICLE_SYMBOL        =       agqmaster:VEHICLE_SYMBOL
+    if agqmaster:vehicle_symbol = "" then
+        sfqmaster:vehicle_symbol    =       "7"
+    SFQMASTER:OTHER_TOTALS[1]       =       agqmaster:OTHER_TOTALS[1]
+    SFQMASTER:OTHER_TOTALS[2]       =       agqmaster:OTHER_TOTALS[2]
+    SFQMASTER:OTHER_TOTALS[3]       =       agqmaster:OTHER_TOTALS[3]
+    SFQMASTER:OTHER_TOTALS[4]       =       agqmaster:OTHER_TOTALS[4]
+    SFQMASTER:OTHER_TOTALS[5]       =       agqmaster:OTHER_TOTALS[5]
+    SFQMASTER:OTHER_TOTALS[6]       =       agqmaster:OTHER_TOTALS[6]
+    SFQMASTER:OTHER_TOTALS[7]       =       agqmaster:OTHER_TOTALS[7]
+    SFQMASTER:OTHER_TOTALS[8]       =       agqmaster:OTHER_TOTALS[8]
+    SFQMASTER:OTHER_TOTALS[9]       =       agqmaster:OTHER_TOTALS[9]
+    SFQMASTER:OTHER_TOTALS[10]      =       agqmaster:OTHER_TOTALS[10]
+    SFQMASTER:OTHER_TOTALS[11]      =       agqmaster:OTHER_TOTALS[11]
+    SFQMASTER:OTHER_TOTALS[12]      =       agqmaster:OTHER_TOTALS[12]
+    SFQMASTER:OTHER_TOTALS[13]      =       agqmaster:OTHER_TOTALS[13]
+    SFQMASTER:OTHER_TOTALS[14]      =       agqmaster:OTHER_TOTALS[14]
+    SFQMASTER:OTHER_TOTALS[15]      =       agqmaster:OTHER_TOTALS[15]
+    SFQMASTER:OTHER_TOTALS[16]      =       agqmaster:OTHER_TOTALS[16]
+    SFQMASTER:OTHER_TOTALS[17]      =       agqmaster:OTHER_TOTALS[17]
+    SFQMASTER:OTHER_TOTALS[18]      =       agqmaster:OTHER_TOTALS[18]
+    SFQMASTER:OTHER_TOTALS[19]      =       agqmaster:OTHER_TOTALS[19]
+    SFQMASTER:OTHER_TOTALS[20]      =       agqmaster:OTHER_TOTALS[20]
+    SFQMASTER:RAW_PREMIUM_AMT_DUE   =       agqmaster:RAW_PREMIUM_AMT_DUE
+    SFQMASTER:APT_500000            =       agqmaster:APT_500000
+    SFQMASTER:APT_DIFFERENCE        =       agqmaster:APT_DIFFERENCE
+    SFQMASTER:COVERED_BY_WORKERS_COMP =     agqmaster:COVERED_BY_WORKERS_COMP
+    SFQMASTER:TERRORISM_PREMIUM     =       agqmaster:TERRORISM_PREMIUM
+    SFQMASTER:TERRORISM_AMT_DUE     =       agqmaster:TERRORISM_AMT_DUE
+    sfqmaster:state                 =       agqmaster:state
+    sfqmaster:county                =       agqmaster:county
+    sfqmaster:remove_terrorism_form =       agqmaster:remove_terrorism_form
+    sfqmaster:minimum_premium[1]    =       agqmaster:minimum_premium[1]
+    sfqmaster:minimum_premium[2]    =       agqmaster:minimum_premium[2]
+    sfqmaster:minimum_premium[3]    =       agqmaster:minimum_premium[3]
+    sfqmaster:minimum_premium[4]    =       agqmaster:minimum_premium[4]
+    sfqmaster:minimum_premium[5]    =       agqmaster:minimum_premium[5]
+    sfqmaster:minimum_premium[6]    =       agqmaster:minimum_premium[6]
+    sfqmaster:auditable             =       agqmaster:auditable
+    sfqmaster:inspection_fee        =       agqmaster:inspection_fee
+    sfqmaster:fully_earned_fee      =       agqmaster:fully_earned_fee
+    sfqmaster:fully_earned_percentage =     agqmaster:fully_earned_percentage
+    sfqmaster:override_location_credit =    agqmaster:override_location_credit
+    sfqmaster:exclude_terrorism     =       agqmaster:exclude_terrorism
+    sfqmaster:tpd6_terrorism_premium =      agqmaster:tpd6_terrorism_premium
+    sfqmaster:override_epl          =       agqmaster:exclude_epl
+    SFQMASTER:EXPANSION             =       ""/raw
+    End
+
+end
+
+procedure update_agqamt
+begin
+access agqamt, set agqamt:app_no = g_app_no, generic
+
+Add sfqamt
+    Begin
+    sfqamt:QUOTE_NO              =       g_quote_no
+    sfqamt:record_rdf            =       agqamt:record_rdf/raw
+    End
+
+end
+
+procedure update_agqfobinfo
+begin
+access agqfobinfo, set agqfobinfo:app_no = g_app_no, generic
+
+Add sfqfobinfo
+    Begin
+    sfqfobinfo:QUOTE_NO          =       g_quote_no
+    sfqfobinfo:record_rdf        =       agqfobinfo:record_rdf/raw
+    End
+
+end
+
+procedure update_agqcreditdebit
+begin
+access agqcreditdebit, set agqcreditdebit:app_no = g_app_no, generic
+
+Add sfqcreditdebit
+    Begin
+    sfqcreditdebit:QUOTE_NO      =       g_quote_no
+    sfqcreditdebit:record_rdf    =       agqcreditdebit:record_rdf/raw
+    End
+
+end
+
+procedure update_agqepl
+begin
+access agqepl, set agqepl:app_no = g_app_no, generic
+
+Add sfqepl
+    Begin
+    sfqepl:QUOTE_NO              =       g_quote_no
+    sfqepl:record_rdf            =       agqepl:record_rdf/raw
+    End
+
+end
+
+procedure update_agqclaim
+begin
+access agqclaim, set agqclaim:app_no = g_app_no, generic
+
+while agqclaim:app_no = g_app_no
+    begin
+    Add sfqclaim
+        Begin
+        sfqclaim:QUOTE_NO              =       g_quote_no
+        sfqclaim:sub_code              =       agqclaim:sub_code
+        sfqclaim:record_rdf            =       agqclaim:record_rdf/raw
+        end
+
+    next agqclaim
+    End
+
+end
+
+procedure update_agqlosses
+begin
+access agqlosses, set agqlosses:app_no = g_app_no, generic
+
+while agqlosses:app_no = g_app_no
+    begin
+    Add sfqlosses
+        Begin
+        sfqlosses:QUOTE_NO              =       g_quote_no
+        sfqlosses:record_rdf            =       agqlosses:record_rdf/raw
+        end
+
+    next agqlosses
+    End
+
+end
+
+procedure update_agqproperty
+begin
+access agqproperty, set agqproperty:app_no = g_app_no, generic
+
+while agqproperty:app_no = g_app_no
+    begin
+    Add sfqproperty
+        Begin
+        sfqproperty:QUOTE_NO              =       g_quote_no
+        sfqproperty:sub_code              =       agqproperty:sub_code
+        sfqproperty:record_rdf            =       agqproperty:record_rdf/raw
+        end
+
+    next agqproperty
+    End
+
+end
+
+procedure update_agqmailingaddress
+begin
+access agqmailingaddress, set agqmailingaddress:app_no = g_app_no, generic
+
+if agqmailingaddress:app_no = g_app_no then
+    begin
+    Add sfqmailingaddress
+        Begin
+        sfqmailingaddress:QUOTE_NO     =       g_quote_no
+        sfqmailingaddress:record_rdf   =       agqmailingaddress:record_rdf/raw
+        end
+
+    access sfqemail, set sfqemail:quote_no = g_quote_no, generic
+
+    if sfqemail:quote_no = g_quote_no then
+        begin
+        change sfqemail
+            begin
+            sfqemail:email_address         = agqmailingaddress:email_address/raw
+            sfqemail:expansion             = ""/raw
+            end
+        end
+    else
+        begin
+        add sfqemail
+            begin
+            sfqemail:quote_no              = g_quote_no
+            sfqemail:email_address         = agqmailingaddress:email_address/raw
+            sfqemail:expansion             = ""/raw
+            end
+        end
+    end
+
+end
+
+procedure update_agqcreditscore
+begin
+access agqcreditscore, set agqcreditscore:app_no = g_app_no, generic
+
+if agqcreditscore:app_no = g_app_no then
+    begin
+    Add sfqcreditscore
+        Begin
+        sfqcreditscore:QUOTE_NO              =       g_quote_no
+        sfqcreditscore:record_rdf            =       agqcreditscore:record_rdf/raw
+        end
+
+    End
+
+end
+
+procedure update_agqmastsupp
+begin
+Access agqmastsupp, Set agqmastsupp:app_no = g_app_no, generic
+
+while agqmastsupp:app_no = g_app_no
+    begin
+    Add sfqmastsupp
+        Begin
+        sfqmastsupp:QUOTE_NO        =       g_quote_no
+        sfqmastsupp:line_of_business =      agqmastsupp:line_of_business
+        sfqmastsupp:RECORD_RDF      =       agqmastsupp:RECORD_RDF/raw
+        End
+
+    Next agqmastsupp
+    End
+
+end
+
+procedure update_agqlocation
+begin
+Access agqlocation, Set agqlocation:app_no = g_app_no, generic
+
+while agqlocation:app_no = g_app_no
+    begin
+    Add SFQLOCATION
+        Begin
+        SFQLOCATION:QUOTE_NO        =       g_quote_no
+        SFQLOCATION:PREM_NO         =       agqlocation:prem_no
+        if sfqlocation:prem_no = 0 then
+            sfqlocation:prem_no = 1
+        SFQLOCATION:BUILD_NO        =       agqlocation:BUILD_NO
+        if sfqlocation:build_no = 0 then
+            sfqlocation:build_no = 1
+        SFQLOCATION:SUB_CODE        =       agqlocation:SUB_CODE
+        SFQLOCATION:RECORD_RDF      =       agqlocation:RECORD_RDF/raw
+        if agqname:same_as_mailing = 1 then
+            sfqlocation:address_same =      "Y"
+        else
+            sfqlocation:address_same =      "N"
+        if agqlocation:address_same = "Y" then
+            sfqlocation:address_same =      "Y"
+        else
+            sfqlocation:address_same =      "N"
+        End
+
+    Next agqlocation
+    End
+
+end
+
+procedure update_agqsupp
+begin
+Access agqsupp, Set agqsupp:app_no = g_app_no, generic
+
+while agqsupp:app_no = g_app_no
+    begin
+    Add SFQSUPP
+        Begin
+        SFQSUPP:QUOTE_NO                =       g_quote_no
+        SFQSUPP:PREM_NO                 =       agqsupp:PREM_NO
+        SFQSUPP:BUILD_NO                =       agqsupp:BUILD_NO
+        SFQSUPP:SUB_CODE                =       agqsupp:SUB_CODE
+        SFQSUPP:RECORD_RDF              =       agqsupp:RECORD_RDF/raw
+        sfqsupp:atima                   =       agqsupp:atima
+        sfqsupp:change_at_renewal       =       "N"
+        sfqsupp:successor               =       agqsupp:successor
+        End
+
+    Next agqsupp
+    End
+
+end
+
+procedure update_agqsupp1
+begin
+Access agqsupp1, Set agqsupp1:app_no = g_app_no, generic
+
+while agqsupp1:app_no = g_app_no
+    begin
+    Add SFQSUPP1
+        Begin
+        SFQSUPP1:QUOTE_NO        =       g_quote_no
+        SFQSUPP1:VEHICLE_NO      =       agqsupp1:VEHICLE_NO
+        SFQSUPP1:SUB_CODE        =       agqsupp1:SUB_CODE
+        SFQSUPP1:RECORD_RDF      =       agqsupp1:RECORD_RDF/raw
+        End
+
+    Next agqsupp1
+    End
+
+end
+
+procedure update_agqend
+begin
+Access agqend, Set agqend:app_no = g_app_no, generic
+
+while agqend:app_no = g_app_no
+    begin
+    if agqend:code one of "BU0601", "BU0602", "BU0603", "BU0604", "BU0605", "BU0606",
+                          "BU0607", "BU0608", "BU0609", "BU0610", "BU0616" then
+        begin
+        l_code = agqend:code
+        do access_agqaddin
+        end
+    else
+    if agqend:code one of "MCL309", "MCL310", "MCL311", "MCL312", "MCL313", "MCL317",
+                          "MCL322", "MCL324", "MCL325", "MCL326", "MCL320" then
+        begin
+        l_code = agqend:code
+        do access_agqaddin3
+        end
+    else
+        begin
+        do subcode
+        Add SFQEND
+            Begin
+            SFQEND:QUOTE_NO        =       g_quote_no
+            SFQEND:PREM_NO         =       agqend:PREM_NO
+            SFQEND:BUILD_NO        =       agqend:BUILD_NO
+            SFQEND:SUB_CODE        =       L_SUB_CODE
+            SFQEND:RECORD_RDF      =       agqend:RECORD_RDF/raw
+            end
+        End
+
+    Next agqend
+    End
+
+end
+
+procedure update_agqend1
+begin
+Access agqend1, Set agqend1:app_no = g_app_no, generic
+
+while agqend1:app_no = g_app_no
+    begin
+    Add SFQEND1
+        Begin
+        SFQEND1:QUOTE_NO        =       g_quote_no
+        SFQEND1:VEHICLE_NO      =       agqend1:VEHICLE_NO
+        SFQEND1:SUB_CODE        =       agqend1:SUB_CODE
+        SFQEND1:RECORD_RDF      =       agqend1:RECORD_RDF/raw
+        End
+
+    Next agqend1
+    End
+
+end
+
+procedure access_agqaddin
+begin
+access agqaddin, set agqaddin:app_no = g_app_no, generic
+
+while agqaddin:app_no = g_app_no
+    begin
+    if agqaddin:code = l_code then
+        begin
+        do subcode
+        Add SFQEND
+            Begin
+            SFQEND:QUOTE_NO        =       g_quote_no
+            SFQEND:PREM_NO         =       agqend:PREM_NO
+            SFQEND:BUILD_NO        =       agqend:BUILD_NO
+            SFQEND:SUB_CODE        =       L_SUB_CODE
+            SFQEND:RECORD_RDF      =       agqend:RECORD_RDF/raw
+            end
+        end
+
+    next agqaddin
+    end
+
+end
+
+procedure access_agqaddin3
+begin
+access agqaddin3, set agqaddin3:app_no = g_app_no, generic
+
+while agqaddin3:app_no = g_app_no
+    begin
+    if agqaddin3:code = l_code then
+        begin
+        do subcode
+        Add SFQEND
+            Begin
+            SFQEND:QUOTE_NO        =       g_quote_no
+            SFQEND:PREM_NO         =       agqend:PREM_NO
+            SFQEND:BUILD_NO        =       agqend:BUILD_NO
+            SFQEND:SUB_CODE        =       L_SUB_CODE
+            SFQEND:RECORD_RDF      =       agqend:RECORD_RDF/raw
+            end
+        end
+
+    next agqaddin3
+    end
+
+end
+
+procedure subcode
+begin
+access sfqend, set sfqend:quote_no = g_quote_no, generic
+
+l_sub_code = 0
+while sfqend:quote_no = g_quote_no
+    begin
+    l_sub_code = sfqend:sub_code
+
+    next sfqend
+    end
+
+l_sub_code = l_sub_code + 10
+end
+
+procedure update_agqnotes
+begin
+l_notes = "Converted from agency rating system using app no " + trun(str(g_app_no))
+Add SFQNOTES
+    Begin
+    SFQNOTES:QUOTE_NO        =       g_quote_no
+    SFQNOTES:PREM_NO         =       0
+    SFQNOTES:BUILD_NO        =       0
+    SFQNOTES:TRANS_DATE      =       todaysdate
+    SFQNOTES:SUB_CODE        =       10
+    sfqnotes:notes           =       l_notes/raw
+    End
+
+end
+
+procedure access_arspayplan
+begin
+Access ARSPAYPLAN, Set ARSPAYPLAN:COMPANY_ID       = agqname:COMPANY_ID,
+                       ARSPAYPLAN:LINE_OF_BUSINESS = agqNAME:LINE_OF_BUSINESS,
+                       ARSPAYPLAN:PAYMENT_PLAN     = agqname:payment_plan, generic
+end
+
+Procedure INSTALLMENT
+Begin
+access agqname, set agqname:app_no = g_app_no, generic
+
+Do CALCULATE_PAYMENT_PLAN_OPTION
+
+Access ARSPAYPLAN, Set ARSPAYPLAN:COMPANY_ID       = agqname:COMPANY_ID,
+                       ARSPAYPLAN:LINE_OF_BUSINESS = agqname:LINE_OF_BUSINESS,
+                       ARSPAYPLAN:PAYMENT_PLAN     = L_HOLD_PAYMENT_PLAN
+
+If ARSPAYPLAN:INSTALLMENT_CHARGE_TYPE = "FLAT" And
+   ARSPAYPLAN:INSTALLMENT_CHARGE_TIME = "EACH" Then
+    L_INSTALLMENT = ARSPAYPLAN:INSTALLMENT_CHARGE_RATE *
+                    ARSPAYPLAN:NUMBER_OF_PAYMENTS
+
+If ARSPAYPLAN:INSTALLMENT_CHARGE_TYPE = "FIXED" Then
+    L_INSTALLMENT = ARSPAYPLAN:INSTALLMENT_CHARGE_RATE
+
+End
+
+Procedure CALCULATE_PAYMENT_PLAN_OPTION
+Begin
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+L_FIRST_TIME = "Y"
+L_HOLD_PAYMENT_PLAN = 1 -- this is a cya
+L_SUB_TOTAL = agqmaster:total[17]
+
+Access ARSPAYPLAN, Set ARSPAYPLAN:COMPANY_ID       = agqname:COMPANY_ID,
+                       ARSPAYPLAN:LINE_OF_BUSINESS = agqname:LINE_OF_BUSINESS, Approximate
+
+While ARSPAYPLAN:COMPANY_ID       = agqname:COMPANY_ID And
+      ARSPAYPLAN:LINE_OF_BUSINESS = agqname:LINE_OF_BUSINESS
+        Begin
+        if arspayplan:manual_payment_plan = 0 then
+            begin
+            If L_FIRST_TIME = "Y" Then
+                Begin
+                L_FIRST_TIME = "N"
+                L_HOLD_PAYMENT_PLAN = ARSPAYPLAN:PAYMENT_PLAN
+                End
+
+            If L_SUB_TOTAL >= ARSPAYPLAN:MINIMUM_PREMIUM  Then
+                Begin
+                L_HOLD_PAYMENT_PLAN = ARSPAYPLAN:PAYMENT_PLAN
+                End
+            end
+
+        Next ARSPAYPLAN
+        End
+
+Access agqsupp, Set agqsupp:app_no = g_app_no, generic
+
+While agqsupp:app_no = g_app_no
+    Begin
+    If agqsupp:MORTGAGE_TYPE_1 One Of "B", "C", "F" Then
+        {
+        L_HOLD_PAYMENT_PLAN = 1
+        }
+
+    Next agqsupp
+    End
+
+If agqname:BILL_PLAN = "AC" Then
+    Begin
+    L_HOLD_PAYMENT_PLAN = 1
+    End
+
+Access agqname, Set agqname:app_no = g_app_no
+
+If agqname:app_no = g_app_no Then
+    Begin
+    Change agqname
+        Begin
+        agqname:PAYMENT_PLAN    = L_HOLD_PAYMENT_PLAN
+        agqname:FINAL_RATING    = "Y"
+        agqname:quoted_by_agent = 1
+        agqname:submitted_quote = 1
+        agqname:SETUP_USER      = username/raw
+        if sfsemail:agent_no <> 0 then
+            agqname:agent_issued = "Y"
+        else
+            agqname:agent_issued = "N"
+        End
+
+    End
+
+End
+
+End

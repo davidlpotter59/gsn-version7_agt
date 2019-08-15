@@ -1,0 +1,456 @@
+%%
+/*
+Date Written: October 7, 2005
+
+Name: agqmso004a.sd                Salem Contractors Lawn Care Application Questions
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------------------
+04/14/2010            JLB            Lawn Care Supplemental App Questions
+--------------------------------------------------------------------------
+*/
+
+Program
+  Name = "agqmso004a";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+  array [120] of string l_no_duplicate_printing[7];
+
+ string l_font ;
+ String L_FILE_NAME[13] = "agqmso004a.cq";
+ String L_COPY_NAME[20] ;
+ String I_REV_NAME2[50] ;
+ String L_POLICY_FORM;
+ String L_TYPE_STR[100];
+ String L_POLICY_DECLARATION[60];
+ String L_TRANS_EFF;
+ String L_AUDIT;
+ String L_PREV_STRING[100];
+ String L_INSURED_CITY_STATE[50];
+ String L_AGQNAME_ZIP="";
+ String L_SFSAGENT;
+ String L__ZIP;
+ String L_SFSMORT_ZIP[10];
+ string l_agqlocation_zip[10];
+ String L_AGQSUPP_ZIP[10];
+ String L_AGENT_ADDRESS;
+ String L_FOB[75];
+ String L_AGENT_TEL[13];
+ String L_AGENT_ZIP[10];
+ String L_MORGAGE_ID[10];
+ String L_LOB_CODE[10];
+ string l_enter[1];
+ String L_STATE;
+ String L_COMPANY_ZIP[10];
+ String L_TERROR_FORM[7];
+ String L_COMPANY_ID[10];
+ String L_BILL_PLAN[2];
+ String L_MORTGAGE_TYPE_1[1];
+ String L_STATE_STR[2];
+ String L_PRINT_BLANK_WORDING;
+ String L_MORTGAGE_TYPE_2[1];
+ String L_SIGNATURE_STRING[55];
+ String L_PLEASED_WORDING[200];
+ String L_PRODUCER_LABEL,
+        l_user_id[15]="";
+-- String L_CHARACTER_STRING[1500]           = "";
+-- string l_h_position[5]                    = "";
+-- string l_v_position[5]                    = "",
+/* Unsigned Ascii Number L_START_PRINT[4]    = 0;
+ Unsigned Ascii Number L_END_PRINT[4]      = 0;
+ Unsigned Ascii Number L_LEN_STRING[4]     = 0;
+ Unsigned Ascii Number L_CHARACTER_BREAK   = 0;
+ Unsigned Ascii Number L_CHARACTER_COUNTER = 0;
+ Unsigned Ascii Number L_MAX_CHAR          = 0;
+*/
+ unsigned ascii number l_top_of_page       = 0;
+ Unsigned Ascii Number l_prem_no[4] = 0001;
+ Unsigned Ascii Number l_build_no[4] = 0001
+-- String L_NEWPAGE_WORDING[40]              = "";
+
+-- number function add_and_check_print_array(string)
+ Number L_TRANS_CODE;
+ Number L_MM_1;
+ Number L_DD_1;
+ Number L_YY_1;
+ Number L_RENEWAL[9];
+
+ Unsigned Ascii Number l_form[1];
+ Unsigned Ascii Number L_LINE_HEIGHT;
+ Unsigned Ascii Number L_MASTER_CODE[4];
+ Unsigned ascii number l_app_no[11];
+ Unsigned Ascii Number L_DECIPOINT;
+ Unsigned Ascii Number L_CHARACTER_PER_INCH;
+ Unsigned Ascii Number L_PAGE_MIDDLE;
+ Unsigned Ascii Number L_HALF_MULTIPLIER;
+ Unsigned Ascii Number L_CHAR_MULTIPLIER[10]/decimals=4;
+ Unsigned Ascii Number L_PAGE_NUMBER = 1;
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_LINE_COUNTER;
+ Unsigned Ascii Number L_MED_LIMIT;
+ Unsigned Ascii Number L_S_LINE_FOR_LOCATION = 0; --start line for location
+ Unsigned Ascii Number L_BIGGER_LINE =0;
+ Unsigned Ascii Number L_SCREEN_COR= 0;
+ Unsigned Ascii Number L_E_LINE_FOR_INSURED = 0;
+ Unsigned Ascii Number L_PAGENUMBER;
+ Unsigned Ascii Number L_MAX_LINES;
+ Unsigned Ascii Number L_LOCATION_COUNTER;
+ Unsigned Ascii Number L_SIZE_COUNTER;
+ Unsigned Ascii Number L_LIABILITY;
+ Unsigned Ascii Number L_LINE_OF_BUSINESS[4];
+ Unsigned Ascii Number L_INSURED_COUNTER;
+ Unsigned Ascii Number L_AGENT_COUNTER;
+ Unsigned Ascii Number L_TWO_PLACER;
+ Unsigned Ascii Number L_SFSFORM[2];
+ Unsigned Ascii Number L_agqMASTER_FORM[2];
+ Unsigned Ascii Number L_LOOP;
+ Unsigned Ascii Number L_SCIPSCONTROL;
+ Unsigned Ascii Number L_STATE_NUM[2];
+ Unsigned Ascii Number L_PRINTED_DATED[1];  --delete after scipscontrol is set up
+ Unsigned Ascii Number L_LOC_COUNTER;
+
+ Include "swsut100.var"
+ Include "swsut200.var"
+ Include "csfonts.inc"
+ Include "sfsrevname.var"
+ Include "line_spacing.var"
+ Include "header.var"
+-- Include "center2.pro"
+
+Initialization
+L_app_no = val(COMMANDLINE[1,11])
+--l_user_id = username
+Deletefile (L_FILE_NAME)
+
+Access agqgeneral,
+   Set agqgeneral:app_no = l_app_no, generic
+
+Access agqcontractor ,
+   Set agqcontractor:app_no    = l_app_no,generic
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no = L_app_no,generic
+
+Access SFSCOMPANY,
+   Set SFSCOMPANY:COMPANY_ID = agqcontractor:company_id , Exact
+
+Access agqSUPP,
+   Set agqSUPP:app_no     = L_app_no, generic
+
+Access agqendorse,
+   Set agqendorse:app_no  = L_app_no, generic
+
+Include "swsut100.inc"
+Include "swsut200.inc"
+
+Access agqEND,
+   Set agqEND:app_no    = l_app_no,generic
+
+Access agqlawncare,
+   Set agqlawncare:app_no    = l_app_no, generic
+
+Access agqNAME,
+   Set agqNAME:app_no = l_app_no, generic
+
+Access agqAPPLICATION,
+   Set agqAPPLICATION:app_no = l_app_no, generic
+
+    Writefile(L_FILE_NAME,"%s","<033>&a200h120V")
+    Writefile(L_FILE_NAME,"%s",trun(l_arial_12))
+    L_FONT = trun(L_ARIAL_12)
+    L_STRING = "Farmers Mutual Fire Insurance Company of Salem County"
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+120"
+--    l_max_lines        = 60
+--    l_max_char         = 85
+    Include "center2.pro"
+
+    Writefile(L_FILE_NAME,"%s",trun(l_arial_12))
+    L_FONT = trun(L_ARIAL_12)
+    L_STRING = "Lawn Care Supplemental Application Questions"
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+180"
+    Include "center2.pro"
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a600h+150V",
+                          "Description of Operations (check all that apply) ")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+----lawn care checkbox
+    Writefile(L_FILE_NAME,"%s","<033>&a703h+240V")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h-103V<033>*c120h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a813h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+108V<033>*c120h8v0P")
+
+    if (str(agqlawncare:operations[1])) = "1" Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a713h+0V")
+        Writefile(L_FILE_NAME,"%s","X")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h+0V",
+                          "Lawn Care (mowing only)")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+---landscaping checkbox
+    Writefile(L_FILE_NAME,"%s","<033>&a703h+260V")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h-103V<033>*c120h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a813h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+108V<033>*c120h8v0P")
+
+    if (str(agqlawncare:operations[2])) = "1" Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a713h+0V")
+        Writefile(L_FILE_NAME,"%s","X")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h+0V",
+                          "Landscape Gardening (planting plant, shrubs, flowers)")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+---tree work checkbox
+    Writefile(L_FILE_NAME,"%s","<033>&a703h+260V")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h-103V<033>*c120h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a813h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+108V<033>*c120h8v0P")
+
+    if (str(agqlawncare:operations[3])) = "1" Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a713h+0V")
+        Writefile(L_FILE_NAME,"%s","X")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h+0V",
+                          "Tree Work (pruning, trimming, removal, stump grinding)")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+---snow plow checkbox
+    Writefile(L_FILE_NAME,"%s","<033>&a703h+260V")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h-103V<033>*c120h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a813h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+108V<033>*c120h8v0P")
+
+    if (str(agqlawncare:operations[4])) = "1" Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a713h+0V")
+        Writefile(L_FILE_NAME,"%s","X")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h-60V",
+                          "Snow Plowing/Removal/Clearing/Treatment. (see SCP102 Endorsement")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h+120V",
+                          "and Supplemental Application Coverage)")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+---herbicide/pesticide checkbox
+    Writefile(L_FILE_NAME,"%s","<033>&a703h+260V")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h-103V<033>*c120h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a813h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+108V<033>*c120h8v0P")
+
+    if (str(agqlawncare:operations[5])) = "1" Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a713h+0V")
+        Writefile(L_FILE_NAME,"%s","X")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h-60V",
+                          "Herbicide/Pesticide Application (see SCP103 Endorsement and")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h+120V",
+                          "Supplemental Application Coverage)")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+---hardscaping checkbox
+    Writefile(L_FILE_NAME,"%s","<033>&a703h+260V")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h-103V<033>*c120h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a813h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+108V<033>*c120h8v0P")
+
+    if (str(agqlawncare:operations[6])) = "1" Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a713h+0V")
+        Writefile(L_FILE_NAME,"%s","X")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h+0V",
+                          "Hardscaping/Pavers/Concrete Work")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+---irrigation checkbox
+    Writefile(L_FILE_NAME,"%s","<033>&a703h+260V")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h-103V<033>*c120h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a813h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+108V<033>*c120h8v0P")
+
+    if (str(agqlawncare:operations[7])) = "1" Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a713h+0V")
+        Writefile(L_FILE_NAME,"%s","X")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h+0V",
+                          "Irrigation in conjunction with lawn care")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+----lawn care/city checkbox
+    Writefile(L_FILE_NAME,"%s","<033>&a703h+260V")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h-103V<033>*c120h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a813h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+108V<033>*c120h8v0P")
+
+    if (str(agqlawncare:operations[8])) = "1" Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a713h+0V")
+        Writefile(L_FILE_NAME,"%s","X")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h+0V",
+                          "Lawn Care, landscaping or tree work for any city or municipality")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+---other checkbox
+    Writefile(L_FILE_NAME,"%s","<033>&a703h+260V")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h-103V<033>*c120h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a813h+0V<033>*c4a49b0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+108V<033>*c120h8v0P")
+
+    if (str(agqlawncare:operations[9])) = "1" Then
+      {
+        Writefile(L_FILE_NAME,"%s","<033>&a713h+0V")
+        Writefile(L_FILE_NAME,"%s","X")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a1000h+0V",
+                          "Other:")
+                          L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+---equipment exposure section
+    Writefile(L_FILE_NAME,"%s","<033>&a1000h+120V")
+    Writefile(L_FILE_NAME,"%s","<033>&a1000h+120V")
+    If agqlawncare:operations_comments <> "" then
+      {
+        l_font             = trun(l_arial)
+        l_v_position       = "+0"
+        l_h_position       = "1000"
+        l_character_string = agqlawncare:operations_comments
+        l_max_lines        = 60
+        l_max_char         = 85
+        include "line_spacing.inc"
+      }
+      L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+---own equipment section
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a600h+240V",
+                          "Equipment Exposure")
+    Writefile(L_FILE_NAME,"%s","<033>&a1000h+120V")
+      L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a600h+150V",
+                          "Do you own equipment? ")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    If agqlawncare:own_equipment = 0 then
+      {
+        Writefile(L_FILE_NAME,"%s%s"," ","No")
+      }
+    If agqlawncare:own_equipment = 1 then
+      {
+        Writefile(L_FILE_NAME,"%s%s"," ","Yes")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a600h+130V",
+                          "If yes, please list type of equipment:")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    Writefile(L_FILE_NAME,"%s","<033>&a600h+120V")
+    If agqlawncare:own_equipment_comments <> "0" then
+      {
+        l_font             = trun(l_arial)
+        l_v_position       = "+0"
+        l_h_position       = "600"
+        l_character_string = agqlawncare:own_equipment_comments
+        l_max_lines        = 60
+        l_max_char         = 85
+        include "line_spacing.inc"
+      }
+
+----rent equipment section
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a600h+00V",
+                          "Do you lease, rent, hire or borrow equipment? ")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    If agqlawncare:rent_equipment = 0 then
+      {
+        Writefile(L_FILE_NAME,"%s%s"," ","No")
+      }
+    If agqlawncare:rent_equipment = 1 then
+      {
+        Writefile(L_FILE_NAME,"%s%s"," ","Yes")
+      }
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_12),"<033>&a600h+130V",
+                          "If yes, please list type of equipment:")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    Writefile(L_FILE_NAME,"%s","<033>&a600h+120V")
+    If agqlawncare:rent_equipment_comments <> "0" then
+      {
+        l_font             = trun(l_arial)
+        l_v_position       = "+0"
+        l_h_position       = "600"
+        l_character_string = agqlawncare:rent_equipment_comments
+        l_max_lines        = 60
+        l_max_char         = 85
+        include "line_spacing.inc"
+      }
+
+    Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+    Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+    Writefile(L_FILE_NAME,"%s","Please add any additional comments in Remarks Section of Application.")
+    Writefile(L_FILE_NAME,"%s","<033>&a600h+10V<033>*c3820h8v0P") --top horizontal line to
+
+ /* --This is being commented out per maureen's e-mail request on 05/12/2010
+
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+240V",
+                          "ANY PERSON WHO KNOWINGLY AND WITH INTENT TO DEFRAUD ANY")
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                          "INSURANCE COMPANY OR ANOTHER PERSON FILES AN APPLICATION FOR")
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                          "INSURANCE OR STATEMENT OF CLAIM CONTAINING ANY MATERIALLY")
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                          "FALSE INFORMATION, OR CONCEALS FOR THE PURPOSE OF MISLEADING")
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                          "INFORMATION CONCERNING ANY FACT MATERIAL THERETO, COMMITS A")
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                          "FRAUDULANT INSURANCE ACT, WHICH IS A CRIME AND SUBJECTS THE")
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                          "PERSON TO CRIMINAL AND CIVIL PENALTIES.")
+
+*/
+/*    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL),"<033>&a600h6900V",
+                          "Signature")
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL),"<033>&a4400h6900V",
+                          "Date")*/
+
+    Writefile(L_FILE_NAME,"%s","<FF>")
+
+Update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET)
+Closefile(L_FILE_NAME)
+End

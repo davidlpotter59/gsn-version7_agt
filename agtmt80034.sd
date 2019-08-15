@@ -1,0 +1,992 @@
+%%                      
+Screen
+        Name = "agtmt80034";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="agqisocrime" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_state[2] ;
+        global unsigned ascii number g_sub_code[4] ;
+
+        global string g_company_id[10] ,
+                      g_crime_form[1] ;
+
+        Local Unsigned Ascii Number L_LIMIT[8] ,
+                                    L_Prem_TERR_FACTOR[5]=0/decimals=3,
+                                    l_Mess_terr_factor[5]=0/decimals=3,
+                                    l_total_premium[6]=0/dec=0,
+                                    l_burglary_terr_factor[5]=0/decimals=3,
+                                    l_line_of_business[4]=0008,
+                                    L_INSIDE_MINIMUM[3]=0,
+                                    L_INSIDE_EACH_ADDL[3]=0,
+                                    L_GUARD_CHARGE[2]=0,
+                                    L_OUTSIDE_MINIMUM[3]=0,
+                                    L_OUTSIDE_EACH_ADDL[3]=0 ,
+                                    L_INSIDE_PER[5]=0,
+                                    L_OUTSIDE_PER[5]=0,
+                                    L_DEDUCTIBLE_FACTOR[4]=0/decimals=3 ,
+                                    l_factor1[6]=0/decimals=3,
+                                    l_factor2[6]=0/decimals=3,
+                                    l_safe_class_code[6]=0,
+                                    l_money_excess[8]=0,
+                                    l_crime1_terr[3],
+                                    l_loss_cost[5]=0/decimals=3,
+                                    l_rmf_factor[5]=0/decimals=3,
+                                    l_mess[3]=0,
+                                    l_sub[3] ;
+
+        Local String L_DESC[50],
+                     l_guard[1],
+                     l_messenger[1],
+                     l_misc_code[1],
+                     l_coverage_code[1],
+                     l_section[1],
+                     L_CODE[7],
+                     L_CODE_1[7],
+                     L_CODE_2[7],
+                     L_CODE_3[7],
+                     L_CODE_4[7],
+                     l_username[15],
+                     l_company_id[10],
+                     L_ADD_ENDORSEMENT[1] ,
+                     L_DELETE_ENDORSEMENT[1],
+                     L_FORM_EDITION[18],
+                     L_DESCRIPTION[55] ,
+                     L_INSIDE_MINIMUM_YES[1]="N",
+                     L_INSIDE_EACH_ADDL_YES[1]="N",
+                     L_OUTSIDE_MINIMUM_YES[1]="N",
+                     L_OUTSIDE_EACH_ADDL_YES[1]="N" ,
+                     L_SCREEN[8] ;
+
+        Local Signed Ascii Number l_package[4]=0/dec=2,
+                                  l_adjusted_rate1[8]=0/decimals=3,
+                                  l_minimum_total1[8]=0/decimals=2,
+                                  l_minimum_total2[8]=0/decimals=2,
+                                  l_deviation[4]=0/dec=2;
+
+        Local Unsigned Ascii Number L_SUB_CODE[4],
+                                    L_STATE[2] ,
+                                    l_premium[6]=0;
+
+        Access agqisocrime,
+           Set agqisocrime:app_no     = G_app_no,
+               agqisocrime:prem_no    = g_prem_no,
+               agqisocrime:build_no   = g_build_no,
+               agqisocrime:crime_form = g_crime_form, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt80034" ;
+
+        reaccess ;
+
+        include "stdfunc7.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+disable(accept_fn)
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+l_username = username
+l_company_id = sfsdefault:company_id
+
+l_username = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = sfsemail:agent_no, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+Access SFSLINE_ALIAS, Set SFSLINE_alias:COMPANY_ID       = l_company_id,
+                          SFSLINE_alias:LINE_OF_BUSINESS = g_line_of_business,
+                          SFSLINE_alias:LOB_SUBLINE      = "00", Generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = l_company_id,
+                    SFSLINE:LINE_OF_BUSINESS = g_line_of_business,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access agqname, set agqname:app_no = g_app_no,generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(delete_fn)
+    disable(accept_fn)
+    end
+
+/*if agqisocrime:app_no = 0 then
+    begin
+    disable(previous_fn)
+    disable(next_fn)
+    end*/
+
+access validation
+if agqisocrime:app_no     <> g_app_no or
+   agqisocrime:prem_no    <> g_prem_no or
+   agqisocrime:build_no   <> g_build_no or
+   agqisocrime:crime_form <> g_crime_form then
+    error 1000
+
+/*access agqisocrime_alias, set agqisocrime_alias:app_no = agqisocrime:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqisocrime_alias:app_no = agqisocrime:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqisocrime_alias:prem_no) +
+                               str(agqisocrime_alias:build_no)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqisocrime_alias:prem_no) +
+                           str(agqisocrime_alias:build_no)
+    l_no_locations  = l_no_locations + 1
+
+    next agqisocrime_alias
+    end
+
+l_str_location = str(agqisocrime:prem_no) +
+                 str(agqisocrime:build_no)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end*/
+
+screen at 1,1 to 30,100
+Properties
+        {
+          Layouttype = screen
+          transparent = False
+          fontstyle = BOLD
+          backgroundcolor = "#ADD8E6"
+          scrollbarpolicy = asneeded
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Crime Information - Plan 4..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+Properties {
+           LayoutType = screen
+           }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     begin
+        access agqcrime1, set agqcrime1:app_no   = g_app_no,
+                              agqcrime1:prem_no  = g_prem_no,
+                              agqcrime1:build_no = g_build_no, generic
+
+        if function one of "ADD", "CHANGE" then
+            begin
+            disable(back_fn)
+            enable(accept_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            enable(back_fn)
+            end
+
+        if function one of "ADD" then
+            begin
+            agqisocrime:app_no                  = g_app_no
+            agqisocrime:prem_no                 = g_prem_no
+            agqisocrime:build_no                = g_build_no
+            agqisocrime:crime_form              = g_crime_form
+            agqisocrime:company_id              = agqcrime1:company_id
+            agqisocrime:state                   = agqcrime1:state
+            agqisocrime:rating_line_of_business = agqcrime1:rating_line_of_business
+            end
+        end
+        agqisocrime:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        Button at 1.5,1   tagged add_fn
+            Properties {
+                       Iconname = "btn_add.bmp"
+                       }
+            Events     {
+                       Action = add_fn
+                       }
+
+        Button at 1.5,38    tagged change_fn
+            Properties {
+                       Iconname = "btn_edit.bmp"
+                       }
+            Events     {
+                       Action = change_fn
+                       }
+
+        Button at 1.5, 70 tagged delete_fn
+            Properties {
+                       Iconname = "btn_delete.bmp"
+                       }
+            Events     {
+                       Action = delete_fn
+                       }
+    }
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        Button to 1,1
+            properties {
+                       Iconname = "btn_print_screen.bmp"
+                       }
+            events     {
+                       action {
+                              function = "print"
+                              abort()
+                              }
+                       }
+    }
+
+Panel at 6.45,92
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        guidetext to 1,1
+            properties {
+                       text = "agtmt80034.sd"
+                       fontsize = 9
+                       }
+    }
+
+Panel at 7,1 to 9,100 Tagged location
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        guidetext at 1.5,24 to 2.5,36
+            properties {
+                       text = "Location No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+
+        guidetext at 1.5,44 to 2.5,56
+            properties {
+                       text = "Building No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+    }
+
+Panel at 7.5,33 to 9,60 Tagged rating_pl
+{
+%%
+____                ____
+
+%%
+
+components
+
+fields
+101   agqisocrime:prem_no/displayonly ;
+102   agqisocrime:build_no/displayonly ;
+
+}
+
+Panel at 7,70 to 7,100
+    Properties {
+               layouttype = row
+               }
+    {
+    Components
+        Button at 1,55 tagged accept_fn
+            properties {
+                       Iconname = "btn_accept_edits.bmp"
+                       }
+            Events     {
+                       mouseclicked = accept
+                       }
+
+    }
+
+carddialog GUI at 9,5 to 28,95
+Properties
+        {
+        layoutconstraints = stretch
+        }
+{
+
+panel
+properties
+        {
+        Scrollbarpolicy = asneeded
+        Text            = "Deductible"
+        }
+{
+
+%%
+
+Deductible:  _____     Rate Group: __
+
+%%
+Components
+
+Fields
+
+201     Begin
+        access agqgeneral1, set agqgeneral1:app_no   = g_app_no,
+                                agqgeneral1:prem_no  = agqisocrime:prem_no,
+                                agqgeneral1:build_no = agqisocrime:build_no, generic
+
+        If FUNCTION = "ADD" Then
+            begin
+            agqisocrime:DEDUCTIBLE = CPSCRIMEDEFAULTS:DEDUCTIBLE
+            agqisocrime:rate_group = agqgeneral1:rate_group
+            end
+        End
+        agqISOCRIME:DEDUCTIBLE/default
+--        If agqISOCRIME:DEDUCTIBLE <> CPSISOCRDED:DEDUCTIBLE Then
+  --          Error 1207
+
+        Activehelp CPSISOCRDED_ALIAS:DEDUCTIBLE ;
+202     agqISOCRIME:RATE_GROUP/default ;
+
+} -- deductible
+
+panel
+properties
+        {
+        Scrollbarpolicy = asneeded
+        Text            = "Coverage Inside Premises"
+        }
+{
+%%
+
+Limit: __________         Plan:  __
+
+   Coverage         Actual Exposure    Factor    Multiplier
+Basic                   _________      _________     _________
+                                Total Multiplier     _________
+
+ Gross       Terr       Net     Deductible    Adj                  Final
+Premium      Mult     Premium     Credit    Premium       RMF     Premium
+_________  _________  _________  _________  _________  _________   _________
+                                          Balance to Meet Minimum: _________
+                                                    Total Premium: _________
+
+%%
+
+components
+
+Fields
+201     agqISOCRIME:LIMIT[1]
+        if agqISOCRIME:limit[1] > 0 then
+            do GET_PER_AMOUNT
+
+        activehelp if cpsisocrstorekeepers:rate_group = agqisocrime:rate_group then
+                       cpsisocrstorekeepers:limit
+                   else
+                       null/heading="Limit" ;
+202     begin
+        if function = "ADD" then
+            agqisocrime:plan = 4
+        end
+        agqISOCRIME:plan/default
+        If agqISOCRIME:plan <> 4 Then
+              Error 1262
+
+        Activehelp CPSisoCRplan_alias:plan,
+                   CPSisocrplan_alias:DESC ;
+501     begin
+        if function = "ADD" then
+            agqisocrime:money_exposure[1] = agqisocrime:limit[1]
+        end
+        agqISOCRIME:money_exposure[1]/default ;
+502     begin
+        if function one of "ADD", "CHANGE" then
+            begin
+            If agqISOCRIME:money_exposure[1] > 0 Then
+                begin
+                l_limit = agqisocrime:limit[1]
+                Do GET_STOREKEEPER
+                end
+            Else
+                L_FACTOR1 = 1
+            agqISOCRIME:base_factor_inside[1] = l_factor1
+            end
+        end
+        agqISOCRIME:base_factor_inside[1]/displayonly ;
+503     begin
+        if function one of "ADD", "CHANGE" then
+            agqISOCRIME:crime_total[1] = (agqisocrime:base_factor_inside[1] *
+                                         agqISOCRIME:money_exposure[1])
+        end
+        agqISOCRIME:crime_total[1]/displayonly ;
+601     begin
+        if function one of "ADD", "CHANGE" then
+            agqISOCRIME:gross_premium[1] = agqISOCRIME:crime_total[1]
+        end
+        agqISOCRIME:gross_premium[1]/displayonly ;
+
+1001    begin
+        if function one of "ADD", "CHANGE" then
+            do get_totals
+        end
+        agqisocrime:gross_premium[1]/displayonly ;
+1002    agqisocrime:territory_factor/displayonly ;
+1003    agqisocrime:net_premium[1]/displayonly ;
+1004    agqisocrime:deductible_premium[1]/displayonly ;
+1005    agqisocrime:adjusted_rate[1]/displayonly ;
+1006    agqisocrime:rmf_total[1]/displayonly ;
+1007    agqisocrime:total_premium[1]/displayonly ;
+1101    agqisocrime:minimum_premium[1]/displayonly ;
+1201    agqisocrime:final_premium[1]/displayonly ;
+
+}
+
+}
+
+}
+
+
+-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,120
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+Panel at 30,1 to 30,100 Tagged icon_line2_tg
+Properties {
+           LayoutType = screen
+           }
+{
+Components
+    Button at 1,5   tagged back_fn
+        Properties {
+                   Iconname = "btn_back_to_main_screen.bmp"
+                   }
+        Events     {
+                   Action {
+                          function = "back"
+                          abort()
+                          }
+                    }
+
+/*    Button at 1,36    tagged previous_fn
+        Properties {
+                   Iconname = "btn_prev_loc.bmp"
+                   }
+        Events     {
+                   Action = previous_fn
+                   }
+
+    Button at 1, 51 tagged next_fn
+        Properties {
+                   Iconname = "btn_next_loc.bmp"
+                   }
+        Events     {
+                   Action = next_fn
+                   }*/
+
+
+}
+
+Update
+if UPDATEOK = "NO" then
+    begin
+    disable(accept_fn)
+    enable(back_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(back_fn)
+    End
+
+Procedure Definition
+
+procedure get_totals
+begin
+Do GET_DEDUCTIBLE_FACTOR
+Do GET_MINIMUM_PREMIUM
+
+access agqcrime1, set agqcrime1:app_no = g_app_no,
+                      agqcrime1:prem_no  = g_prem_no,
+                      agqcrime1:build_no = g_build_no, generic
+
+l_crime1_terr = agqcrime1:terr
+
+Do GET_TERRITORY_FACTOR
+DO GET_RMF_FACTOR
+
+agqisocrime:deductible_factor = l_deductible_factor
+agqisocrime:TERRITORY_FACTOR  = L_prem_TERR_FACTOR
+agqisocrime:mess_terr_factor  = l_mess_terr_factor
+agqisocrime:rmf_total[1]      = l_rmf_factor
+agqisocrime:net_premium[1]    = (agqisocrime:gross_premium[1] *
+                                l_prem_terr_factor)
+if l_deductible_factor = 0 then
+    agqisocrime:deductible_premium[1] = 0
+else
+    agqisocrime:deductible_premium[1] = ((agqisocrime:gross_premium[1] * l_deductible_factor) divide
+                                        (agqisocrime:money_exposure[1] divide l_inside_per))
+agqisocrime:ADJUSTED_RATE[1]  = agqisocrime:net_premium[1] -
+                                agqisocrime:DEDUCTIBLE_Premium[1]
+l_total_premium = agqisocrime:adjusted_rate[1] *
+                  agqisocrime:rmf_total[1]
+agqisocrime:total_premium[1]  = l_total_premium
+
+l_premium = agqisocrime:total_premium[1]
+agqisocrime:crime_premium = l_total_premium
+agqisocrime:Final_premium[1] = l_total_premium
+
+if agqcrime1:app_no = g_app_no and
+   agqcrime1:prem_no = g_prem_no and
+   agqcrime1:build_no = g_build_no and
+   agqcrime1:sub_code = g_sub_code then
+    begin
+    change agqcrime1
+        begin
+        agqcrime1:total_premium = agqisocrime:crime_premium
+        agqcrime1:premium       = agqcrime1:total_premium
+        end
+    end
+
+end
+
+Procedure ACCESS_agqEND_DELETE
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_DELETE_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    If agqEND:LOB_END_CODE = "C" And
+       agqEND:CODE <> L_CODE_1 And
+       agqEND:CODE <> L_CODE_2 Then
+        L_DELETE_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access agqGENERAL_ALIAS, Set agqGENERAL_ALIAS:app_no = G_app_no,
+                             agqGENERAL_ALIAS:PREM_NO = G_PREM_NO,
+                             agqGENERAL_ALIAS:BUILD_NO = G_BUILD_NO, Generic
+
+L_STATE = agqGENERAL_ALIAS:STATE
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqisocrime:company_id,
+                      SFSOPTEND:STATE = L_STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqisocrime:company_id Or
+            SFSOPTEND:STATE <> L_STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqisocrime:rating_line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If agqNAME:EFF_DATE >= SFSOPTEND:EFF_DATE Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqEND
+    Begin
+    agqEND:app_no             =       G_app_no
+    agqEND:PREM_NO              =       G_PREM_NO
+    agqEND:BUILD_NO             =       G_BUILD_NO
+    agqEND:SUB_CODE             =       L_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION
+    agqEND:PREMIUM              =       0
+    agqEND:LOB_END_CODE         =       "C"
+    End
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+
+Procedure GET_RMF_FACTOR
+Begin
+Access SFSLOSSCOST, Set sfslosscost:COMPANY_ID = agqisocrime:company_id,
+                        sfslosscost:STATE = agqISOCRIME:STATE,
+                        sfslosscost:LINE_OF_BUSINESS = l_line_of_business, Generic
+
+While sfslosscost:COMPANY_ID = agqisocrime:company_id And
+      sfslosscost:STATE = agqISOCRIME:STATE And
+      sfslosscost:LINE_OF_BUSINESS = l_line_of_business
+        Begin
+        If agqNAME:EFF_DATE >= sfslosscost:EFF_DATE Then
+            begin
+            l_loss_cost = sfslosscost:rate_1[2]
+            end
+
+        Next sfslosscost
+        End
+
+l_rmf_factor = ((l_loss_cost * agqcrime1:package_mod) * agqcrime1:company_deviation)
+if l_rmf_factor = 0 then
+   l_rmf_factor = 1.00
+
+End
+
+Procedure GET_DEDUCTIBLE_FACTOR
+Begin
+Access CPSISOCRDED, Set CPSISOCRDED:COMPANY_ID = agqisocrime:company_id,
+                        CPSISOCRDED:STATE = agqISOCRIME:STATE,
+                        CPSISOCRDED:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business,
+                        CPSISOCRDED:DEDUCTIBLE = agqISOCRIME:DEDUCTIBLE, Generic
+
+While CPSISOCRDED:COMPANY_ID = agqisocrime:company_id And
+      CPSISOCRDED:STATE = agqISOCRIME:STATE And
+      CPSISOCRDED:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business And
+      CPSISOCRDED:DEDUCTIBLE = agqISOCRIME:DEDUCTIBLE
+        Begin
+        If agqNAME:EFF_DATE >= CPSISOCRDED:EFF_DATE Then
+            Begin
+            L_DEDUCTIBLE_FACTOR = CPSISOCRDED:multiplier
+            End
+
+        Next CPSISOCRDED
+        End
+
+End
+
+Procedure GET_MINIMUM_PREMIUM
+Begin
+Access CPSISOCRMINIMUMS, Set CPSISOCRMINIMUMS:COMPANY_ID = agqisocrime:company_id,
+                             CPSISOCRMINIMUMS:STATE = agqISOCRIME:STATE,
+                             CPSISOCRMINIMUMS:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business,
+                             CPSISOCRMINIMUMS:CRIME_FORM = agqISOCRIME:CRIME_FORM, Generic
+
+While CPSISOCRMINIMUMS:COMPANY_ID = agqisocrime:company_id And
+      CPSISOCRMINIMUMS:STATE = agqISOCRIME:STATE And
+      CPSISOCRMINIMUMS:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business And
+      CPSISOCRMINIMUMS:CRIME_FORM = agqISOCRIME:CRIME_FORM
+        Begin
+        If agqNAME:EFF_DATE >= CPSISOCRMINIMUMS:EFF_DATE Then
+            Begin
+            L_INSIDE_MINIMUM = CPSISOCRMINIMUMS:FIRST_PREMISES[1]
+            L_INSIDE_EACH_ADDL = CPSISOCRMINIMUMS:EACH_ADDITIONAL[1]
+            L_OUTSIDE_MINIMUM = CPSISOCRMINIMUMS:FIRST_MESSENGER
+            L_OUTSIDE_EACH_ADDL = CPSISOCRMINIMUMS:ADDITIONAL_messenger
+            End
+
+        Next CPSISOCRMINIMUMS
+        End
+
+End
+
+Procedure GET_TERRITORY_FACTOR
+Begin
+Access CPSISOCRTERR, Set CPSISOCRTERR:COMPANY_ID = agqisocrime:company_id,
+                         CPSISOCRTERR:STATE = agqISOCRIME:STATE,
+                         CPSISOCRTERR:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business,
+                         CPSISOCRTERR:territory_code = l_crime1_terr,
+                         CPSISOCRTERR:plan = agqISOCRIME:plan, generic
+
+While CPSISOCRTERR:COMPANY_ID = agqisocrime:company_id And
+      CPSISOCRTERR:STATE = agqISOCRIME:STATE And
+      CPSISOCRTERR:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business And
+      CPSISOCRTERR:territory_code = l_CRIME1_terr and
+      cpsisocrterr:plan = agqisocrime:plan
+        Begin
+        If agqNAME:EFF_DATE >= CPSISOCRTERR:EFF_DATE Then
+            Begin
+            L_Prem_TERR_FACTOR = CPSISOCRTERR:FACTOR[1]
+            End
+
+        Next CPSISOCRTERR
+        End
+
+End
+
+Procedure GET_STOREKEEPER
+Begin
+Access CPSISOCRstorekeepers, Set CPSISOCRstorekeepers:COMPANY_ID = agqisocrime:company_id,
+                                 CPSISOCRstorekeepers:STATE = agqISOCRIME:STATE,
+                                 CPSISOCRstorekeepers:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business,
+                                 CPSISOCRstorekeepers:rate_group = agqISOCRIME:rate_group,
+                                 CPSISOCRstorekeepers:limit = l_limit, Generic
+
+While CPSISOCRstorekeepers:COMPANY_ID = agqisocrime:company_id And
+      CPSISOCRstorekeepers:STATE = agqISOCRIME:STATE And
+      CPSISOCRstorekeepers:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business And
+      CPSISOCRstorekeepers:rate_group = agqISOCRIME:rate_group and
+      cpsisocrstorekeepers:limit = agqisocrime:limit[1]
+        Begin
+        If agqNAME:EFF_DATE >= CPSISOCRstorekeepers:EFF_DATE Then
+            Begin
+            L_FACTOR1 = CPSISOCRstorekeepers:FACTOR
+            End
+
+        Next CPSISOCRstorekeepers
+        End
+
+End
+
+
+Procedure GET_PER_AMOUNT
+Begin
+l_MISC_CODE = "Z"
+Access CPSISOCRFactors, Set CPSISOCRFACTORS:COMPANY_ID = agqisocrime:company_id,
+                            CPSISOCRFACTORS:STATE = agqISOCRIME:STATE,
+                            CPSISOCRFACTORS:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business,
+                            CPSISOCRFACTORS:CRIME_FORM = agqISOCRIME:CRIME_FORM,
+                            CPSISOCRFACTORS:CODE = L_MISC_CODE, Generic
+
+While CPSISOCRFACTORS:COMPANY_ID = agqisocrime:company_id And
+      CPSISOCRFACTORS:STATE = agqISOCRIME:STATE And
+      CPSISOCRFACTORS:LINE_OF_BUSINESS = agqisocrime:rating_line_of_business And
+      CPSISOCRFACTORS:CRIME_FORM = agqISOCRIME:CRIME_FORM and
+      CPSISOCRFACTORS:CODE = L_MISC_CODE
+        Begin
+        If agqNAME:EFF_DATE >= CPSISOCRFACTORS:EFF_DATE Then
+            Begin
+            L_INSIDE_PER = CPSISOCRFACTORS:PER[1]
+            L_OUTSIDE_PER = CPSISOCRFACTORS:PER[2]
+            End
+
+        Next CPSISOCRFACTORS
+        End
+
+End
+
+End

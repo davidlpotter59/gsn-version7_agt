@@ -1,0 +1,2219 @@
+%%
+Program
+        Name = "agtup7001" ;
+        Type = "file" ;
+        Padcharacter = Space ;
+        Domain = "sfsdefault" ;
+
+        Global Unsigned Ascii Number g_app_no[11] ,
+                                     G_PREM_NO[4] ,
+                                     G_BUILD_NO[4] ,
+                                     G_STATE[2] ,
+                                     g_deductible[5] ;
+
+        local array[10] of unsigned ascii number l_increase_total[8] ;
+
+        Local Unsigned Ascii Number L_TOTAL[8]=0,
+                                    l_tpd6_terrorism_premium[8]/decimals=0,
+                                    L_MINIMUM[4]=0,
+                                    l_minimum_premium_without_auto[4]=0,
+                                    L_STATE[2]=0,
+                                    L_SURCHARGE_FACTOR[8]=0/decimals=6,
+                                    L_SURCHARGE_MINIMUM[2]=0,
+                                    l_el_charge_first[3]=0,
+                                    l_el_charge_remaining[3]=0,
+                                    l_employers_liability_charge[3]=0,
+                                    l_prem_no[4],
+                                    l_build_no[4],
+                                    l_mp_changes[1],
+                                    l_changed_premium[8]=0,
+                                    l_line_of_business[4]=0,
+                                    l_total_auto[6]=0,
+                                    l_total_1[8]=0,
+                                    l_total_2[8]=0,
+                                    l_total_3[8]=0,
+                                    l_total_4[8]=0,
+                                    l_total_5[8]=0,
+                                    L_FINAL_TOTAL_1[8]=0,
+                                    L_FINAL_TOTAL_2[8]=0,
+                                    L_FINAL_TOTAL_3[8]=0,
+                                    L_SURCHARGE[6]=0 ,
+                                    L_LIMIT[8]=0,
+                                    L_CSEXEC_NUMBER[12] ,
+                                    I_CSEXEC_NUMBER[12],
+                                    L_INSTALLMENT[4]=0,
+                                    L_DAYS_RATE[7]=0/decimals=4,
+                                    L_PRO_RATA_PREMIUM[8]=0/decimals=4 ;
+
+        Local Signed Ascii Number L_DAYS ;
+
+        Local String L_TYPE[1] ,
+                     l_enter[1],
+                     L_CSEXEC_APPLICATION[25]="" ,
+                     L_COMMANDLINE[8],
+                     L_APP[3]="agq",
+                     L_DEC[15],
+                     L_FORM_EDITION[25],
+                     l_add_endorsement[1],
+                     L_DESCRIPTION[75],
+                     l_minimum_applies[1]="N",
+                     L_SCREEN[11] ,
+                     l_deleted[1]="N",
+                     L_CODE[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_code_8[7],
+                     l_code_9[7],
+                     l_code_10[7],
+                     l_wc_1[1]="N",
+                     l_wc_2[1]="N",
+                     l_auto_1[1]="N",
+                     l_auto_2[1]="N",
+                     l_hired_1[1]="N",
+                     l_hired_2[1]="N",
+                     l_pi_1[1]="N",
+                     l_pi_2[1]="N",
+                     l_prod_1[1]="N",
+                     l_prod_2[1]="N",
+                     l_endorsement_exists[1]="N",
+                     l_change_code[7],
+                     L_PRO_RATE="PRO RATA" ;
+
+        Local Date L_EFF_DATE_1[8] ,
+                   l_surcharge_date[8] ;
+
+        Local Mmddyyyy Date L_CORRECT_DATE[8] ;
+        Local String L_FIRST_TIME[1]="Y";
+        Unsigned Ascii Number L_HOLD_PAYMENT_PLAN[4]=0;
+        Signed Ascii Number L_SUB_TOTAL[9]=0/decimals=2;
+        Local Unsigned Ascii Number L_OPT[1]=0 ;
+
+        Unsigned Ascii Number L_TERRORISM_PREMIUM[8]/decimals =0;
+        Unsigned Ascii Number L_TERRORISM_PREMIUM_1[8]/decimals =0;
+        Unsigned Ascii Number L_TERRORISM_PREMIUM_2[8]/decimals =0;
+        Unsigned Ascii Number L_TERRORISM_PREMIUM_3[8]/decimals =0;
+        Unsigned Ascii Number L_TERROR_PERCENTAGE[5]/decimals=4;
+        Unsigned Ascii Number L_TERROR_MINIMUM[3];
+        Wdate L_TERROR_EFF_DATE;
+        Unsigned Ascii Number L_FOUND[1];
+        Unsigned Ascii Number L_REMOVE_TERROR_FOUND[1] ;
+        Unsigned Ascii Number L_SUB_CODE[4];
+
+        Include "print.var"
+
+        Include "virtualdecs.var"
+
+        local string l_coverage[1]="" ;
+
+        Local Unsigned Ascii Number l_minimum_premium[4]=0 ,
+                                    l_minimum_premium_2[4]=0,
+                                    l_minimum_premium_3[4]=0,
+                                    l_no_vehicles[3]=0,
+                                    l_no_vehicles_1[3]=0,
+                                    l_sub[2]=0,
+                                    l_sub_1[2]=0,
+                                    l_increased_total[6]=0,
+                                    l_repeat[2]=0,
+                                    l_each_addl_minimum[4]=0,
+                                    l_original_total[8]=0,
+                                    l_minimum_premium_total[8]=0,
+                                    l_increased_million_premium[8]=0,
+                                    l_final_total[8]=0,
+                                    l_irpm[4]=0/dec=2,
+                                    l_increased_factor[4]=0/dec=2 ;
+
+        local signed ascii number l_irpm_total[6]=0;
+
+        local string l_add_code[7],
+                     l_remove_code[7] ,
+                     l_tpd_code[7];
+
+screen entry
+G_APP_NO   = val(commandline[1,11])
+
+access agqumbrella1, set agqumbrella1:app_no = g_app_no, generic
+
+access agqumdetail1, set agqumdetail1:app_no = g_app_no, generic
+
+access agqumunderlying, set agqumunderlying:app_no = g_app_no, generic
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+access cpsumdefault, set cpsumdefault:company_id = agqumbrella1:company_id, generic
+
+access sfsline, set sfsline:company_id       = agqname:company_id,
+                    sfsline:line_of_business = agqname:line_of_business,
+                    sfsline:lob_subline      = "00", generic
+
+do remove_terrorism_forms_1
+do workers_comp
+do original_total
+do umbrella_minimum_premium
+l_changed_premium = agqumbrella1:changed_premium
+if l_changed_premium < l_original_total and
+   l_changed_premium <> 0 then
+    begin
+    if l_minimum_premium_total = 0 then
+        begin
+        l_irpm = ((cpsumdefault:irpm_maximum[2] divide 100) + 1)
+        l_irpm_total = l_original_total * l_irpm
+        if l_changed_premium < l_irpm_total then
+            error "Total is less than allowed discount"
+        end
+    end
+do increased_million
+do final_total
+do terrorism
+if sfsline:lob_code one of "CPORTFOLIO" then
+    begin
+    access agqmastsupp, set agqmastsupp:app_no           = g_app_no,
+                            agqmastsupp:line_of_business = agqumbrella1:line_of_business, generic
+
+    l_terrorism_premium = agqmastsupp:terrorism_premium
+    end
+else
+    begin
+    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+    l_terrorism_premium = agqmaster:terrorism_premium
+    end
+Do FINAL_TOTAL_1
+do update_triggers
+
+update
+
+procedure definition
+
+procedure update_triggers
+begin
+access cpsumrates, set cpsumrates:company_id = agqumbrella1:company_id,
+                       cpsumrates:state = agqumbrella1:state,
+                       cpsumrates:line_of_business = agqumbrella1:line_of_business, generic
+
+while cpsumrates:company_id = agqumbrella1:company_id and
+      cpsumrates:state = agqumbrella1:state and
+      cpsumrates:line_of_business = agqumbrella1:line_of_business
+        begin
+        if agqname:eff_date => cpsumrates:eff_date then
+            begin
+            l_code_3  = cpsumrates:trigger_codes[1] -- MCL703
+            l_code_4  = cpsumrates:trigger_codes[2] -- MCL704
+            l_code_5  = cpsumrates:trigger_codes[3] -- MCL705
+            l_code_6  = cpsumrates:trigger_codes[4] -- MCL706
+            l_code_7  = cpsumrates:trigger_codes[9] -- MCL731
+            end -- end of eff_date
+
+        next cpsumrates
+        end -- end of while
+
+-- delete this everytime and only add back if needed below
+L_CODE = L_CODE_3
+Do ACCESS_agqEND_1
+if l_add_endorsement = "N" then
+    do delete_agqend_1
+L_CODE = L_CODE_4
+Do ACCESS_agqEND_1
+if l_add_endorsement = "N" then
+    do delete_agqend_1
+
+l_coverage = "A"
+access agqumdetail1, set agqumdetail1:app_no = agqumbrella1:app_no,
+                        agqumdetail1:coverage = l_coverage, generic
+
+if agqumdetail1:app_no = agqumbrella1:app_no and
+   agqumdetail1:coverage = l_coverage then
+    begin
+    if agqumdetail1:coverage_type[1] = 1 or
+       agqumdetail1:coverage_type[2] = 1 or
+       agqumdetail1:coverage_type[3] = 1 or
+       agqumdetail1:coverage_type[4] = 1 then
+        begin
+        L_CODE = L_CODE_3
+        Do ACCESS_agqEND_1
+        If l_auto_1 = "N" and
+           l_auto_2 = "N" and
+           l_code_3 <> "" and
+           agqumdetail1:hired_nonowned = "" Then
+            Do ADD_agqEND_1
+        else
+        if l_auto_1 = "N" and
+           l_auto_2 = "Y" and
+           agqumdetail1:hired_nonowned = "" and
+           l_code_4 <> "" then
+            begin
+            l_change_code = l_code_4
+            do change_agqend_1
+            end
+        end
+
+    if agqumdetail1:hired_nonowned one of "B" then
+        begin
+        L_CODE = L_CODE_5
+        Do ACCESS_agqEND_1
+        If l_hired_1 = "N" and
+           l_hired_2 = "N" and
+           l_code_5 <> "" Then
+            begin
+            Do ADD_agqEND_1
+            end
+        else
+        if l_hired_1 = "N" and
+           l_hired_2 = "Y" and
+           l_code_6 <> "" then
+            begin
+            l_change_code = l_code_6
+            do change_agqend_1
+            end
+        end
+    else
+    if agqumdetail1:hired_nonowned one of "N", "H" then
+        begin
+        L_CODE = L_CODE_6
+        Do ACCESS_agqEND_1
+        If l_hired_1 = "N" and
+           l_hired_2 = "N" and
+           l_code_6 <> "" Then
+            begin
+            Do ADD_agqEND_1
+            end
+        else
+        if l_hired_1 = "Y" and
+           l_hired_2 = "N" and
+           l_code_5 <> "" then
+            begin
+            l_change_code = l_code_5
+            do change_agqend_1
+            end
+        end
+    else
+    if agqumdetail1:hired_nonowned not one of "B", "H", "N" then
+        begin
+        l_code = l_code_5
+        Do ACCESS_agqEND_1
+        If l_hired_1 = "Y" or
+           l_hired_2 = "Y" and
+           l_code_5 <> "" then
+            Do delete_agqend_hired_1
+        end
+
+    end
+else
+    begin
+    L_CODE = L_CODE_4
+    Do ACCESS_agqEND_1
+    If l_auto_1 = "N" and
+       l_auto_2 = "N" and
+       l_code_4 <> "" Then
+        Do ADD_agqEND_1
+    else
+    if l_auto_1 = "Y" and
+       l_auto_2 = "N" and
+       l_code_3 <> "" then
+        begin
+        l_change_code = l_code_3
+        do change_agqend_1
+        end
+
+    L_CODE = L_CODE_5
+    Do ACCESS_agqEND_1
+    If l_hired_1 = "Y" or
+       l_hired_2 = "Y" and
+       l_code_5 <> "" then
+        Do delete_agqend_hired_1
+
+    end
+
+l_eff_date_1 = dateadd(agqname:eff_date,0,1)
+l_code = l_code_7
+do access_agqend_1
+if l_add_endorsement = "Y" and
+   agqname:exp_date < l_eff_date_1 and
+   l_code_7 <> "" then
+    do add_agqend_1
+if l_add_endorsement = "N" and
+   agqname:exp_date = l_eff_date_1 and
+   l_code_7 <> "" then
+    do delete_agqend_1
+end
+
+Procedure ACCESS_agqEND_1
+Begin
+g_prem_no = 1
+g_build_no = 1
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+l_add_endorsement = "Y"
+L_wc_1 = "N"
+l_wc_2 = "N"
+l_auto_1 = "N"
+l_auto_2 = "N"
+l_hired_1 = "N"
+l_hired_2 = "N"
+l_pi_1 = "N"
+l_pi_2 = "N"
+l_prod_1 = "N"
+l_prod_2 = "N"
+l_endorsement_exists = "N"
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    If agqEND:CODE = L_CODE_1 Then
+        L_WC_1 = "Y"
+    if agqend:code = l_code_2 then
+        l_wc_2 = "Y"
+    If agqEND:CODE = L_CODE_3 Then
+        L_auto_1 = "Y"
+    if agqend:code = l_code_4 then
+        l_auto_2 = "Y"
+    If agqEND:CODE = L_CODE_5 Then
+        L_hired_1 = "Y"
+    if agqend:code = l_code_6 then
+        l_hired_2 = "Y"
+    If agqEND:CODE = L_CODE_7 Then
+        L_pi_1 = "Y"
+    if agqend:code = l_code_8 then
+        l_pi_2 = "Y"
+    If agqEND:CODE = L_CODE_9 Then
+        L_prod_1 = "Y"
+    if agqend:code = l_code_10 then
+        l_prod_2 = "Y"
+    If agqEND:CODE = L_CODE Then
+        begin
+        L_endorsement_exists = "Y"
+        l_add_Endorsement = "N"
+        end
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND_1
+Begin
+g_prem_no = 1
+g_build_no = 1
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access agqumbrella1_ALIAS, Set agqumbrella1_ALIAS:app_no = G_app_no, generic
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqumbrella1:company_id,
+                      SFSOPTEND:STATE = agqumbrella1:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqumbrella1:line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqumbrella1:company_id Or
+            SFSOPTEND:STATE <> agqumbrella1:state Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqumbrella1:line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqname:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqname:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+access agqend, set agqend:app_no = g_app_no,
+                   agqend:prem_no = g_prem_no,
+                   agqend:build_no = g_build_no, generic
+
+        add agqEND
+            Begin
+            agqend:app_no             =       agqumbrella1:app_no
+            agqend:prem_no              =       1
+            agqend:build_no             =       1
+            agqend:sub_code             =       l_sub_code
+            agqEND:CODE                 =       L_CODE
+            agqEND:FORM_EDITION         =       L_FORM_EDITION
+            agqEND:DESCRIPTION          =       L_DESCRIPTION
+            agqEND:PREMIUM              =       0
+            agqend:lob_end_code         =       "U"
+            agqend:terrorism_Form       =       0
+            end
+
+
+End
+
+Procedure CHANGE_agqEND_1
+Begin
+g_prem_no = 1
+g_build_no = 1
+Access agqumbrella1_ALIAS, Set agqumbrella1_ALIAS:app_no = G_app_no, generic
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqumbrella1:company_id,
+                      SFSOPTEND:STATE = agqumbrella1:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqumbrella1:line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqumbrella1:company_id Or
+            SFSOPTEND:STATE <> agqumbrella1:state Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqumbrella1:line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqname:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqname:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+access agqend, set agqend:app_no = g_app_no,
+                   agqend:prem_no = g_prem_no,
+                   agqend:build_no = g_build_no, generic
+
+while agqend:app_no = g_app_no and
+      agqend:prem_no = g_prem_no and
+      agqend:build_no = g_build_no
+        begin
+        if agqend:code = l_change_code then
+        change agqEND
+            Begin
+            agqEND:CODE                 =       L_CODE
+            agqEND:FORM_EDITION         =       L_FORM_EDITION
+            agqEND:DESCRIPTION          =       L_DESCRIPTION
+            agqEND:PREMIUM              =       0
+            agqend:lob_end_code         =       "U"
+            agqend:terrorism_Form       =       0
+            end
+
+        next agqend
+        End
+
+End
+
+Procedure DELETE_agqEND_hired_1
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+while agqEND:app_no = G_app_no and
+      agqEND:PREM_NO = G_PREM_NO and
+      agqEND:BUILD_NO = G_BUILD_NO
+        begin
+        If agqEND:CODE = L_CODE_5 or
+           agqend:code = L_code_6 Then
+            Delete agqEND
+
+        Next agqEND
+        End
+
+End
+
+Procedure DELETE_agqEND_1
+Begin
+l_prem_no = 1
+l_build_no = 1
+Access agqEND, Set agqEND:app_no = agqumbrella1:app_no ,
+                   agqEND:PREM_NO = L_PREM_NO,
+                   agqEND:BUILD_NO = L_BUILD_NO, Generic
+
+l_deleted = "N"
+while agqEND:app_no = agqumbrella1:app_no and
+      agqEND:PREM_NO = L_PREM_NO and
+      agqEND:BUILD_NO = L_BUILD_NO
+        begin
+        If agqEND:CODE = L_CODE and
+           l_deleted = "N" Then
+            begin
+            l_deleted = "Y"
+            Delete agqEND
+            end
+
+        Next agqEND
+        End
+
+End
+
+procedure remove_terrorism_forms_1
+begin
+Access SFSMSOTERROR, Set SFSMSOTERROR:COMPANY_ID       = agqumbrella1:COMPANY_ID,
+                         SFSMSOTERROR:STATE            = agqumbrella1:STATE,
+                         SFSMSOTERROR:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS, Generic
+
+While SFSMSOTERROR:COMPANY_ID       = agqumbrella1:COMPANY_ID And
+      SFSMSOTERROR:STATE            = agqumbrella1:STATE And
+      SFSMSOTERROR:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS
+        begin
+        if agqname:eff_date >= sfsmsoterror:eff_date then
+             begin
+             L_remove_code = sfsmsoterror:terrorism_form_to_remove
+             l_add_code    = sfsmsoterror:terrorism_form_to_add
+             l_tpd_code    = uppercase(sfsmsoterror:tpd_forms_to_print[2])
+             end
+
+        Next SFSMSOTERROR
+        end
+
+Access agqend, Set agqend:app_no = G_app_no, generic
+
+While agqend:app_no = g_app_no
+        begin
+        If agqend:CODE = l_remove_code or
+           agqend:code = l_add_code or
+           agqend:code = l_tpd_code Then
+            delete agqend
+
+        next agqend
+        end
+
+end
+
+procedure workers_comp
+begin
+access cpsumrates, set cpsumrates:company_id = agqumbrella1:company_id,
+                       cpsumrates:state = agqumbrella1:state,
+                       cpsumrates:line_of_business = agqumbrella1:line_of_business, generic
+
+while cpsumrates:company_id = agqumbrella1:company_id and
+      cpsumrates:state = agqumbrella1:state and
+      cpsumrates:line_of_business = agqumbrella1:line_of_business
+        begin
+        if agqname:eff_date => cpsumrates:eff_date then
+            begin
+            l_el_charge_first = cpsumrates:workers_comp_charge_first
+            l_el_charge_remaining = cpsumrates:workers_comp_charge_remaining
+            l_code_1  = cpsumrates:workers_comp_code[1] -- MCL716
+            l_code_2  = cpsumrates:workers_comp_code[2] -- MCL717
+            l_code_3  = cpsumrates:trigger_codes[1] -- MCL703
+            l_code_4  = cpsumrates:trigger_codes[2] -- MCL704
+            l_code_5  = cpsumrates:trigger_codes[3] -- MCL705
+            l_code_6  = cpsumrates:trigger_codes[4] -- MCL706
+            end -- end of eff_date
+
+        next cpsumrates
+        end -- end of while
+
+l_coverage = "E"
+access agqumdetail1, set agqumdetail1:app_no   = agqumbrella1:app_no,
+                         agqumdetail1:coverage = l_coverage, generic
+
+if agqumdetail1:app_no   = agqumbrella1:app_no and
+   agqumdetail1:coverage = l_coverage then
+    begin
+    L_CODE = L_CODE_1
+    Do ACCESS_agqEND
+    If l_wc_1 = "N" and
+       l_wc_2 = "N" and
+       l_code_1 <> "" Then
+        begin
+        Do ADD_agqEND
+        end
+    else
+    if l_wc_1 = "N" and
+       l_wc_2 = "Y" and
+       l_code_2 <> "" then
+        begin
+        l_change_code = l_code_2
+        do change_agqend
+        end
+    l_employers_liability_charge = 0
+    access agqumbrella1_alias, set agqumbrella1_alias:app_no = agqumbrella1:app_no, generic
+
+    change agqumbrella1_alias
+        begin
+        agqumbrella1_alias:employers_liability_charge[1]    = l_el_charge_first
+        agqumbrella1_alias:employers_liability_charge[2]    = 0
+        agqumbrella1_alias:employers_liability_charge[3]    = 0
+        agqumbrella1_alias:employers_liability_charge[4]    = 0
+        agqumbrella1_alias:employers_liability_charge[5]    = 0
+        agqumbrella1_alias:employers_liability_charge_1[1]  = 0
+        agqumbrella1_alias:employers_liability_charge_1[2]  = 0
+        agqumbrella1_alias:employers_liability_charge_1[3]  = 0
+        agqumbrella1_alias:employers_liability_charge_1[4]  = 0
+        agqumbrella1_alias:employers_liability_charge_1[5]  = 0
+        end
+
+    l_employers_liability_charge = l_el_charge_first
+
+    l_repeat = ((agqumbrella1_alias:occurrence - cpsumdefault:occurrence)
+               divide cpsumdefault:occurrence)
+
+    l_sub   = 1
+    l_sub_1 = 0
+    while l_sub <= l_repeat
+        begin
+        l_employers_liability_charge = l_employers_liability_charge + l_el_charge_remaining
+
+        access agqumbrella1_alias, set agqumbrella1_alias:app_no = agqumbrella1:app_no, generic
+
+        change agqumbrella1_alias
+            begin
+            if l_sub => 5 then
+                begin
+                l_sub_1 = l_sub_1 + 1
+                agqumbrella1_alias:employers_liability_charge_1[l_sub_1] = l_el_charge_remaining
+                end
+            else
+                agqumbrella1_alias:employers_liability_charge[l_sub + 1] = l_el_charge_remaining
+            end -- end of change
+
+        l_sub = l_sub + 1
+        end -- end of while
+
+    end
+else
+    begin
+    L_CODE = L_CODE_2
+    Do ACCESS_agqEND
+    If l_wc_1 = "N" and
+       l_wc_2 = "N" and
+       l_code_2 <> "" Then
+        Do ADD_agqEND
+    else
+    if l_wc_1 = "Y" and
+       l_wc_2 = "N" and
+       l_code_1 <> "" then
+        begin
+        l_change_code = l_code_1
+        do change_agqend
+        end
+
+    l_employers_liability_charge = 0
+    access agqumbrella1_alias, set agqumbrella1_alias:app_no = agqumbrella1:app_no, generic
+
+    change agqumbrella1_alias
+        begin
+        agqumbrella1_alias:employers_liability_charge[1]   = 0
+        agqumbrella1_alias:employers_liability_charge[2]   = 0
+        agqumbrella1_alias:employers_liability_charge[3]   = 0
+        agqumbrella1_alias:employers_liability_charge[4]   = 0
+        agqumbrella1_alias:employers_liability_charge[5]   = 0
+        agqumbrella1_alias:employers_liability_charge_1[1] = 0
+        agqumbrella1_alias:employers_liability_charge_1[2] = 0
+        agqumbrella1_alias:employers_liability_charge_1[3] = 0
+        agqumbrella1_alias:employers_liability_charge_1[4] = 0
+        agqumbrella1_alias:employers_liability_charge_1[5] = 0
+        end
+    end
+
+end -- end of procedure
+
+procedure original_total
+begin
+access agqumunderlying, set agqumunderlying:app_no = agqumbrella1:app_no, generic
+
+l_original_total = 0
+l_total_auto     = 0
+while agqumunderlying:app_no = agqumbrella1:app_no
+    begin
+    if sfscompany:boiler_Rating = 4 then
+        begin
+        if agqumunderlying:coverage = "A" then
+            begin
+            l_total_auto = agqumunderlying:total_premium +
+                           l_total_auto
+            end
+        else
+            begin
+            l_original_total = l_original_total + agqumunderlying:total_premium
+            end
+        end
+    else
+        begin
+        l_ORIGINAL_TOTAL = l_original_total + agqUMUNDERLYING:TOTAL_PREMIUM
+        end
+
+    next agqumunderlying
+    end
+
+if sfscompany:boiler_rating = 4 then
+    begin
+    if l_total_auto <> 0 and
+       agqumbrella1:autos_minimum_premium <> 0 and
+       l_total_auto < agqumbrella1:autos_minimum_premium then
+        begin
+        l_total_auto = agqumbrella1:autos_minimum_premium
+        end
+
+    l_original_total = l_original_total + l_total_auto
+    end
+
+access agqend, set agqend:app_no = agqumbrella1:app_no, generic
+
+while agqend:app_no = agqumbrella1:app_no
+    begin
+    if agqend:terrorism_form = 0 then
+        l_original_total = l_original_total + agqend:manual_premium
+
+    next agqend
+    end
+
+access agqmisc, set agqmisc:app_no = g_app_no, generic
+
+while agqmisc:app_no = g_app_no
+    begin
+    if ((agqmisc:lob_end_code one of "U" and
+       sfsline:lob_code one of "CPORTFOLIO") or
+       sfsline:lob_code not one of "CPORTFOLIO") then
+        begin
+        l_original_total = l_original_total + agqmisc:premium
+        end
+
+    next agqmisc
+    end
+
+access agqumbrella1_alias, set agqumbrella1_alias:app_no = agqumbrella1:app_no, generic
+
+change agqumbrella1_alias
+    begin
+    agqumbrella1_alias:original_total = l_original_total +
+                                       agqumbrella1_alias:total_premium[1] +
+                                       agqumbrella1_alias:total_premium[2] +
+                                       agqumbrella1_alias:total_premium[3]
+
+    end
+
+l_original_total = agqumbrella1_alias:original_total
+end
+
+procedure umbrella_minimum_premium
+begin
+access sfscompany, set sfscompany:company_id = agqumbrella1:company_id, generic
+
+access agqumbrella1_alias, set agqumbrella1_alias:app_no = agqumbrella1:app_no, generic
+
+change agqumbrella1_alias
+    begin
+    if sfscompany:boiler_rating <> 4 then
+        do minimum_premiums
+    else
+        do minimum_premiums_delos
+    if agqumbrella1_alias:original_total < l_minimum_premium then
+        agqumbrella1_alias:minimum_premium_total = l_minimum_premium
+    else
+        agqumbrella1_alias:minimum_premium_total = 0
+    end
+
+l_minimum_premium_total = agqumbrella1_alias:minimum_premium_total
+end
+
+procedure increased_million
+begin
+access agqumbrella1_alias, set agqumbrella1_alias:app_no = agqumbrella1:app_no, generic
+
+if l_mp_changes = 2 and
+   sfscompany:boiler_rating = 4 then
+    begin
+    change agqumbrella1_alias
+        begin
+        agqumbrella1_alias:changed_premium = l_changed_premium
+        if agqumbrella1_alias:occurrence > cpsumdefault:occurrence then
+            begin
+            l_repeat = ((agqumbrella1_alias:occurrence - cpsumdefault:occurrence)
+                       divide cpsumdefault:occurrence)
+
+            if agqumbrella1_alias:minimum_premium_total = 0 or
+               l_changed_premium <> 0 then
+                begin
+                agqumbrella1_alias:increased_million_premium = 0
+                if agqumbrella1_alias:changed_premium <> 0 then
+                    l_increased_total = agqumbrella1_alias:changed_premium
+                else
+                    l_increased_total = agqumbrella1_alias:original_total
+
+                if l_changed_premium <> 0 then
+                    l_increase_total[1] = l_changed_premium
+                else
+                    l_increase_total[1] = l_original_total
+                l_sub_1 = 1
+                l_sub = 1
+                while l_sub <= l_repeat
+                    begin
+                    l_increased_total = l_increased_total *
+                                        l_increased_factor
+
+                    if l_sub + 1 > 5 and
+                       agqumbrella1_alias:manually_changed_limits[l_sub_1] = 1 then
+                        begin
+                        l_sub_1 = l_sub_1 + 1
+                        if sfsline:lob_code one of "CPORTFOLIO" then
+                            begin
+                            switch(l_sub + 1)
+                              case 6  : l_increased_total = agqmastsupp:other_totals[11]
+                              case 7  : l_increased_total = agqmastsupp:other_totals[12]
+                              case 8  : l_increased_total = agqmastsupp:other_totals[13]
+                              case 9  : l_increased_total = agqmastsupp:other_totals[14]
+                              case 10 : l_increased_total = agqmastsupp:other_totals[15]
+                              end
+                            end
+                        end
+                    else
+                    if l_increased_total < l_minimum_premium and
+                       l_minimum_premium <> 0 then
+                        begin
+                        l_increased_total = l_minimum_premium
+                        end
+
+                    agqumbrella1_alias:increased_million_premium =
+                                      agqumbrella1_alias:increased_million_premium +
+                                      l_increased_total
+
+                    l_increase_total[l_sub + 1] = l_increased_total
+
+                    l_sub = l_sub + 1
+                    end
+                end
+            else
+            if agqumbrella1_alias:minimum_premium_total <> 0 then
+                begin
+                agqumbrella1_alias:increased_million_premium = 0
+                l_increased_total = agqumbrella1_alias:minimum_premium_total
+
+                if l_changed_premium <> 0 then
+                    l_increase_total[1] = l_changed_premium
+                else
+                    l_increase_total[1] = agqumbrella1_alias:minimum_premium_total
+                l_sub = 1
+                l_sub_1 = 1
+                while l_sub <= l_repeat
+                    begin
+                    l_increased_total = l_increased_total *
+                                        l_increased_factor
+
+                    if l_sub + 1 > 5 and
+                       agqumbrella1_alias:manually_changed_limits[l_sub_1] = 1 then
+                        begin
+                        l_sub_1 = l_sub_1 + 1
+                        if sfsline:lob_code one of "CPORTFOLIO" then
+                            begin
+                            switch(l_sub + 1)
+                              case 6  : l_increased_total = agqmastsupp:other_totals[11]
+                              case 7  : l_increased_total = agqmastsupp:other_totals[12]
+                              case 8  : l_increased_total = agqmastsupp:other_totals[13]
+                              case 9  : l_increased_total = agqmastsupp:other_totals[14]
+                              case 10 : l_increased_total = agqmastsupp:other_totals[15]
+                              end
+                            end
+                        else
+                            begin
+                            switch(l_sub + 1)
+                              case 6  : l_increased_total = agqmaster:other_totals[11]
+                              case 7  : l_increased_total = agqmaster:other_totals[12]
+                              case 8  : l_increased_total = agqmaster:other_totals[13]
+                              case 9  : l_increased_total = agqmaster:other_totals[14]
+                              case 10 : l_increased_total = agqmaster:other_totals[15]
+                              end
+                            end
+                        end
+                    else
+                    if l_increased_total < l_minimum_premium then
+                        begin
+                        l_increased_total = l_minimum_premium
+                        end
+
+                    agqumbrella1_alias:increased_million_premium =
+                                      agqumbrella1_alias:increased_million_premium +
+                                      l_increased_total
+
+                    l_increase_total[l_sub + 1] = l_increased_total
+
+                    l_sub   = l_sub + 1
+                    end
+                end
+            end
+        else
+            begin
+            agqumbrella1_alias:increased_million_premium = 0
+            if l_changed_premium <> 0 then
+                l_increase_total[1] = l_changed_premium
+            else
+            if agqumbrella1_alias:minimum_premium_total <> 0 then
+                l_increase_total[1] = agqumbrella1_alias:minimum_premium_total
+            else
+                l_increase_total[1] = agqumbrella1_alias:original_total
+            end
+        end
+    end
+else
+begin
+change agqumbrella1_alias
+    begin
+    agqumbrella1_alias:changed_premium = l_changed_premium
+    if agqumbrella1_alias:occurrence > cpsumdefault:occurrence then
+        begin
+        l_repeat = ((agqumbrella1_alias:occurrence - cpsumdefault:occurrence)
+                   divide cpsumdefault:occurrence)
+
+        if agqumbrella1_alias:minimum_premium_total = 0 or
+           l_changed_premium <> 0 then
+            begin
+            agqumbrella1_alias:increased_million_premium = 0
+            if agqumbrella1_alias:changed_premium <> 0 then
+                l_increased_total = agqumbrella1_alias:changed_premium
+            else
+                l_increased_total = agqumbrella1_alias:original_total
+
+            if l_changed_premium <> 0 then
+                l_increase_total[1] = l_changed_premium
+            else
+                l_increase_total[1] = l_original_total
+            l_sub_1 = 1
+            l_sub = 1
+            while l_sub <= l_repeat
+                begin
+                l_increased_total = l_increased_total *
+                                    l_increased_factor
+
+                if l_sub + 1 > 5 and
+                   agqumbrella1_alias:manually_changed_limits[l_sub_1] = 1 then
+                    begin
+                    l_sub_1 = l_sub_1 + 1
+                    if sfsline:lob_code one of "CPORTFOLIO" then
+                        begin
+                        switch(l_sub + 1)
+                          case 6  : l_increased_total = agqmastsupp:other_totals[11]
+                          case 7  : l_increased_total = agqmastsupp:other_totals[12]
+                          case 8  : l_increased_total = agqmastsupp:other_totals[13]
+                          case 9  : l_increased_total = agqmastsupp:other_totals[14]
+                          case 10 : l_increased_total = agqmastsupp:other_totals[15]
+                          end
+                        end
+                    end
+                else
+                if l_increased_total < l_each_addl_minimum and
+                   l_each_addl_minimum <> 0 then
+                    begin
+                    l_increased_total = l_each_addl_minimum
+                    end
+                else
+                if l_increased_total < l_minimum_premium_2 and
+                   l_each_addl_minimum = 0 and
+                   agqumbrella1_alias:occurrence = 2000000 then
+                    begin
+                    l_increased_total = l_minimum_premium_2
+                    end
+                else
+                if l_increased_total < l_minimum_premium_3 and
+                   l_each_addl_minimum = 0 and
+                   agqumbrella1_alias:occurrence = 3000000 then
+                    begin
+                    l_increased_total = l_minimum_premium_3
+                    end
+
+                agqumbrella1_alias:increased_million_premium =
+                                  agqumbrella1_alias:increased_million_premium +
+                                  l_increased_total
+
+                l_increase_total[l_sub + 1] = l_increased_total
+
+                l_sub = l_sub + 1
+                end
+            end
+        else
+            if agqumbrella1_alias:minimum_premium_total <> 0 then
+                begin
+                agqumbrella1_alias:increased_million_premium = 0
+                l_increased_total = agqumbrella1_alias:minimum_premium_total
+
+                if l_changed_premium <> 0 then
+                    l_increase_total[1] = l_changed_premium
+                else
+                    l_increase_total[1] = agqumbrella1_alias:minimum_premium_total
+                l_sub = 1
+                l_sub_1 = 1
+                while l_sub <= l_repeat
+                    begin
+                    l_increased_total = l_increased_total *
+                                        l_increased_factor
+
+                    if l_sub + 1 > 5 and
+                       agqumbrella1_alias:manually_changed_limits[l_sub_1] = 1 then
+                        begin
+                        l_sub_1 = l_sub_1 + 1
+                        if sfsline:lob_code one of "CPORTFOLIO" then
+                            begin
+                            switch(l_sub + 1)
+                              case 6  : l_increased_total = agqmastsupp:other_totals[11]
+                              case 7  : l_increased_total = agqmastsupp:other_totals[12]
+                              case 8  : l_increased_total = agqmastsupp:other_totals[13]
+                              case 9  : l_increased_total = agqmastsupp:other_totals[14]
+                              case 10 : l_increased_total = agqmastsupp:other_totals[15]
+                              end
+                            end
+                        else
+                            begin
+                            switch(l_sub + 1)
+                              case 6  : l_increased_total = agqmaster:other_totals[11]
+                              case 7  : l_increased_total = agqmaster:other_totals[12]
+                              case 8  : l_increased_total = agqmaster:other_totals[13]
+                              case 9  : l_increased_total = agqmaster:other_totals[14]
+                              case 10 : l_increased_total = agqmaster:other_totals[15]
+                              end
+                            end
+                        end
+                    else
+                    if l_increased_total < l_each_addl_minimum then
+                        begin
+                        l_increased_total = l_each_addl_minimum
+                        end
+                    else
+                    if l_increased_total < l_minimum_premium_2 and
+                       l_each_addl_minimum = 0 and
+                       agqumbrella1_alias:occurrence = 2000000 then
+                        begin
+                        l_increased_total = l_minimum_premium_2
+                        end
+                    else
+                    if l_increased_total < l_minimum_premium_3 and
+                       l_each_addl_minimum = 0 and
+                       agqumbrella1_alias:occurrence = 3000000 then
+                        begin
+                        l_increased_total = l_minimum_premium_3
+                        end
+
+                    if sfscompany:boiler_Rating = 4 and
+                       l_mp_changes = 2 then
+                        begin
+                        if l_increased_total < l_minimum_premium and
+                           l_minimum_applies = "Y" then
+                            l_increased_total = l_minimum_premium
+                        end
+
+                    agqumbrella1_alias:increased_million_premium =
+                                      agqumbrella1_alias:increased_million_premium +
+                                      l_increased_total
+
+                    l_increase_total[l_sub + 1] = l_increased_total
+
+                    l_sub   = l_sub + 1
+                    end
+                end
+        end
+    else
+        begin
+        agqumbrella1_alias:increased_million_premium = 0
+        if l_changed_premium <> 0 then
+            l_increase_total[1] = l_changed_premium
+        else
+        if agqumbrella1_alias:minimum_premium_total <> 0 then
+            l_increase_total[1] = agqumbrella1_alias:minimum_premium_total
+        else
+            l_increase_total[1] = agqumbrella1_alias:original_total
+        end
+    end
+end
+
+l_increased_million_premium = agqumbrella1_alias:increased_million_premium
+end
+
+procedure final_total
+begin
+access agqumbrella1_alias, set agqumbrella1_alias:app_no = agqumbrella1:app_no, generic
+
+change agqumbrella1_alias
+    begin
+    If agqumbrella1_alias:changed_premium <> 0 Then
+        agqumbrella1_alias:FINAL_TOTAL = agqumbrella1_alias:changed_premium +
+                                        agqumbrella1_alias:increased_million_premium
+    Else
+    if agqumbrella1_alias:minimum_premium_total <> 0 then
+        agqumbrella1_alias:final_total = agqumbrella1_alias:minimum_premium_total +
+                                        agqumbrella1_alias:increased_million_premium
+    else
+        agqumbrella1_alias:FINAL_TOTAL = agqumbrella1_alias:ORIGINAL_TOTAL +
+                                        agqumbrella1_alias:increased_million_premium
+    l_repeat = ((agqumbrella1_alias:occurrence - cpsumdefault:occurrence)
+               divide cpsumdefault:occurrence)
+    if agqumbrella1_alias:mp_changed_by_user not one of 1 then
+        agqumbrella1_alias:total_minimum_premium = (l_minimum_premium +
+                                                  (L_each_addl_minimum * l_repeat))
+    agqumbrella1_alias:final_total = agqumbrella1_alias:final_total +
+                                    l_employers_liability_charge
+    End
+
+l_final_total = agqumbrella1_alias:final_total
+
+if cpsumdefault:mp_final_total = 1 and
+   agqumbrella1_alias:mp_changed_by_user not one of 1 then
+    begin
+    access agqumbrella1_alias, set agqumbrella1_alias:app_no = agqumbrella1:app_no, generic
+
+    change agqumbrella1_alias
+        begin
+        agqumbrella1_alias:total_minimum_premium = l_final_total
+        end
+    end
+end
+
+procedure minimum_premiums
+begin
+access cpsumminimums, set cpsumminimums:company_id = agqumbrella1:company_id,
+                          cpsumminimums:state = agqumbrella1:state,
+                          cpsumminimums:line_of_business = agqumbrella1:line_of_business, generic
+
+if l_no_vehicles = 0 then
+    l_no_vehicles = agqumbrella1:no_vehicles
+while cpsumminimums:company_id = agqumbrella1:company_id and
+      cpsumminimums:state = agqumbrella1:state and
+      cpsumminimums:line_of_business = agqumbrella1:line_of_business
+        begin
+        if (agqname:eff_date >= cpsumminimums:eff_date and
+           (agqname:eff_date <= cpsumminimums:exp_date or
+           cpsumminimums:exp_date = 0)) then
+            begin
+            if cpsumminimums:mp_changes = 0 then
+                begin
+                if agqumbrella1:office = 1 then
+                    begin
+                    if l_no_vehicles <= cpsumminimums:no_vehicles[1] and
+                       agqumbrella1:receipts <= cpsumminimums:office_minimum then
+                        l_minimum_premium = cpsumminimums:minimum_premium[1]
+                    else
+                    if l_no_vehicles > cpsumminimums:no_vehicles[1] and
+                       l_no_vehicles <= cpsumminimums:no_vehicles[2] and
+                       agqumbrella1:receipts <= cpsumminimums:office_minimum then
+                        l_minimum_premium = cpsumminimums:minimum_premium[2]
+
+                    if l_no_vehicles > cpsumminimums:no_vehicles[2] and
+                       agqumbrella1:receipts <= cpsumminimums:office_minimum then
+                        l_minimum_premium = cpsumminimums:minimum_premium[3]
+                    end
+                else
+                    begin
+                    if l_no_vehicles <= cpsumminimums:no_vehicles[1] and
+                       agqumbrella1:receipts < cpsumminimums:receipts_1[1] then
+                        l_minimum_premium = cpsumminimums:minimum_premium[1]
+                    else
+                    if ((l_no_vehicles > cpsumminimums:no_vehicles[1] and
+                       l_no_vehicles <= cpsumminimums:no_vehicles[2]) or
+                       (agqumbrella1:receipts => cpsumminimums:receipts_1[2] and
+                       agqumbrella1:receipts < cpsumminimums:receipts_2[2])) then
+                        l_minimum_premium = cpsumminimums:minimum_premium[2]
+
+                    if (l_no_vehicles > cpsumminimums:no_vehicles[2] or
+                       (agqumbrella1:receipts => cpsumminimums:receipts_1[3] and
+                       agqumbrella1:receipts <= cpsumminimums:receipts_2[3])) then
+                        l_minimum_premium = cpsumminimums:minimum_premium[3]
+                    end
+                end
+            else
+            if cpsumminimums:mp_changes = 3 then
+                begin
+                if l_no_vehicles <= cpsumminimums:no_vehicles[1] and
+                   agqumbrella1:receipts <= cpsumminimums:receipts_1[1] then
+                    begin
+                    l_minimum_premium = cpsumminimums:minimum_premium[1]
+                    l_minimum_premium_2 = cpsumminimums:above_million_mp[1]
+                    l_minimum_premium_3 = cpsumminimums:above_million_mp[3]
+                    end
+                else
+                    begin
+                    l_minimum_premium = cpsumminimums:minimum_premium[2]
+                    l_minimum_premium_2 = cpsumminimums:above_million_mp[2]
+                    l_minimum_premium_3 = cpsumminimums:above_million_mp[3]
+                    end
+                end
+            else
+                begin
+                if agqumbrella1:office = 1 then
+                    begin
+                    if l_no_vehicles <= cpsumminimums:no_vehicles[1] and
+                       agqumbrella1:receipts <= cpsumminimums:office_minimum then
+                        begin
+                        l_minimum_premium = cpsumminimums:minimum_premium[1]
+                        end
+                    else
+                    if l_no_vehicles <= cpsumminimums:no_vehicles[2] and
+                       agqumbrella1:receipts <= cpsumminimums:office_minimum then
+                        begin
+                        l_minimum_premium = cpsumminimums:minimum_premium[2]
+                        end
+                    else
+                    if l_no_vehicles <= cpsumminimums:no_vehicles[3] and
+                       agqumbrella1:receipts <= cpsumminimums:office_minimum then
+                        begin
+                        l_minimum_premium = cpsumminimums:minimum_premium[3]
+                        end
+
+                    if l_no_vehicles > cpsumminimums:no_vehicles[3] or
+                       agqumbrella1:receipts > cpsumminimums:office_minimum then
+                        begin
+                        l_minimum_premium = cpsumminimums:minimum_premium_1[1]
+                        end
+                    end
+                else
+                    begin
+                    if l_no_vehicles <= cpsumminimums:no_vehicles[1] and
+                       agqumbrella1:receipts < cpsumminimums:receipts_1[1] then
+                        begin
+                        l_minimum_premium = cpsumminimums:minimum_premium[1]
+                        end
+                    else
+                    if l_no_vehicles <= cpsumminimums:no_vehicles[2] and
+                       agqumbrella1:receipts < cpsumminimums:receipts_1[2] then
+                        l_minimum_premium = cpsumminimums:minimum_premium[2]
+                    else
+                    if l_no_vehicles <= cpsumminimums:no_vehicles[3] and
+                       agqumbrella1:receipts < cpsumminimums:receipts_1[3] then
+                        begin
+                        l_minimum_premium = cpsumminimums:minimum_premium[3]
+                        end
+
+                    if l_no_vehicles > cpsumminimums:no_vehicles[3] or
+                       agqumbrella1:receipts => cpsumminimums:receipts_1[3] then
+                        begin
+                        l_minimum_premium = cpsumminimums:minimum_premium_1[1]
+                        end
+                    end
+                end
+
+            l_increased_factor = cpsumminimums:increased_factor
+            l_each_addl_minimum = cpsumminimums:each_addl_minimum_premium
+            end
+
+        next cpsumminimums
+        end
+
+end
+
+procedure minimum_premiums_delos
+begin
+access agqumunderlying, set agqumunderlying:app_no = g_app_no, generic
+
+l_no_vehicles = 0
+while agqumunderlying:app_no = g_app_no
+    begin
+    if agqumunderlying:coverage = "A" then
+        begin
+        l_no_vehicles = l_no_vehicles +
+                        agqumunderlying:no_vehicles
+        end
+
+    next agqumunderlying
+    end
+
+if l_no_vehicles = 0 and
+   agqumbrella1:no_vehicles <> 0 then
+    l_no_vehicles = agqumbrella1:no_vehicles
+
+access cpsumminimums, set cpsumminimums:company_id = agqumbrella1:company_id,
+                          cpsumminimums:state = agqumbrella1:state,
+                          cpsumminimums:line_of_business = agqumbrella1:line_of_business, generic
+
+while cpsumminimums:company_id = agqumbrella1:company_id and
+      cpsumminimums:state = agqumbrella1:state and
+      cpsumminimums:line_of_business = agqumbrella1:line_of_business
+        begin
+        if (agqname:eff_date >= cpsumminimums:eff_date and
+           (agqname:eff_date <= cpsumminimums:exp_date or
+           cpsumminimums:exp_date = 0)) then
+            begin
+            l_mp_changes = cpsumminimums:mp_changes
+            end
+
+        next cpsumminimums
+        end
+
+if l_mp_changes = 2 then
+    begin
+    l_no_vehicles   = 0
+    l_no_vehicles_1 = 0
+    if agqumbrella1:no_autos[1] <> 0 then
+        l_no_vehicles   = agqumbrella1:no_autos[1]
+    if agqumbrella1:no_autos[2] <> 0 then
+        l_no_vehicles   = l_no_vehicles +
+                          agqumbrella1:no_autos[2]
+    if agqumbrella1:no_autos[3] <> 0 then
+        l_no_vehicles_1 = agqumbrella1:no_autos[3]
+    if agqumbrella1:no_autos[4] <> 0 then
+        l_no_vehicles_1 = l_no_vehicles_1 +
+                           agqumbrella1:no_autos[4]
+    if agqumbrella1:no_autos[5] <> 0 then
+        l_no_vehicles_1 = l_no_vehicles_1 +
+                          agqumbrella1:no_autos[5]
+    end
+
+access cpsumminimums, set cpsumminimums:company_id = agqumbrella1:company_id,
+                          cpsumminimums:state = agqumbrella1:state,
+                          cpsumminimums:line_of_business = agqumbrella1:line_of_business, generic
+
+while cpsumminimums:company_id = agqumbrella1:company_id and
+      cpsumminimums:state = agqumbrella1:state and
+      cpsumminimums:line_of_business = agqumbrella1:line_of_business
+        begin
+        if (agqname:eff_date >= cpsumminimums:eff_date and
+           (agqname:eff_date <= cpsumminimums:exp_date or
+           cpsumminimums:exp_date = 0)) then
+            begin
+            l_mp_changes = cpsumminimums:mp_changes
+            if cpsumminimums:mp_changes = 1 then
+                begin
+                if l_no_vehicles = 0 then
+                    begin
+                    l_minimum_premium = cpsumminimums:each_addl_minimum_premium
+                    end
+                else
+                if l_no_vehicles <= cpsumminimums:no_vehicles[1] and
+                   agqumbrella1:receipts >= cpsumminimums:receipts_1[1] and
+                   agqumbrella1:receipts < cpsumminimums:receipts_1[2] then
+                    begin
+                    l_minimum_premium = cpsumminimums:minimum_premium[1]
+                    end
+                else
+                if l_no_vehicles <= cpsumminimums:no_vehicles[2] and
+                   agqumbrella1:receipts >= cpsumminimums:receipts_1[2] and
+                   agqumbrella1:receipts < cpsumminimums:receipts_1[2] then
+                    l_minimum_premium = cpsumminimums:minimum_premium[2]
+                else
+                if l_no_vehicles > cpsumminimums:no_vehicles[3] or
+                   agqumbrella1:receipts => cpsumminimums:receipts_1[3] then
+                    begin
+                    l_minimum_premium = cpsumminimums:minimum_premium[3]
+                    end
+
+                l_minimum_premium_without_auto = cpsumminimums:each_addl_minimum_premium
+                l_increased_factor = cpsumminimums:increased_factor
+                l_each_addl_minimum = l_minimum_premium
+                end
+            else
+            begin
+            if cpsumminimums:mp_changes = 2 then
+                begin
+                if l_no_vehicles_1 > 0 or
+                   l_no_vehicles > cpsumminimums:no_vehicles[2] or
+                   agqumbrella1:liquor <> 0 or
+                   agqumbrella1:receipts > cpsumminimums:receipts_2[2] then
+                    begin
+                    l_minimum_premium = cpsumminimums:minimum_premium[3]
+                    l_minimum_applies = "Y"
+                    end
+                else
+                if l_no_vehicles <= cpsumminimums:no_vehicles[1] and
+                   agqumbrella1:receipts < cpsumminimums:receipts_1[2] then
+                    begin
+                    l_minimum_premium = cpsumminimums:minimum_premium[1]
+                    l_minimum_applies = "Y"
+                    end
+                else
+                if ((l_no_vehicles > cpsumminimums:no_vehicles[1] and
+                   l_no_vehicles <= cpsumminimums:no_vehicles[2]) or
+                   (agqumbrella1:receipts >= cpsumminimums:receipts_1[2] and
+                   agqumbrella1:receipts <= cpsumminimums:receipts_2[2])) then
+                    begin
+                    l_minimum_premium = cpsumminimums:minimum_premium[2]
+                    l_minimum_applies = "Y"
+                    end
+
+                l_increased_factor = cpsumminimums:increased_factor
+                l_each_addl_minimum = l_minimum_premium
+                end
+            end
+            end
+
+        next cpsumminimums
+        end
+
+end
+
+procedure terrorism
+begin
+access agqumbrella1_alias, set agqumbrella1_alias:app_no = agqumbrella1:app_no, generic
+
+-- terrorism
+L_EFF_DATE_1 = Dateadd(agqNAME:EFF_DATE,0,1)
+If agqNAME:EXP_DATE < L_EFF_DATE_1 Then
+    Begin
+    L_DAYS_RATE = L_final_TOTAL Divide 365
+    L_DAYS = agqNAME:EXP_DATE - agqNAME:EFF_DATE
+    L_PRO_RATA_PREMIUM = L_DAYS * L_DAYS_RATE
+    L_final_TOTAL = L_PRO_RATA_PREMIUM
+    l_sub = 1
+    while l_sub < 6
+        begin
+        L_DAYS_RATE = l_increase_TOTAL[l_sub] Divide 365
+        L_DAYS = agqNAME:EXP_DATE - agqNAME:EFF_DATE
+        L_PRO_RATA_PREMIUM = L_DAYS * L_DAYS_RATE
+        L_increase_total[l_sub] = L_PRO_RATA_PREMIUM
+        L_DAYS_RATE = agqumbrella1_alias:employers_liability_charge[l_sub] Divide 365
+        L_DAYS = agqNAME:EXP_DATE - agqNAME:EFF_DATE
+        L_PRO_RATA_PREMIUM = L_DAYS * L_DAYS_RATE
+        change agqumbrella1_alias
+            begin
+            agqumbrella1_alias:employers_liability_charge[l_sub] = L_PRO_RATA_PREMIUM
+            end
+        l_sub = l_sub + 1
+        end
+    End
+
+    if agqumbrella1:remove_terrorism_form = 0 then
+        begin
+        do get_terrorism_premium
+        end
+    else
+        begin
+        do add_terrorism_exclusion
+
+        if sfscompany:boiler_rating = 4 then
+            do access_cpsumrisk
+
+        if sfscompany:boiler_rating = 4 then
+            begin
+            l_terrorism_premium_1 = l_final_total - l_total_auto - l_increased_million_premium
+            if l_terrorism_premium_1 < l_minimum_premium_without_auto then
+                l_terrorism_premium_1 = l_minimum_premium_without_auto
+            if agqumbrella1:occurrence > 1000000 then
+                begin
+                l_sub = 1
+                l_terrorism_premium_3 = l_terrorism_premium_1
+                l_repeat = ((agqumbrella1_alias:occurrence - cpsumdefault:occurrence)
+                            divide cpsumdefault:occurrence)
+                while l_sub <= l_repeat
+                    begin
+                    l_terrorism_premium_2 = l_terrorism_premium_3 * l_increased_factor
+                    if l_terrorism_premium_2 < l_minimum_premium_without_auto then
+                        begin
+                        l_minimum_premium_without_auto = l_minimum_premium_without_auto
+                        l_terrorism_premium_1 = l_terrorism_premium_1 +
+                                                l_minimum_premium_without_auto
+                        l_terrorism_premium_3 = l_minimum_premium_without_auto
+                        end
+                    else
+                        begin
+                        l_terrorism_premium_3 = l_terrorism_premium_2
+                        l_terrorism_premium_1 = l_terrorism_premium_1 + l_terrorism_premium_2
+                        end
+
+                    l_sub = l_sub + 1
+                    end
+                end
+
+            l_tpd6_terrorism_premium = l_terrorism_premium_1 * l_terror_percentage
+            end
+        else
+            begin
+            L_tpd6_TERRORISM_PREMIUM = l_final_total * L_TERROR_PERCENTAGE
+            end
+
+        If L_tpd6_TERRORISM_PREMIUM <= L_TERROR_MINIMUM and
+           l_terror_minimum <> 0 Then
+            begin
+            L_tpd6_TERRORISM_PREMIUM = L_TERROR_MINIMUM
+            end
+
+        if sfsline:lob_code one of "CPORTFOLIO" then
+            begin
+            access agqmastsupp_alias, set agqmastsupp_alias:app_no = g_app_no,
+                                          agqmastsupp_alias:line_of_business = agqumbrella1:line_of_business, generic
+
+            change agqmastsupp_alias
+                begin
+                agqmastsupp_alias:terrorism_premium = 0
+                end
+            end
+        else
+            begin
+            access agqmaster_alias, set agqmaster_alias:app_no = g_app_no, generic
+
+            change agqmaster_alias
+                begin
+                agqmaster_alias:terrorism_premium = 0
+                agqmaster_alias:tpd6_terrorism_premium = l_tpd6_terrorism_premium
+                end
+            end
+
+        end
+
+End
+
+procedure remove_terrorism_forms
+begin
+do access_sfsmsoterror
+Access agqend, Set agqend:app_no = G_app_no, generic
+
+L_FOUND = 0
+While agqend:app_no = G_app_no
+        begin
+        If agqend:CODE = SFSMSOTERROR:TERRORISM_FORM_TO_ADD or
+           agqend:code = SFSMSOTERROR:terrorism_form_to_remove Then
+            begin
+            Delete agqend
+            end
+
+        Next agqend
+        end
+
+end
+
+procedure add_terrorism_exclusion
+begin
+access sfscompany, set sfscompany:company_id = agqumbrella1:company_id, generic
+
+if sfscompany:boiler_rating = 4 then
+    begin
+    do access_sfsmsoterror
+    do access_cpsumrisk
+    end
+else
+    begin
+    Do ACCESS_SFSMSOTERROR
+    end
+
+Access agqend, Set agqend:app_no = G_app_no, generic
+
+L_FOUND = 0
+l_remove_terror_found = 0
+While agqend:app_no = G_app_no
+    begin
+    If agqend:CODE = SFSMSOTERROR:TERRORISM_FORM_TO_REMOVE Then
+        delete agqend
+
+    if agqend:code = uppercase(sfsmsoterror:tpd_forms_to_print[2]) then
+        delete agqend
+
+    next agqend
+    end
+
+Do ACCESS_SFSMSOTERROR
+Do SUBCODE
+L_CODE = SFSMSOTERROR:TERRORISM_FORM_TO_REMOVE
+Do ACCESS_KEY
+l_sub_code = L_sub_code + 10
+Add agqend  --ADDS ENDORSEMENTS TO agqend
+    Begin
+    agqend:app_no       = g_app_no
+    agqend:prem_no        = 1
+    agqend:build_no       = 1
+    agqend:SUB_CODE       = L_SUB_CODE
+    agqend:CODE           = SFSMSOTERROR:TERRORISM_FORM_TO_REMOVE
+    agqend:FORM_EDITION   = l_FORM_EDITION
+    agqend:manual_PREMIUM = 0
+    agqend:DESCRIPTION    = l_DESCRIPTION
+    agqend:lob_end_code   = "U"
+    agqend:terrorism_Form = 1
+    end
+
+if ((sfscompany:boiler_rating = 4 and
+   agqname:quote_type = "R") or
+   (sfscompany:boiler_rating = 4 and
+   agqname:previous_policy_no <> 0)) then
+    begin
+    Do SUBCODE
+    l_sub_code = l_sub_code + 10
+    L_CODE     = uppercase(SFSMSOTERROR:tpd_forms_to_print[2])
+    Do ACCESS_KEY
+    Add agqEND
+        Begin
+        agqEND:app_no         = G_app_no
+        agqEND:PREM_NO          = 1
+        agqEND:BUILD_NO         = 1
+        agqEND:SUB_CODE         = L_SUB_CODE
+        agqEND:CODE             = l_code
+        agqEND:FORM_EDITION     = L_FORM_EDITION
+        agqEND:PREMIUM          = 0
+        agqEND:DESCRIPTION      = L_DESCRIPTION
+        agqend:terrorism_form   = 1
+        agqend:lob_end_code     = "U"
+        end
+    End
+
+end
+
+Procedure GET_TERRORISM_PREMIUM
+begin
+if sfscompany:boiler_rating <> 4 then
+    Do ACCESS_SFSMSOTERROR
+else
+    do access_cpsumrisk
+
+Access agqend, Set agqend:app_no = G_app_no, generic
+
+L_FOUND = 0
+l_remove_terror_found = 0
+While agqend:app_no = G_app_no
+        begin
+        If agqend:CODE = SFSMSOTERROR:TERRORISM_FORM_TO_ADD Then
+            delete agqend
+        if agqend:code = uppercase(sfsmsoterror:tpd_forms_to_print[2]) then
+            delete agqend
+
+        next agqend
+        end
+
+if l_terror_percentage <> 0 then
+    begin
+    if sfscompany:boiler_rating = 4 then
+        begin
+        l_terrorism_premium_1 = l_final_total - l_total_auto - l_increased_million_premium
+        if l_terrorism_premium_1 < l_minimum_premium_without_auto then
+            l_terrorism_premium_1 = l_minimum_premium_without_auto
+        if agqumbrella1:occurrence > 1000000 then
+            begin
+            l_sub = 1
+            l_terrorism_premium_3 = l_terrorism_premium_1
+
+            l_repeat = ((agqumbrella1_alias:occurrence - cpsumdefault:occurrence)
+                       divide cpsumdefault:occurrence)
+
+            while l_sub <= l_repeat
+                begin
+                l_terrorism_premium_2 = l_terrorism_premium_3 * l_increased_factor
+                if l_terrorism_premium_2 < l_minimum_premium_without_auto then
+                    begin
+                    l_minimum_premium_without_auto = l_minimum_premium_without_auto
+                    l_terrorism_premium_1 = l_terrorism_premium_1 +
+                                            l_minimum_premium_without_auto
+                    l_terrorism_premium_3 = l_minimum_premium_without_auto
+                    end
+                else
+                    begin
+                    l_terrorism_premium_3 = l_terrorism_premium_2
+                    l_terrorism_premium_1 = l_terrorism_premium_1 + l_terrorism_premium_2
+                    end
+
+                l_sub = l_sub + 1
+                end
+            end
+
+        l_terrorism_premium = l_terrorism_premium_1 * l_terror_percentage
+        end
+    else
+        begin
+        L_TERRORISM_PREMIUM = l_final_total * L_TERROR_PERCENTAGE
+        end
+
+    If L_TERRORISM_PREMIUM <= L_TERROR_MINIMUM Then
+        begin
+        L_TERRORISM_PREMIUM = L_TERROR_MINIMUM
+        end
+
+   Do ADD_TERRORISM_ENDORSEMENT
+   end
+end
+
+Procedure ADD_TERRORISM_ENDORSEMENT
+begin
+--MUST REACCESS THE FILE THE WHILE LOOP ABOVE HAVE MOVED ME PAST WHERE i
+--WANT TO BE.
+Do SUBCODE
+L_CODE = SFSMSOTERROR:TERRORISM_FORM_TO_ADD
+Do ACCESS_KEY
+l_sub_code = L_sub_code + 10
+Add agqend  --ADDS ENDORSEMENTS TO agqend
+    Begin
+    agqend:app_no       = g_app_no
+    agqend:prem_no        = 1
+    agqend:build_no       = 1
+    agqend:SUB_CODE       = L_SUB_CODE
+    agqend:CODE           = SFSMSOTERROR:TERRORISM_FORM_TO_ADD
+    agqend:FORM_EDITION   = l_FORM_EDITION
+    agqend:manual_PREMIUM = L_TERRORISM_PREMIUM
+    agqend:DESCRIPTION    = l_DESCRIPTION
+    agqend:lob_end_code   = "U"
+    agqend:terrorism_Form = 1
+    end
+
+if sfsline:lob_code one of "CPORTFOLIO" then
+    begin
+    access agqmastsupp_alias, set agqmastsupp_alias:app_no = g_app_no,
+                                  agqmastsupp_alias:line_of_business = agqumbrella1:line_of_business, generic
+
+    change agqmastsupp_alias
+        begin
+        agqmastsupp_alias:terrorism_premium = l_terrorism_premium
+        end
+    end
+else
+    begin
+    access agqmaster_alias, set agqmaster_alias:app_no = g_app_no, generic
+
+    change agqmaster_alias
+        begin
+        agqmaster_alias:terrorism_premium = l_terrorism_premium
+        end
+    end
+
+end
+
+Procedure ACCESS_SFSMSOTERROR
+begin
+Access SFSMSOTERROR, Set SFSMSOTERROR:COMPANY_ID       = agqumbrella1:company_id,
+                         SFSMSOTERROR:STATE            = agqumbrella1:STATE,
+                         SFSMSOTERROR:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS, Generic
+
+While SFSMSOTERROR:COMPANY_ID       = agqumbrella1:company_id And
+      SFSMSOTERROR:STATE            = agqumbrella1:STATE And
+      SFSMSOTERROR:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS
+        begin
+        if agqname:eff_date >= sfsmsoterror:eff_date then
+             begin
+             L_TERROR_EFF_DATE   = SFSMSOTERROR:EFF_DATE
+             L_TERROR_PERCENTAGE = SFSMSOTERROR:PERCENTAGE
+             L_TERROR_MINIMUM    = SFSMSOTERROR:MINIMUM_PREMIUM
+             end
+        Next SFSMSOTERROR
+        end
+
+Access SFSMSOTERROR, Set SFSMSOTERROR:COMPANY_ID       = agqumbrella1:company_id,
+                         SFSMSOTERROR:STATE            = agqumbrella1:STATE,
+                         SFSMSOTERROR:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS,
+                         SFSMSOTERROR:EFF_DATE         = L_TERROR_EFF_DATE, Exact
+end
+
+Procedure ACCESS_cpsumrisk
+begin
+Access cpsumrisk, Set cpsumrisk:COMPANY_ID       = agqumbrella1:company_id,
+                      cpsumrisk:STATE            = agqumbrella1:STATE,
+                      cpsumrisk:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS,
+                      cpsumrisk:risk_type        = agqumbrella1:risk_type, Generic
+
+While cpsumrisk:COMPANY_ID       = agqumbrella1:company_id And
+      cpsumrisk:STATE            = agqumbrella1:STATE And
+      cpsumrisk:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS and
+      cpsumrisk:risk_type        = agqumbrella1:risk_type
+        begin
+        if agqname:eff_date >= cpsumrisk:eff_date then
+             begin
+             L_TERROR_EFF_DATE   = cpsumrisk:EFF_DATE
+             L_TERROR_PERCENTAGE = cpsumrisk:terrorism_factor divide 100
+             end
+
+        Next cpsumrisk
+        end
+
+Access cpsumrisk, Set cpsumrisk:COMPANY_ID       = agqumbrella1:company_id,
+                      cpsumrisk:STATE            = agqumbrella1:STATE,
+                      cpsumrisk:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS,
+                      cpsumrisk:risk_type        = agqumbrella1:risk_type,
+                      cpsumrisk:EFF_DATE         = L_TERROR_EFF_DATE, Exact
+
+end
+
+Procedure ACCESS_KEY
+Begin
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqumbrella1:company_id ,
+                      SFSOPTEND:STATE            = agqumbrella1:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqumbrella1:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while sfsoptend:company_id = agqumbrella1:company_id and
+      sfsoptend:state = agqumbrella1:state and
+      sfsoptend:line_of_business = agqumbrella1:line_of_business and
+      sfsoptend:code = l_code
+        begin
+        if (agqname:eff_date >= sfsoptend:eff_date and
+           (agqname:eff_date <= sfsoptend:exp_date or
+           sfsoptend:exp_date = 0)) then
+            begin
+            l_Form_edition = sfsoptend:form_edition
+            l_description = sfsoptend:description
+            end
+        next sfsoptend
+        end
+End
+
+Procedure SUBCODE
+Begin
+l_prem_no = 1
+l_build_no = 1
+Access agqend_ALIAS, Set agqend_ALIAS:app_no = g_app_no ,
+                         agqend_alias:prem_no = l_prem_no,
+                         agqend_alias:build_no = l_build_no, generic
+
+L_SUB_CODE = 0
+while agqend_ALIAS:app_no = g_app_no and
+      agqend_alias:prem_no = l_prem_no and
+      agqend_alias:build_no = l_build_no
+        begin
+
+        L_SUB_CODE = agqend_ALIAS:SUB_CODE + 10
+
+        Next agqend_ALIAS
+        End
+End
+
+Procedure FINAL_TOTAL_1
+Begin
+If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+    L_FINAL_TOTAL_1 = L_final_TOTAL + L_INSTALLMENT + l_terrorism_premium
+Else
+    L_FINAL_TOTAL_1 = L_final_TOTAL + l_terrorism_premium
+
+access sfssurcharge, set sfssurcharge:company_id = agqumbrella1:company_id,
+                         sfssurcharge:state = agqumbrella1:state,
+                         sfssurcharge:line_of_business = agqumbrella1:line_of_business, generic
+
+l_surcharge_date = 0
+while sfssurcharge:company_id = agqumbrella1:company_id and
+      sfssurcharge:state = agqumbrella1:state and
+      sfssurcharge:line_of_business = agqumbrella1:line_of_business
+        begin
+        if (agqname:eff_date >= sfssurcharge:eff_date and
+           (l_surcharge_date < sfssurcharge:eff_date or
+           l_surcharge_date = 0)) then
+            begin
+            l_surcharge_date    = sfssurcharge:eff_date
+            l_surcharge_factor  = sfssurcharge:surcharge_factor
+            l_surcharge_minimum = sfssurcharge:minimum_premium
+            end
+        next sfssurcharge
+        end
+
+access agqumbrella1_alias, set agqumbrella1_alias:app_no = agqumbrella1:app_no, generic
+
+L_SURCHARGE = L_FINAL_TOTAL_1 * L_SURCHARGE_FACTOR
+If L_SURCHARGE < L_SURCHARGE_MINIMUM Then
+    L_SURCHARGE = L_SURCHARGE_MINIMUM
+
+if sfsline:lob_code one of "CPORTFOLIO" then
+    begin
+    access agqamt, set agqamt:app_no = g_app_no, exact
+
+    if agqamt:app_no = g_app_no then
+        change agqamt
+            begin
+            agqamt:lob_totals[4]     = l_final_total_1 - l_terrorism_premium
+            agqamt:lob_surcharge[4]  = l_surcharge
+            agqamt:lob_terrorism[4]  = l_terrorism_premium
+            end
+    else
+        add agqamt
+            begin
+            agqamt:app_no          = g_app_no
+            agqamt:lob_totals[4]     = l_final_total_1 - l_terrorism_premium
+            agqamt:lob_surcharge[4]  = l_surcharge
+            agqamt:lob_terrorism[4]  = l_terrorism_premium
+            end
+
+    Access agqmastsupp_alias, Set agqmastsupp_alias:app_no = G_app_no,
+                                  agqmastsupp_alias:line_of_business = agqumbrella1:line_of_business, Generic
+
+    If agqmastsupp_alias:app_no = G_app_no and
+       agqmastsupp_alias:line_of_business = agqumbrella1:line_of_business Then
+        Begin
+        Change agqmastsupp_alias
+            Begin
+            agqmastsupp_alias:TOTAL[1] = L_increase_total[1] -- 1st million
+            agqmastsupp_alias:TOTAL[2] = L_increase_total[2] -- 2nd
+            agqmastsupp_alias:TOTAL[3] = L_increase_total[3] -- 3rd
+            agqmastsupp_alias:TOTAL[4] = L_increase_total[4] -- 4th
+            agqmastsupp_alias:TOTAL[5] = L_increase_total[5] -- 5th
+            agqmastsupp_alias:other_totals[11] = l_increase_total[6]
+            agqmastsupp_alias:other_totals[12] = l_increase_total[7]
+            agqmastsupp_alias:other_totals[13] = l_increase_total[8]
+            agqmastsupp_alias:other_totals[14] = l_increase_total[9]
+            agqmastsupp_alias:other_totals[15] = l_increase_total[10]
+            agqmastsupp_alias:other_totals[1]  = agqumbrella1_alias:employers_liability_charge[1]
+            agqmastsupp_alias:other_totals[2]  = agqumbrella1_alias:employers_liability_charge[2]
+            agqmastsupp_alias:other_totals[3]  = agqumbrella1_alias:employers_liability_charge[3]
+            agqmastsupp_alias:other_totals[4]  = agqumbrella1_alias:employers_liability_charge[4]
+            agqmastsupp_alias:other_totals[5]  = agqumbrella1_alias:employers_liability_charge[5]
+            agqmastsupp_alias:other_totals[6]  = agqumbrella1_alias:employers_liability_charge_1[1]
+            agqmastsupp_alias:other_totals[7]  = agqumbrella1_alias:employers_liability_charge_1[2]
+            agqmastsupp_alias:other_totals[8]  = agqumbrella1_alias:employers_liability_charge_1[3]
+            agqmastsupp_alias:other_totals[9]  = agqumbrella1_alias:employers_liability_charge_1[4]
+            agqmastsupp_alias:other_totals[10] = agqumbrella1_alias:employers_liability_charge_1[5]
+            agqmastsupp_alias:total[6] = l_original_total
+            agqmastsupp_alias:total[7] = l_minimum_premium_total
+            agqmastsupp_alias:total[8] = l_changed_premium
+            agqmastsupp_alias:total[9] = l_increased_million_premium
+            agqmastsupp_alias:total[10] = l_final_total
+            agqmastsupp_alias:TOTAL[18] = L_FINAL_TOTAL_1 - l_terrorism_premium
+            agqmastsupp_alias:TOTAL[20] = L_FINAL_TOTAL_1 + l_surcharge
+            agqmastsupp_alias:SURCHARGE = L_SURCHARGE
+            agqmastsupp_alias:RAW_PREMIUM_AMT_DUE = L_FINAL_TOTAL_1
+            agqmastsupp_alias:TOTAL[20] = L_FINAL_TOTAL_1 + l_surcharge
+            agqmastsupp_alias:AMT_DUE_TOTAL[20] = L_FINAL_TOTAL_1 + l_surcharge
+            end
+        End
+    End
+else
+    begin
+    Access agqMASTER_ALIAS, Set agqMASTER_ALIAS:app_no = agqumbrella1:app_no, Generic
+
+    If agqMASTER_ALIAS:app_no = agqumbrella1:app_no Then
+        Begin
+        Change agqMASTER_ALIAS
+            Begin
+            agqMASTER_ALIAS:TOTAL[1] = L_increase_total[1] -- 1st million
+            agqMASTER_ALIAS:TOTAL[2] = L_increase_total[2] -- 2nd
+            agqMASTER_ALIAS:TOTAL[3] = L_increase_total[3] -- 3rd
+            agqMASTER_ALIAS:TOTAL[4] = L_increase_total[4] -- 4th
+            agqMASTER_ALIAS:TOTAL[5] = L_increase_total[5] -- 5th
+            agqmaster_alias:other_totals[11] = l_increase_total[6]
+            agqmaster_alias:other_totals[12] = l_increase_total[7]
+            agqmaster_alias:other_totals[13] = l_increase_total[8]
+            agqmaster_alias:other_totals[14] = l_increase_total[9]
+            agqmaster_alias:other_totals[15] = l_increase_total[10]
+            agqmaster_alias:other_totals[1]  = agqumbrella1_alias:employers_liability_charge[1]
+            agqmaster_alias:other_totals[2]  = agqumbrella1_alias:employers_liability_charge[2]
+            agqmaster_alias:other_totals[3]  = agqumbrella1_alias:employers_liability_charge[3]
+            agqmaster_alias:other_totals[4]  = agqumbrella1_alias:employers_liability_charge[4]
+            agqmaster_alias:other_totals[5]  = agqumbrella1_alias:employers_liability_charge[5]
+            agqmaster_alias:other_totals[6]  = agqumbrella1_alias:employers_liability_charge_1[1]
+            agqmaster_alias:other_totals[7]  = agqumbrella1_alias:employers_liability_charge_1[2]
+            agqmaster_alias:other_totals[8]  = agqumbrella1_alias:employers_liability_charge_1[3]
+            agqmaster_alias:other_totals[9]  = agqumbrella1_alias:employers_liability_charge_1[4]
+            agqmaster_alias:other_totals[10] = agqumbrella1_alias:employers_liability_charge_1[5]
+            agqmaster_alias:total[6] = l_original_total
+            agqmaster_alias:total[7] = l_minimum_premium_total
+            agqmaster_alias:total[8] = l_changed_premium
+            agqmaster_alias:total[9] = l_increased_million_premium
+            agqmaster_alias:total[10] = l_final_total
+            agqMASTER_ALIAS:TOTAL[18] = L_FINAL_TOTAL_1 - l_terrorism_premium
+            agqMASTER_ALIAS:TOTAL[20] = L_FINAL_TOTAL_1 + l_surcharge
+            agqMASTER_ALIAS:INSTALLMENT_CHARGE = L_INSTALLMENT
+            agqMASTER_ALIAS:SURCHARGE = L_SURCHARGE
+            agqMASTER_ALIAS:RAW_PREMIUM_AMT_DUE = L_FINAL_TOTAL_1
+            agqMASTER_ALIAS:TOTAL[20] = L_FINAL_TOTAL_1 + l_surcharge
+            agqMASTER_ALIAS:AMT_DUE_TOTAL[20] = L_FINAL_TOTAL_1 + l_surcharge
+            agqmaster_alias:tpd6_terrorism_premium = l_tpd6_terrorism_premium
+            end
+        End
+    End
+
+End
+
+Procedure ACCESS_agqEND
+Begin
+g_prem_no = 1
+g_build_no = 1
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+l_add_endorsement = "Y"
+L_wc_1 = "N"
+l_wc_2 = "N"
+l_auto_1 = "N"
+l_auto_2 = "N"
+l_hired_1 = "N"
+l_hired_2 = "N"
+l_pi_1 = "N"
+l_pi_2 = "N"
+l_prod_1 = "N"
+l_prod_2 = "N"
+l_endorsement_exists = "N"
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    If agqEND:CODE = L_CODE_1 Then
+        L_WC_1 = "Y"
+    if agqend:code = l_code_2 then
+        l_wc_2 = "Y"
+    If agqEND:CODE = L_CODE_3 Then
+        L_auto_1 = "Y"
+    if agqend:code = l_code_4 then
+        l_auto_2 = "Y"
+    If agqEND:CODE = L_CODE_5 Then
+        L_hired_1 = "Y"
+    if agqend:code = l_code_6 then
+        l_hired_2 = "Y"
+    If agqEND:CODE = L_CODE_7 Then
+        L_pi_1 = "Y"
+    if agqend:code = l_code_8 then
+        l_pi_2 = "Y"
+    If agqEND:CODE = L_CODE_9 Then
+        L_prod_1 = "Y"
+    if agqend:code = l_code_10 then
+        l_prod_2 = "Y"
+    If agqEND:CODE = L_CODE Then
+        begin
+        L_endorsement_exists = "Y"
+        l_add_Endorsement = "N"
+        end
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND
+Begin
+g_prem_no = 1
+g_build_no = 1
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> G_app_no Or
+            agqEND:PREM_NO <> G_PREM_NO Or
+            agqEND:BUILD_NO <> G_BUILD_NO
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access agqumbrella1_ALIAS, Set agqumbrella1_ALIAS:app_no = G_app_no, generic
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqumbrella1:company_id,
+                      SFSOPTEND:STATE = agqumbrella1:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqumbrella1:line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqumbrella1:company_id Or
+            SFSOPTEND:STATE <> agqumbrella1:state Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqumbrella1:line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqNAME:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqname:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+access agqend, set agqend:app_no = g_app_no,
+                   agqend:prem_no = g_prem_no,
+                   agqend:build_no = g_build_no, generic
+
+        add agqEND
+            Begin
+            agqend:app_no             =       agqumbrella1:app_no
+            agqend:prem_no              =       1
+            agqend:build_no             =       1
+            agqend:sub_code             =       l_sub_code
+            agqEND:CODE                 =       L_CODE
+            agqEND:FORM_EDITION         =       L_FORM_EDITION
+            agqEND:DESCRIPTION          =       L_DESCRIPTION
+            agqEND:PREMIUM              =       0
+            agqend:lob_end_code         =       "U"
+            agqend:terrorism_Form       =       0
+            end
+
+
+End
+
+Procedure CHANGE_agqEND
+Begin
+g_prem_no = 1
+g_build_no = 1
+Access agqumbrella1_ALIAS, Set agqumbrella1_ALIAS:app_no = G_app_no, generic
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqumbrella1:company_id,
+                      SFSOPTEND:STATE = agqumbrella1:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqumbrella1:line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqumbrella1:company_id Or
+            SFSOPTEND:STATE <> agqumbrella1:state Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqumbrella1:line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqNAME:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqname:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+access agqend, set agqend:app_no = g_app_no,
+                   agqend:prem_no = g_prem_no,
+                   agqend:build_no = g_build_no, generic
+
+while agqend:app_no = g_app_no and
+      agqend:prem_no = g_prem_no and
+      agqend:build_no = g_build_no
+        begin
+        if agqend:code = l_change_code then
+        change agqEND
+            Begin
+            agqEND:CODE                 =       L_CODE
+            agqEND:FORM_EDITION         =       L_FORM_EDITION
+            agqEND:DESCRIPTION          =       L_DESCRIPTION
+            agqEND:PREMIUM              =       0
+            agqend:lob_end_code         =       "U"
+            agqend:terrorism_Form       =       0
+            end
+
+        next agqend
+        End
+
+End
+
+Procedure DELETE_agqEND_hired
+Begin
+Access agqEND, Set agqEND:app_no = G_app_no ,
+                   agqEND:PREM_NO = G_PREM_NO,
+                   agqEND:BUILD_NO = G_BUILD_NO, Generic
+
+while agqEND:app_no = G_app_no and
+      agqEND:PREM_NO = G_PREM_NO and
+      agqEND:BUILD_NO = G_BUILD_NO
+        begin
+        If agqEND:CODE = L_CODE_5 or
+           agqend:code = L_code_6 Then
+            Delete agqEND
+
+        Next agqEND
+        End
+
+End
+
+Procedure DELETE_agqEND
+Begin
+l_prem_no = 1
+l_build_no = 1
+Access agqEND, Set agqEND:app_no = agqumbrella1:app_no ,
+                   agqEND:PREM_NO = L_PREM_NO,
+                   agqEND:BUILD_NO = L_BUILD_NO, Generic
+
+l_deleted = "N"
+while agqEND:app_no = agqumbrella1:app_no and
+      agqEND:PREM_NO = L_PREM_NO and
+      agqEND:BUILD_NO = L_BUILD_NO
+        begin
+        If agqEND:CODE = L_CODE and
+           l_deleted = "N" Then
+            begin
+            l_deleted = "Y"
+            Delete agqEND
+            end
+
+        Next agqEND
+        End
+
+End
+
+End

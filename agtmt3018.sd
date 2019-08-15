@@ -1,0 +1,768 @@
+%%                 
+Screen
+        Name = "agtmt3018";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqpersonal" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_form[1];
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_article[20],
+                      g_answer[1],
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_both[1],
+                                    l_prior_both[1],
+                                    l_remove_form[1],
+                                    l_rate[6]=0/dec=3,
+                                    l_per[5]=0,
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ,
+                                    l_limit[8],
+                                    l_alarm_factor[4]=0/dec=3,
+                                    l_alarm_factor_1[2]=0,
+                                    l_premium_1[8]=0/dec=4,
+                                    l_premium_2[8]=0/dec=4,
+                                    l_premium_3[8]=0/dec=4,
+                                    l_premium_4[8]=0/dec=4,
+                                    l_premium_5[8]=0/dec=4,
+                                    l_premium_6[8]=0/dec=4,
+                                    l_ctr[1]=0,
+                                    l_agqend_sub_code[4] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_mpl49[1],
+                     l_system_id[15],
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_screen[10],
+                     l_valid[1]="N",
+                     l_included[18]="INCLUDED",
+                     l_description[55] ;
+
+        Access agqpersonal,
+           Set agqpersonal:app_NO   = G_app_NO ,
+               agqpersonal:prem_no  = g_prem_no,
+               agqpersonal:build_no = g_build_no;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access plsdefault, set plsdefault:company_id = agqpersonal:company_id,
+                       plsdefault:line_of_business = agqpersonal:line_of_business, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : if agqpersonal:company_id = "FARMERS" and
+                   agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+                   plsdefault:rating_algorithm_date <> 0 then
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3_new,iconname,"title_mho3.bmp")
+                      case 4  : setproperty(t_mho4_new,iconname,"title_mho4.bmp")
+                      case 6  : setproperty(t_mho6_new,iconname,"title_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3_new,iconname,"")
+                                setproperty(t_mho4_new,iconname,"")
+                                setproperty(t_mho6_new,iconname,"")
+                                end
+                      end
+                    end
+                else
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                      case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                      case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3,iconname,"")
+                                setproperty(t_mho4,iconname,"")
+                                setproperty(t_mho6,iconname,"")
+                                end
+                      end
+                   end
+
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access plsdefault, set plsdefault:company_id = agqpersonal:company_id,
+                       plsdefault:line_of_business = agqpersonal:line_of_business, generic
+
+if agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+   agqpersonal:company_id = "FARMERS" and
+   plsdefault:rating_algorithm_date <> 0 then
+    hide(old_rating_fn)
+else
+    hide(new_rating_fn)
+
+Access Validation
+If agqpersonal:app_NO <> G_app_NO or
+   agqpersonal:prem_no <> g_prem_no or
+   agqpersonal:build_no <> g_build_no Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+    fontstyle = BOLD
+
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho3_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,20 tagged t_mho4_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho6_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "MPL 70 - Protective Devices"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt3018.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+panel at 8,5 to 25,100 tagged new_rating_fn
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        Scrollbarpolicy    = asneeded
+        }
+{
+components
+          guidetext at 1,1 to 1,45     tagged display_information_box
+                properties
+                  {
+                    text = "Alarm Reporting to:"
+                    fontsize = 12
+                    fontstyle = BOLD
+                    underlined = true
+                    transparent = False
+                    fontname = "arial"
+                  }
+
+          guidetext at 1,50 to 1,80     tagged display_information_box
+                properties
+                  {
+                    text = "Sprinkler System"
+                    fontsize = 12
+                    fontstyle = BOLD
+                    underlined = true
+                    transparent = False
+                    fontname = "arial"
+                  }
+          guidetext at 5,50 to 5,80     tagged display_information_box
+                properties
+                  {
+                    text = "Local Alarm Smoke Detectors"
+                    fontsize = 12
+                    fontstyle = BOLD
+                    underlined = true
+                    transparent = False
+                    fontname = "arial"
+                  }
+          guidetext at 8,50 to 8,80     tagged display_information_box
+                properties
+                  {
+                    text = "Others"
+                    fontsize = 12
+                    fontstyle = BOLD
+                    underlined = true
+                    transparent = False
+                    fontname = "arial"
+                  }
+
+}
+
+Panel at 8,1 to 25, 100 Tagged new_rating_fn
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+
+    Central Station Fire and Theft Alarm:~~_         Automatic Sprinkler System:~~_
+    **Certificate Required                           (100% of the house must be covered by system to qualify)
+
+    Central Station Fire Alarm:~~~~~~~~~~~~_
+    **Certificate Required                           Smoke Detectors:~~~~~~~~~~~~~_
+
+    Central Station Theft Alarm:~~~~~~~~~~~_
+    **Certificate Required                           Local Theft Alarm:~~~~~~~~~~~_
+
+    Alarm Reporting to Fire Station:~~~~~~~_         Dead Bolts:~~~~~~~~~~~~~~~~~~_
+    **Certificate Required
+
+    Alarm Reporting to Police Station:~~~~~_
+    **Certificate Required
+
+%%
+
+components
+
+Fields
+201     begin
+        if agqpersonal:alarm_option[1] = 1 and
+           agqpersonal:alarm_option[2] = 1 then
+            begin
+            l_both = 1
+            l_prior_both = 1
+            end
+        else
+            begin
+            l_prior_both = 0
+            l_both = 0
+            end
+        end
+        l_both/tabstop/default/checkbox/values="0,1"
+        if l_both = 1 then
+            begin
+            agqpersonal:alarm_option[1] = 1
+            agqpersonal:alarm_option[2] = 1
+            end
+        else
+        if l_prior_both = 1 and
+           l_both = 0 then
+            begin
+            agqpersonal:alarm_option[1] = 0
+            agqpersonal:alarm_option[2] = 0
+            end;
+
+501     agqPERSONAL:ALARM_OPTION[1]/tabstop
+        hide if l_both = 1 ;
+
+801     agqPERSONAL:ALARM_OPTION[2]/tabstop
+        hide if l_both = 1 ;
+
+1101    agqPERSONAL:ALARM_OPTION[3]/tabstop;
+
+1401    agqPERSONAL:ALARM_OPTION[4]/tabstop;
+
+202     agqPERSONAL:ALARM_OPTION[6]/tabstop;
+
+601     agqPERSONAL:ALARM_OPTION[5]/tabstop;
+
+901     agqPERSONAL:ALARM_OPTION[7]/tabstop;
+
+1102    agqPERSONAL:ALARM_OPTION[8]/tabstop;
+
+}
+
+panel at 8,1 to 25, 100 Tagged old_rating_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+           Type of Station                    Discount Factor
+
+    Central Station - Fire          _            _____
+    Central Station - Burglary      _            _____
+
+    Fire Department                 _            _____
+    Police Station                  _            _____
+
+    Local Alarm/Smoke Detector      _            _____   __________
+    Automatic Sprinkler System      _            _____
+
+
+%%
+
+components
+
+Fields
+301     Begin
+            Do ACCESS_SFSOPTEND
+        End
+        agqPERSONAL:ALARM_OPTION[1]/tabstop ;
+302     Begin
+        If agqPERSONAL:ALARM_OPTION[1] = 1 And
+           agqPERSONAL:ALARM_FACTOR[1] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[1] = L_PREMIUM_1
+        End
+        agqPERSONAL:ALARM_FACTOR[1]/default/tabstop
+        Hide If agqPERSONAL:ALARM_OPTION[1] = 0 ;
+
+401     Begin
+        If agqPERSONAL:ALARM_OPTION[1] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[1] = 0
+        End
+        agqPERSONAL:ALARM_OPTION[2]/tabstop;
+402     Begin
+        If agqPERSONAL:ALARM_OPTION[2] = 1 And
+           agqPERSONAL:ALARM_FACTOR[2] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[2] = L_PREMIUM_2
+        End
+        agqPERSONAL:ALARM_FACTOR[2]/default/tabstop
+        Hide If agqPERSONAL:ALARM_OPTION[2] = 0 ;
+
+601     Begin
+        If agqPERSONAL:ALARM_OPTION[2] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[2] = 0
+        End
+        agqPERSONAL:ALARM_OPTION[3]/tabstop;
+602     Begin
+        If agqPERSONAL:ALARM_OPTION[3] = 1 And
+           agqPERSONAL:ALARM_FACTOR[3] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[3] = L_PREMIUM_3
+        End
+        agqPERSONAL:ALARM_FACTOR[3]/default/tabstop
+        Hide If agqPERSONAL:ALARM_OPTION[3] = 0 ;
+
+701     Begin
+        If agqPERSONAL:ALARM_OPTION[3] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[3] = 0
+        End
+        agqPERSONAL:ALARM_OPTION[4]/tabstop;
+702     Begin
+        If agqPERSONAL:ALARM_OPTION[4] = 1 And
+           agqPERSONAL:ALARM_FACTOR[4] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[4] = L_PREMIUM_4
+        End
+        agqPERSONAL:ALARM_FACTOR[4]/default/tabstop
+        Hide If agqPERSONAL:ALARM_OPTION[4] = 0 ;
+
+901     Begin
+        If agqPERSONAL:ALARM_OPTION[4] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[4] = 0
+        End
+        agqPERSONAL:ALARM_OPTION[5]/tabstop;
+902     Begin
+        If agqPERSONAL:ALARM_OPTION[5] = 1 And
+           agqPERSONAL:ALARM_FACTOR[5] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[5] = L_PREMIUM_5
+        End
+        agqPERSONAL:ALARM_FACTOR[5]/default/tabstop
+        Hide If agqPERSONAL:ALARM_OPTION[5] = 0 Or
+                agqPERSONAL:ALARM_INCLUDED = 1 ;
+903     L_INCLUDED/showasguidetext/displayonly
+        Hide If agqPERSONAL:ALARM_INCLUDED = 0 ;
+1001    Begin
+        If agqPERSONAL:ALARM_OPTION[5] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[5] = 0
+        End
+        agqPERSONAL:ALARM_OPTION[6]/tabstop;
+1002    Begin
+        If agqPERSONAL:ALARM_OPTION[6] = 1 And
+           agqPERSONAL:ALARM_FACTOR[6] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[6] = L_PREMIUM_6
+        End
+        agqPERSONAL:ALARM_FACTOR[6]/default/tabstop
+        Hide If agqPERSONAL:ALARM_OPTION[6] = 0 ;
+
+1002    Begin
+        If agqPERSONAL:ALARM_OPTION[6] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[6] = 0
+        End
+        agqPERSONAL:ALARM_FACTOR[6]/displayonly
+        If agqPERSONAL:ALARM_OPTION[1] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[1] = 0
+        If agqPERSONAL:ALARM_OPTION[2] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[2] = 0
+        If agqPERSONAL:ALARM_OPTION[3] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[3] = 0
+        If agqPERSONAL:ALARM_OPTION[4] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[4] = 0
+        If agqPERSONAL:ALARM_OPTION[5] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[5] = 0
+        If agqPERSONAL:ALARM_OPTION[6] = 0 Then
+            agqPERSONAL:ALARM_FACTOR[6] = 0
+
+        L_ALARM_FACTOR = 0
+        L_ALARM_FACTOR_1 = 0
+        Do MINIMUM
+        If L_ALARM_FACTOR_1 > agsdefault_plp:PROT_DEVICE_MAX Then
+            Warning "The factors are over the maximum factor allowed" ;
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 27,35 to 27,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 28,1 to 28,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+Update
+
+procedure definition
+
+Procedure ACCESS_SFSOPTEND
+Begin
+L_CODE = "MPL70"
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqpersonal:COMPANY_ID,
+                      SFSOPTEND:STATE = agqPERSONAL:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE =  L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqpersonal:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqPERSONAL:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqpersonal:LINE_OF_BUSINESS Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If agqpersonal:EFF_DATE >= SFSOPTEND:EFF_DATE Then
+        Begin
+        L_PREMIUM_1 = SFSOPTEND:PREMIUM_1[1]
+        L_PREMIUM_2 = SFSOPTEND:PREMIUM_1[2]
+        L_PREMIUM_3 = SFSOPTEND:PREMIUM_1[3]
+        L_PREMIUM_4 = SFSOPTEND:PREMIUM_1[4]
+        L_PREMIUM_5 = SFSOPTEND:PREMIUM_1[5]
+        L_PREMIUM_6 = SFSOPTEND:PREMIUM_1[6]
+        End
+
+    Next SFSOPTEND
+    End
+
+End
+
+Procedure MINIMUM
+Begin
+L_CTR = 1
+
+L_ALARM_FACTOR = 0
+While L_CTR < 8
+    Begin
+    If agqPERSONAL:ALARM_FACTOR[L_CTR] <> 0 Then
+        L_ALARM_FACTOR = L_ALARM_FACTOR + (1 - agqPERSONAL:ALARM_FACTOR[L_CTR])
+    L_CTR = L_CTR + 1
+    End
+
+L_ALARM_FACTOR_1 = L_ALARM_FACTOR * 100
+
+End
+
+End

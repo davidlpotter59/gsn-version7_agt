@@ -1,0 +1,45 @@
+%% 
+Program
+        Name = "agqpr9997b" ;
+        Type = "File" ;
+        Domain = "flat";
+        Padcharacter = Space ;
+
+        local unsigned ascii number l_app_no[11] ,
+                                    l_sub_code[4] ,
+                                    l_line_counter = 1,
+                                    l_max_lines = 57 ;
+
+        local wdate l_trans_date ;
+
+        local String L_FILE_NAME[11] = "response.cq" ,
+                     l_font[35] ;
+
+        include "line_spacing.var"
+
+        include "csfonts.inc"
+
+initialisation
+l_app_no     = val(commandline[1,11])
+l_trans_date = date(commandline[12,19])
+l_sub_code   = val(commandline[20,23])
+
+access agqstatusnotes, set agqstatusnotes:app_no     = l_app_no,
+                           agqstatusnotes:trans_date = l_trans_date,
+                           agqstatusnotes:sub_code   = l_sub_code, generic
+
+access agqpersonal, set agqpersonal:app_no = l_app_no, generic
+
+deletefile(l_file_name)
+
+L_FONT             = L_ARIAL_12
+L_V_POSITION       = "+120"
+L_H_POSITION       = "200"
+L_CHARACTER_STRING = agqstatusnotes:notes
+L_MAX_CHAR         = 100
+Include "line_spacing.inc"
+
+closefile(l_file_name)
+update
+
+End

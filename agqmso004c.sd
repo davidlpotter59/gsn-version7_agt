@@ -1,0 +1,570 @@
+%%
+/*
+Date Written: October 7, 2005
+
+Name: agqmso004c.sd                Salem Contractors herbicide pesticide applicator Coverage
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------------------
+04/19/2010            JLB            herbicide pesticide applicator Coverage
+--------------------------------------------------------------------------
+*/
+
+Program
+  Name = "agqmso004c";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+  array [120] of string l_no_duplicate_printing[7];
+
+ string l_font ;
+ String L_FILE_NAME[13] = "agqmso004c.cq";
+ String L_COPY_NAME[20] ;
+ String I_REV_NAME2[50] ;
+ String L_POLICY_FORM;
+ String L_TYPE_STR[100];
+ String L_POLICY_DECLARATION[60];
+ String L_TRANS_EFF;
+ String L_AUDIT;
+ String L_PREV_STRING[100];
+ String L_INSURED_CITY_STATE[50];
+ String L_AGQNAME_ZIP="";
+ String L_SFSAGENT;
+ String L__ZIP;
+ String L_SFSMORT_ZIP[10];
+ string l_agqlocation_zip[10];
+ String L_AGQSUPP_ZIP[10];
+ String L_AGENT_ADDRESS;
+ String L_FOB[75];
+ String L_AGENT_TEL[13];
+ String L_AGENT_ZIP[10];
+ String L_MORGAGE_ID[10];
+ String L_LOB_CODE[10];
+ string l_enter[1];
+ String L_STATE;
+ String L_COMPANY_ZIP[10];
+ String L_TERROR_FORM[7];
+ String L_COMPANY_ID[10];
+ String L_BILL_PLAN[2];
+ String L_MORTGAGE_TYPE_1[1];
+ String L_STATE_STR[2];
+ String L_PRINT_BLANK_WORDING;
+ String L_MORTGAGE_TYPE_2[1];
+ String L_SIGNATURE_STRING[55];
+ String L_PLEASED_WORDING[200];
+ String L_PRODUCER_LABEL,
+        l_user_id[15]="";
+ unsigned ascii number l_top_of_page       = 0;
+ Unsigned Ascii Number l_prem_no[4] = 0001;
+ Unsigned Ascii Number l_build_no[4] = 0001
+ Number L_TRANS_CODE;
+ Number L_MM_1;
+ Number L_DD_1;
+ Number L_YY_1;
+ Number L_RENEWAL[9];
+
+ Unsigned Ascii Number l_form[1];
+ Unsigned Ascii Number L_LINE_HEIGHT;
+ Unsigned Ascii Number L_MASTER_CODE[4];
+ Unsigned ascii number l_app_no[11];
+ Unsigned Ascii Number L_DECIPOINT;
+ Unsigned Ascii Number L_CHARACTER_PER_INCH;
+ Unsigned Ascii Number L_PAGE_MIDDLE;
+ Unsigned Ascii Number L_HALF_MULTIPLIER;
+ Unsigned Ascii Number L_CHAR_MULTIPLIER[10]/decimals=4;
+ Unsigned Ascii Number L_PAGE_NUMBER = 1;
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_LINE_COUNTER;
+ Unsigned Ascii Number L_MED_LIMIT;
+ Unsigned Ascii Number L_S_LINE_FOR_LOCATION = 0; --start line for location
+ Unsigned Ascii Number L_BIGGER_LINE =0;
+ Unsigned Ascii Number L_SCREEN_COR= 0;
+ Unsigned Ascii Number L_E_LINE_FOR_INSURED = 0;
+ Unsigned Ascii Number L_PAGENUMBER;
+ Unsigned Ascii Number L_MAX_LINES=60;
+ Unsigned Ascii Number L_LOCATION_COUNTER;
+ Unsigned Ascii Number L_SIZE_COUNTER;
+ Unsigned Ascii Number L_LIABILITY;
+ Unsigned Ascii Number L_LINE_OF_BUSINESS[4];
+ Unsigned Ascii Number L_INSURED_COUNTER;
+ Unsigned Ascii Number L_AGENT_COUNTER;
+ Unsigned Ascii Number L_TWO_PLACER;
+ Unsigned Ascii Number L_SFSFORM[2];
+ Unsigned Ascii Number L_agqMASTER_FORM[2];
+ Unsigned Ascii Number L_LOOP;
+ Unsigned Ascii Number L_SCIPSCONTROL;
+ Unsigned Ascii Number L_STATE_NUM[2];
+ Unsigned Ascii Number L_PRINTED_DATED[1];  --delete after scipscontrol is set up
+ Unsigned Ascii Number L_LOC_COUNTER;
+
+ Include "swsut100.var"
+ Include "swsut200.var"
+ Include "csfonts.inc"
+ Include "sfsrevname.var"
+ Include "line_spacing.var"
+ Include "header.var"
+
+Initialization
+L_app_no = val(COMMANDLINE[1,11])
+--l_user_id = username
+Deletefile (L_FILE_NAME)
+
+Access agqgeneral,
+   Set agqgeneral:app_no = l_app_no, generic
+
+Access agqcontractor ,
+   Set agqcontractor:app_no    = l_app_no,generic
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no = L_app_no,generic
+
+Access SFSCOMPANY,
+   Set SFSCOMPANY:COMPANY_ID = agqcontractor:company_id , Exact
+
+Access agqSUPP,
+   Set agqSUPP:app_no     = L_app_no, generic
+
+Access agqendorse,
+   Set agqendorse:app_no  = L_app_no, generic
+
+Include "swsut100.inc"
+Include "swsut200.inc"
+
+Access agqEND,
+   Set agqEND:app_no    = l_app_no,generic
+
+Access agqlawncare,
+   Set agqlawncare:app_no    = l_app_no, generic
+
+Access agqNAME,
+   Set agqNAME:app_no = l_app_no, generic
+
+Access agqAPPLICATION,
+   Set agqAPPLICATION:app_no = l_app_no, generic
+
+l_line_counter = 0
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+Writefile(L_FILE_NAME,"%s",trun(l_arial_12))
+L_FONT = trun(L_ARIAL_12)
+L_STRING = "Farmers Mutual Fire Insurance Company of Salem County"
+L_PITCH_HALF = 6
+L_PITCH_FULL = 12
+L_VERTICAL_POS = "+120"
+Include "center2.pro"
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+L_FONT = trun(L_ARIAL_12)
+L_STRING = "Herbicide Pesticide Applicator Coverage"
+L_PITCH_HALF = 6
+L_PITCH_FULL = 12
+L_VERTICAL_POS = "+180"
+Include "center2.pro"
+L_LINE_COUNTER = L_LINE_COUNTER + 1.5
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+150V")
+Writefile(L_FILE_NAME,"%s","For this coverage to be effected, this form must be completed.")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+220V")
+Writefile(L_FILE_NAME,"%s","Name(s) of License Holder")
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a2400h+0V")
+Writefile(L_FILE_NAME,"%s","License Number")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a4000h+0V")
+Writefile(L_FILE_NAME,"%s","Year Licensed")
+
+Writefile(L_FILE_NAME,"%s",l_push)
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+For l_loop = 1 to 5
+  {
+    If agqlawncare:license_holder[l_loop] <> "0" then
+      {
+        l_font             = trun(l_arial)
+        l_v_position       = "+0"
+        l_h_position       = "600"
+        l_character_string = agqlawncare:license_holder[l_loop]
+        l_max_char         = 80
+        l_max_lines        = 60
+        include "line_spacing.inc"
+      }
+  }
+
+Writefile(L_FILE_NAME,"%s",l_pop)
+Writefile(L_FILE_NAME,"%s",l_push)
+
+Writefile(L_FILE_NAME,"%s","<033>&a2400h+130V")
+For l_loop = 1 to 5
+  {
+    If agqlawncare:license_number[l_loop] <> "0" then
+      {
+        l_font             = trun(l_arial)
+        l_v_position       = "+0"
+        l_h_position       = "2400"
+        l_character_string = agqlawncare:license_number[l_loop]
+        l_max_char         = 80
+        l_max_lines        = 60
+        include "line_spacing.inc"
+      }
+  }
+
+Writefile(L_FILE_NAME,"%s",l_pop)
+Writefile(L_FILE_NAME,"%s",l_push)
+Writefile(L_FILE_NAME,"%s","<033>&a4000h+130V")
+For l_loop = 1 to 5
+  {
+    If str(agqlawncare:year_licensed[l_loop]) <> "0" then
+      {
+        l_font             = trun(l_arial)
+        l_v_position       = "+0"
+        l_h_position       = "4000"
+        l_character_string = str(agqlawncare:year_licensed[l_loop])
+        l_max_lines        = 60
+        l_max_char         = 80
+        include "line_spacing.inc"
+      }
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+120V")
+Writefile(L_FILE_NAME,"%s","Type of Chemical Use")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a2400h+0V")
+Writefile(L_FILE_NAME,"%s","Name of Chemical Used")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Writefile(L_FILE_NAME,"%s",l_push)
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+if agqlawncare:chemical_type[1] = "H" Then
+  {
+    Writefile(L_FILE_NAME,"%s","Herbicide")
+  }
+if agqlawncare:chemical_type[1] = "P" Then
+  {
+    Writefile(L_FILE_NAME,"%s","Pesticide")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+if agqlawncare:chemical_type[2] = "H" Then
+  {
+    Writefile(L_FILE_NAME,"%s","Herbicide")
+  }
+if agqlawncare:chemical_type[2] = "P" Then
+  {
+    Writefile(L_FILE_NAME,"%s","Pesticide")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+if agqlawncare:chemical_type[3] = "H" Then
+  {
+    Writefile(L_FILE_NAME,"%s","Herbicide")
+  }
+if agqlawncare:chemical_type[3] = "P" Then
+  {
+    Writefile(L_FILE_NAME,"%s","Pesticide")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+if agqlawncare:chemical_type[4] = "H" Then
+  {
+    Writefile(L_FILE_NAME,"%s","Herbicide")
+  }
+if agqlawncare:chemical_type[4] = "P" Then
+  {
+    Writefile(L_FILE_NAME,"%s","Pesticide")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+if agqlawncare:chemical_type[5] = "H" Then
+  {
+    Writefile(L_FILE_NAME,"%s","Herbicide")
+  }
+if agqlawncare:chemical_type[5] = "P" Then
+  {
+    Writefile(L_FILE_NAME,"%s","Pesticide")
+  }
+
+Writefile(L_FILE_NAME,"%s",l_pop)
+Writefile(L_FILE_NAME,"%s","<033>&a2400h+130V")
+For l_loop = 1 to 5
+  {
+    If agqlawncare:chemical_used[l_loop] <> "0" then
+      {
+        l_font             = trun(l_arial)
+        l_v_position       = "+0"
+        l_h_position       = "2400"
+        l_character_string = agqlawncare:chemical_used[l_loop]
+        l_max_char         = 75
+        l_max_lines        = 60
+        include "line_spacing.inc"
+      }
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+150V")
+Writefile(L_FILE_NAME,"%s",'If an "over the counter" product is not being used, please provide the label from the')
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","product container.  If not available, supply the name below:")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+ If agqlawncare:product_name <> "0" then
+   {
+     l_font             = trun(l_arial)
+     l_v_position       = "+0"
+     l_h_position       = "600"
+     l_character_string = agqlawncare:product_name
+     l_max_char         = 75
+     l_max_lines        = 60
+     include "line_spacing.inc"
+   }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+150V")
+Writefile(L_FILE_NAME,"%s","Is a sprayer used to apply the chemicals listed? ")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+if (str(agqlawncare:sprayer_used)) = "1" Then
+  {
+    Writefile(L_FILE_NAME,"%s","YES")
+  }
+if (str(agqlawncare:sprayer_used)) = "0" Then
+  {
+    Writefile(L_FILE_NAME,"%s","NO")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","Size of sprayer container? ")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+Writefile(L_FILE_NAME,"%s","<033>&a2450h+0V")
+if (str(agqlawncare:size_sprayer)) <> "0" Then
+  {
+    Writefile(L_FILE_NAME,"%s",str(agqlawncare:size_sprayer))
+  }
+
+Writefile(L_FILE_NAME,"%s","<033>&a2600h+0V")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s"," ")
+Writefile(L_FILE_NAME,"%s","Gallons ")
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","Is this container a portable unit? ")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+if (str(agqlawncare:container_portable)) = "1" Then
+  {
+    Writefile(L_FILE_NAME,"%s","YES")
+  }
+if (str(agqlawncare:container_portable)) = "0" Then
+  {
+    Writefile(L_FILE_NAME,"%s","NO")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","Is this container bolted to a truck or trailer? ")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+if (str(agqlawncare:container_bolted)) = "1" Then
+  {
+    Writefile(L_FILE_NAME,"%s","YES")
+  }
+if (str(agqlawncare:container_bolted)) = "0" Then
+  {
+    Writefile(L_FILE_NAME,"%s","NO")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","What percentage of Herbicide / Pesticide is Solid ")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+if (str(agqlawncare:percentage_solid)) <> "0" Then
+  {
+    Writefile(L_FILE_NAME,"%s",str(agqlawncare:percentage_solid))
+  }
+Writefile(L_FILE_NAME,"%s","%")
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a3600h+0V")
+Writefile(L_FILE_NAME,"%s","Liquid ")
+if (str(agqlawncare:percent_liquid)) <> "0" Then
+  {
+    Writefile(L_FILE_NAME,"%s",str(agqlawncare:percent_liquid))
+  }
+Writefile(L_FILE_NAME,"%s","%")
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","What percentage of your total gross receipts is applicable to the application of the")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","chemicals mentioned above?")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+if (str(agqlawncare:percentage_total_gross)) <> "0" Then
+  {
+    Writefile(L_FILE_NAME,"%s"," ")
+    Writefile(L_FILE_NAME,"%n",agqlawncare:percentage_total_gross)
+    Writefile(L_FILE_NAME,"%s","%")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","Do you use sub-contractors for Herbicide/Pesticide application? ")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+if (str(agqlawncare:sub_contractor_application)) = "1" Then
+  {
+    Writefile(L_FILE_NAME,"%s","YES")
+  }
+if (str(agqlawncare:sub_contractor_application)) = "0" Then
+  {
+    Writefile(L_FILE_NAME,"%s","NO")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","If Yes, percentage used")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+if (str(agqlawncare:sub_contractor_app_used)) <> "0" Then
+  {
+    Writefile(L_FILE_NAME,"%s"," ")
+    Writefile(L_FILE_NAME,"%n",agqlawncare:sub_contractor_app_used)
+    Writefile(L_FILE_NAME,"%s","%")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+150V")
+Writefile(L_FILE_NAME,"%s","Have you ever, or do you intend to do any mosquito control or eradication work for any")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","city or municipality?")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+if (str(agqlawncare:mosquito_control)) = "1" Then
+  {
+    Writefile(L_FILE_NAME,"%s"," ")
+    Writefile(L_FILE_NAME,"%s","YES")
+  }
+if (str(agqlawncare:mosquito_control)) = "0" Then
+  {
+    Writefile(L_FILE_NAME,"%s"," ")
+    Writefile(L_FILE_NAME,"%s","NO")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","Have you ever, or do you intend to treat lakes or streams? ")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+If agqlawncare:treat_lakes = 0 then
+  {
+    Writefile(L_FILE_NAME,"%s","No")
+  }
+If agqlawncare:treat_lakes = 1 then
+  {
+    Writefile(L_FILE_NAME,"%s","Yes")
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","Explain: ")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+If agqlawncare:treat_lakes_comments <> "0" then
+  {
+    l_font             = trun(l_arial)
+    l_v_position       = "+0"
+    l_h_position       = "600"
+    l_character_string = agqlawncare:treat_lakes_comments
+    l_max_char         = 80
+    l_max_lines        = 60
+    include "line_spacing.inc"
+  }
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+180V")
+Writefile(L_FILE_NAME,"%s","Please describe any formal training you or anyone mentioned above has had in the")
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_12))
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+Writefile(L_FILE_NAME,"%s","application and use of the Herbicides / Pesticides mentioned above:")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+Writefile(L_FILE_NAME,"%s","<033>&a600h+130V")
+If agqlawncare:training <> "0" then
+  {
+    l_font             = trun(l_arial)
+    l_v_position       = "+0"
+    l_h_position       = "600"
+    l_character_string = agqlawncare:training
+    l_max_char         = 80
+    l_max_lines        = 60
+    include "line_spacing.inc"
+  }
+
+If l_line_counter >= l_max_lines - 15 then
+  {
+    Writefile(L_FILE_NAME,"%s","<FF>")
+    l_line_counter = 0
+  }
+
+/*--commented out per Maureen's e-mail of 05/12/2010
+
+Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+240V",
+                      "ANY PERSON WHO KNOWINGLY AND WITH INTENT TO DEFRAUD ANY")
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                      "INSURANCE COMPANY OR ANOTHER PERSON FILES AN APPLICATION FOR")
+Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                      "INSURANCE OR STATEMENT OF CLAIM CONTAINING ANY MATERIALLY")
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                      "FALSE INFORMATION, OR CONCEALS FOR THE PURPOSE OF MISLEADING")
+Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                      "INFORMATION CONCERNING ANY FACT MATERIAL THERETO, COMMITS A")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                      "FRAUDULANT INSURANCE ACT, WHICH IS A CRIME AND SUBJECTS THE")
+Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD),"<033>&a600h+130V",
+                      "PERSON TO CRIMINAL AND CIVIL PENALTIES.")
+L_LINE_COUNTER = L_LINE_COUNTER + 4
+*/
+/*Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL),"<033>&a600h6900V",
+                      "Signature")
+Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL),"<033>&a4400h6900V",
+                      "Date")*/
+L_LINE_COUNTER = L_LINE_COUNTER + 3
+
+Writefile(L_FILE_NAME,"%s","<FF>")
+
+Update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET)
+Closefile(L_FILE_NAME)
+End

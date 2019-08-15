@@ -1,0 +1,256 @@
+%%
+Screen
+
+        Name   = "agtmt001k"
+        Type   = "Multiline"
+
+        Domain = "FILESYSTEM"
+
+        Repeat T_REPEATED, 100 times down
+
+        Resizeable = True
+        Screensize = "100x25"
+        Iconline = 0
+        Statusbar = False
+        Scrollprompt = ""
+        Autoscroll = True
+        Showunusedrecords = False
+
+        -- Returns the file extension of the given filename
+        Global String Function GetFileExtension(String )
+
+        Local String l_directory[160]="/home/" + USERNAME + "/agent_commission_statements",
+                     l_name[100] ;
+
+        String Function getIcon(String) ;
+
+        Access FILESYSTEM,
+           Set FILESYSTEM:DIRECTORY = l_directory, Using First Index, Generic
+
+Style Definition
+
+        Field Style {
+                Cursorshape = Default
+                BackgroundColor = "#ffffff"
+        }
+
+        Repeated Field Style {
+                Borderstyle = None
+                Borderwidth = 1
+                Cursorshape = Default
+                BackgroundColor = "#ffffff"
+        } Tagged T_REPEATED_FIELD_STYLE
+
+        Repeated DisplayOnly Field Style Extends T_REPEATED_FIELD_STYLE {
+        }
+
+Functions
+
+        Reaccess/Hidden ;
+
+        "SELECT_FILE"
+                Continue {
+--                        Warning "You selected " + FILESYSTEM:NAME
+                        proc("cp %s/%s %s",filesystem:directory,filesystem:name,"/www")/noconsole
+                        proc("chmod %s %s/%s","444","/www",filesystem:name)/noconsole
+                        l_name  = "http://linux99/" + filesystem:name
+                        ShowDocument( l_name )    --show in your default browser
+--                        proc("sleep 2s")   -- sleeps for 2 seconds
+                        proc("chmod %s %s/%s","644","/www",filesystem:name)/noconsole
+                        proc("rm %s/%s","/www",filesystem:name)/noconsole
+                } ;
+
+Events Definition
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+        Function = "REACCESS"
+--   warning FILESYSTEM:NAME
+
+ACCESS VALIDATION
+--   warning GetFileExtension(FILESYSTEM:NAME)
+--   warning l_directory
+  skip if GetFileExtension(FILESYSTEM:NAME) <> "pdf"
+
+Screen
+        Properties {
+                Layouttype = Column
+                LayoutGap = 1
+                BackgroundColor = "#ffffff"
+                Transparent = False
+        }
+
+{
+
+/*Panel
+        Properties {
+              LayoutType = Row
+              BackgroundColor = "red"
+              foregroundColor = "white"
+        }
+
+        {
+          Fields
+                FILESYSTEM:DIRECTORY at 1,1 ;
+        }
+*/
+
+Listbox to 20,80
+        Tagged T_LISTBOX
+        Properties {
+                Layoutconstraints = "STRETCH"
+
+        }
+        {Heading
+                Tagged T_LISTBOX_HEADING
+                Properties {
+                        Layouttype = Row
+                        LayoutConstraints = "NORTH"
+                BackgroundColor = "#ffffff"
+                }
+                {Components
+
+                        Button to 1,2.75
+                                Tagged H_COLUMN_1
+                                Properties {
+                                        Text = ""
+                                        TextAlignment = Left
+                                        ContentAlignment = Left
+                                }
+
+                        Button to 1,30.0
+                                Tagged H_COLUMN_2
+                                Properties {
+                                        Text=" Name"
+                                        TextAlignment = Left
+                                        ContentAlignment = Left
+                                }
+
+                        Button to 1,15.0
+                                Tagged H_COLUMN_3
+                                Properties {
+                                        Text="Size "
+                                        TextAlignment = Left
+                                        ContentAlignment = Right
+                                }
+
+                        Button to 1,17.0
+                                Tagged H_COLUMN_4
+                                Properties {
+                                        Text=" Created"
+                                        TextAlignment = Left
+                                        ContentAlignment = Left
+                                }
+
+                        Button to 1,17.0
+                                Tagged H_COLUMN_5
+                                Properties {
+                                        Text=" Modified"
+                                        TextAlignment = Left
+                                        ContentAlignment = Left
+                                }
+
+                        Button/Disabled to 1.0,1.0
+                                Tagged H_COLUMN_6
+                                Properties {
+                                        LayoutConstraints = STRETCH
+                                }
+                }
+
+          Panel
+                Properties {
+                        LayoutType = Row
+
+                }
+
+                {Components
+
+                        Group T_REPEATED Contains R_COLUMN_1, R_COLUMN_2, R_COLUMN_3, R_COLUMN_4, R_COLUMN_5, R_COLUMN_6
+
+                 Fields
+
+                        {Local Image l_Icon[128] = getIcon(FILESYSTEM:NAME) ;
+                        }
+                        l_Icon to 1.0,2.0
+                                Tagged R_COLUMN_1
+                                Properties {
+                                        Transparent = True
+                                        BackgroundColor = "white"
+                                } ;
+
+                        FILESYSTEM:NAME to 1.0,30.0
+                                Tagged R_COLUMN_2
+                                Events {
+                                        MouseClicked {
+                                                CurrentRecord = EVENT.LINE
+                                                Function = "SELECT_FILE"
+                                                Abort()
+                                        }
+                                } ;
+
+                        FILESYSTEM:SIZE to 1.0, 17.0
+                                Tagged R_COLUMN_3
+                                Properties {
+                                        ContentAlignment = Right
+                                } ;
+
+                        FILESYSTEM:CREATED to 1.0,17.0
+                                Tagged R_COLUMN_4 ;
+
+                        FILESYSTEM:MODIFIED to 1.0,17.0
+                                Tagged R_COLUMN_5
+                                Properties {
+                                        Transparent = False
+                                } ;
+
+                        "" to 1.0,1.0
+                                Tagged R_COLUMN_6
+                                Properties {
+                                        LayoutConstraints = STRETCH
+                                } ;
+
+                        }
+                }
+}
+
+Screen Exit
+
+Procedure Definition
+
+String Function getIcon(String A_FILENAME)
+
+{
+        Local String l_iconName[256] ;
+
+        If FILESYSTEM:ISDIR = "T" Then
+                l_iconName = "folder.gif"
+        Else
+                If GetFileExtension(A_FILENAME) one of "eq", "rc", "cq", "cqf" Then
+                        l_iconName = "cqfile.gif"
+                Else
+                        l_iconName = "file.gif"
+
+         Return l_iconName
+}
+
+/*
+ *  Returns the file extension of the given filename
+ */
+String Function GetFileExtension(string A_FILENAME) {
+
+        Local Number i = Len(A_FILENAME);
+
+        While i > 0 And A_FILENAME[i] <> '.'
+                i = i - 1
+
+        If i > 0 and i < Len(A_FILENAME) Then
+                Return A_FILENAME[i + 1, -1]
+        Else
+                Return ""
+
+}
+
+End

@@ -1,0 +1,145 @@
+%%                      
+Screen
+        Name = "AGTMT010b";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="AGQGENERAL" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+
+        global string g_company_id[10] ;
+
+        Local String L_COMPANY_ID[10],
+                     l_continue_1[3]="",
+                     l_continue_2[3]="",
+                     l_continue_3[3]="";
+
+        include "virtualdecs.var"
+
+        Access agqGENERAL,
+           Set agqGENERAL:app_no = G_app_no, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="Grey"
+                                }
+
+
+Functions
+
+        "add" sequence "new"      tagged add_fn ;
+        "new" add/hidden ;
+
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+
+        "func1" display "agtmt020" tagged calc_fn ;
+
+        reaccess ;
+
+        "popup"  Continue Begin
+                      l_continue_1 = Dialog("EXITING SCIPS","warning.bmp","You are About to Leave SCIPS","Yes","No")
+                                      switch (l_continue_1)
+                                         Case "Yes" : function =  "bye"
+                                        end
+                    end ;
+
+        "Bye"   Stop;           /* Terminate this session */
+                Stop;
+
+        include "stdfunc7b.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {g_line_of_business = val(event.value) }
+                             "set_info_box" { setproperty( display_information_box, text, event.value ) }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+g_app_no = 0
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+
+Access Validation
+If agqGENERAL:app_no <> G_app_no Then
+    begin
+    Error 1000
+    end
+
+screen at 1,3 to 30,120
+Properties
+        {
+        Layouttype = screen
+        }
+{
+
+panel/hidden
+        {
+        fields
+                function at 1,1 ;
+        }
+
+panel at 1,1 to 3,120
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "Times New Roman"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 1.45,75 to 2.45, 120 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+Quote No: ___________
+
+%%
+fields
+101   agqGENERAL:APP_NO/displayonly ;
+}
+
+
+}
+
+End

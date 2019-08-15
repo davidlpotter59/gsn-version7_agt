@@ -1,0 +1,859 @@
+%%
+Program
+       Name="webservice_property_agent"
+       Type="file"
+       Domain="dummy"
+--  do not add padcharacter equals space it will crash this program
+
+       string l_filename1[30] = "request_property.xml";
+       string l_filename[30] = "request_response_property.xml";
+       string l_filename2[30] = "orginalrequest_property.xml";
+       string l_responsefile[30] = "response_property.xml";
+       string l_property_file[12] = "property";
+       string l_credit_error_file[18] = "error_property"
+       string l_which_web_service_function[500];
+       string l_accept_id[9];
+       string l_temp[14500];
+       string l_error_message[300];
+       string l_which_protocol[40];
+       string l_web_service_error[2048];
+       string l_response_1[14500] ;
+       string function remove_newlines(string) ;
+       string function parse_get_response(string, string, string);
+       string l_enter[1];
+       string l_header[100] ;
+       string l_header_1[100] ;
+       unsigned ascii number l_header_2[2] ;
+       unsigned ascii number l_trys_for_accept_id[2] = 0;
+       unsigned ascii number l_quit_program[1];
+       unsigned ascii number l_no_matches[2] ;
+       unsigned ascii number l_app_no[11] ;
+       unsigned ascii number l_matches[4] ;
+       unsigned ascii number l_sub_code[4] ;
+       unsigned ascii number l_sub[4] ;
+       unsigned ascii number l_file_hit[6];
+       unsigned ascii number l_position[8];
+       unsigned ascii number l_position_1[8];
+       unsigned ascii number l_start_position[10];
+       unsigned ascii number l_last_position[10];
+       unsigned ascii number l_length_pos[8];
+       unsigned ascii number l_length[6];
+
+
+Initialisation
+l_app_no       = val(commandline[1,11])
+L_which_protocol = uppercase(COMMANDLINE [12,52])
+
+access agqproperty, set agqproperty:app_no = l_app_no, generic
+
+while agqproperty:app_no = l_app_no
+    begin
+    delete agqproperty
+
+    next agqproperty
+    end
+
+deletefile(l_property_file)
+deletefile(l_credit_error_file)
+deletefile(l_filename2)
+deletefile(l_filename1)
+deletefile(l_filename)
+
+add agqproperty
+    begin
+    agqproperty:app_no       =       l_app_no
+    agqproperty:sub_code       =       10
+    agqproperty:date_checked   =       todaysdate
+    end
+
+do get_property_request    --setup the claim request format and it will create the request.xml file
+l_which_web_service_function="SOAPMethodName: https://expressnet.iix.com/web-services/Auth:sendRequest<NL>"
+
+do connect_with_webservice(l_which_web_service_function,1)      --sendRequest returns an 9 digit accept_id
+
+deletefile(l_filename1)                   --erase the send_request.xml file so I can reuse it for the getResponse
+if l_quit_program not one of 1 then    --the request came back bad why asked for a get response to a bad formatted sting
+    {
+    do fillin_get_response(l_accept_id)
+    l_which_web_service_function="SOAPMethodName: https://expressnet.iix.com/web-services/Auth:getResponse<NL>"
+    do connect_with_webservice(l_which_web_service_function,0)      --get_response to the original request with accept id.
+    }
+
+Update
+
+screen exit
+access agqproperty, set agqproperty:app_no = l_app_no, generic
+
+if agqproperty:app_no = l_app_no then
+    begin
+    change agqproperty
+        begin
+        agqproperty:updated = 1
+        end
+    end
+
+procedure definition
+
+procedure connect_with_webservice(string p_which_web_service_function,
+                                  number p_call_accept_message)
+begin
+Handle conn;
+Handle req;
+String l_request[14500];
+String l_response[14500];
+string l_property_segment[7];
+string l_error_segment[19];
+string l_property[5];
+
+l_response = ""
+-- Read in the Soap request from request.xml
+req = openfile(l_filename1)                    --request.xml
+repeat
+    {
+    String l_line[1024];
+    readfile( req, l_line, 1024, "<NL>" )
+    if errornumber = 0 then
+        {
+        l_request = l_request + l_line + "<NL>"
+        }
+    } until errornumber <> 0
+
+closefile( req )
+
+-- Open a secure https connection to web service
+conn = opensocket( "expressnet.iix.com", "https", true )
+
+-- Send the HTTP request headers
+writefile( conn, "POST https://expressnet.iix.com/web-services/Auth<NL>" )
+writefile( conn, "Content-Type: text/xml<NL>" )
+writefile( conn, "%s",p_which_web_service_function )
+writefile( conn, "Content-Length: %X<NL>", Len( l_request ) )
+writefile( conn, "<NL>" )
+
+-- Now sent the body of the request
+writefile( conn, "%X", l_request )
+
+-- Flush the output to the server
+flushfile( conn )
+
+-- Read back the response from the server
+repeat
+    {
+    String l_line[1024];
+    readfile( conn, l_line, 1024, "<NL>" )
+    if errornumber = 0 then
+        {
+        l_response = l_response + l_line + "<NL>"
+        }
+    } until errornumber <> 0
+
+closefile( conn )    -- Close the connection
+
+-- Display what we got
+write( "%X<NL>",l_response )
+
+writefile(l_filename,"%s",l_response)
+l_error_segment   = '"xsd:string">Error:'
+pause(1000)
+if p_call_accept_message = 1 then     --there will be a accept message from the get_response I need to parse for the credit score
+    {
+    do get_accept_message_from_request(l_response)  --this will provide the accept_id if is does I need to request it again up to 10 times if response not yet available it give
+    if trun(l_accept_id) = "" then --means an error message was sent back one would be Response not yet avaiable is returned.  If it is Response Not yet available I have to i have to try again I have a loop 10 all other errors should stop the program
+        {
+        l_error_message = parse_get_response("",l_error_segment, l_response)
+
+        if uppercase(l_error_message) = uppercase("Response Not Yet Available") then
+            {
+            l_which_web_service_function="SOAPMethodName: https://expressnet.iix.com/web-services/Auth:getResponse<NL>"
+            if l_trys_for_accept_id <= 10 then
+                {
+                l_trys_for_accept_id = l_trys_for_accept_id + 1
+                pause (500)   --half a second pause for next attempt
+                do connect_with_webservice(l_which_web_service_function,1)       --need to call for the accept ID.
+                }
+            else
+                {
+                write("%s%s<NL>","ERROR MESSAGE -->",l_error_message)
+                writefile(l_credit_error_file,"%s<nl>","I tried 10 times and no accept ID was given.  Please contact IIX 1-800-683-8553 option 7.")
+                closefile(l_error_message)
+                }
+            }
+        else
+            {
+            write("%s%s<NL>","ERROR MESSAGE is getting close -->",l_error_message)
+            writefile(l_credit_error_file,"%s<nl>",l_error_message)
+            closefile(l_error_message)
+            l_quit_program = 1
+            }
+        }
+    }
+else
+    {
+    do parse_subject_header(l_response)
+    l_response_1 = remove_newlines(l_response)
+    if l_file_hit > 0 then
+        begin
+        l_matches = 1
+        l_start_position = 1
+        l_length = len(l_response_1)
+        l_response_1 = l_response_1[l_start_position,l_length]
+        l_property = parse_get_response(l_property_segment,l_error_segment, l_response_1)
+/*            if l_property[1] = "+" then
+                {
+                if Val(l_property) = 0 then
+                    {
+                    writefile(l_property_file,"%s%s",l_property,"<NL>")
+                    }
+                else
+                    {
+                    writefile(l_property_file,"%s%s",l_property,"<NL>")
+                    }
+                closefile(l_property_file)
+                }
+            else
+                {
+                l_error_message = parse_get_response("",l_error_segment, l_response)
+                if uppercase(l_error_message) = uppercase("Response Not Yet Available") then
+                    {
+                    l_which_web_service_function="SOAPMethodName: https://expressnet.iix.com/web-services/Auth:getResponse<NL>"
+                    do connect_with_webservice(l_which_web_service_function,0)
+                    l_response = ""
+                    write( "%x%x<NL>", "I have the error messageray",l_error_message)
+                    writefile(l_property_file,"%s<nl>",l_error_message)
+                    closefile(l_error_message)
+                    }
+                else
+                if uppercase(l_error_message) = uppercase("Your WebServices Password has Expired. Please call WebServices Customer Support at 1-800-683-8553, option 7.") or
+                   uppercase(l_error_message) = uppercase("Your WebServices Password has been revoked. Please call WebServices Customer Support at 1-800-683-8553, option 7") or
+                   uppercase(l_error_message) = uppercase("The WebServices Password you entered is not valid. Your password will be revoked after 3 failed login attempts.") or
+                   uppercase(l_error_message) = uppercase("Invalid account/bill code for this request ID") or
+                   uppercase(l_error_message) = uppercase("This Account is not registered for online application access. Please Register before trying to Sign In.") or
+                   uppercase(l_error_message) = uppercase("No requests can be processed for this Account. The Account has unknown status. Please contact iiX Sales at 1-800-683-8553, option 1.") or
+                   uppercase(l_error_message) = uppercase("The Account you entered is not an iiX account. Please check with your system administrator and try again.") then
+                    {
+                    writefile(l_credit_error_file,"%s<NL>",l_error_message)
+                    closefile(l_error_message)
+                    Proc("cli mail -s Web Service Account Error %s < l_credit_error_file","sfbattles@gmail.com")/noconsole
+                    Proc("cli mail -s Web Service Account Error %s < l_credit_error_file","support@fosnj.com")/noconsole
+                    }
+                else
+                    {
+                    do parse_subject_header(l_response)
+    --                write( "%x%x<NL>", "I have the error message bell",l_error_message)
+                    writefile(l_credit_error_file,"%s<NL>",l_error_message)
+                    closefile(l_error_message)
+                    Proc("cli mail -s Web Service Formatting Error %s < l_credit_error_file","sfbattles@gmail.com")/noconsole
+                    Proc("cli mail -s Web Service Formatting Error %s < l_credit_error_file","support@fosnj.com")/noconsole
+                    }
+                }    */
+
+        end
+
+    }
+
+
+end
+
+string function remove_newlines(string p_response)
+BEGIN
+string l_subject_header_segment[7];
+string l_ssn_match_indicator[2];
+unsigned ascii number l_next_file[4] ;
+unsigned ascii number l_newline_at[8] ;
+
+l_newline_at = 1
+while l_newline_at <> 0
+    begin
+    l_newline_at = pos("<NL>",p_response)
+    p_response = p_response[1,l_newline_at - 1] + p_response[l_newline_at + 1,len(p_response)]
+    end
+
+return p_response
+
+END
+
+procedure parse_subject_header(string p_response)
+BEGIN
+string l_subject_header_segment[7];
+string l_ssn_match_indicator[2];
+unsigned ascii number l_next_file[4] ;
+
+
+l_subject_header_segment = iix_property_char:subject_header_segment
+l_header = "&lt;APLUS-PROPERTY&gt;"
+l_position = pos(trun(l_header),p_response)
+
+l_header = "_Condition='SUCCESSFUL'"
+l_header_1 = "_Code='0400'"
+l_position = pos(trun(l_header),p_response)
+l_position_1 = pos(trun(l_header_1),p_response)
+if l_position <> 0 then    --found the header OAPR
+    {
+    l_file_hit = l_position    --at the file hit
+    }
+
+END
+
+string function parse_get_response(string p_search_str, string p_error_str, string p_response)
+BEGIN
+string l_property[5];
+unsigned ascii number l_no_matches_pos[2] ;
+string l_match_type[2] ;
+string p_response_1[2000] ;
+string p_response_2[200] ;
+
+access agqproperty, set agqproperty:app_no = l_app_no, generic
+
+if l_file_hit <> 0 then
+    {
+    change agqproperty
+        begin
+--        agqproperty:app_no         =       l_app_no
+--        agqproperty:sub_code       =       10
+--        agqproperty:date_checked   =       todaysdate
+
+-- property information
+        l_header     = "&gt;&lt;PROPERTY"
+        l_header_1   = "&gt;&lt;/_LEGAL_DESCRIPTION"
+        l_position   = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        p_response_1 = p_response[l_position,l_position_1]
+
+-- city
+        l_header     = "_City"
+        l_header_1   = "_State"
+        l_position   = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with city
+        agqproperty:city           = p_response_2[1,l_position - 1]
+
+        l_header     = "_State"
+        l_header_1   = "_PostalCode"
+        l_position   = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with state
+        agqproperty:str_state       = p_response_2[1,l_position - 1]
+
+-- zipcode
+        l_header     = "_PostalCode"
+        l_header_1   = "_County"
+        l_position   = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with zip code
+        agqproperty:zipcode[1,5]   = val(p_response_2[1,l_position - 1])
+
+-- county
+        l_header     = "_County"
+        l_header_1   = "_PlusFourPostalCode"
+        l_position   = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with county
+        agqproperty:county_name    =  p_response_2[1,l_position - 1]
+
+-- zipcode[6,9]
+        l_header     = "_PlusFourPostalCode"
+        l_header_1   = "_TractNumberIdentifier"
+        l_position   = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with zip code[6,9]
+        agqproperty:zipcode[6,9]   = val(p_response_2[1,l_position - 1])
+
+-- parsed street address
+        l_header     = "&gt;&lt;_PARSED_STREET_ADDRESS"
+        l_header_1   = "&gt;&lt;PROPERTY_OWNER"
+        l_position   = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        p_response_1 = p_response[l_position,l_position_1]
+
+-- house number
+        l_header = "_HouseNumber"
+        l_header_1 = "_ApartmentOrUnit"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with house number
+        agqproperty:st_number      = val(p_response_2[1,l_position - 1])
+
+-- apartment no
+        l_header = "_ApartmentOrUnit"
+        l_header_1 = "_StreetName"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with apt no
+        agqproperty:apt_no         = p_response_2[1,l_position - 1]
+
+-- street name
+        l_header = "_StreetName"
+        l_header_1 = "_StreetSuffix"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with street
+        agqproperty:street         =  p_response_2[1,l_position - 1]
+
+-- street type
+        l_header = "_StreetSuffix"
+        l_header_1 = "_DirectionPrefix"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with street type
+        agqproperty:st_type        = p_response_2[1,l_position - 1]
+
+-- street direction
+        l_header = "_DirectionPrefix"
+        l_header_1 = "_DirectionSuffix"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with street direction
+        agqproperty:st_direction   = p_response_2[1,l_position - 1]
+
+-- general description
+        l_header     = "&gt;&lt;_GENERAL_DESCRIPTION"
+        l_header_1   = "&gt;&lt;_EXTERIOR_DESCRIPTION"
+        l_position   = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        p_response_1 = p_response[l_position,l_position_1]
+
+-- year built
+        l_header = "_YearBuiltDateIdentifier"
+        l_header_1 = "_EffectiveYearBuiltDateIdentifier"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first ' for year built      example '1997'
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second ' for year built    example '1997'
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with year built
+        agqproperty:year_built = val(p_response_2[1,l_position - 1])
+
+-- no stories
+        l_header = "_TotalStoriesNumber"
+        l_header_1 = "_TotalUnitNumber"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with year built
+        agqproperty:no_stories      = val(p_response_2[1,l_position - 1])
+
+-- no units
+        l_header = "_TotalUnitNumber"
+        l_header_1 = "_TotalCommUnitNumber"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with no units
+        agqproperty:no_units        =  val(p_response_2[1,l_position - 1])
+
+-- heating type
+        l_header = "_HeatingTypeDescription"
+        l_header_1 = "_PorchTypeDescription"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with heating type
+        agqproperty:heating_type    =  p_response_2[1,l_position - 1]
+
+-- exterior description
+        l_header     = "/&gt;&lt;_EXTERIOR_DESCRIPTION"
+        l_header_1   = "/&gt;&lt;_FOUNDATION"
+        l_position   = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        p_response_1 = p_response[l_position,l_position_1]
+
+-- Roof Surface
+        l_header   = "_RoofSurfaceDescription"
+        l_header_1 = "_RoofTypeDescription"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with roof surface
+        agqproperty:roof_type       = p_response_2[1,l_position - 1]
+
+-- construction type
+        l_header = "_ExteriorWallsIdentifier"
+        l_header_1 = "_RoofShape"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with construction type
+        agqproperty:construction_type = p_response_2[1,l_position - 1]
+
+-- Room Count
+        l_header     = "&gt;&lt;_ROOM_COUNT"
+        l_header_1   = "&gt;&lt;_COOLING"
+        l_position   = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        p_response_1 = p_response[l_position,l_position_1]
+
+-- total baths
+        l_header = "_TotalBathsCount"
+        l_header_1 = "_TotalFullBathsCount"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with number of bathroosm
+        agqproperty:no_bathrooms    =  val(p_response_2[1,l_position - 1])
+
+-- total square feet
+        l_header = "_TotalLivingAreaSquareFeetNumber"
+        l_header_1 = "_GrossLivingAreaSquareFeetNumber"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with square feet
+        agqproperty:square_feet    =  val(p_response_2[1,l_position - 1])
+
+-- pool
+        l_header     = "&gt;&lt;_POOL"
+        l_header_1   = "&gt;&lt;/_FEATURES"
+        l_position   = pos(trun(l_header),p_response)
+        l_position_1 = pos(trun(l_header_1),p_response)
+        p_response_1 = p_response[l_position,l_position_1]
+
+-- has pool
+        l_header = "_HasFeatureIndicator"
+        l_header_1 = "_Description"
+        l_position = pos(trun(l_header),p_response_1)
+        l_position_1 = pos(trun(l_header_1),p_response_1)
+        p_response_2 = p_response_1[l_position,l_position_1]
+
+        -- find the first '
+        l_header = "'"
+        l_header_2 = len(p_response_2)
+        l_position = pos(trun(l_header),p_response_2)
+        p_response_2 = p_response_2[l_position + 1,l_header_2]
+
+        -- find the second '
+        l_header = "'"
+        l_position = pos(trun(l_header),p_response_2)
+
+        -- update file with pool information
+        agqproperty:pool      = p_response_2[1,l_position - 1]
+
+        agqproperty:updated   = 1
+        end
+
+    return l_property
+    }
+else
+    {
+    l_position = pos(p_error_str,p_response)   --found location of the start of the error string
+    l_position_1 = pos("</return>",p_response)   --find the ending of the error message
+    if l_position <> 0 then
+        {
+        l_error_message = p_response[l_position+len(p_error_str),l_position_1 - 1]
+        }
+    return l_error_message  --Means there was an error processing the request.  I will have to write out the error message to a file.
+    }
+
+END
+
+/*string function parse_get_response(string p_search_str, string p_error_str, string p_response)
+BEGIN
+unsigned ascii number l_position[6];
+unsigned ascii number l_position1[6];
+string l_property[5];
+
+l_position = pos(p_search_str,p_response)   --found location of the start of the p_search_string
+
+if l_position <> 0 then
+    {
+    l_property = p_response[l_position+12,l_position+19]
+    return l_property
+    }
+else
+    {
+    l_position = pos(p_error_str,p_response)   --found location of the start of the error string
+    l_position1 = pos("</return>",p_response)   --find the ending of the error message
+    if l_position <> 0 then
+        {
+        l_error_message = p_response[l_position+len(p_error_str),l_position1 - 1]
+        }
+
+    return l_error_message  --Means there was an error processing the request.  I will have to write out the error message to a file.
+    }
+
+END*/
+
+Procedure get_accept_message_from_request(string p_response)
+BEGIN
+unsigned ascii number l_position[4];
+string l_search_str[20] = "Accept:";
+
+l_accept_id = ""
+l_position = pos(l_search_str,p_response)  --found location of the start of the Accept:
+if p_response[l_position,l_position+6] = "Accept:" then
+    {
+    l_accept_id = p_response[l_position+7,l_position+16]
+    }
+else   --accept_id did not return one the get request.  This could be because of login information is wrong.
+    {
+    l_accept_id = ""
+    }
+write("%c-->%s<--<nl>",11002,L_accept_id)
+
+End
+
+procedure fillin_get_response(string p_accept_id)             --this uses the get response which need to have the accept_id
+
+BEGIN
+  string l_request_format[34];
+  access iix_property_char,
+     set iix_property_char:which_protocol = l_which_protocol, approximate   --WAS IIX
+deletefile(l_filename1)
+l_request_format= iix_property_char:user_name +
+                  iix_property_char:user_password +
+                  str(iix_property_char:account_number,"999999") +
+                  iix_property_char:bill_code +
+                  iix_property_char:product +
+                  p_accept_id
+
+writefile(l_filename1,"%s",trun(iix_property_char:XML_BEFORE_GET_RESPONSE_FORMAT))
+writefile(l_filename1,"%s",trun(l_request_format))
+writefile(l_filename1,"%s",trun(iix_property_char:XML_AFTER_GET_RESPONSE_FORMAT))
+closefile(l_filename1)
+END
+
+procedure get_property_request        --fills in for the orginal request.
+BEGIN
+string l_request_format[528];
+access iix_property_char,
+     set iix_property_char:which_protocol = l_which_protocol, approximate --was "IIX"
+
+l_request_format= iix_property_char:user_name +
+                  iix_property_char:user_password +
+                  str(iix_property_char:account_number,"999999") +
+                  iix_property_char:bill_code +
+                  iix_property_char:product +
+                  uppercase(iix_property_char:last_name) +
+                  uppercase(iix_property_char:first_name) +
+                  uppercase(iix_property_char:address_format) +
+                  iix_property_char:apt_number +
+                  iix_property_char:direction_prefix +
+                  iix_property_char:street_direction +
+                  iix_property_char:house_number +
+                  iix_property_char:street_name +
+                  iix_property_char:street_type +
+                  iix_property_char:address2 +
+                  iix_property_char:city_name +
+                  iix_property_char:str_state +
+                  iix_property_char:county_name +
+                  iix_property_char:zip_code +
+                  iix_property_char:country +
+                  iix_property_char:formatted_apn +
+                  iix_property_char:quoteback
+
+writefile(l_filename1,"%s",trun(iix_property_char:XML_BEFORE_REQUEST_FORMAT))
+writefile(l_filename1,"%s",l_request_format)
+writefile(l_filename1,"%s",trun(iix_property_char:XML_after_REQUEST_FORMAT))
+writefile(l_filename2,"%s",trun(iix_property_char:XML_BEFORE_REQUEST_FORMAT))
+writefile(l_filename2,"%s",l_request_format)
+writefile(l_filename2,"%s",trun(iix_property_char:XML_after_REQUEST_FORMAT))
+closefile(l_filename1)
+closefile(l_filename2)
+END
+
+End

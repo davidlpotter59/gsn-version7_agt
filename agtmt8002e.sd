@@ -1,0 +1,762 @@
+%% 
+Screen
+        Name = "agtmt8002e"
+        Type = "Multiline"
+        Domain = "sfspolicywideoptend"
+        Resizeable = True
+        ScreenSize = "95X32"
+        Repeat T_REPEATED,100 times down, wrap across ;
+        Iconline = 0
+        Statusbar = false
+        HighLightRecord = True
+        HighlightField = False
+        ShowUnusedRecords = False
+        Scrollprompt = ""
+        Autoscroll = True
+
+        Global Unsigned Ascii Number g_app_no[11] ;
+        Global Unsigned Ascii Number g_prem_no[4] ;
+        Global Unsigned Ascii Number g_build_no[4] ;
+        Global Unsigned Ascii Number g_state[2] ;
+        Global Unsigned Ascii Number g_line_of_business[4] ;
+
+        Global String g_code[7] ,
+                      g_first[1] ,
+                      g_company_id[10] ;
+
+        Local UNSIGNED ASCII Number l_selected[1] ,
+                                    l_limit[8] ,
+                                    l_state[2] ,
+                                    l_line_of_business[4],
+                                    l_last_prem_no[4],
+                                    l_last_build_no[4],
+                                    l_first_prem_no[4],
+                                    l_first_build_no[4],
+                                    l_no_locations[2]=0 ;
+
+        local string l_first[1] ,
+                     l_inland_exists[1] ,
+                     l_company_id[10],
+                     l_first_str_location[8],
+                     l_last_str_location[8],
+                     l_str_location[8],
+                     l_first_location[1]="Y",
+                     l_enter,
+                     l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7];
+
+        -- Returns the default selected value
+        Number Function getSelected(Number, String)
+
+        -- Returns Y if subscreen is complete else returns N
+        String Function isPopupComplete(Number, String)
+
+        -- Returns Y if the endorsement exists else returns N
+        String Function endorsementExists(Number, String)
+
+Style Definition
+
+        Include "styles.inc"
+
+        Style {
+                ContentAlignment = Left
+                BackgroundColor = "#ffffff"
+                BorderStyle = None
+                Transparent = False
+        } Tagged T_LISTBOX_FIELD_STYLE
+
+Functions
+
+        "redisplay" display/noreturn "agtmt8002e" ;
+        "func1" display/noreturn "agtmt8002" tagged calc_fn ;
+        change   tagged change_fn ;
+        print    tagged print_fn ;
+        next tagged next_fn ;
+        previous tagged previous_fn ;
+
+        ReAccess ;
+
+        "DISPLAY_ENDORSEMENT_SCREEN"
+                ReAccess/KeepSelection {
+                                        g_code = sfspolicywideoptend:CODE
+                                        if sfspolicywideoptend:popup_screen <> "" then
+                                            Display Modal Screen trun(sfspolicywideoptend:popup_screen)
+                } ;
+
+        "TOGGLE_ENDORSEMENT"
+                ReAccess/KeepSelection {
+                                       -- If the enforsement is not selected ?
+                                       If getSelected(agqliability:app_no, sfspolicywideoptend:CODE) = 0 Then
+                                           {
+                                           -- Endorsement not selected, so select it
+                                           Do ToggleEndorsement(agqliability:app_no, sfspolicywideoptend:CODE,1)
+
+                                           -- We have selected the endorsement, so display the popup screen
+                                           Function = "DISPLAY_ENDORSEMENT_SCREEN"
+                                           Abort()
+                                           }
+                                       Else
+                                           {
+                                           -- Endorsement is selected, so deselect it
+                                           Do ToggleEndorsement(agqliability:app_no, sfspolicywideoptend:CODE,0)
+                                           }
+                } ;
+
+Event Definition
+        windowclosed {
+                     -- do nothing
+                     }
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+if l_first = "" then
+    begin
+    function = "redisplay"
+    l_first = "N"
+    end
+
+access agqname, set agqname:app_no = g_app_no, exact
+
+Access agqliability, Set agqliability:app_no   = g_app_no,
+                         agqliability:prem_no  = g_prem_no,
+                         agqliability:build_no = g_build_no, Generic
+
+Access sfspolicywideoptend,
+        Set sfspolicywideoptend:COMPANY_ID       = agqliability:COMPANY_ID,
+        Set sfspolicywideoptend:STATE            = agqliability:STATE,
+        Set sfspolicywideoptend:LINE_OF_BUSINESS = agqliability:RATING_LINE_OF_BUSINESS, generic
+
+Function = "REACCESS"
+
+Access Validation
+access agqname, set agqname:app_no = g_app_no, exact
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+Access agqliability, Set agqliability:app_no = g_app_no,
+                         agqliability:prem_no = g_prem_no,
+                         agqliability:build_no = g_build_no, Generic
+
+access sfsoptend, set sfsoptend:company_id = agqliability:company_id,
+                      sfsoptend:state = agqliability:state,
+                      sfsoptend:line_of_business = agqliability:rating_line_of_business,
+                      sfsoptend:code = sfspolicywideoptend:code, generic
+
+skip if sfsoptend:end_lob_code not one of "L"
+
+skip if sfspolicywideoptend:class_code not one of 99996
+
+-- Get the selected default
+l_selected = getSelected(agqliability:app_no, sfspolicywideoptend:CODE)
+
+Screen at 1,1 to 28,100
+
+Tagged MAIN_SCREEN
+    Properties {
+               Layouttype = Column
+               BorderStyle = None
+               BorderPadding = 5
+               LayoutGap = 5
+               Backgroundimagename = "quotebackground.jpg"
+               }
+{
+
+Panel/Hidden
+    Properties {
+               LayoutType = Row
+               }
+
+    {
+        Fields
+            Function
+                Properties {
+                           Editable = False
+                           }
+                Events     {
+                           !SPACE {
+                                  EVENT.CONSUMED = TRUE
+                                  Function = "TOGGLE_ENDORSEMENT"
+                                  Abort()
+                                  }
+                            } ;
+
+            sfspolicywideoptend:COMPANY_ID ;
+
+            sfspolicywideoptend:STATE ;
+
+            sfspolicywideoptend:LINE_OF_BUSINESS ;
+
+    }
+
+Panel Tagged T_HEADING_PANEL
+    Properties {
+               Layouttype = Row
+               }
+{
+    Components
+        Guidetext at 1,1
+            Properties {
+                       Iconname = "qp_logo.gif"
+                       }
+}
+
+Panel to 2,1
+    Properties {
+               LayoutType = Row
+               Backgroundcolor = "Grey"
+               Transparent = False
+               BorderPadding = 5
+               BorderStyle = None
+               }
+{
+    Panel
+        Properties {
+                   LayoutType = Row
+                   LayoutConstraints = STRETCH
+                   }
+    {
+        Components
+            Guidetext tagged display_information_box
+                Properties {
+                           Text = "Liability Information - Optional Endorsements..."
+                           Fontsize = 18
+                           Fontstyle = BOLD
+                           Transparent = False
+                           Fontname = "arial"
+                           Backgroundcolor = "Grey"
+                           }
+
+            Guidetext
+                Properties {
+                           LayoutConstraints = STRETCH
+                           }
+    }
+
+Panel
+    Properties {
+               LayoutType = Row
+               LayoutAlignment = Middle
+               LayoutPreferredSize = True
+               }
+{
+    Components
+        Guidetext
+            Properties {
+                       Text = "App No: "
+                       }
+
+            Fields
+                agqliability:app_no/displayonly ;
+            }
+
+}
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = row
+               layoutalignment = right
+               }
+    {
+    Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 4.45,91
+        Properties
+            {
+            layouttype = row
+            layoutalignment = right
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt8002e.sd"
+                      fontsize = 9
+                    }
+      }
+
+Panel at 4,33 to 4,100 Tagged rating_pl
+        Properties
+            {
+            layouttype = screen
+            }
+{
+%%
+Location No: ____    Building No: ____
+
+%%
+
+components
+
+fields
+101   agqliability:prem_no/displayonly ;
+102   agqliability:build_no/displayonly ;
+
+}
+
+SplitPanel
+        Properties {
+                LayoutType = Column
+                LayoutConstraints = STRETCH
+--                LayoutGap = 5
+        }
+        {Panel
+                Properties {
+                        LayoutType = Border
+                        LayoutConstraints = STRETCH
+                        ScrollbarPolicy = AsNeeded
+                        BorderStyle = Plain
+                }
+
+                {Panel to 1,50--75
+                        Tagged T_REPEATED
+                        Properties {
+                                Layouttype = Row
+                                Transparent = True
+                        }
+
+                        {Fields
+
+                                trun(sfspolicywideoptend:policy_wide_form_desc) + " " + sfspolicywideoptend:FORM_PRINT/Style=T_LISTBOX_FIELD_STYLE to 1,40--60
+                                        Tagged REPEATED_LINES
+                                        Properties {
+                                                Transparent = true
+                                                Fontsize = 12
+                                                Fontstyle = BOLD
+                                                Fontname = "arial"
+                                                ForeGroundColor =
+                                                        (If l_selected = 1 and sfspolicywideoptend:popup_screen > "" Then
+                                                                If isPopupComplete(agqliability:app_no, sfspolicywideoptend:CODE) = "Y" Then
+                                                                        "blue"
+                                                                else
+                                                                        "red"
+
+                                                         Else
+                                                                "black"
+                                                        )
+
+                                                CursorShape = (If l_selected = 1 and sfspolicywideoptend:popup_screen > "" Then Hand Else Default)
+                                        }
+                                        Events {
+
+                                                MouseClicked {
+
+                                                        CurrentRecord = EVENT.LINE
+
+                                                        Function = "DISPLAY_ENDORSEMENT_SCREEN"
+                                                        Abort()
+                                                }
+                                        } ;
+
+                                l_selected/Style=T_LISTBOX_FIELD_STYLE/checkbox/values="0,1"/default to 1,5
+                                        Tagged REPEATED_LINES
+                                        Properties {
+                                                ContentAlignment = Middle
+                                                transparent = true
+                                        }
+                                        Events {
+                                                MouseClicked {
+
+                                                        CurrentRecord = EVENT.LINE
+
+                                                        Function = "TOGGLE_ENDORSEMENT"
+                                                        Abort()
+                                                }
+                                        } ;
+                        }
+                }
+
+Panel to 4,1
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,75   tagged calc_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = calc_fn
+                }
+
+}
+
+}
+
+}
+
+Screen Exit
+
+Procedure Definition
+
+Number Function getSelected(Number A_app_no, String A_ENDORSEMENT_CODE) {
+
+-- THIS IS INEFFICIENT
+
+-- There appears to be no index on agqend to Access this by the
+-- relevant key values, maybe there aren't that many records to read ?
+
+        Local File F_agqend = Alias for agqend ;
+
+        Local Number l_isSelected = 0 ;
+
+        Access F_agqend,
+                Set F_agqend:app_no = A_app_no,
+                    f_agqend:prem_no = g_prem_no,
+                    f_agqend:build_no = g_build_no,
+                Generic
+
+        While F_agqend:app_no = A_app_no and
+              f_agqend:prem_no = g_prem_no and
+              f_agqend:build_no = g_build_no {
+
+                If F_agqend:CODE = A_ENDORSEMENT_CODE Then {
+                        l_isSelected = 1
+                        Exit
+                }
+
+                Next F_agqend
+        }
+
+        Return l_isSelected
+}
+
+String Function isPopupComplete(Number A_app_no, String A_ENDORSEMENT_CODE) {
+
+        Local File F_agqliability = Alias for agqliability ;
+        local file f_agqname = alias for agqname ;
+        Local File F_agqendorse5 = Alias for agqendorse5 ;
+
+        Local String l_isPopupComplete[1] = "N" ;
+
+        Local Unsigned ASCII Number l_prem_no ;
+        Local Unsigned ASCII Number l_build_no ;
+
+        Access F_agqliability,
+                Set F_agqliability:app_no = A_app_no,
+                Generic
+
+        Access F_agqname,
+                Set F_agqname:app_no = A_app_no,
+                Generic
+
+        access agqendorse5, set agqendorse5:app_no = a_app_no,
+                                agqendorse5:prem_no = g_prem_no,
+                                agqendorse5:build_no = g_build_no,
+                                agqendorse5:code = a_endorsement_code, generic
+
+        if agqendorse5:code = a_endorsement_code then
+            l_isPopupComplete = "Y"
+
+        l_prem_no  = F_agqliability:prem_no
+        l_build_no = F_agqliability:build_no
+
+        Return l_isPopupComplete
+
+}
+
+Procedure ToggleEndorsement(Number A_app_no, String A_ENDORSEMENT_CODE, Number A_SELECTED) {
+
+        Local File F_agqliability = Alias for agqliability ;
+
+        local file f_agqname = alias for agqname ;
+
+        local file f_agqend = alias for agqend ;
+
+        local file f_sfsline = alias for sfsline ;
+
+        Local String l_OK[2] ;
+
+        Access F_agqliability,
+                Set F_agqliability:app_no = A_app_no,
+                    f_agqliability:prem_no = g_prem_no,
+                    f_agqliability:build_no = g_build_no,
+                Generic
+
+        access f_agqname,
+                set f_agqname:app_no = a_app_no, generic
+
+        access f_agqend, set f_agqend:app_no = a_app_no,
+                             f_agqend:prem_no = g_prem_no,
+                             f_agqend:build_no = g_build_no,  generic
+
+        Switch(A_SELECTED)
+
+                -- Enddorsement is selected
+                Case 1 : {
+                         if sfspolicywideoptend:refer_to_company = 1 then
+                             warning "Refer to Underwriting"
+                         do addEndorsements(A_app_no, A_ENDORSEMENT_CODE)
+                         }
+
+                -- Enddorsement is deselected
+                Case 0 : {
+                         do delete_agqend(A_app_no, A_ENDORSEMENT_CODE)
+                         }
+
+        End
+}
+
+procedure addEndorsements(Number A_app_no, String A_ENDORSEMENT_CODE) {
+
+        Local File F_agqliability = Alias for agqliability ;
+        Local File F_agqend = Alias for agqend ;
+        local File F_agqname = Alias for agqname ;
+
+        Local Unsigned ASCII Number l_prem_no[4] ;
+        Local Unsigned ASCII Number l_build_no[4] ;
+        local unsigned ascii number l_state[2] ;
+        local unsigned ascii number l_increase_cov_c[8]=0/dec=4 ;
+        Local string l_continue_1[2] ;
+
+        Access F_agqliability,
+                Set F_agqliability:app_no = A_app_no,
+                Generic
+
+        Access F_agqname,
+                Set F_agqname:app_no = A_app_no, generic
+
+        l_prem_no  = F_agqliability:PREM_NO
+        l_build_no = F_agqliability:BUILD_NO
+
+        Access F_agqend,
+                Set F_agqend:app_no   = A_app_no ,
+                Set F_agqend:PREM_NO  = g_prem_no,
+                Set F_agqend:BUILD_NO = g_build_no,
+                Generic
+
+
+        l_state = f_agqliability:state
+
+        If endorsementExists(A_app_no,A_ENDORSEMENT_CODE) = "N" Then
+                begin
+                Do add_agqend(A_app_no,A_ENDORSEMENT_CODE)
+                end
+
+}
+
+String Function endorsementExists(Number A_app_no, String A_ENDORSEMENT_CODE) {
+
+        Local File F_agqend = Alias for agqend ;
+        Local File F_agqliability = Alias for agqliability ;
+
+        Local String l_endorsementExists[1] = "N" ;
+
+        Access F_agqend,
+                Set F_agqend:app_no   = A_app_no ,
+                    f_agqend:prem_no  = g_prem_no,
+                    f_agqend:build_no = g_build_no,
+                Generic
+
+        l_endorsementexists = "N"
+        while F_agqend:app_no   = A_app_no and
+              f_agqend:prem_no  = g_prem_no and
+              f_agqend:build_no = g_build_no
+               {
+               If F_agqend:CODE = A_ENDORSEMENT_CODE Then
+                   l_endorsementExists = "Y"
+
+               Next F_agqend
+               }
+
+        Return l_endorsementExists
+}
+
+Procedure add_agqend(Number A_app_no, String A_ENDORSEMENT_CODE) {
+
+Local File F_agqend = Alias for agqend ;
+Local File F_agqliability = Alias for agqliability ;
+Local File F_sfspolicywideoptend = Alias for sfspolicywideoptend ;
+Local File F_sfsoptend = Alias for sfsoptend ;
+local file f_agqname = Alias for agqname ;
+
+Local Unsigned ASCII Number l_subCode[4] ;
+local unsigned ascii number l_state[2] ;
+local unsigned ascii number l_increase_cov_c[8]=0/dec=4 ;
+
+Local String l_formEdition[18] ;
+Local String l_description[55] ;
+
+Access F_agqliability, Set F_agqliability:app_no   = A_app_no,
+                           f_agqliability:prem_no  = g_prem_no,
+                           f_agqliability:build_no = g_build_no, Generic
+
+Access F_agqname, Set F_agqname:app_no = A_app_no, Generic
+
+Access F_agqend,
+        Set F_agqend:app_no   = A_app_no ,
+        Set F_agqend:PREM_NO  = g_prem_no,
+        Set F_agqend:BUILD_NO = g_build_no,
+        Generic
+
+l_subCode = 0
+
+while F_agqend:app_no   = A_app_no and
+      F_agqend:PREM_NO  = g_prem_no and
+      F_agqend:BUILD_NO = g_build_no
+    {
+    l_subCode = F_agqend:SUB_CODE
+
+    Next F_agqend
+    }
+
+l_subCode = l_subCode + 10
+
+Access F_sfsoptend,
+        Set F_sfsoptend:COMPANY_ID   = F_agqliability:COMPANY_ID,
+        F_sfsoptend:STATE            = F_agqliability:STATE,
+        F_sfsoptend:LINE_OF_BUSINESS = F_agqliability:rating_LINE_OF_BUSINESS,
+        F_sfsoptend:CODE             = A_ENDORSEMENT_CODE,
+        Generic
+
+while F_sfsoptend:COMPANY_ID       = F_agqliability:COMPANY_ID and
+      F_sfsoptend:STATE            = F_agqliability:STATE and
+      F_sfsoptend:LINE_OF_BUSINESS = F_agqliability:rating_LINE_OF_BUSINESS and
+      F_sfsoptend:CODE             = A_ENDORSEMENT_CODE
+        {
+        If (F_agqname:eff_date >= f_sfsoptend:EFF_DATE and
+           (F_agqname:eff_date <= F_sfsoptend:EXP_DATE or
+           F_sfsoptend:EXP_DATE = 0)) Then
+               {
+               l_formEdition   = F_sfsoptend:form_edition
+               l_description    = F_sfsoptend:description
+               }
+
+        Next F_sfsoptend
+        }
+
+if l_formEdition <> "" then
+    {
+    Add F_agqend
+        {
+        F_agqend:app_no               =       A_app_no
+        F_agqend:PREM_NO              =       g_prem_no
+        F_agqend:BUILD_NO             =       g_build_no
+        F_agqend:SUB_CODE             =       l_subCode
+        F_agqend:CODE                 =       A_ENDORSEMENT_CODE
+        F_agqend:FORM_EDITION         =       l_formEdition
+        F_agqend:DESCRIPTION          =       l_description
+        F_agqend:PREMIUM              =       0
+        F_agqend:LOB_END_CODE         =       "L"
+        }
+    }
+
+}
+
+Procedure delete_agqend(Number A_app_no, String A_ENDORSEMENT_CODE) {
+
+        Local File F_agqend = Alias for agqend ;
+        Local File F_agqendorse5 = Alias for agqendorse5 ;
+        Local File F_agqliability = Alias for agqliability ;
+        Local File F_agqname = Alias for agqname ;
+        Local File F_plsdefault = Alias for plsdefault ;
+        Local file f_sfsline = alias for sfsline ;
+
+        Local Unsigned ASCII Number l_prem_no[4] ;
+        Local Unsigned ASCII Number l_build_no[4] ;
+        Local Unsigned ascii number l_form[1] ;
+
+        Access F_agqliability,
+                Set F_agqliability:app_no = A_app_no,
+                    f_agqliability:prem_no = g_prem_no,
+                    f_agqliability:build_no = g_build_no,
+                Generic
+
+        access f_agqname,
+                set f_agqname:app_no = A_app_no, generic
+
+        l_prem_no  = F_agqliability:PREM_NO
+        l_build_no = F_agqliability:BUILD_NO
+
+         Access F_agqend,
+                Set F_agqend:app_no   = A_app_no ,
+                Set F_agqend:PREM_NO  = g_prem_no,
+                Set F_agqend:BUILD_NO = g_build_no, Generic
+
+            while F_agqend:app_no   = A_app_no and
+                  F_agqend:PREM_NO  = g_prem_no and
+                  F_agqend:BUILD_NO = g_build_no
+                {
+
+                If F_agqend:CODE = A_ENDORSEMENT_CODE Then
+                        Delete F_agqend
+
+                Next F_agqend
+                }
+
+         Access F_agqendorse5,
+                Set F_agqendorse5:app_no   = A_app_no ,
+                Set F_agqendorse5:PREM_NO  = g_prem_no,
+                Set F_agqendorse5:BUILD_NO = g_build_no, Generic
+
+            while F_agqendorse5:app_no   = A_app_no and
+                  F_agqendorse5:PREM_NO  = g_prem_no and
+                  F_agqendorse5:BUILD_NO = g_build_no
+                {
+
+                If F_agqendorse5:CODE = A_ENDORSEMENT_CODE Then
+                        Delete F_agqendorse5
+
+                Next F_agqendorse5
+                }
+
+
+}
+
+procedure delete_popup_files(Number A_app_no, String A_ENDORSEMENT_CODE) {
+
+        Local File F_agqendorse5 = Alias for agqendorse5 ;
+        Local File F_agqliability = Alias for agqliability ;
+
+        Local Unsigned ASCII Number l_prem_no[4] ;
+        Local Unsigned ASCII Number l_build_no[4] ;
+
+        Access F_agqliability,
+                Set F_agqliability:app_no = A_app_no,
+                Generic
+
+        l_prem_no  = F_agqliability:PREM_NO
+        l_build_no = F_agqliability:BUILD_NO
+
+        Access F_agqendorse5,
+                Set F_agqendorse5:app_no   = A_app_no,
+                Set F_agqendorse5:prem_no  = l_prem_no,
+                Set F_agqendorse5:build_no = l_build_no,
+                Set F_agqendorse5:code     = A_ENDORSEMENT_CODE,
+                Generic
+
+        while F_agqendorse5:app_no   = A_app_no and
+              F_agqendorse5:prem_no  = l_prem_no and
+              F_agqendorse5:build_no = l_build_no and
+              F_agqendorse5:code     = A_ENDORSEMENT_CODE {
+                        Delete F_agqendorse5
+                        Next F_agqendorse5
+        }
+
+
+}
+
+End

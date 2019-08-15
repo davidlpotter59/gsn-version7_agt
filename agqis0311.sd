@@ -1,0 +1,450 @@
+%%
+/*
+Date Written: January 20, 2011
+
+Name: agqis0311.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+01/20/2011            JLB            Adverse Action Notification Insurance Scoring Notice
+===========================
+*/
+
+Program
+  Name = "agqis0311";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[12] = "agqis0311.cq";
+
+ Unsigned Ascii Number  l_page_counter;
+ string l_agqis0311_exists[1]="N";
+ String L_COMPANY_ID[10];
+ Number L_BREAK = 40;     --number of characters printed before break
+ Number L_BREAK_POINT;    --where the break occurs and newline is inserted
+ Number L_LOOP;
+ Number L_PAGE_NUMBER = 0;
+ Number L_ITEM_NO = 1;
+ String L_SFPLOCATION_ZIP,
+        l_risk_scoring_code;
+
+ Unsigned Ascii Number l_form[2],
+                       l_max_lines = 60,
+                       l_app_no,
+                       l_code,
+                       l_credit_score;
+
+ Unsigned Ascii Number L_YEAR[4];
+ Unsigned Ascii number L_LINE_OF_BUSINESS[4];
+ Unsigned ascii number l_found[1];
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_LINE_COUNTER=0;
+ Unsigned Ascii Number L_STATE[2]=0;
+ wdate L_EFF_DATE;
+
+   Include "csfonts.inc"
+   Include "swsut100.var"
+   Include "swsut200.var"
+ --Include "swsut300.var"
+   Include "center2.var"
+   Include "line_spacing.var"
+
+Initialization
+  Deletefile (L_FILE_NAME);
+ L_app_no = val(COMMANDLINE[1,11])
+
+--Update
+
+Access agqcreditscore,
+   Set agqcreditscore:app_no     = l_app_no, Generic
+
+Access agqend,
+   Set agqend:app_no    = l_app_no, generic
+
+Access agqname,
+   Set agqname:app_no    = l_app_no, generic
+
+Access plqpersonal,
+   Set plqpersonal:quote_no    = l_app_no,generic
+
+   l_agqis0311_exists = "N"
+    while agqend:app_no    = l_app_no
+         begin
+           if agqend:code = "agqis0311" then
+              l_agqis0311_exists = "Y"
+           next agqend
+         end
+
+   Include "swsut100.inc"
+--   I_CODE = "IS0311"
+   Include "swsut200.inc"
+
+If agqname:eff_date >= 01.01.2012 then
+  {
+    L_STATE            = plqpersonal:STATE
+    L_COMPANY_ID       = agqname:COMPANY_ID
+    L_LINE_OF_BUSINESS = agqname:line_of_business
+
+    Writefile(L_FILE_NAME,"%s","<033>&a200h120V")
+    L_STRING = "FARMERS MUTUAL FIRE INSURANCE COMPANY OF SALEM COUNTY "
+    L_FONT = L_ARIAL_bold_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+120"
+    L_HORIZONTAL_POS = "2800"
+    Include "center3.pro"
+    l_line_counter = l_line_counter + 1
+
+    Writefile(L_FILE_NAME,"%s","<033>&a1500h+130V")
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    Writefile(L_FILE_NAME,"%s","DISCLOSURE NOTICE")
+    Writefile(L_FILE_NAME,"%s","<033>&a+30h-30V")
+    Writefile(L_FILE_NAME,"%s","<033>*c75h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+105h+30V")
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    Writefile(L_FILE_NAME,"%s","INSURANCE SCORING")
+    l_line_counter = l_line_counter + 1.08
+
+    L_STRING = "NOTIFICATION"
+    L_FONT = L_ARIAL_bold_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+130"
+    L_HORIZONTAL_POS = "2800"
+    Include "center3.pro"
+    l_line_counter = l_line_counter + 1.08
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","Dear Applicant,")
+    l_line_counter = l_line_counter + 2.33
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s","Thank you for choosing Farmers Mutual Fire Insurance Co. of Salem Co.")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","Information contained in a consumer report obtained from TransUnion has")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","resulted in you not receiving a lower premium.  The decision to take this action")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","was made by Farmers Mutual Fire Insurance Company of Salem County.")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","TransUnion is unable to provide you with specific reasons on how consumer")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","report affected your homeowner rate. ")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s","If you have been affected by information contained in a consumer report provided ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","by TransUnion, you have the right under the Fair Credit Reporting Act to obtain a ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","free copy of such reports from TransUnion within 60 days of receipt of this notice. ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","Please contact TransUnion to request a copy of report at 800-645-1938 or use ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","the following site:  ")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s",l_underline_start)
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","http://annualcreditreport.transunion.com/tu/disclosure/currentSituation.jsp ")
+    Writefile(L_FILE_NAME,"%s",l_underline_end)
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s","After receiving your consumer report(s), if you disagree with the accuracy or  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","completeness of any information contained therein, you should contact: ")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+240V")
+    l_line_counter = l_line_counter + 2
+    Writefile(L_FILE_NAME,"%s","TransUnion ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","P.O. Box 2000 ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","Chester, PA. 19022 ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","(800)916-8800 ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","You may also dispute using the following site: ")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s",l_underline_start)
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","http://www.transunion.com/corporate/personal/creditDisputes.page ")
+    Writefile(L_FILE_NAME,"%s",l_underline_end)
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s","You may not have received the most favorable outcome due to information  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","obtained from your consumer report.  The following is a list of the credit factors  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","that had the greatest impact in preventing you from receiving a higher score: ")
+--    Writefile(L_FILE_NAME,"%s","<033>&a700h+120V")
+    l_line_counter = l_line_counter + 1.5
+
+    For l_loop = 1 to 4
+      {
+        l_risk_scoring_code = agqcreditscore:risk_scoring_code[l_loop]
+
+        Access risk_scoring_factors,
+           Set risk_scoring_factors:code = l_risk_scoring_code ,  exact
+        if l_line_counter >= l_max_lines - 5 then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a700h6960V")
+            Writefile(L_FILE_NAME,"%s",l_arial)
+            Writefile(L_FILE_NAME,"%s",str(l_app_no))
+
+            Writefile(L_FILE_NAME,"%s","  ")
+            Writefile(L_FILE_NAME,"%s",l_arial)
+            Writefile(L_FILE_NAME,"%s",str(agqname:agent_no))
+
+            Writefile(L_FILE_NAME,"%s","<033>&a700h7080V")
+            Writefile(L_FILE_NAME,"%s",l_arial)
+            Writefile(L_FILE_NAME,"%s","AdverseActionInsScore032011 (Revised 092011) ")
+
+            If l_page_number = 2 then
+              {
+            l_page_number = l_page_number + 1
+            Writefile(L_FILE_NAME,"%s","<033>&a5100h7080V")
+            Writefile(L_FILE_NAME,"%s",l_arial)
+            Writefile(L_FILE_NAME,"%s","Page ")
+            Writefile(L_FILE_NAME,"%n",l_page_number)
+
+                Writefile(L_FILE_NAME,"%s","<033>&a4600h6960V")
+                Writefile(L_FILE_NAME,"%s",l_arial)
+                Writefile(L_FILE_NAME,"%s","See Reverse Side")
+              }
+
+            Writefile(L_FILE_NAME,"%s","<FF>")
+
+            Writefile(L_FILE_NAME,"%s%s","<033>&a+0h0V","<NL>")
+          }
+
+
+        If trun(l_risk_scoring_code) <> "" then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a700h+180V")
+            l_line_counter = l_line_counter + 1.5
+--            Writefile(L_FILE_NAME,"%s",l_arial_12)
+--            Writefile(L_FILE_NAME,"%n.",l_loop)
+            l_font             = l_arial_12
+            l_v_position       = "+0"
+            l_h_position       = "700"
+            l_character_string =trun(risk_scoring_factors:explanation)
+            l_max_char         = 70
+            include "line_spacing.inc"
+          }
+      }
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h6960V")
+    Writefile(L_FILE_NAME,"%s",l_arial)
+    Writefile(L_FILE_NAME,"%s",str(l_app_no))
+
+    Writefile(L_FILE_NAME,"%s","  ")
+    Writefile(L_FILE_NAME,"%s",l_arial)
+    Writefile(L_FILE_NAME,"%s",str(agqname:agent_no))
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h7080V")
+    Writefile(L_FILE_NAME,"%s",l_arial)
+    Writefile(L_FILE_NAME,"%s","AdverseActionInsScore032011 (Revised 092011) ")
+
+    If l_page_number = 2 then
+      {
+    l_page_number = l_page_number + 1
+    Writefile(L_FILE_NAME,"%s","<033>&a5100h7080V")
+    Writefile(L_FILE_NAME,"%s",l_arial)
+    Writefile(L_FILE_NAME,"%s","Page ")
+    Writefile(L_FILE_NAME,"%n",l_page_number)
+
+        Writefile(L_FILE_NAME,"%s","<033>&a4600h6960V")
+        Writefile(L_FILE_NAME,"%s",l_arial)
+        Writefile(L_FILE_NAME,"%s","See Reverse Side")
+      }
+
+    Writefile(L_FILE_NAME,"%s","<FF>")
+  }
+else
+  {
+    L_STATE            = plqpersonal:STATE
+    L_COMPANY_ID       = agqname:COMPANY_ID
+    L_LINE_OF_BUSINESS = agqname:line_of_business
+
+    Writefile(L_FILE_NAME,"%s","<033>&a200h120V")
+
+    L_STRING = "FARMERS MUTUAL FIRE INSURANCE COMPANY OF SALEM COUNTY "
+    L_FONT = L_ARIAL_bold_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+120"
+    L_HORIZONTAL_POS = "2800"
+    Include "center3.pro"
+    l_line_counter = l_line_counter + 1
+
+    Writefile(L_FILE_NAME,"%s","<033>&a1100h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    Writefile(L_FILE_NAME,"%s","DISCLOSURE NOTICE")
+    Writefile(L_FILE_NAME,"%s","<033>&a+30h-30V")
+    Writefile(L_FILE_NAME,"%s","<033>*c75h8v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+105h+30V")
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    Writefile(L_FILE_NAME,"%s","ADVERSE ACTION NOTIFICATION ")
+
+    L_STRING = "INSURANCE SCORING"
+    L_FONT = L_ARIAL_bold_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+130"
+    L_HORIZONTAL_POS = "2800"
+    Include "center3.pro"
+    l_line_counter = l_line_counter + 1.08
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","An adverse rating decision has been made based in part on information  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","contained in a consumer report obtained from TransUnion.  The decision to take  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","this action was made by Farmers Mutual Fire Insurance Company of Salem  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","County.   TransUnion is unable to provide you with specific reasons on how  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","consumer report affected your homeowner rate. ")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s","You may not have received the most favorable outcome due to information  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","obtained from your consumer report.  The following is a list of the credit factors  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","that had the greatest impact in preventing you from receiving a higher score: ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+180V")
+    l_line_counter = l_line_counter + 1.5
+
+
+    For l_loop = 1 to 4
+      {
+        l_risk_scoring_code = agqcreditscore:risk_scoring_code[l_loop]
+
+        Access risk_scoring_factors,
+           Set risk_scoring_factors:code = l_risk_scoring_code ,  exact
+
+        If trun(l_risk_scoring_code) <> "" then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a700h+180V")
+            l_line_counter = l_line_counter + 1.5
+            Writefile(L_FILE_NAME,"%s",l_arial_12)
+            Writefile(L_FILE_NAME,"%n.",l_loop)
+            l_font             = l_arial_12
+            l_v_position       = "+0"
+            l_h_position       = "850"
+            l_character_string =trun(risk_scoring_factors:explanation)
+            l_max_char         = 70
+            include "line_spacing.inc"
+          }
+      }
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s","If you have been adversely affected by information contained in a consumer  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","report provided by TransUnion, you have the right under the Fair Credit  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","Reporting Act to obtain a free copy of such reports from TransUnion within 60  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","days of receipt of this notice.  Please contact TransUnion to request a copy of  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","report at 800-645-1938 or use the following site:  ")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s",l_underline_start)
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","http://annualcreditreport.transunion.com/tu/disclosure/currentSituation.jsp ")
+    Writefile(L_FILE_NAME,"%s",l_underline_end)
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s","After receiving your consumer report(s), if you disagree with the accuracy or  ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","completeness of any information contained therein, you should contact: ")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+240V")
+    l_line_counter = l_line_counter + 2
+    Writefile(L_FILE_NAME,"%s","TransUnion ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","P.O. Box 2000 ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","Chester, PA. 19022 ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","(800)916-8800 ")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","You may also dispute using the following site: ")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s",l_underline_start)
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","http://www.transunion.com/corporate/personal/creditDisputes.page ")
+    Writefile(L_FILE_NAME,"%s",l_underline_end)
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h7000V")
+    Writefile(L_FILE_NAME,"%s",l_arial)
+    Writefile(L_FILE_NAME,"%s",str(l_app_no))
+
+    Writefile(L_FILE_NAME,"%s","  ")
+    Writefile(L_FILE_NAME,"%s",l_arial)
+    Writefile(L_FILE_NAME,"%s",str(agqname:agent_no))
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h7200V")
+    Writefile(L_FILE_NAME,"%s",l_arial)
+    Writefile(L_FILE_NAME,"%s","AdverseActionInsScore032011 ")
+    Writefile(L_FILE_NAME,"%s","<FF>")
+  }
+update
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+End

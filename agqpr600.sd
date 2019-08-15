@@ -1,0 +1,1155 @@
+%%                                                                
+Program
+        Name = "agqpr600";
+        Type = "File";
+        Domain = "flat";
+        Padcharacter = Space;
+
+        Array[120] Of STRING L_CODE_ARRAY[10];
+
+        String L_FILE_NAME[11] = "agqpr600.cq" ,
+               L_STATE,
+               l_user_id[15],
+               l_first[1],
+               l_antitheft[30],
+               l_dumping[30],
+               l_safety[30],
+               l_address[50],
+               L_STATE_STR[2],
+               L_agqNAME_ZIP="",
+               L_agqvehicle_ZIP="",
+               L_SFPSUPP1_ZIP[10],
+               L_MORGAGE_ID[10],
+               L_SIGNATURE_STRING[55],
+               L_PREV_STRING,
+               L_TYPE_STR[29],
+               L_TRANS_EFF,
+               L_AUDIT="",
+               L_SYMBOL_STRING[5] ="",
+               L_AGENT_TEL[13],
+               L_COMPANY[10]="",
+               L_SFQNAME_ZIP = "",
+               L_FOB[75],
+               L_ENTER,
+               L_AGENT_ZIP,
+               L_COPY_NAME[20],
+               L_COMPANY_ZIP[10],
+               L_INSURED_CITY_STATE[100],
+               L_LOB_CODE[10],
+               L_COMPANY_ID[10],
+               L_FULL_CLASS_CODE[4],
+               L_SFSMORT_ZIP[10],
+               L_MORTAGE_TYPE_2[1],
+               L_BILL_PLAN[2],
+               l_class_code[5],
+               L_TERROR_FORM[7],
+               L_MORTGAGE_TYPE_1[1],
+               L_TEST,
+               L_CODE,
+               L_PLEASED_WORDING[200],
+               L_PRODUCER_LABEL,
+               L_CHARACTER_STRING[1000] = "",
+               L_V_POSITION = "",
+               L_H_POSITION = "",
+               L_NEWPAGE_WORDING;
+
+        Number L_RENEWAL[9],
+               L_MM_1,
+               L_DD_1,
+               L_YY_1,
+               L_LOOP =0,
+               L_SWITCH_COL_COUNTER = 1,
+               L_TRANS_CODE,
+               L_PAGE_NUMBER = 1;
+
+        Ascii Number L_LENGTH,
+                     L_WIDTH,
+                     L_HORZ_LOC,
+                     L_VERT_LOC;
+
+        Unsigned ascii number l_app_no[11],
+                              l_commercial_underwriter[2],
+                              l_quote_no[11],
+                              L_COUNTER[3],
+                              l_class[5],
+                              L_MASTER_CODE[4],
+                              l_pip_total[6],
+                              l_vehicle_total[6],
+                              L_PAGENUMBER,
+                              L_LINE_PCOUNTER = 1,
+                              L_LINE_TCOUNTER = 0,
+                              L_LINE_TPCOUTER = 58,
+                              L_POL_YEAR[4],
+                              L_ENDORSEMENT_SEQ[4],
+                              L_S_LINE_FOR_AGENT = 0,
+                              L_E_LINE_FOR_ISSURED = 0,
+                              L_BIGGER_LINE =0,
+                              L_SCREEN_COR= 0,
+                              L_agqVEHICLE_STATE[2],
+                              L_agqVEHICLE_COUNTY[3],
+                              L_LINE_OF_BUSINESS[4],
+                              L_LESSOR_Y_N = 0,
+                              L_RENTAL_HEADING_PRINTED = 0,
+                              L_TWO_PLACER,
+                              L_STATE2[2],
+                              L_DECIPOINT,
+                              L_CHARACTER_PER_INCH,
+                              L_STATE_NO[2],
+                              L_PAGE_MIDDLE,
+                              L_HALF_MULTIPLIER,
+                              L_LEN_STRING,
+                              L_CHAR_MULTIPLIER,
+                              L_LINE_HEIGHT,
+                              L_SIZE_COUNTER,
+                              L_MAX_LINES,
+                              L_LOCATION_COUNTER,
+                              L_AGENT_COUNTER,
+                              L_INSURED_COUNTER,
+                              L_OPTIONAL_COVERAGE_TOTAL[9],
+                              L_START_PRINT[4]    = 0,
+                              L_END_PRINT[4]      = 0,
+                              L_CHARACTER_BREAK   = 0,
+                              L_CHARACTER_COUNTER = 0,
+                              L_MAX_CHAR          = 0,
+                              L_vertical_pos2[4],
+                              L_LINE_COUNTER/decimals=2,
+                              L_NUM_FORMS = 0;
+
+        Wdate L_SFSEND_DATE;
+
+        Include "csfonts.inc"
+        Include "sfsrevname.var"
+        Include "swsut100.var"
+        Include "center2.var"
+
+Initialisation
+Deletefile(L_FILE_NAME);
+L_APP_NO = val(COMMANDLINE[1,11])
+
+Access agqVEHICLE, Set agqVEHICLE:app_NO = L_APP_NO,Generic
+
+Access AGQNAME,
+     Set AGQNAME:APP_NO = L_APP_NO, Generic
+
+Access SFSAGENT ,
+     Set SFSAGENT:COMPANY_ID = agqvehicle:COMPANY_ID,
+         SFSAGENT:AGENT_NO   = agqvehicle:AGENT_NO, Exact
+
+Access SFSCOMPANY,
+     Set SFSCOMPANY:COMPANY_ID = agqvehicle:COMPANY_ID , Exact
+
+Access SFSLINE,
+     Set SFSLINE:COMPANY_ID       = agqvehicle:COMPANY_ID ,
+         SFSLINE:LINE_OF_BUSINESS = agqvehicle:LINE_OF_BUSINESS,
+         SFSLINE:LOB_SUBLINE      = "00", Generic
+
+l_user_id = username
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = l_user_id, generic
+
+l_commercial_underwriter = sfsagent:commercial_underwriter
+access sfscomun, set sfscomun:company_id             = agqvehicle:company_id,
+                     sfscomun:commercial_underwriter = l_commercial_underwriter, generic
+
+Access agqMASTER, Set agqMASTER:app_no = L_APP_NO, Generic
+
+access agqmastsupp, set agqmastsupp:app_no           = l_app_no,
+                        agqmastsupp:line_of_business = agqvehicle:line_of_business, generic
+
+access agqnonowned, set agqnonowned:app_no = l_app_no, generic
+
+access agqdoc, set agqdoc:app_no = l_app_no, generic
+
+access agqmisc, set agqmisc:app_no = l_app_no, generic
+
+access agqdev, set agqdev:app_no = l_app_no, generic
+
+Access SCIPSCONTROL,
+     Set SCIPSCONTROL:COMPANY_ID = L_COMPANY_ID,
+         SCIPSCONTROL:STATE      = I_STATE,
+         SCIPSCONTROL:LOB_CODE   = L_LOB_CODE,Exact
+
+Writefile(L_FILE_NAME,"%s",L_LEDUP)
+Writefile(L_FILE_NAME,"%s","<033>&a0h0V")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+L_STRING     = trun(sfscompany:name[1])
+L_FONT       = L_ARIAL_BOLD_12
+L_PITCH_HALF = 8
+L_PITCH_FULL = 16
+L_VERTICAL_POS = "+240"
+Include "center2.pro"
+
+if agqvehicle:line_of_business = 16 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_ARIAL_BOLD,"<033>&a2500h+0V","PREMIER")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s","Application No: ")
+Writefile(L_FILE_NAME,"%s",trun(str(l_app_no)))
+
+Writefile(L_FILE_NAME,"%s","<033>&a2000h+0V")
+Writefile(L_FILE_NAME,"%s","Name: ")
+Writefile(L_FILE_NAME,"%s","<033>&a2400h+0V")
+i_name = agqvehicle:business_name[1]
+include "sfsrevname7.pro"
+Writefile(L_FILE_NAME,"%s",trun(toggle(i_rev_name)))
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL))
+Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+Writefile(L_FILE_NAME,"%s","Effective Date: ")
+Writefile(L_FILE_NAME,"%s",str(agqvehicle:eff_date,"MM/DD/YYYY"))
+Writefile(L_FILE_NAME,"%s","<033>&a2000h+0V")
+Writefile(L_FILE_NAME,"%s","Expiration Date: ")
+Writefile(L_FILE_NAME,"%s",str(agqvehicle:exp_date,"MM/DD/YYYY"))
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+Access SFSAGENT,
+   Set SFSAGENT:COMPANY_ID = agqvehicle:COMPANY_ID,
+       SFSAGENT:AGENT_NO   = agqvehicle:AGENT_NO, Exact
+
+For L_LOOP = 1 To 3
+    {
+    If SFSAGENT:NAME[L_LOOP] <> "" Then
+        {
+        Writefile(L_FILE_NAME,"%s%s","<033>&a200h+0V",toggle(SFSAGENT:NAME[L_LOOP]))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        l_agent_counter = l_agent_counter + 1
+        }
+    }
+For L_LOOP = 1 To 3
+    {
+    If SFSAGENT:ADDRESS[L_LOOP] <> "" Then
+        {
+        Writefile(L_FILE_NAME,"%s%s%s","<033>&a200h+0V",toggle(SFSAGENT:ADDRESS[L_LOOP]),"<NL>")
+        l_agent_counter = l_agent_counter + 1
+        }
+    }
+l_address = trun(toggle(sfsagent:city)) + ", " + trun(sfsagent:str_state) + " " + trun(sfsagent:str_zipcode[1,5])
+Writefile(L_FILE_NAME,"%s%s","<033>&a200h+0V",l_address)
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+l_first = "Y"
+
+while agqvehicle:app_no = l_app_no
+    begin
+    access castype, set castype:company_id       = agqvehicle:company_id,
+                        castype:state            = agqvehicle:state,
+                        castype:line_of_business = agqvehicle:line_of_business,
+                        castype:type             = agqvehicle:type, generic
+
+    access sfsstate, set sfsstate:company_id = agqvehicle:company_id,
+                         sfsstate:state      = agqvehicle:state,
+                         sfsstate:county     = "000", generic
+
+    access sfsstate_alias, set sfsstate_alias:company_id = agqvehicle:company_id,
+                               sfsstate_alias:state      = agqvehicle:state,
+                               sfsstate_alias:county     = agqvehicle:county, generic
+
+    access sfsterritory, set sfsterritory:company_id       = agqvehicle:company_id,
+                             sfsterritory:state            = agqvehicle:state,
+                             sfsterritory:line_of_business = agqvehicle:line_of_business,
+                             sfsterritory:county           = agqvehicle:county,
+                             sfsterritory:territory        = agqvehicle:territory,
+                             sfsterritory:sub_code         = agqvehicle:territory_sub_code, generic
+
+    access agqpip, set agqpip:app_no     = agqvehicle:app_no,
+                       agqpip:vehicle_no = agqvehicle:vehicle_no, generic
+
+    if l_first = "N" then
+        begin
+--        Writefile(L_FILE_NAME,"%s","<033>&a1200h+80V<033>*c2500h5v0P")
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    Writefile(L_FILE_NAME,"%s%s%s",l_arial,"<033>&a200h+0V",str(agqvehicle:vehicle_no) + "  " +
+                                                            str(agqvehicle:year) + "  " +
+                                                            trun(toggle(agqvehicle:make)) + "  " +
+                                                            trun(toggle(agqvehicle:model)))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a350h+0V","Serial Number")
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3500h+0V",trun(agqvehicle:serial_no))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a350h+0V","Original Cost/Age")
+    if agqvehicle:original_cost <> 0 then
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3500h+0V",str(agqvehicle:original_cost,"$$$,$$$") + " / " + str(agqvehicle:age))
+    else
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3500h+0V","N/A")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a350h+0V","Vehicle Type")
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3500h+0V",castype:description)
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    if agqvehicle:secondary_class_iso <> 0 then
+        l_class_code = trun(str(agqvehicle:class_code,"9999")) +
+                       str(agqvehicle:secondary_class_iso)
+    else
+    if agqvehicle:secondary_class <> 0 then
+        l_class_code = trun(str(agqvehicle:class_code,"9999")) +
+                       str(agqvehicle:secondary_class)
+    else
+        l_class_code = trun(str(agqvehicle:class_code,"9999"))
+
+    l_class = val(l_class_code)
+    writefile(l_file_name,"%s%s","<033>&a350h+0V","Class Code")
+    if agqmaster:non_fleet = "F" and
+       agqvehicle:CLASS_CODE not one of 681, 682, 683, 684, 691, 692, 693, 694 and
+       agqvehicle:type = 1 and
+       agqvehicle:company_id = "FARMERS" then
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3500h+0V",trun(str(l_class,"99999")) + " " + "Fleet")
+    else
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3500h+0V",trun(str(l_class,"99999")))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a350h+0V","State")
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3500h+0V",trun(toggle(sfsstate:description)))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a350h+0V","County")
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3500h+0V",trun(toggle(sfsstate_alias:description)))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a350h+0V","Territory")
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3500h+0V",trun(str(agqvehicle:territory)) + " " + trun(agqvehicle:territory_description))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+    writefile(l_file_name,"%s%s%s",l_arial_bold,"<033>&a2000h+0V","Vehicle Coverages")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+    if agqvehicle:vehicle_totals[1] <> 0 then
+        begin
+        if agqmastsupp:app_no = l_app_no then
+            writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a200h+0V",str(agqmastsupp:liability,"$$,$$$,$$$"))
+        else
+            writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a200h+0V",str(agqmaster:liability,"$$,$$$,$$$"))
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Liability Limit")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[1],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        if agqvehicle:additional_insured = "Y" then
+            begin
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Additional Insured Lessor")
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            end
+        if agqpip:limitation = "Y" then
+            begin
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Eliminate Verbal Threshold")
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            end
+        end
+
+    if (agqvehicle:vehicle_totals[2] <> 0 or
+       (agqvehicle:type = 1 and
+       agqvehicle:state not one of 37)) then
+        begin
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a200h+0V",str(agqvehicle:medical_payments,"$$,$$$,$$$"))
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Medical Payments")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[2],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    if agqvehicle:vehicle_totals[3] <> 0 then
+        begin
+        if agqmastsupp:app_no = l_app_no then
+            writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a200h+0V",str(agqmastsupp:um_uim_limit[1],"$$,$$$,$$$"))
+        else
+            writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a200h+0V",str(agqmaster:um_uim_limit[1],"$$,$$$,$$$"))
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Uninsured Motorists")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[3],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        if agqvehicle:state = 37 then
+            begin
+            if agqmastsupp:app_no = l_app_no then
+                writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a200h+0V",str(agqmastsupp:um_uim_limit[2],"$$,$$$,$$$"))
+            else
+                writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a200h+0V",str(agqmaster:um_uim_limit[2],"$$,$$$,$$$"))
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Underinsured Motorists")
+            writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[17],"ZZZ,ZZ9"))
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            end
+        end
+
+    if agqvehicle:vehicle_totals[7] <> 0 then
+        begin
+        if agqvehicle:comp_deductible = 1 then
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Full")
+        else
+            writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a200h+0V",str(agqvehicle:comp_deductible,"$$,$$$,$$$"))
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Comprehensive Deductible")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[7],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        if agqvehicle:type = 2 and
+           agqvehicle:antitheft[1] = "Y" then
+            l_antitheft = "Category I antitheft devices"
+        else
+        if agqvehicle:type = 2 and
+           agqvehicle:antitheft[2] = "Y" then
+            l_antitheft = "Category II antitheft devices"
+        else
+        if agqvehicle:type = 2 and
+           agqvehicle:antitheft[3] = "Y" then
+            l_antitheft = "Category III antitheft or vehicle recovery"
+        else
+        if agqvehicle:type = 2 and
+           agqvehicle:antitheft[4] = "Y" then
+            l_antitheft = "Category IV antitheft or vehicle recovery"
+        if l_antitheft <> "" then
+            begin
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1000h+0V",l_antitheft)
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            end
+        end
+
+    if agqvehicle:vehicle_totals[8] <> 0 then
+        begin
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a200h+0V",str(agqvehicle:coll_deductible,"$$,$$$,$$$"))
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Collision Deductible")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[8],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+        if agqvehicle:type = 1 and
+           agqvehicle:dump = "Y" then
+            l_dumping = "Used in Dumping"
+        else
+        if agqvehicle:type = 1 and
+           agqvehicle:dump = "N" then
+            l_dumping = "Not used in Dumping"
+        if l_antitheft <> "" then
+            begin
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1000h+0V",l_dumping)
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            end
+
+        if agqvehicle:type = 2 and
+           agqvehicle:safety <> 0 then
+            l_safety = str(agqvehicle:safety) + " Safety Features"
+        if l_antitheft <> "" then
+            begin
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1000h+0V",l_safety)
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            end
+        end
+
+    if agqvehicle:vehicle_totals[9] <> 0 then
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Rental Days")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a1400h+0V",str(agqvehicle:rental_days))
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1600h+0V","Rental Amount")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a2300h+0V",str(agqvehicle:rental_amount))
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[9],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    if agqvehicle:vehicle_totals[10] <> 0 then
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Towing")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[10],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    if agqvehicle:vehicle_totals[13] <> 0 then
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Medical Expense Benefits")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[13],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1000h+0V","Motor Bus Passengers")
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    if agqpip:pedestrian = "Y" then
+        begin
+        if agqvehicle:class_code one of 7391 and
+           agqvehicle:type = 2 then
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Pedestrian PIP")
+        else
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Stranger Pedestrian PIP")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[4],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    if agqvehicle:vehicle_totals[5] <> 0 then
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Basic PIP")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[5],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        if agqvehicle:type = 2 then
+            begin
+            if agqvehicle:non_employee = "N" then
+                begin
+                writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1000h+0V","Principally operated by employees")
+                Writefile(L_FILE_NAME,"%s","<NL>")
+                L_LINE_COUNTER = L_LINE_COUNTER + 1
+                end
+            else
+                begin
+                writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1000h+0V","Principally operated by non-employees")
+                Writefile(L_FILE_NAME,"%s","<NL>")
+                L_LINE_COUNTER = L_LINE_COUNTER + 1
+                end
+            end
+        end
+
+    if agqvehicle:vehicle_totals[6] <> 0 then
+        begin
+        if agqvehicle:state = 37 then
+            begin
+            if agqpanofault:combined_option = 1 then
+                begin
+                writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V",str(agqpanofault:combined_limit,"$$$,$$$,$$$"))
+                Writefile(L_FILE_NAME,"%s","<NL>")
+                L_LINE_COUNTER = L_LINE_COUNTER + 1
+                end
+            end
+
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Additional PIP")
+        if agqpip:additional_pip_option <> 0 then
+            begin
+            writefile(l_file_name,"%s%s%s%s",l_arial,"<033>&a1500h+0V","- Option ",str(agqpip:additional_pip_option))
+            end
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[6],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+        if agqpanofault:combined_option = 0 and
+           agqvehicle:state = 37 then
+            begin
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1000h+0V","Medical Expense ")
+            writefile(l_file_name,"%s%s",l_letter_gothic_bold_10,str(agqpanofault:medical_expense_limit,"ZZZ,ZZZ,ZZZ"))
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a2000h+0V","Work Loss ")
+            writefile(l_file_name,"%s%s%s%s",l_letter_gothic_bold_10,str(agqpanofault:work_loss_monthly_limit,"ZZZ,ZZZ,ZZZ")," / ",str(agqpanofault:work_loss_total_limit,"ZZZ,ZZZ,ZZZ"))
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1000h+0V","Funeral Expense ")
+            writefile(l_file_name,"%s%s",l_letter_gothic_bold_10,str(agqpanofault:funeral_limit,"ZZZ,ZZZ,ZZZ"))
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a2000h+0V","Accidental Death ")
+            writefile(l_file_name,"%s%s",l_letter_gothic_bold_10,str(agqpanofault:accident_limit,"ZZZ,ZZZ,ZZZ"))
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            end
+        end
+
+    if agqvehicle:vehicle_totals[11] <> 0 then
+        begin
+        if agqvehicle:state = 37 then
+            begin
+            writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a200h+0V",str(agqpanofault:extra_medical_limit,"$$,$$$,$$$"))
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Extraordinary Medical Benefits")
+            end
+        else
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Extended Medical - PIP")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[11],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    writefile(l_file_name,"%s%s%s",l_arial_bold,"<033>&a1900h+0V","Optional Endorsements")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+    access agqend1, set agqend1:app_no     = agqvehicle:app_no,
+                        agqend1:vehicle_no = agqvehicle:vehicle_no, generic
+
+    while agqend1:app_no     = agqvehicle:app_no and
+          agqend1:vehicle_no = agqvehicle:vehicle_no
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V",agqend1:form_edition)
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1200h+0V",agqend1:description[1,75])
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqend1:premium,"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+        next agqend1
+        end
+
+    if agqvehicle:vehicle_totals[19] <> 0 then
+        begin
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        writefile(l_file_name,"%s%s%s%s%s",l_arial_bold,"<033>&a200h+0V","Vehicle ",str(agqvehicle:vehicle_no)," Total Premium")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqvehicle:vehicle_totals[19],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    l_first = "N"
+
+    next agqvehicle
+    end
+
+if agqmaster:total[11] <> 0 or
+   agqmastsupp:total[11] <> 0 then
+    begin
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Non-ownership Liability")
+    if agqmastsupp:total[11] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[11],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[11],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    writefile(l_file_name,"%s%s%s%s",l_arial,"<033>&a500h+0V","Number of Employees ",str(agqnonowned:no_employees))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmaster:total[12] <> 0 or
+   agqmastsupp:total[12] <> 0 then
+    {
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Hired Car")
+    if agqmastsupp:total[11] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:other_totals[3],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:other_totals[3],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    if agqmastsupp:app_no = l_app_no then
+        writefile(l_file_name,"%s%s%s%s",l_arial,"<033>&a500h+0V","Liability ",str(agqmastsupp:liability,"$$$,$$$,$$$"))
+    else
+        writefile(l_file_name,"%s%s%s%s",l_arial,"<033>&a500h+0V","Liability ",str(agqmaster:liability,"$$$,$$$,$$$"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    if agqnonowned:if_any = "N" and
+       agqnonowned:cost_of_hire <> 0 then
+        begin
+        writefile(l_file_name,"%s%s%s%s",l_arial,"<033>&a800h+0V","Cost of Hire ",str(agqnonowned:cost_of_hire,"$$,$$$,$$$"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+    else
+    if agqnonowned:if_any = "Y" then
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","If Any")
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    if agqnonowned:comp_deductible <> 0 or
+       agqnonowned:coll_deductible <> 0 then
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Physical Damage")
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+        if agqnonowned:cost_of_hire_1 <> 0 then
+            begin
+            writefile(l_file_name,"%s%s%s%s",l_arial,"<033>&a800h+0V","Cost of Hire ",str(agqnonowned:cost_of_hire_1,"$$,$$$,$$$"))
+            if agqmastsupp:other_totals[4] <> 0 then
+                writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:other_totals[4],"ZZZ,ZZ9"))
+            else
+                writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:other_totals[4],"ZZZ,ZZ9"))
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            end
+        else
+            begin
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","If Any ")
+            if agqmastsupp:other_totals[4] <> 0 then
+                writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:other_totals[4],"ZZZ,ZZ9"))
+            else
+                writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:other_totals[4],"ZZZ,ZZ9"))
+            Writefile(L_FILE_NAME,"%s","<NL>")
+            L_LINE_COUNTER = L_LINE_COUNTER + 1
+            end
+        end
+
+    if agqnonowned:comp_deductible <> 0 then
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Comp Deductible ")
+        if agqvehicle:comp_deductible = 1 then
+            writefile(l_file_name,"%s%s%s",l_arial,"<033>&a800h+0V","Full")
+        else
+            writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a800h+0V",str(agqvehicle:comp_deductible,"$$,$$$,$$$"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    if agqnonowned:coll_deductible <> 0 then
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Coll Deductible ")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a800h+0V",str(agqvehicle:coll_deductible,"$$,$$$,$$$"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+
+    if agqnonowned:funeral_medical_payments = "Y" then
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Non-owned/Hired Car Funeral Director Medical Payments ")
+        if agqmastsupp:other_totals[19] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a800h+0V",str(agqmastsupp:other_totals[19],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+    end
+
+if agqmaster:total[4] <> 0 or
+   agqmastsupp:total[4] <> 0 then
+    begin
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Drive Other Car")
+    if agqmastsupp:total[4] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[4],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[4],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Liability ")
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a1300h+0V",str(agqdoc:liability,"$$$,$$$,$$$"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Uninsured ")
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a1300h+0V",str(agqdoc:um_uim_limit,"$$$,$$$,$$$"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Underinsured ")
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a1300h+0V",str(agqdoc:um_uim_limit_2,"$$$,$$$,$$$"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Medical Payments ")
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a1300h+0V",str(agqdoc:medical_payments,"$$$,$$$,$$$"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Include Comp ")
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a1600h+0V",agqdoc:comp)
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Include Coll ")
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a1600h+0V",agqdoc:coll)
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmastsupp:other_totals[9] <> 0 or
+   agqmaster:other_totals[9] <> 0 then
+    begin
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Broadened PIP")
+    if agqmastsupp:other_totals[9] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:other_totals[9],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:other_totals[9],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmastsupp:total[15] <> 0 or
+   agqmaster:total[15] <> 0 then
+    begin
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Miscellaneous")
+    if agqmastsupp:total[15] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[15],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[15],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqdev:app_no = l_app_no then
+    begin
+    if agqdev:experience[1] <> 0 or
+       agqdev:experience[1] <> 0 or
+       agqdev:experience[1] <> 0 then
+        begin
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Experience Factor - Physical Damage")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a1850h+0V",str(agqdev:experience[1],"ZZZ.ZZ"))
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a2400h+0V","Liability")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a2800h+0V",str(agqdev:experience[2],"ZZZ.ZZ"))
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3400h+0V","Other")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3700h+0V",str(agqdev:experience[3],"ZZZ.ZZ"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+    if agqdev:schedule[1] <> 0 or
+       agqdev:schedule[2] <> 0 or
+       agqdev:schedule[3] <> 0 then
+        begin
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Schedule Factor - Physical Damage")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a1850h+0V",str(agqdev:schedule[1],"ZZZ.ZZ"))
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a2400h+0V","Liability")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a2800h+0V",str(agqdev:schedule[2],"ZZZ.ZZ"))
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a3400h+0V","Other")
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3700h+0V",str(agqdev:schedule[3],"ZZZ.ZZ"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+    end
+
+Access agqVEHICLE, Set agqVEHICLE:app_NO = L_APP_NO,Generic
+
+if agqmaster:minimum_premium[1] = "Y" and
+   agqvehicle:company_Id = "FARMERS" then
+    {
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a500h+0V","Quote not eligible for Schedule Rating as annual premium is below $1,000")
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    }
+
+if agqdev:companion_discount = 1 then
+    {
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Companion Policy No")
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a1400h+0V",str(agqdev:companion_policy_no))
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a2300h+0V","Eff Date")
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a2700h+0V",str(agqdev:companion_eff_date,"MM/DD/YYYY"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+writefile(l_file_name,"%s%s%s",l_arial_bold,"<033>&a1500h+0V","Policy Wide Optional Endorsements")
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+access agqend1, set agqend1:app_no     = l_app_no,
+                    agqend1:vehicle_no = 0, generic
+
+while agqend1:app_no     = l_app_no and
+      agqend1:vehicle_no = 0
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V",agqend1:form_edition)
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a1200h+0V",agqend1:description[1,75])
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqend1:premium,"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    next agqend1
+    end
+
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+writefile(l_file_name,"%s%s%s",l_arial_bold,"<033>&a1900h+0V","Premium Summary")
+Writefile(L_FILE_NAME,"%s","<NL>")
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+if agqmaster:total[1] <> 0 or
+   agqmastsupp:total[1] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total Liability")
+    if agqmastsupp:total[1] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[1],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[1],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmaster:total[2] <> 0 or
+   agqmastsupp:total[2] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total Medical Payments")
+    if agqmastsupp:total[2] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[2],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[2],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmaster:total[3] <> 0 or
+   agqmastsupp:total[3] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total Uninsured Motorists")
+    if agqmastsupp:total[3] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[3],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[3],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    if agqvehicle:state = 37 then
+        begin
+        writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total Underinsured Motorists")
+        if agqmastsupp:other_totals[18] <> 0 then
+            writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:other_totals[18],"ZZZ,ZZ9"))
+        else
+            writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:other_totals[18],"ZZZ,ZZ9"))
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+        end
+    end
+
+if agqmaster:total[7] <> 0 or
+   agqmastsupp:total[7] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total Comprehensive")
+    if agqmastsupp:total[7] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[7],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[7],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmaster:total[8] <> 0 or
+   agqmastsupp:total[8] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total Collision")
+    if agqmastsupp:total[8] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[8],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[8],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmastsupp:app_no = l_app_no then
+    l_pip_total = agqmastsupp:other_totals[8] +
+                  agqmastsupp:other_totals[10] +
+                  agqmastsupp:other_totals[11] +
+                  agqmastsupp:other_totals[12]
+else
+    l_pip_total = agqmaster:other_totals[8] +
+                  agqmaster:other_totals[10] +
+                  agqmaster:other_totals[11] +
+                  agqmaster:other_totals[12]
+
+if l_pip_total <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total PIP")
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(l_pip_total,"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmaster:total[9] <> 0 or
+   agqmastsupp:total[9] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total Rental")
+    if agqmastsupp:total[9] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[9],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[9],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmaster:total[10] <> 0 or
+   agqmastsupp:total[10] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total Towing")
+    if agqmastsupp:total[10] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[10],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[10],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmaster:total[14] <> 0 or
+   agqmastsupp:total[14] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total Optional Endorsements")
+    if agqmastsupp:total[14] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[14],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[14],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmaster:total[15] <> 0 or
+   agqmastsupp:total[15] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Total Miscellaneous")
+    if agqmastsupp:total[15] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[15],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[15],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+if agqmastsupp:app_no = l_app_no then
+    l_vehicle_total = agqmastsupp:total[1] +
+                      agqmastsupp:total[2] +
+                      agqmastsupp:total[3] +
+                      agqmastsupp:total[7] +
+                      agqmastsupp:total[8] +
+                      agqmastsupp:total[9] +
+                      agqmastsupp:total[10] +
+                      agqmastsupp:total[14] +
+                      agqmastsupp:total[15] +
+                      agqmastsupp:other_totals[18] +
+                      l_pip_total
+else
+    l_vehicle_total = agqmaster:total[1] +
+                      agqmaster:total[2] +
+                      agqmaster:total[3] +
+                      agqmaster:total[7] +
+                      agqmaster:total[8] +
+                      agqmaster:total[9] +
+                      agqmaster:total[10] +
+                      agqmaster:total[14] +
+                      agqmaster:total[15] +
+                      agqmaster:other_totals[18] +
+                      l_pip_total
+
+if l_vehicle_total <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Vehicle Totals")
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(l_vehicle_total,"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmaster:total[4] <> 0 or
+   agqmaster:other_totals[9] <> 0 or
+   agqmastsupp:total[4] <> 0 or
+   agqmastsupp:other_totals[9] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","DOC & Broadened PIP")
+    if agqmastsupp:total[4] <> 0 or
+       agqmastsupp:other_totals[9] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[4] + agqmastsupp:other_totals[9],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[4] + agqmaster:other_totals[9],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if agqmaster:total[11] <> 0 or
+   agqmaster:total[12] <> 0 or
+   agqmastsupp:total[11] <> 0 or
+   agqmastsupp:total[12] <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial,"<033>&a200h+0V","Hired/Nonowned Auto")
+    if agqmastsupp:total[11] <> 0 or
+       agqmastsupp:total[12] <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[11] + agqmastsupp:total[12],"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[11] + agqmaster:total[12],"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+writefile(l_file_name,"%s%s%s",l_arial_bold,"<033>&a200h+0V","Total")
+if agqmastsupp:total[19] <> 0 then
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[19],"ZZZ,ZZ9"))
+else
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[19],"ZZZ,ZZ9"))
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+if agqmaster:terrorism_premium <> 0 or
+   agqmastsupp:terrorism_premium <> 0 then
+    begin
+    writefile(l_file_name,"%s%s%s",l_arial_bold,"<033>&a200h+0V","Terrorism")
+    if agqmastsupp:terrorism_premium <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:terrorism_premium,"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:terrorism_premium,"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+writefile(l_file_name,"%s%s%s",l_arial_bold,"<033>&a200h+0V","Final Total")
+if agqmastsupp:app_no = l_app_no then
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:total[19] + agqmastsupp:terrorism_premium,"ZZZ,ZZ9"))
+else
+    writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:total[19] + agqmaster:terrorism_premium,"ZZZ,ZZ9"))
+
+if agqmaster:surcharge <> 0 or
+   agqmastsupp:surcharge <> 0 then
+    begin
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    writefile(l_file_name,"%s%s%s",l_arial_bold,"<033>&a200h+0V","Surcharge")
+    if agqmastsupp:surcharge <> 0 then
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmastsupp:surcharge,"ZZZ,ZZ9"))
+    else
+        writefile(l_file_name,"%s%s%s",l_letter_gothic_bold_10,"<033>&a3500h+0V",str(agqmaster:surcharge,"ZZZ,ZZ9"))
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+writefile(l_file_name,"%s%s%s%s",l_arial,"<033>&a200h+0V","Date Printed ",str(todaysdate,"MM/DD/YYYY"))
+writefile(l_file_name,"%s%s%s%s",l_arial,"<033>&a2000h+0V","Printed By ",username)
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+if sfsemail:agent_no = 0 then
+    writefile(l_file_name,"%s%s%s%s",l_arial,"<033>&a200h+0V","Underwriter ",sfscomun:name)
+
+update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+
+END

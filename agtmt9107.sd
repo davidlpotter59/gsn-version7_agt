@@ -1,0 +1,993 @@
+%%                      
+Screen
+        Name = "agtmt9107";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information    %m";
+        Domain="agqsupp" ;
+        resizeable = yes ;
+        iconline = 0 ;
+        autoaccept = true ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_form[1] ;
+        global unsigned ascii number g_state[2] ;
+        global unsigned ascii number g_protection[2] ;
+        global unsigned ascii number g_sub_code[4] ;
+
+        global string g_company_id[10] ,
+                      g_zipcode_change[1] ,
+                      g_initial_screen[50],
+                      g_inquiry[1] ,
+                      g_code[7] ,
+                      g_literal[100];
+
+        global wdate g_eff_date ;
+
+        string l_username[15] ,
+               l_first_location[1]="Y" ,
+               l_first_str_location[12]="",
+               l_last_str_location[12]="",
+               l_str_location[12]="",
+               l_current_web_page[50],
+               l_web_site_address[150],
+               l_continue_2[3],
+               l_server_name[100];
+
+        local unsigned ascii number l_found[1]=0,
+                                    l_sub_code[4]=0 ,
+                                    l_no_locations[2]=0,
+                                    l_no_mtg[1],
+                                    l_first_prem_no[4]=0,
+                                    l_first_build_no[4]=0,
+                                    l_last_prem_no[4]=0,
+                                    l_last_build_no[4]=0;
+
+        Access agqsupp,
+           Set agqsupp:app_no = G_app_no,
+               agqsupp:prem_no = 1,
+               agqsupp:build_no = 1, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt9107" ;
+
+        "add" sequence "new"      tagged add_fn ;
+        "new" add/hidden/autoupdate ;
+
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden/autoupdate ;
+
+        "back" display/noreturn "agtmt001" tagged back_fn ;
+         reaccess ;
+
+         "nextscreen"     display/noreturn "agtmt9108" tagged nextscreen_fn ;
+         "previousscreen" display/noreturn "agtmt9106" tagged previousscreen_fn ;
+         "finalchecklist"   display/noreturn "agtmt9110" tagged final_checklist_fn ;
+
+        include "stdfunc7b.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+disable(accept_fn)
+l_username = username
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = l_username, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : switch(g_form)
+                  case 3  : setproperty(t_mho3,iconname,"title_mho3.bmp")
+                  case 4  : setproperty(t_mho4,iconname,"title_mho4.bmp")
+                  case 6  : setproperty(t_mho6,iconname,"title_mho6.bmp")
+                  default : begin
+                            setproperty(t_mho3,iconname,"")
+                            setproperty(t_mho4,iconname,"")
+                            setproperty(t_mho6,iconname,"")
+                            end
+                  end
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+l_username = username
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER
+
+if agqpersonal:company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "18webhelp_agtmt1203_scr_mortgagee.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(add_fn)
+    disable(delete_fn)
+    end
+
+l_no_mtg = 0
+access agqsupp_alias, set agqsupp_alias:app_no = g_app_no, generic
+
+while agqsupp_alias:app_no = g_app_no
+    begin
+    l_no_mtg = l_no_mtg + 1
+
+    next agqsupp_alias
+    end
+
+if l_no_mtg >= 3 then
+    begin
+    warning "Refer to Company-Exceeds Binding Authority"
+    end
+
+access agqsupp_alt, set agqsupp_alt:app_no = g_app_no, generic
+
+if agqsupp_alt:app_no <> g_app_no then
+    begin
+    disable(change_fn)
+    disable(delete_fn)
+    disable(info_fn)
+    disable(back_fn)
+    disable(final_checklist_fn)
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+    begin
+    enable(change_fn)
+    enable(delete_fn)
+    enable(info_fn)
+    enable(back_fn)
+    enable(final_checklist_fn)
+    enable(next_fn)
+    enable(previous_fn)
+    end
+
+Access Validation
+If agqsupp:app_NO   <> G_app_NO Then
+    Error 1000 ;
+
+access agqsupp_alias, set agqsupp_alias:app_no   = agqsupp:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqsupp_alias:app_no   = agqsupp:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqsupp_alias:prem_no) +
+                               str(agqsupp_alias:build_no) +
+                               str(agqsupp_alias:sub_code)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqsupp_alias:prem_no) +
+                           str(agqsupp_alias:build_no) +
+                           str(agqsupp_alias:sub_code)
+    l_no_locations  = l_no_locations + 1
+
+    next agqsupp_alias
+    end
+
+l_str_location = str(agqsupp:prem_no) +
+                 str(agqsupp:build_no) +
+                 str(agqsupp:sub_code)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+    Properties
+          {
+          Layouttype = screen
+          transparent = False
+          backgroundcolor = "#ADD8E6"
+          scrollbarpolicy = always
+          fontstyle = BOLD
+
+          }
+    {
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,28 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,20 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Applicant Information: Mortgage Company..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+Panel at 3.45,75 to 4.45, 100
+    Properties
+        {
+        LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     begin
+        if function one of "ADD", "NEW" then
+            begin
+            agqsupp:app_no   = g_app_no
+            agqsupp:prem_no  = 1
+            agqsupp:build_no =  1
+            end
+
+        if function one of "CHG","CHANGE","ADD","NEW" then
+            {
+            disable(nextscreen_fn)
+            disable(previousscreen_fn)
+            disable(final_checklist_fn)
+            enable(accept_fn)
+            disable(back_fn)
+            enable(info_fn)
+            }
+        else
+            {
+            enable(nextscreen_fn)
+            enable(previousscreen_fn)
+            enable(add_fn)
+--            disable(final_checklist_fn)
+            disable(accept_fn)
+--            disable(back_fn)
+            disable(info_fn)
+            if agqsupp_alt:app_no <> g_app_no then
+                begin
+                disable(change_fn)
+                disable(delete_fn)
+                end
+            else
+                begin
+                enable(change_fn)
+                enable(delete_fn)
+                end
+            }
+
+        end
+        agqsupp:app_no/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1.5,10    tagged change_fn
+        Properties {
+                Iconname = "btn_edit_entries.bmp"
+                }
+        Events  {
+                Action = change_fn
+                }
+
+        Button at 1.5,35   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+
+        Button at 1.5,60 tagged accept_fn
+          properties
+            {
+              Iconname = "btn_accept_edits.bmp"
+            }
+          Events  {
+                    mouseclicked = accept
+                  }
+    }
+
+Panel at 7,30 to 8,100 Tagged add_fn
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5  tagged add_fn
+        Properties {
+                Iconname = "btn_add_mortgagee.bmp"
+                }
+        Events  {
+                Action = add_fn
+                }
+}
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties
+        {
+        layouttype = column
+        }
+    {
+    Components
+        Button to 1,1
+            properties
+                {
+                Iconname = "btn_print_screen.bmp"
+                }
+            events
+                {
+                action
+                    {
+                    function = "print"
+                    abort()
+                    }
+                }
+    }
+
+Panel at 6.45,91
+    Properties
+        {
+        layouttype = column
+        }
+    {
+    Components
+        guidetext to 1,1
+            properties
+                {
+                text = "agtmt9107.sd"
+                fontsize = 9
+                }
+    }
+
+panel at 8,1 to 8,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+                }
+    }
+
+Panel at 9,1 to 24,95
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,20
+             properties
+               {
+                 text = "Payor Type:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+            guidetext at 4,1 to 4,20
+             properties
+               {
+                 text = "Name:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+              }
+           guidetext at 7,1 to 7,20
+             properties
+               {
+                 text = "Successor and/or Assigns:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 8,1 to 8,20
+             properties
+               {
+                 text = "ATIMA:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 9,1 to 9,20
+             properties
+               {
+                 text = "Address:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 12,1 to 12,20
+             properties
+               {
+                 text = "City State Zip:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+           guidetext at 13,1 to 13,20
+             properties
+               {
+                 text = "Account No:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "Arial"
+               }
+         }
+
+
+Panel at 9,22 to 24, 95 Tagged info_fn
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+________________________  Mortgage Type: _______________________
+
+
+__________________________________________________
+__________________________________________________
+__________________________________________________
+[R_ Yes _ No R]
+[R_ Yes _ No R]
+__________________________________________________
+__________________________________________________
+__________________________________________________
+_________________________________ ____  __________
+_________________________
+
+%%
+
+components
+
+Fields
+101     begin
+        access sfsdefault,
+           set sfsdefault:sfs_code = "SFS", generic
+
+        access agqsupp,
+           set agqsupp:app_no   = g_app_no, generic
+
+        access sfspayortype_alias,
+           set sfspayortype_alias:company_id = agqpersonal:company_id, generic
+
+        if function one of "ADD", "NEW" then
+          begin
+            agqsupp:mortgage_type_1 = sfsdefault:mortgage_type_default
+            agqsupp:change_at_renewal = "N"
+            activehelp()
+          end
+        end
+        agqSUPP:MORTGAGE_TYPE_1/default/tabstop   Mandatory
+        hide if agqsupp_alt:app_no = g_app_no
+        access sfspayortype,
+           set sfspayortype:company_id = agqpersonal:company_id,
+               sfspayortype:payor_code = agqsupp:mortgage_type_1, exact
+
+        If agqSUPP:MORTGAGE_TYPE_1 <> SFSPAYORTYPE:PAYOR_CODE Then
+            Error 1262
+
+        Activehelp if sfspayortype_alias:hide_from_agent = 0 then
+                       SFSPAYORTYPE_ALIAS:PAYOR_CODE
+                   else
+                       null/width=10,
+                   if sfspayortype_alias:hide_from_agent = 0 then
+                       SFSPAYORTYPE_ALIAS:DESCRIPTION
+                   else
+                       null/width=75 ;
+101     begin
+        if function = "ADD" then
+            agqsupp:mortgage_type_1 = "M"
+        end
+        agqsupp:mortgage_type_1/displayonly
+        hide if agqsupp_alt:app_no <> g_app_no ;
+101     begin
+        access sfspayortype,
+           set sfspayortype:company_id = agqpersonal:company_id,
+               sfspayortype:payor_code = agqsupp:mortgage_type_1, exact
+        end
+        SFSPAYORTYPE:DESCRIPTION ;
+102     begin
+        access sfsmorttype_alias,
+           set sfsmorttype_alias:company_id = agqpersonal:company_id, generic
+
+        if function one of "ADD", "NEW" then
+            begin
+            access agqsupp_alias, set agqsupp_alias:app_no = g_app_no, generic
+
+            if agqsupp_alias:app_no <> g_app_no then
+                agqsupp:mortgage_type_2 = "P"
+            else
+                agqsupp:mortgage_type_2 = "S"
+
+--            activehelp()
+            end
+        end
+        agqsupp:MORTGAGE_TYPE_2/tabstop/default   Mandatory
+        access sfsmorttype, set sfsmorttype:company_id    = agqpersonal:company_id,
+                                sfsmorttype:mortgage_code = agqsupp:mortgage_type_2, generic
+
+        If agqsupp:MORTGAGE_TYPE_2 <> SFSMORTTYPE:MORTGAGE_CODE Then
+            Error 1262
+
+        L_FOUND = 0
+        Do ACCESS_agqsuppALIAS
+        If L_FOUND >= 1 And
+           agqsupp:MORTGAGE_TYPE_2 = "P" And
+           sfsline:lob_code not one of "SMP", "PROPERTY" and
+           FUNCTION One Of "ADD" Then
+            Error "There is a primary mortgage already listed"
+
+        Activehelp if sfsmorttype_alias:hide_from_agent = 0 then
+                       SFSMORTTYPE_ALIAS:MORTGAGE_CODE
+                   else
+                       null/width=13,
+                   if sfsmorttype_alias:hide_from_agent = 0 then
+                       SFSMORTTYPE_ALIAS:DESCRIPTION
+                   else
+                       null/width=75 ;
+102     Begin
+        access sfsmorttype, set sfsmorttype:company_id    = agqpersonal:company_id,
+                                sfsmorttype:mortgage_code = agqsupp:mortgage_type_2, generic
+
+        If FUNCTION One Of "ADD", "CHANGE", "NEW", "CHG" Then
+            Begin
+            If agqsupp:MORTGAGE_TYPE_2 = "P" and
+               sfsline:lob_code not one of "SMP", "PROPERTY" Then
+                Begin
+                agqsupp:SUB_CODE = 1
+                End
+            End
+        End
+        SFSMORTTYPE:DESCRIPTION;
+401     Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            Do SUBCODE
+            End
+        End
+        agqsupp:name[1]/tabstop ;
+501     agqSUPP:NAME[2]/tabstop ;
+601     agqSUPP:NAME[3]/tabstop ;
+701     begin
+        if function one of "ADD", "NEW" and
+           agqpersonal:company_id = "FLEMINGTON" then
+            agqsupp:successor = "Y"
+        end
+        agqsupp:successor/values="Y,N"/tabstop/default;
+801     begin
+        if function one of "ADD", "NEW" and
+           agqpersonal:company_id = "FLEMINGTON" then
+            agqsupp:atima = "Y"
+        end
+        agqsupp:atima/values="Y,N"/tabstop;
+901     agqSUPP:ADDRESS[1]/tabstop
+        if agqsupp:name[1] <> "" and
+           agqsupp:address[1] = "" then
+            error "You must enter a address";
+1001    agqSUPP:ADDRESS[2]/tabstop ;
+1101    agqSUPP:ADDRESS[3]/tabstop ;
+1201    agqSUPP:CITY/tabstop
+        if agqsupp:name[1] <> "" and
+           agqsupp:city = "" then
+            error "You must enter a city";
+1202    agqSUPP:STR_STATE/tabstop
+        if agqsupp:name[1] <> "" and
+           agqsupp:str_state = "" then
+            error "You must enter a state";
+1203    agqSUPP:STR_ZIPCODE/tabstop
+        if agqsupp:name[1] <> "" and
+           agqsupp:str_zipcode = "" then
+            error "You must enter a zip code";
+1203    begin
+        If agqSUPP:STR_ZIPCODE[6,9] = "" Then
+            agqSUPP:STR_ZIPCODE[6,9] = "0000"
+        End
+        agqSUPP:STR_ZIPCODE/displayonly ;
+1301    agqSUPP:ACCOUNT_NO/tabstop ;
+}
+
+Panel at 25,1 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,10   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+
+        Button at 1,34    tagged previous_fn
+        Properties {
+                Iconname = "btn_previous.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+
+        Button at 1,49 tagged next_fn
+        Properties {
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+
+        Button at 1,70 tagged delete_fn
+        Properties {
+                Iconname = "btn_delete_mortgagee.bmp"
+                }
+        Events  {
+                Action = delete_fn
+                }
+
+}
+
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+                }
+    }
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+    Properties
+        {
+        LayoutType = screen
+        }
+    {
+    Components
+        Button at 1,5   tagged previousscreen_fn
+        Properties {
+                Iconname = "previous_screen.bmp"
+                }
+        Events  {
+                Action {
+                       function = "previousscreen"
+                       abort()
+                       }
+                }
+
+        Button at 1,40   tagged final_checklist_fn
+        Properties {
+                Iconname = "final_checklist.bmp"
+                }
+        Events  {
+                Action {
+                       function = "finalchecklist"
+                       abort()
+                       }
+                }
+
+        Button at 1,75   tagged nextscreen_fn
+            Properties
+                {
+                Iconname = "next_screen.bmp"
+                }
+            Events
+                {
+                Action
+                    {
+                    function = "nextscreen"
+                    abort()
+                    }
+                }
+
+}
+
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+                }
+    }
+
+panel at 30,1 to 32,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+}
+
+Update
+if UPDATEOK = "NO" Then
+    {
+    disable(accept_fn)
+    enable(nextscreen_fn)
+    enable(final_checklist_fn)
+    enable(previousscreen_fn)
+    enable(back_fn)
+    }
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(nextscreen_fn)
+    enable(previousscreen_fn)
+    enable(final_checklist_fn)
+    enable(back_fn)
+    function = "redisplay"
+    end
+
+Screen Exit
+
+Procedure Definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END
+
+Procedure ACCESS_agqSUPPALIAS
+Begin
+Access agqSUPP_ALIAS, Set agqSUPP_ALIAS:app_no   = agqSUPP:app_no,
+                          agqSUPP_ALIAS:PREM_NO  = agqSUPP:PREM_NO,
+                          agqSUPP_ALIAS:BUILD_NO = agqSUPP:BUILD_NO, Approximate
+
+L_FOUND = 0
+While agqSUPP_ALIAS:app_no   = agqSUPP:app_no And
+      agqSUPP_ALIAS:PREM_NO  = agqSUPP:PREM_NO And
+      agqSUPP_ALIAS:BUILD_NO = agqSUPP:BUILD_NO
+        Begin
+        If agqSUPP_ALIAS:MORTGAGE_TYPE_2 = "P" Then
+            L_FOUND = L_FOUND + 1
+
+        Next agqSUPP_ALIAS
+        End
+
+End
+
+Procedure SUBCODE
+Begin
+Access agqSUPP_ALIAS, Set agqSUPP_ALIAS:app_no   = agqSUPP:app_no,
+                          agqSUPP_ALIAS:PREM_NO  = agqSUPP:PREM_NO,
+                          agqSUPP_ALIAS:BUILD_NO = agqSUPP:BUILD_NO, Approximate
+
+L_SUB_CODE = 0
+while agqSUPP_ALIAS:app_no   = agqSUPP:app_no and
+      agqSUPP_ALIAS:PREM_NO  = agqSUPP:PREM_NO and
+      agqSUPP_ALIAS:BUILD_NO = agqSUPP:BUILD_NO
+    begin
+    L_SUB_CODE = agqSUPP_ALIAS:SUB_CODE
+
+    Next agqSUPP_ALIAS
+    End
+
+agqSUPP:SUB_CODE = L_SUB_CODE + 10
+End
+
+End

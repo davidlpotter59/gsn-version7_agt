@@ -1,0 +1,556 @@
+%%
+/*
+Date Written: September 13, 2012
+
+Name: agqbu0603_012003.sd
+
+Copyright (c) 2012, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+09/13/2012             DAP     New form for agents rating system
+===========================
+*/
+
+Program
+  Name = "agqbu0603_012003";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[19] = "agqbu0603_012003.cq";
+ String L_COPY_NAME[20] ;
+ String L_agqLOCATION_ZIP;
+ String L_agqADDIN_ZIP;
+ String L_FONT[35];
+ unsigned ascii number l_app_no[11] ;
+ Unsigned ascii number l_max_lines;
+ Unsigned Ascii Number L_YEAR[4];
+ Unsigned Ascii number L_LINE_OF_BUSINESS[4];
+ Unsigned ascii number l_found[1];
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_STATE[2]=0;
+ Unsigned Ascii Number L_LOOP;
+ wdate L_EFF_DATE;
+ Unsigned Ascii Number L_LINE_COUNTER,
+                       l_prem_no[4],
+                       l_build_no[4];
+ Unsigned Ascii Number L_PAGE_NUMBER;
+
+   Include "swsut100.var"
+   Include "swsut200.var"
+   Include "swsut300.var"
+   Include "csfonts.inc"
+   Include "line_spacing.var"
+
+Initialization
+  l_app_no = val(commandline[1,11])
+  Deletefile (L_FILE_NAME);
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no    = l_app_no , generic
+
+Access agqNAME,
+   Set agqNAME:app_no    = l_app_no , generic
+
+Access agqEND_ALIAS,
+   Set agqEND_ALIAS:app_no    = l_app_no , generic
+
+Access agqendorse,
+   Set agqendorse:app_no    = l_app_no , generic
+
+Access agqgeneral,
+   Set agqgeneral:app_no    = l_app_no , generic
+
+Access agqADDIN ,
+   Set agqADDIN:app_no    = l_app_no, generic
+
+Access sfscompany,
+   Set sfscompany:company_id  = agqgeneral:company_id, generic
+
+Include "swsut100.inc"
+I_CODE = "BU0603"
+Include "swsut200.inc"
+--Include "swsut300.inc"
+
+If sfscompany:company_id = "LEBINS" then
+  {
+    do print_lebins
+  }
+Else
+  {
+    do print_other
+  }
+
+Update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+
+Procedure definition
+
+Procedure print_lebins
+Begin
+While agqEND_ALIAS:app_no    = l_app_no
+{
+  If agqEND_ALIAS:CODE = I_CODE Then
+    {
+      while agqaddin:app_no    = l_app_no and
+            agqaddin:prem_no      = agqlocation:prem_no and
+            agqaddin:build_no     = agqlocation:build_no
+        {
+          if agqaddin:code = I_CODE then
+            {
+              L_STATE            = agqGENERAL:STATE
+              L_COMPANY_ID       = agqgeneral:COMPANY_ID
+              l_line_of_business = agqgeneral:line_of_business
+
+              Access SFSOPTEND,
+                 Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+                     SFSOPTEND:STATE            = L_STATE,
+                     SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                     SFSOPTEND:CODE             = I_CODE, generic
+
+               While SFSOPTEND:COMPANY_ID       = L_COMPANY_ID and
+                     SFSOPTEND:STATE            = L_STATE and
+                     SFSOPTEND:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS and
+                     SFSOPTEND:CODE             = I_CODE
+
+                {  --start of sfsoptend check
+                  If (agqgeneral:eff_date >= sfsoptend:eff_date and
+                     (agqgeneral:eff_date <= sfsoptend:exp_date or
+                      sfsoptend:exp_date = 0)) then
+                    {
+                      l_eff_date = sfsoptend:eff_date
+                    }
+                  next sfsoptend
+                }
+
+              Access SFSOPTEND,
+                 Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+                     SFSOPTEND:STATE            = L_STATE,
+                     SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                     SFSOPTEND:CODE             = I_CODE,
+                     SFSOPTEND:EFF_DATE         = L_EFF_DATE, exact
+
+              Access agqENDORSE,
+                 Set agqENDORSE:app_no    = l_app_no,
+                     agqENDORSE:PREM_NO      = agqEND_ALIAS:PREM_NO,
+                     agqENDORSE:BUILD_NO     = agqEND_ALIAS:BUILD_NO,
+                     agqENDORSE:CODE         = I_CODE, Generic
+
+              Access agqLOCATION,
+                 Set agqLOCATION:app_no    = l_app_no ,
+                     agqLOCATION:PREM_NO      = agqEND_ALIAS:PREM_NO,
+                     agqLOCATION:BUILD_NO     = agqEND_ALIAS:BUILD_NO, Generic
+
+              L_agqLOCATION_ZIP = If (Val(agqLOCATION:STR_ZIPCODE[6,9]) = 0) Then
+                                      agqLOCATION:STR_ZIPCODE[1,5]
+                                  Else
+                                      agqLOCATION:STR_ZIPCODE[1,5] + "-" +
+                                      agqLOCATION:STR_ZIPCODE[6,9]
+
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a420h7200V")
+              Writefile(L_FILE_NAME,"%s",l_copyright_6)
+              Writefile(L_FILE_NAME,"%s"," ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+              Writefile(L_FILE_NAME,"%s",sfsoptend:COPYRIGHT)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+              Writefile(L_FILE_NAME,"%s","<033>&a4300h120V")
+              Writefile(L_FILE_NAME,"%s",Trun(SFSOPTEND:FORM_PRINT))
+              Writefile(L_FILE_NAME,"%s"," ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s",SFSOPTEND:EDITION_PRINT)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+              -- Making sure the agqlocation is the same as agqaddin
+              While agqADDIN:PREM_NO  <> agqLOCATION:PREM_NO And
+                    agqADDIN:BUILD_NO <> agqLOCATION:BUILD_NO
+                {
+                  Next agqLOCATION
+                }
+
+              L_agqADDIN_ZIP = If (Val(agqADDIN:STR_ZIPCODE[6,9]) = 0) Then
+                                   agqADDIN:STR_ZIPCODE[1,5]
+                               Else
+                                   agqADDIN:STR_ZIPCODE[1,5] + "-" +
+                                   agqADDIN:STR_ZIPCODE[6,9]
+
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+              Writefile(L_FILE_NAME,"%s","ADDITIONAL ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","INSUREDS")
+              Writefile(L_FILE_NAME,"%s","<033>&a+25h-30V<033>*c75h3v0P")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a+100h+30V")
+              Writefile(L_FILE_NAME,"%s","ASSIGNEE / MORTGAGEE / RECEIVER")
+              Writefile(L_FILE_NAME,"%s","<033>&a+30h+20V")
+              Writefile(L_FILE_NAME,"%s",L_BULLET_6)
+              Writefile(L_FILE_NAME,"%s","<033>&a+30h-20V")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","PART II")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_italic_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+              Writefile(L_FILE_NAME,"%s","This endorsement extends the definition of insureds to include the designated person or organization for the designated premises. ")
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+              Writefile(L_FILE_NAME,"%s","The required information may be shown below or elsewhere in this policy.")
+              Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+140V")
+              Writefile(L_FILE_NAME,"%s","The provisions of this endorsement apply only when the endorsement number is listed in the Declarations.")
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+              Writefile(L_FILE_NAME,"%s","Except as provided below, all other provisions in this policy are unchanged.")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+100V")
+              Writefile(L_FILE_NAME,"%s","<033>&a200h-60V<033>*c5200h5v0P") --Horizontal
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+140V")
+              Writefile(L_FILE_NAME,"%s","Application # ")
+              Writefile(L_FILE_NAME,"%n",l_app_no)
+              Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+200V")
+              Writefile(L_FILE_NAME,"%s","SCHEDULE")
+
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+              Writefile(L_FILE_NAME,"%s","Designated Person or Organization:")
+              Writefile(L_FILE_NAME,"%s","<033>&a2900h+0V")
+              Writefile(L_FILE_NAME,"%s","Description / Location of Premises:")
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+              Writefile(L_FILE_NAME,"%s",L_push)
+              For L_LOOP = 1 to 3
+
+                {
+                  If agqADDIN:NAME[L_LOOP] <> "" Then
+                    {
+                      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+                      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+                      Writefile(L_FILE_NAME,"%s",agqADDIN:NAME[L_LOOP])
+                    }
+                }
+
+              For L_LOOP = 1 to 3
+                {
+                  If agqADDIN:ADDRESS[L_LOOP] <> "" Then
+                    {
+                      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+                      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+                      Writefile(L_FILE_NAME,"%s",agqADDIN:ADDRESS[L_LOOP])
+                    }
+                }
+
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+              Writefile(L_FILE_NAME,"%s",Trun(agqADDIN:CITY))
+              Writefile(L_FILE_NAME,"%s",", ")
+              Writefile(L_FILE_NAME,"%s",agqADDIN:STR_STATE)
+              Writefile(L_FILE_NAME,"%s"," ")
+              Writefile(L_FILE_NAME,"%s",L_agqADDIN_ZIP)
+
+              L_max_lines        = 60
+              L_FONT             = l_arial_bold_9
+              L_V_POSITION       = "+190"
+              L_H_POSITION       = "200"
+              L_CHARACTER_STRING = agqADDIN:DESCRIPTION
+              L_MAX_CHAR         = 55
+              include "line_spacing.inc"
+
+              Writefile(L_FILE_NAME,"%s",L_pop)
+              Writefile(L_FILE_NAME,"%s","<033>&a2900h+120V")
+              Writefile(L_FILE_NAME,"%s","Location: ")
+              Writefile(L_FILE_NAME,"%n",agqLOCATION:PREM_NO)
+              Writefile(L_FILE_NAME,"%s","<033>&a2900h+120V")
+              Writefile(L_FILE_NAME,"%s","Building: ")
+              Writefile(L_FILE_NAME,"%n",agqLOCATION:BUILD_NO)
+              Writefile(L_FILE_NAME,"%s","<033>&a2900h+120V")
+              Writefile(L_FILE_NAME,"%s",agqLOCATION:ADDRESS)
+              For L_LOOP = 1 to 3
+                {
+                  If agqLOCATION:ADDRESS1[L_LOOP] <> "" Then
+                    {
+                      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+                      Writefile(L_FILE_NAME,"%s","<033>&a2900h+120V")
+                      Writefile(L_FILE_NAME,"%s",agqLOCATION:ADDRESS1[L_LOOP])
+                    }
+                }
+              Writefile(L_FILE_NAME,"%s","<033>&a2900h+120V")
+              Writefile(L_FILE_NAME,"%s",Trun(agqLOCATION:CITY))
+              Writefile(L_FILE_NAME,"%s",", ")
+              Writefile(L_FILE_NAME,"%s",agqLOCATION:STR_STATE)
+              Writefile(L_FILE_NAME,"%s"," ")
+              Writefile(L_FILE_NAME,"%s",L_agqLOCATION_ZIP)
+
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h3500V")
+              Writefile(L_FILE_NAME,"%s","PERSONS INSURED EXTENSION")
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+              Writefile(L_FILE_NAME,"%s","Assignee / Mortgagee / Receiver")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a1250h+120V")
+              Writefile(L_FILE_NAME,"%s","The definition of ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","insured ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","in the Common Glossary is amended to include the following as an")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a1250h+120V")
+              Writefile(L_FILE_NAME,"%s","insured ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","under this policy.")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a1250h+180V")
+              Writefile(L_FILE_NAME,"%s","Insured ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+              Writefile(L_FILE_NAME,"%s","includes the designated person or organization, as shown in the Schedule, but only with ")
+              Writefile(L_FILE_NAME,"%s","<033>&a1250h+120V")
+              Writefile(L_FILE_NAME,"%s","respect to their liability: As an assignee, mortgagee or receiver of the designated premises arising out")
+              Writefile(L_FILE_NAME,"%s","<033>&a1250h+120V")
+              Writefile(L_FILE_NAME,"%s","of ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+              Writefile(L_FILE_NAME,"%s","your ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+              Writefile(L_FILE_NAME,"%s","ownership, maintenance or use of such premises. ")
+              Writefile(L_FILE_NAME,"%s","<033>&a1250h+180V")
+              Writefile(L_FILE_NAME,"%s","However, this insurance does not apply to demolition operations, new construction or structural ")
+              Writefile(L_FILE_NAME,"%s","<033>&a1250h+120V")
+              Writefile(L_FILE_NAME,"%s","alterations performed by or on behalf of such person or organization. ")
+              Writefile(L_FILE_NAME,"%s","<FF>")
+          }--end of IF agqaddin
+        Next agqaddin
+      }--End of While
+    }--End of If agqEND_ALIAS Code = I_CODE
+  Next agqEND_ALIAS
+}--End of outside While agqEND_ALIAS
+End
+
+Procedure print_other
+Begin
+While agqEND_ALIAS:app_no    = l_app_no
+{
+  If agqEND_ALIAS:CODE = I_CODE Then
+    {
+      while agqaddin:app_no    = l_app_no and
+            agqaddin:prem_no      = agqlocation:prem_no and
+            agqaddin:build_no     = agqlocation:build_no
+        {
+          if agqaddin:code = I_CODE then
+            {
+              L_STATE            = agqGENERAL:STATE
+              L_COMPANY_ID       = agqgeneral:COMPANY_ID
+              L_LINE_OF_BUSINESS = agqgeneral:line_of_business
+
+              Access SFSOPTEND,
+                 Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+                     SFSOPTEND:STATE            = L_STATE,
+                     SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                     SFSOPTEND:CODE             = I_CODE, generic
+
+              While SFSOPTEND:COMPANY_ID       = L_COMPANY_ID and
+                    SFSOPTEND:STATE            = L_STATE and
+                    SFSOPTEND:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS and
+                    SFSOPTEND:CODE             = I_CODE
+                  {
+                  If (agqgeneral:eff_date >= sfsoptend:eff_date and
+                     (agqgeneral:eff_date <= sfsoptend:exp_date or
+                     sfsoptend:exp_date = 0)) then
+                      l_eff_date = sfsoptend:eff_date
+
+                  next sfsoptend
+                  }
+
+              Access SFSOPTEND,
+                 Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+                     SFSOPTEND:STATE            = L_STATE,
+                     SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+                     SFSOPTEND:CODE             = I_CODE,
+                     SFSOPTEND:EFF_DATE         = L_EFF_DATE, exact
+
+              Access agqLOCATION,
+                 Set agqLOCATION:app_no       = l_app_no ,
+                     agqLOCATION:PREM_NO      = agqEND_ALIAS:PREM_NO,
+                     agqLOCATION:BUILD_NO     = agqEND_ALIAS:BUILD_NO, Generic
+
+              L_agqLOCATION_ZIP = If (Val(agqLOCATION:STR_ZIPCODE[6,9]) = 0) Then
+                                      agqLOCATION:STR_ZIPCODE[1,5]
+                                  Else
+                                      agqLOCATION:STR_ZIPCODE[1,5] + "-" +
+                                      agqLOCATION:STR_ZIPCODE[6,9]
+
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a420h7200V")
+              Writefile(L_FILE_NAME,"%s",l_copyright_6)
+              Writefile(L_FILE_NAME,"%s"," ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+              Writefile(L_FILE_NAME,"%s",sfsoptend:COPYRIGHT)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+              Writefile(L_FILE_NAME,"%s","<033>&a4300h120V")
+              Writefile(L_FILE_NAME,"%s",Trun(SFSOPTEND:FORM_PRINT))
+              Writefile(L_FILE_NAME,"%s"," ")
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s",SFSOPTEND:EDITION_PRINT)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+            L_agqADDIN_ZIP = If (Val(agqADDIN:STR_ZIPCODE[6,9]) = 0) Then
+                                 agqADDIN:STR_ZIPCODE[1,5]
+                             Else
+                                 agqADDIN:STR_ZIPCODE[1,5] + "-" +
+                                 agqADDIN:STR_ZIPCODE[6,9]
+
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+            Writefile(L_FILE_NAME,"%s","ADDITIONAL ")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","INSUREDS")
+            Writefile(L_FILE_NAME,"%s","<033>&a+25h-30V<033>*c75h3v0P")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a+100h+30V")
+            Writefile(L_FILE_NAME,"%s","ASSIGNEE / MORTGAGEE / RECEIVER")
+            Writefile(L_FILE_NAME,"%s","<033>&a+30h+20V")
+            Writefile(L_FILE_NAME,"%s",L_BULLET_6)
+            Writefile(L_FILE_NAME,"%s","<033>&a+30h-20V")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","PART II")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_italic_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+            Writefile(L_FILE_NAME,"%s","This endorsement extends the definition of insureds to include the designated person or organization for the designated premises. ")
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+            Writefile(L_FILE_NAME,"%s","The required information may be shown below or elsewhere in this policy.")
+            Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+140V")
+            Writefile(L_FILE_NAME,"%s","The provisions of this endorsement apply only when the endorsement number is listed in the Declarations.")
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+            Writefile(L_FILE_NAME,"%s","Except as provided below, all other provisions in this policy are unchanged.")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+100V")
+            Writefile(L_FILE_NAME,"%s","<033>&a200h-60V<033>*c5200h5v0P") --Horizontal
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+140V")
+            Writefile(L_FILE_NAME,"%s","Application # ")
+            Writefile(L_FILE_NAME,"%n",l_app_no)
+            Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+200V")
+            Writefile(L_FILE_NAME,"%s","SCHEDULE")
+
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+            Writefile(L_FILE_NAME,"%s","Designated Person or Organization:")
+            Writefile(L_FILE_NAME,"%s","<033>&a2900h+0V")
+            Writefile(L_FILE_NAME,"%s","Description / Location of Premises:")
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+            Writefile(L_FILE_NAME,"%s",L_push)
+            For L_LOOP = 1 to 3
+              {
+                If agqADDIN:NAME[L_LOOP] <> "" Then
+                  {
+                    Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+                    Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+                    Writefile(L_FILE_NAME,"%s",agqADDIN:NAME[L_LOOP])
+                  }
+              }
+
+            For L_LOOP = 1 to 3
+              {
+                If agqADDIN:ADDRESS[L_LOOP] <> "" Then
+                  {
+                    Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+                    Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+                    Writefile(L_FILE_NAME,"%s",agqADDIN:ADDRESS[L_LOOP])
+                  }
+              }
+
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+            Writefile(L_FILE_NAME,"%s",Trun(agqADDIN:CITY))
+            Writefile(L_FILE_NAME,"%s",", ")
+            Writefile(L_FILE_NAME,"%s",agqADDIN:STR_STATE)
+            Writefile(L_FILE_NAME,"%s"," ")
+            Writefile(L_FILE_NAME,"%s",L_agqADDIN_ZIP)
+
+            L_max_lines        = 60
+            L_FONT             = l_arial_bold_9
+            L_V_POSITION       = "+190"
+            L_H_POSITION       = "200"
+            L_CHARACTER_STRING = agqADDIN:DESCRIPTION
+            L_MAX_CHAR         = 55
+            include "line_spacing.inc"
+
+            do location
+
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a200h3500V")
+            Writefile(L_FILE_NAME,"%s","PERSONS INSURED EXTENSION")
+            Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+            Writefile(L_FILE_NAME,"%s","Assignee / Mortgagee / Receiver")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a1250h+120V")
+            Writefile(L_FILE_NAME,"%s","The definition of ")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","insured ")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","in the Common Glossary is amended to include the following as an")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a1250h+120V")
+            Writefile(L_FILE_NAME,"%s","insured ")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+            Writefile(L_FILE_NAME,"%s","under this policy.")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+            Writefile(L_FILE_NAME,"%s","<033>&a1250h+180V")
+            Writefile(L_FILE_NAME,"%s","Insured ")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+            Writefile(L_FILE_NAME,"%s","includes the designated person or organization, as shown in the Schedule, but only with ")
+            Writefile(L_FILE_NAME,"%s","<033>&a1250h+120V")
+            Writefile(L_FILE_NAME,"%s","respect to their liability: As an assignee, mortgagee or receiver of the designated premises arising out")
+            Writefile(L_FILE_NAME,"%s","<033>&a1250h+120V")
+            Writefile(L_FILE_NAME,"%s","of ")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+            Writefile(L_FILE_NAME,"%s","your ")
+            Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+            Writefile(L_FILE_NAME,"%s","ownership, maintenance or use of such premises. ")
+            Writefile(L_FILE_NAME,"%s","<033>&a1250h+180V")
+            Writefile(L_FILE_NAME,"%s","However, this insurance does not apply to demolition operations, new construction or structural ")
+            Writefile(L_FILE_NAME,"%s","<033>&a1250h+120V")
+            Writefile(L_FILE_NAME,"%s","alterations performed by or on behalf of such person or organization. ")
+            Writefile(L_FILE_NAME,"%s","<FF>")
+
+          }--end of IF agqaddin
+        Next agqaddin
+      }--End of While
+    }--End of If agqEND_ALIAS Code = I_CODE
+  Next agqEND_ALIAS
+}--End of outside While agqEND_ALIAS
+End
+
+Procedure location
+Begin
+  Writefile(L_FILE_NAME,"%s",L_pop)
+  Writefile(L_FILE_NAME,"%s","<033>&a2900h+120V")
+  Writefile(L_FILE_NAME,"%s","Location: ")
+  Writefile(L_FILE_NAME,"%n",agqLOCATION:PREM_NO)
+  Writefile(L_FILE_NAME,"%s","<033>&a2900h+120V")
+  Writefile(L_FILE_NAME,"%s","Building: ")
+  Writefile(L_FILE_NAME,"%n",agqLOCATION:BUILD_NO)
+  Writefile(L_FILE_NAME,"%s","<033>&a2900h+120V")
+  Writefile(L_FILE_NAME,"%s",agqLOCATION:ADDRESS)
+  For L_LOOP = 1 to 3
+    {
+      If agqLOCATION:ADDRESS1[L_LOOP] <> "" Then
+        {
+          Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+          Writefile(L_FILE_NAME,"%s","<033>&a2900h+120V")
+          Writefile(L_FILE_NAME,"%s",agqLOCATION:ADDRESS1[L_LOOP])
+        }
+    }
+  Writefile(L_FILE_NAME,"%s","<033>&a2900h+120V")
+  Writefile(L_FILE_NAME,"%s",Trun(agqLOCATION:CITY))
+  if agqlocation:app_no = l_app_no then
+      Writefile(L_FILE_NAME,"%s",", ")
+  Writefile(L_FILE_NAME,"%s",agqLOCATION:STR_STATE)
+  if agqlocation:app_no = l_app_no then
+      Writefile(L_FILE_NAME,"%s"," ")
+  Writefile(L_FILE_NAME,"%s",L_agqLOCATION_ZIP)
+End
+
+End

@@ -1,0 +1,609 @@
+%%                 
+Screen
+        Name = "agtmt320";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqaddin" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_enhancement[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4]=0010,
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_no_locations[2]=0,
+                                    l_first_prem_no[4]=0,
+                                    l_first_build_no[4]=0,
+                                    l_last_prem_no[4]=0,
+                                    l_last_build_no[4]=0,
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     l_heading[60],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ,
+               l_first_location[1]="Y" ,
+               l_first_str_location[12]="",
+               l_last_str_location[12]="",
+               l_str_location[12]="";
+
+        Access agqaddin,
+           Set agqaddin:app_NO   = G_app_NO ,
+               agqaddin:prem_no  = g_prem_no,
+               agqaddin:build_no = g_build_no,
+               agqaddin:code     = g_code, generic ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        add/autoupdate tagged add_fn ;
+        change/autoupdate tagged change_fn ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+l_sub_code = 10
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(farmers_fn)
+    hide(lebins_fn)
+    hide(ggund_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    hide(ggund_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    hide(ggund_fn)
+    end
+else
+if sfsdefault:company_id one of "GGUND" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    hide(lebins_fn)
+    hide(t_line_of_business)
+    hide(t_line_of_business_1)
+    end
+
+if agqaddin:app_no <> g_app_no or
+   agqaddin:prem_no <> g_prem_no or
+   agqaddin:build_no <> g_build_no or
+   agqaddin:code <> g_code then
+    function = "ADD"
+
+Access Validation
+If agqaddin:app_NO   <> G_app_NO or
+   agqaddin:prem_no  <> g_prem_no or
+   agqaddin:build_no <> g_build_no or
+   agqaddin:code <> g_code Then
+    Error 1000 ;
+
+access agqaddin_alias, set agqaddin_alias:app_no   = agqaddin:app_no,
+                           agqaddin_alias:prem_no  = agqaddin:prem_no,
+                           agqaddin_alias:build_no = agqaddin:build_no,
+                           agqaddin_alias:code     = agqaddin:code, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqaddin_alias:app_no   = agqaddin:app_no and
+      agqaddin_alias:prem_no  = agqaddin:prem_no and
+      agqaddin_alias:build_no = agqaddin:build_no and
+      agqaddin_alias:code     = agqaddin:code
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqaddin_alias:prem_no) +
+                               str(agqaddin_alias:build_no) +
+                               str(agqaddin_alias:sub_code)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqaddin_alias:prem_no) +
+                           str(agqaddin_alias:build_no) +
+                           str(agqaddin_alias:sub_code)
+    l_no_locations  = l_no_locations + 1
+
+    next agqaddin_alias
+    end
+
+l_str_location = str(agqaddin:prem_no) +
+                 str(agqaddin:build_no) +
+                 str(agqaddin:sub_code)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent         = false
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,83 to 2,100 tagged ggund_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,60     tagged display_information_box
+                properties
+                  {
+                    text = "BU0610 - Additional Insured - Grantor of Franchise"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt320.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 16,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,15
+             properties
+               {
+                 text = "Name:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 4,1 to 4,15
+             properties
+               {
+                 text = "Address:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 7,1 to 7,15
+             properties
+               {
+                 text = "City State Zip:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 9,5 to 9,20
+             properties
+               {
+                 text = "Description:"
+                 fontsize = 12
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+         }
+
+Panel at 8,17 to 14, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+__________________________________________________
+______________________________   ___   ___________
+
+%%
+
+components
+
+Fields
+101     begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqaddin:app_no   = G_app_no
+            agqaddin:PREM_NO  = G_PREM_NO
+            agqaddin:BUILD_NO = G_BUILD_NO
+            agqaddin:CODE     = G_CODE
+            do subcode
+            agqaddin:SUB_CODE = l_sub_code
+            End
+        end
+        agqaddin:NAME[1]/tabstop ;
+201     agqaddin:NAME[2]/tabstop ;
+301     agqaddin:NAME[3]/tabstop;
+401     agqaddin:ADDRESS[1]/tabstop ;
+501     agqaddin:ADDRESS[2]/tabstop;
+601     agqaddin:ADDRESS[3]/tabstop;
+701     agqaddin:CITY/tabstop ;
+702     agqaddin:STR_STATE/tabstop;
+703     agqaddin:STR_ZIPCODE/tabstop ;
+703     Begin
+        If agqaddin:STR_ZIPCODE[6,9] = "" Then
+            agqaddin:STR_ZIPCODE[6,9] = "0000"
+        End
+        agqaddin:STR_ZIPCODE/displayonly ;
+
+}
+
+Panel at 17,5 to 19, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+________________________________________________________________________
+
+%%
+
+components
+
+Fields
+101     agqaddin:description/tabstop/uppercase ;
+
+}
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,1 to 23,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1   tagged back_fn
+        Properties {
+                Iconname = "btn_add_addl_insured.bmp"
+                }
+        Events  {
+                Action = add_fn
+                }
+
+        Button at 1,32    tagged previous_fn
+        Properties {
+                Iconname = "btn_previous.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+
+        Button at 1, 48 tagged next_fn
+        Properties {
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+
+
+        Button at 1,75   tagged nextscreen_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+procedure definition
+
+procedure subcode
+begin
+access agqaddin_alias, set agqaddin_alias:app_no   = agqaddin:app_no,
+                           agqaddin_alias:prem_no  = agqaddin:prem_no,
+                           agqaddin_alias:build_no = agqaddin:build_no,
+                           agqaddin_alias:code     = agqaddin:code, generic
+
+l_sub_code = 0
+while agqaddin_alias:app_no   = agqaddin:app_no and
+      agqaddin_alias:prem_no  = agqaddin:prem_no and
+      agqaddin_alias:build_no = agqaddin:build_no and
+      agqaddin_alias:code     = agqaddin:code
+        begin
+        l_sub_code = agqaddin_alias:sub_code
+
+        next agqaddin_alias
+        end
+
+l_sub_code = l_sub_code + 10
+end
+
+End

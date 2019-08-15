@@ -1,0 +1,547 @@
+%%
+Program
+        Name = "agqcv100b" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+         Global Unsigned Ascii Number G_OLD_QUOTE[8] ,
+                                      G_QUOTE_NO[8] ,
+                                      g_app_no[11];
+
+         String L_PROCEDURE[20] ,
+                L_QUOTE_NO[8] ,
+                l_app_no[11],
+                l_code[7],
+                l_enter,
+                L_NEW_QUOTE_NO[8] ;
+
+        unsigned ascii number l_prem_no[4],
+                              l_build_no[4],
+                              l_sub_code[4] ;
+
+Initialisation
+g_app_no   = val(commandline[1,11])
+g_quote_no = val(COMMANDLINE[12,19])
+
+Access agqname, set agqname:app_no = g_app_no, generic
+
+Access agqgeneral, Set agqgeneral:app_no = g_app_no, generic
+
+while agqgeneral:app_no = g_app_no
+    begin
+    Add BOQGENERAL
+        Begin
+        BOQGENERAL:QUOTE_NO                 = G_QUOTE_NO
+        BOQGENERAL:PREM_NO                  = agqgeneral:PREM_NO
+        BOQGENERAL:BUILD_NO                 = agqgeneral:BUILD_NO
+        BOQGENERAL:RECORD_RDF               = agqgeneral:RECORD_RDF/raw
+        boqgeneral:credit_card_limit        = agqgeneral:credit_card_limit
+        boqgeneral:sub_code                 = agqgeneral:bpsclass_sub_code
+        if agqgeneral:water_backup_limit <> 0 then
+            boqgeneral:water_backup_limited = "Y"
+        boqgeneral:epl_percent              = agqgeneral:epl_percent
+        boqgeneral:no_employees             = agqgeneral:no_employees
+        boqgeneral:fire_limit               = agqgeneral:fire_limit
+        End
+
+    Next agqgeneral
+    End
+
+Access agqgeneral2, Set agqgeneral2:app_no = g_app_no, generic
+
+while agqgeneral2:app_no = g_app_no
+    begin
+    access agqgeneral, set agqgeneral:app_no   = agqgeneral2:app_no,
+                           agqgeneral:prem_no  = agqgeneral2:prem_no,
+                           agqgeneral:build_no = agqgeneral2:build_no, generic
+
+    Add BOQGENERAL1
+        Begin
+        BOQGENERAL1:QUOTE_NO                 = G_QUOTE_NO
+        BOQGENERAL1:PREM_NO                  = agqgeneral2:PREM_NO
+        BOQGENERAL1:BUILD_NO                 = agqgeneral2:BUILD_NO
+        BOQGENERAL1:RECORD_RDF               = agqgeneral2:RECORD_RDF/raw
+        boqgeneral1:garden_type              = agqgeneral:garden_type
+        boqgeneral1:family_apt               = agqgeneral:family_apt
+        End
+
+    Next agqgeneral2
+    End
+
+Access agqgeneral, Set agqgeneral:app_no = g_app_no, generic
+
+Access agqaddin, Set agqaddin:app_no = g_app_no, generic
+
+while agqaddin:app_no = g_app_no
+    begin
+    l_prem_no  = agqaddin:prem_no
+    l_build_no = agqaddin:build_no
+    l_code     = agqaddin:code
+    do access_sfqend
+    Add BOQADDIN
+        Begin
+        BOQADDIN:QUOTE_NO               = G_QUOTE_NO
+        BOQADDIN:PREM_NO                = agqaddin:PREM_NO
+        BOQADDIN:BUILD_NO               = agqaddin:BUILD_NO
+        BOQADDIN:SUB_CODE               = L_SUB_CODE
+        BOQADDIN:CODE                   = agqaddin:code/raw
+        boqaddin:name[1]                = agqaddin:name[1]/raw
+        boqaddin:name[2]                = agqaddin:name[2]/raw
+        boqaddin:name[3]                = agqaddin:name[3]/raw
+        boqaddin:address[1]             = agqaddin:address[1]/raw
+        boqaddin:address[2]             = agqaddin:address[2]/raw
+        boqaddin:address[3]             = agqaddin:address[3]/raw
+        boqaddin:city                   = agqaddin:city/raw
+        boqaddin:str_state              = agqaddin:str_state/raw
+        boqaddin:str_zipcode            = agqaddin:str_zipcode/raw
+        boqaddin:description            = agqaddin:description/raw
+        End
+
+    Next agqaddin
+    End
+
+Access agqbshop, Set agqbshop:app_no = g_app_no, generic
+
+while agqbshop:app_no = g_app_no
+    begin
+    Add BOQBSHOP
+        Begin
+        BOQBSHOP:QUOTE_NO               = G_QUOTE_NO
+        BOQBSHOP:PREM_NO                = agqbshop:PREM_NO
+        BOQBSHOP:BUILD_NO               = agqbshop:BUILD_NO
+        BOQBSHOP:RECORD_RDF             = agqbshop:RECORD_RDF/raw
+        End
+
+    Next agqbshop
+    End
+
+Access agqdishonesty, Set agqdishonesty:app_no = g_app_no, generic
+
+while agqdishonesty:app_no = g_app_no
+    begin
+    Add BOQDISHONESTY
+        Begin
+        BOQDISHONESTY:QUOTE_NO               = G_QUOTE_NO
+        BOQDISHONESTY:PREM_NO                = agqdishonesty:PREM_NO
+        BOQDISHONESTY:BUILD_NO               = agqdishonesty:BUILD_NO
+        BOQDISHONESTY:RECORD_RDF             = agqdishonesty:RECORD_RDF/raw
+        End
+
+    Next agqdishonesty
+    End
+
+Access agqcomputer, Set agqcomputer:app_no = g_app_no, generic
+
+while agqcomputer:app_no = g_app_no
+    begin
+    Add BOQCOMPUTER
+        Begin
+        BOQCOMPUTER:QUOTE_NO               = G_QUOTE_NO
+        BOQCOMPUTER:PREM_NO                = agqcomputer:PREM_NO
+        BOQCOMPUTER:BUILD_NO               = agqcomputer:BUILD_NO
+        BOQCOMPUTER:RECORD_RDF             = agqcomputer:RECORD_RDF/raw
+        if agqname:company_id = "FARMERS" then
+            boqcomputer:limit[1]           = agqcomputer:limit[1] + agqcomputer:limit[3]
+        else
+            boqcomputer:limit[1]           = agqcomputer:limit[1]
+        boqcomputer:limit[2]               = agqcomputer:limit[2]
+        boqcomputer:limit[3]               = agqcomputer:limit[3]
+        End
+
+    Next agqcomputer
+    End
+
+Access agqcompdesc, Set agqcompdesc:app_no = g_app_no, generic
+
+while agqcompdesc:app_no = g_app_no
+    begin
+    Add BOQCOMPDESC
+        Begin
+        BOQCOMPDESC:QUOTE_NO               = G_QUOTE_NO
+        BOQCOMPDESC:PREM_NO                = agqcompdesc:PREM_NO
+        BOQCOMPDESC:BUILD_NO               = agqcompdesc:BUILD_NO
+        BOQCOMPDESC:SUB_CODE               = agqcompdesc:SUB_CODE
+        BOQCOMPDESC:RECORD_RDF             = agqcompdesc:RECORD_RDF/raw
+        End
+
+    Next agqcompdesc
+    End
+
+Access agqendorse, Set agqendorse:app_no = g_app_no, generic
+
+while agqendorse:app_no = g_app_no
+    begin
+    Add BOQENDORSE
+        Begin
+        BOQENDORSE:QUOTE_NO               = G_QUOTE_NO
+        BOQENDORSE:PREM_NO                = agqendorse:PREM_NO
+        BOQENDORSE:BUILD_NO               = agqendorse:BUILD_NO
+        BOQENDORSE:CODE                   = agqendorse:CODE
+        BOQENDORSE:SUB_CODE               = agqendorse:SUB_CODE
+        BOQENDORSE:RECORD_RDF             = agqendorse:RECORD_RDF/raw
+        End
+
+    Next agqendorse
+    End
+
+/*Access agqdesc, Set agqdesc:app_no = g_app_no, generic
+
+while agqdesc:app_no = g_app_no
+    begin
+    Add BOQdesc
+        Begin
+        BOQdesc:QUOTE_NO               = G_QUOTE_NO
+        BOQdesc:PREM_NO                = agqdesc:PREM_NO
+        BOQdesc:BUILD_NO               = agqdesc:BUILD_NO
+        BOQdesc:CODE                   = agqdesc:CODE
+        BOQdesc:SUB_CODE               = agqdesc:SUB_CODE
+        BOQdesc:RECORD_RDF             = agqdesc:RECORD_RDF/raw
+        End
+
+    Next agqdesc
+    End*/
+
+Access agqfuneral, Set agqfuneral:app_no = g_app_no, generic
+
+while agqfuneral:app_no = g_app_no
+    begin
+    Add BOQFUNERAL
+        Begin
+        BOQFUNERAL:QUOTE_NO               = G_QUOTE_NO
+        BOQFUNERAL:PREM_NO                = agqfuneral:PREM_NO
+        BOQFUNERAL:BUILD_NO               = agqfuneral:BUILD_NO
+        BOQFUNERAL:RECORD_RDF             = agqfuneral:RECORD_RDF/raw
+        End
+
+    Next agqfuneral
+    End
+
+Access agqprint, Set agqprint:app_no = g_app_no, generic
+
+while agqprint:app_no = g_app_no
+    begin
+    Add BOQPRINT
+        Begin
+        BOQPRINT:QUOTE_NO               = G_QUOTE_NO
+        BOQPRINT:PREM_NO                = agqprint:PREM_NO
+        BOQPRINT:BUILD_NO               = agqprint:BUILD_NO
+        BOQPRINT:RECORD_RDF             = agqprint:RECORD_RDF/raw
+        End
+
+    Next agqprint
+    End
+
+/*Access agqsafeguard, Set agqsafeguard:app_no = g_app_no, generic
+
+while agqsafeguard:app_no = g_app_no
+    begin
+    Add BOQSAFEGUARD
+        Begin
+        BOQSAFEGUARD:QUOTE_NO               = G_QUOTE_NO
+        BOQSAFEGUARD:PREM_NO                = agqsafeguard:PREM_NO
+        BOQSAFEGUARD:BUILD_NO               = agqsafeguard:BUILD_NO
+        BOQSAFEGUARD:RECORD_RDF             = agqsafeguard:RECORD_RDF/raw
+        End
+
+    Next agqsafeguard
+    End*/
+
+Access agqglass, Set agqglass:app_no = g_app_no, generic
+
+while agqglass:app_no = g_app_no
+    begin
+    Add BOQGLASS
+        Begin
+        BOQGLASS:QUOTE_NO               = G_QUOTE_NO
+        BOQGLASS:PREM_NO                = agqglass:PREM_NO
+        BOQGLASS:BUILD_NO               = agqglass:BUILD_NO
+        BOQGLASS:RECORD_RDF             = agqglass:RECORD_RDF/raw
+        End
+
+    Next agqglass
+    End
+
+Access agqumuim, Set agqumuim:app_no = g_app_no, generic
+
+while agqumuim:app_no = g_app_no
+    begin
+    Add BOQUMUIM
+        Begin
+        BOQUMUIM:QUOTE_NO               = G_QUOTE_NO
+        BOQUMUIM:PREM_NO                = agqumuim:PREM_NO
+        BOQUMUIM:BUILD_NO               = agqumuim:BUILD_NO
+        BOQUMUIM:SUB_CODE               = agqumuim:SUB_CODE
+        BOQUMUIM:RECORD_RDF             = agqumuim:RECORD_RDF/raw
+        End
+
+    Next agqumuim
+    End
+
+/*Access agqgaragekeepers, Set agqgaragekeepers:app_no = g_app_no, generic
+
+while agqgaragekeepers:app_no = g_app_no
+    begin
+    Add agqgaragekeepers
+        Begin
+        agqgaragekeepers:QUOTE_NO               = G_QUOTE_NO
+        agqgaragekeepers:PREM_NO                = agqgaragekeepers:PREM_NO
+        agqgaragekeepers:BUILD_NO               = agqgaragekeepers:BUILD_NO
+        agqgaragekeepers:SUB_CODE               = agqgaragekeepers:SUB_CODE
+        agqgaragekeepers:RECORD_RDF             = agqgaragekeepers:RECORD_RDF/raw
+        End
+
+    Next agqgaragekeepers
+    End*/
+
+Access agqoperations, Set agqoperations:app_no = g_app_no, generic
+
+while agqoperations:app_no = g_app_no
+    begin
+    Add BOQOPERATIONS
+        Begin
+        BOQOPERATIONS:QUOTE_NO               = G_QUOTE_NO
+        BOQOPERATIONS:PREM_NO                = agqoperations:PREM_NO
+        BOQOPERATIONS:BUILD_NO               = agqoperations:BUILD_NO
+        BOQOPERATIONS:RECORD_RDF             = agqoperations:RECORD_RDF/raw
+        End
+
+    Next agqoperations
+    End
+
+/*Access BOQBU0405_ALIAS, Set BOQBU0405_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If BOQBU0405_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add BOQBU0405
+        Begin
+        BOQBU0405:QUOTE_NO               = G_QUOTE_NO
+        BOQBU0405:PREM_NO                = BOQBU0405_ALIAS:PREM_NO
+        BOQBU0405:BUILD_NO               = BOQBU0405_ALIAS:BUILD_NO
+        BOQBU0405:SUB_CODE               = BOQBU0405_ALIAS:SUB_CODE
+        BOQBU0405:RECORD_RDF             = BOQBU0405_ALIAS:RECORD_RDF/raw
+        End
+
+    Next BOQBU0405_ALIAS
+    End*/
+
+Access agqlosspayee, Set agqlosspayee:app_no = g_app_no, generic
+
+while agqlosspayee:app_no = g_app_no
+    begin
+    Add BOQLOSSPAYEE
+        Begin
+        BOQLOSSPAYEE:QUOTE_NO               = G_QUOTE_NO
+        BOQLOSSPAYEE:PREM_NO                = agqlosspayee:PREM_NO
+        BOQLOSSPAYEE:BUILD_NO               = agqlosspayee:BUILD_NO
+        BOQLOSSPAYEE:SUB_CODE               = agqlosspayee:SUB_CODE
+        BOQLOSSPAYEE:RECORD_RDF             = agqlosspayee:RECORD_RDF/raw
+        End
+
+    Next agqlosspayee
+    End
+
+/*L_PROCEDURE = "boqeedp FILE UPDATE"
+
+Access BOQEEDP_ALIAS, Set BOQEEDP_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If BOQEEDP_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add BOQEEDP
+        Begin
+        BOQEEDP:QUOTE_NO               = G_QUOTE_NO
+        BOQEEDP:PREM_NO                = BOQEEDP_ALIAS:PREM_NO
+        BOQEEDP:BUILD_NO               = BOQEEDP_ALIAS:BUILD_NO
+        BOQEEDP:RECORD_RDF             = BOQEEDP_ALIAS:RECORD_RDF/raw
+        End
+
+    Next BOQEEDP_ALIAS
+    End
+
+L_PROCEDURE = "boqecona FILE UPDATE"
+
+Access BOQECONA_ALIAS, Set BOQECONA_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If BOQECONA_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add BOQECONA
+        Begin
+        BOQECONA:QUOTE_NO               = G_QUOTE_NO
+        BOQECONA:PREM_NO                = BOQECONA_ALIAS:PREM_NO
+        BOQECONA:BUILD_NO               = BOQECONA_ALIAS:BUILD_NO
+        BOQECONA:RECORD_RDF             = BOQECONA_ALIAS:RECORD_RDF/raw
+        End
+
+    Next BOQECONA_ALIAS
+    End
+
+L_PROCEDURE = "boqecoal FILE UPDATE"
+
+Access BOQECOAL_ALIAS, Set BOQECOAL_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If BOQECOAL_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add BOQECOAL
+        Begin
+        BOQECOAL:QUOTE_NO               = G_QUOTE_NO
+        BOQECOAL:PREM_NO                = BOQECOAL_ALIAS:PREM_NO
+        BOQECOAL:BUILD_NO               = BOQECOAL_ALIAS:BUILD_NO
+        BOQECOAL:RECORD_RDF             = BOQECOAL_ALIAS:RECORD_RDF/raw
+        End
+
+    Next BOQECOAL_ALIAS
+    End
+
+L_PROCEDURE = "boqepral FILE UPDATE"
+
+Access BOQEPRAL_ALIAS, Set BOQEPRAL_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If BOQEPRAL_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add BOQEPRAL
+        Begin
+        BOQEPRAL:QUOTE_NO               = G_QUOTE_NO
+        BOQEPRAL:PREM_NO                = BOQEPRAL_ALIAS:PREM_NO
+        BOQEPRAL:BUILD_NO               = BOQEPRAL_ALIAS:BUILD_NO
+        BOQEPRAL:SUB_CODE               = BOQEPRAL_ALIAS:SUB_CODE
+        BOQEPRAL:RECORD_RDF             = BOQEPRAL_ALIAS:RECORD_RDF/raw
+        End
+
+    Next BOQEPRAL_ALIAS
+    End
+
+L_PROCEDURE = "boqephy FILE UPDATE"
+
+Access BOQEPHY_ALIAS, Set BOQEPHY_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If BOQEPHY_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add BOQEPHY
+        Begin
+        BOQEPHY:QUOTE_NO               = G_QUOTE_NO
+        BOQEPHY:PREM_NO                = BOQEPHY_ALIAS:PREM_NO
+        BOQEPHY:BUILD_NO               = BOQEPHY_ALIAS:BUILD_NO
+        BOQEPHY:RECORD_RDF             = BOQEPHY_ALIAS:RECORD_RDF/raw
+        End
+
+    Next BOQEPHY_ALIAS
+    End
+
+L_PROCEDURE = "boqetrip FILE UPDATE"
+
+Access BOQETRIP_ALIAS, Set BOQETRIP_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If BOQETRIP_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add BOQETRIP
+        Begin
+        BOQETRIP:QUOTE_NO               = G_QUOTE_NO
+        BOQETRIP:PREM_NO                = BOQETRIP_ALIAS:PREM_NO
+        BOQETRIP:BUILD_NO               = BOQETRIP_ALIAS:BUILD_NO
+        BOQETRIP:RECORD_RDF             = BOQETRIP_ALIAS:RECORD_RDF/raw
+        End
+
+    Next BOQETRIP_ALIAS
+    End
+
+L_PROCEDURE = "boqetrna FILE UPDATE"
+
+Access BOQETRNA_ALIAS, Set BOQETRNA_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If BOQETRNA_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add BOQETRNA
+        Begin
+        BOQETRNA:QUOTE_NO               = G_QUOTE_NO
+        BOQETRNA:PREM_NO                = BOQETRNA_ALIAS:PREM_NO
+        BOQETRNA:BUILD_NO               = BOQETRNA_ALIAS:BUILD_NO
+        BOQETRNA:RECORD_RDF             = BOQETRNA_ALIAS:RECORD_RDF/raw
+        End
+
+    Next BOQETRNA_ALIAS
+    End
+
+L_PROCEDURE = "boqetral FILE UPDATE"
+
+Access BOQETRAL_ALIAS, Set BOQETRAL_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If BOQETRAL_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add BOQETRAL
+        Begin
+        BOQETRAL:QUOTE_NO               = G_QUOTE_NO
+        BOQETRAL:PREM_NO                = BOQETRAL_ALIAS:PREM_NO
+        BOQETRAL:BUILD_NO               = BOQETRAL_ALIAS:BUILD_NO
+        BOQETRAL:RECORD_RDF             = BOQETRAL_ALIAS:RECORD_RDF/raw
+        End
+
+    Next BOQETRAL_ALIAS
+    End
+
+L_PROCEDURE = "boqwh16 FILE UPDATE"
+
+Access BOQWH16_ALIAS, Set BOQWH16_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If BOQWH16_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add BOQWH16
+        Begin
+        BOQWH16:QUOTE_NO               = G_QUOTE_NO
+        BOQWH16:PREM_NO                = BOQWH16_ALIAS:PREM_NO
+        BOQWH16:BUILD_NO               = BOQWH16_ALIAS:BUILD_NO
+        BOQWH16:RECORD_RDF             = BOQWH16_ALIAS:RECORD_RDF/raw
+        End
+
+    Next BOQWH16_ALIAS
+    End*/
+
+Update
+
+Errors
+Writefile("boqcv200.err","<NL>")
+Writefile("boqcv200.err","%S",L_PROCEDURE)
+Writefile("boqcv200.err","<NL>")
+Writefile("boqcv200.err","%N%S boqcv200 errors ",ERRORNUMBER, ERRORTEXT)
+Writefile("boqcv200.err","<NL>")
+Writefile("boqcv200.err","<NL>")
+
+procedure definition
+
+procedure access_sfqend
+begin
+access sfqend, set sfqend:quote_no = g_quote_no,
+                   sfqend:prem_no  = l_prem_no,
+                   sfqend:build_no = l_build_no, generic
+
+l_sub_code = 0
+while sfqend:quote_no = g_quote_no and
+      sfqend:prem_no  = l_prem_no and
+      sfqend:build_no = l_build_no
+        begin
+        if sfqend:code = l_code and
+           sfqend:updated <> 1 and
+           l_sub_code = 0 then
+            begin
+            l_sub_code = sfqend:sub_code
+            change sfqend
+                begin
+                sfqend:updated = 1
+                end
+            end
+
+        next sfqend
+        end
+
+end
+
+End

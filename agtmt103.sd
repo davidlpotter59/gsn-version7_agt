@@ -1,0 +1,253 @@
+%%                 
+Screen
+        Name = "agtmt103";   --Search for Previous Entered Quotes
+        type = "multiline";
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Repeat LINE_ITEMS, 40 times down ;
+        Screensize="dynamic";
+        Domain="agqgeneral" ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+
+        local string l_system_id[15],
+                     l_enter[1],
+                     l_app_no,
+                     l_username[15];
+
+        local unsigned ascii number l_application[11];
+
+
+
+        Include "stdkeys7.inc"
+
+        access agqgeneral,
+           set agqgeneral:app_no = "";
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+        query/precode/postcode;
+        reaccess;
+        "add" sequence "new"      tagged add_fn ;
+        "new" add/hidden/autoupdate ;
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden/autoupdate ;
+        "back" sequence "goback"  tagged back_fn;
+        "goback" continue begin
+                            do back_a_screen
+                          end ;
+        Include "stdfunc7.inc"
+
+EVENT DEFINITION
+        repeated field eventhandler {
+                                     mousedoubleclicked { function = "select" abort()}
+                                   }
+        default eventhandler {
+                               "REMOVE_SCREEN" {
+                                                 function = "exit" abort ()
+                                               }
+                             }
+
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+  proc ("cli /software/shells/agent_search_display.mk")/noconsole
+  proc ("cli /software/shells/agent_search.mk")/noconsole
+  function = "reaccess"
+  abort()
+
+/*access sfsemail,
+   set sfsemail:company_id = agqgeneral:company_id,
+       sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+*/
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    Transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel at 1,1 to 2,100
+     Properties
+        {
+        layouttype = screen
+        }
+    {
+      components
+          guidetext at 1,1 to 2,40
+               properties
+                 {
+                   iconname = "qp_logo.gif"
+                 }
+          guidetext at 1,75 to 2,100
+               properties
+                 {
+                   iconname = "ficof_logo.gif"
+                 }
+
+    }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        scrollbarpolicy=asneeded
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Search..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+
+   Panel at 5.5,1 to 7,100
+           Properties {
+                        LayoutType = screen
+                      }
+                   {
+                     Components
+                        guidetext at 1,10 tagged t_view1
+                             properties
+                               {
+                                 text = "Enter A"
+                                 fontsize = 14
+                                 fontstyle = Plain
+                                 fontname = "arial"
+                               }
+                        guidetext at 1,45 tagged t_view2
+                             properties
+                               {
+                                 text = "Select A"
+                                 fontsize = 14
+                                 fontstyle = Plain
+                                 fontname = "arial"
+                               }
+                        guidetext at 1,75 tagged t_view3
+                             properties
+                               {
+                                 text = "Enter Any Portion of"
+                                 fontsize = 14
+                                 fontstyle = Plain
+                                 fontname = "arial"
+                               }
+                        guidetext at 1.75,5 tagged t_view4
+                             properties
+                               {
+                                 text = "Quote Number:"
+                                 fontsize = 14
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+                        guidetext at 1.75,27 tagged t_view5
+                             properties
+                               {
+                                 text = "OR"
+                                 fontsize = 18
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+                        guidetext at 1.75,40 tagged t_view6
+                             properties
+                               {
+                                 text = "Line of Business"
+                                 fontsize = 14
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+                        guidetext at 1.75,63 tagged t_view7
+                             properties
+                               {
+                                 text = "OR"
+                                 fontsize = 18
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+                        guidetext at 1.75,76 tagged t_view8
+                             properties
+                               {
+                                 text = "Insured's Name"
+                                 fontsize = 14
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                               }
+                   }
+/*   Panel
+      {
+        Fields
+          __________
+        Function at 1,40 to 1,60 ;
+      }
+  */
+
+Panel at 7.75, 5 to 30.75, 20 tagged t_quote_search_field
+{
+%%
+_________
+___________
+
+
+___________
+
+
+%%
+
+Components
+
+Fields
+  FUNCTION;
+
+  { Queryfield = "agqgeneral:app_no" queryclass=1 }
+   l_app_no
+  { l_app_no = queryexpression };
+
+  { if function="QUERY" THEN forwardfield() }
+   agqgeneral:app_no    tagged LINE_ITEMS;
+}
+
+}
+
+screen exit
+
+Procedure Definition
+
+procedure back_a_screen
+
+begin
+  function = "exit" abort ()
+  display screen "agtmt001"
+end
+
+End

@@ -1,0 +1,1884 @@
+%%
+/*
+Date Written: October 7, 2005
+
+Name: agqmso001a.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------------------
+10/07/2005            REL & DWR    Initial BOQ Quote Letter setup
+07/10/2006            DWR          Added Rating Information section
+--------------------------------------------------------------------------
+*/
+
+Program
+  Name = "agqmso001a";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ array [120] of string l_no_duplicate_printing[7];
+
+ string l_font ;
+ String L_FILE_NAME[13] = "agqmso001a.cq";
+ String L_COPY_NAME[20] ;
+ String I_REV_NAME2[50] ;
+ String L_POLICY_FORM;
+ String L_TYPE_STR[100];
+ String L_POLICY_DECLARATION[60];
+ String L_TRANS_EFF;
+ String L_AUDIT;
+ String L_PREV_STRING[100];
+ String L_INSURED_CITY_STATE[50];
+ String L_agqNAME_ZIP="";
+ String L_SFSAGENT;
+ String L_agqLOCATION_ZIP;
+ String L_SFSMORT_ZIP[10];
+ String L_agqSUPP_ZIP[10];
+ String L_AGENT_ADDRESS;
+ String L_FOB[75];
+ String L_AGENT_TEL[13];
+ String L_AGENT_ZIP[10];
+ String L_MORGAGE_ID[10];
+ String L_LOB_CODE[10];
+ string l_enter[1],
+        l_code,
+        l_form_edition,
+        l_description,
+        l_sub_code;
+ String L_STATE;
+ String L_COMPANY_ZIP[10];
+ String L_TERROR_FORM[7];
+ String L_COMPANY_ID[10];
+ String L_BILL_PLAN[2];
+ String L_MORTGAGE_TYPE_1[1];
+ String L_STATE_STR[2];
+ String L_PRINT_BLANK_WORDING;
+ String L_MORTGAGE_TYPE_2[1];
+ String L_SIGNATURE_STRING[55];
+ String L_PLEASED_WORDING[200];
+ String L_PRODUCER_LABEL;
+ String L_CHARACTER_STRING[1500]            = "";
+ string l_h_position[5]                    = "";
+ string l_v_position[5]                    = "";
+ Unsigned Ascii Number L_START_PRINT[4]    = 0;
+ Unsigned Ascii Number L_END_PRINT[4]      = 0;
+ Unsigned Ascii Number L_LEN_STRING[4]     = 0;
+ Unsigned Ascii Number L_CHARACTER_BREAK   = 0;
+ Unsigned Ascii Number L_CHARACTER_COUNTER = 0;
+ Unsigned Ascii Number L_MAX_CHAR          = 0;
+ unsigned ascii number l_top_of_page       = 0;
+ String L_NEWPAGE_WORDING[40]              = "";
+
+ Number L_TRANS_CODE;
+ Number L_MM_1;
+ Number L_DD_1;
+ Number L_YY_1;
+ Number L_RENEWAL[9],
+ l_premium;
+ number function add_and_check_print_array(string)
+
+ Unsigned Ascii Number l_form[1];
+ Unsigned Ascii Number L_LINE_HEIGHT;
+ Unsigned Ascii Number L_MASTER_CODE[4];
+ Unsigned ascii number l_app_no[11];
+ Unsigned Ascii Number L_DECIPOINT;
+ Unsigned Ascii Number L_CHARACTER_PER_INCH;
+ Unsigned Ascii Number L_PAGE_MIDDLE;
+ Unsigned Ascii Number L_HALF_MULTIPLIER;
+ Unsigned Ascii Number L_CHAR_MULTIPLIER[10]/decimals=4;
+ Unsigned Ascii Number L_PAGE_NUMBER = 1;
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_LINE_COUNTER;
+ Unsigned Ascii Number L_MED_LIMIT;
+ Unsigned Ascii Number L_S_LINE_FOR_LOCATION = 0; --start line for location
+ Unsigned Ascii Number L_BIGGER_LINE =0;
+ Unsigned Ascii Number L_SCREEN_COR= 0;
+ Unsigned Ascii Number L_E_LINE_FOR_INSURED = 0;
+ Unsigned Ascii Number L_PAGENUMBER;
+ Unsigned Ascii Number L_MAX_LINES;
+ Unsigned Ascii Number L_LOCATION_COUNTER;
+ Unsigned Ascii Number L_SIZE_COUNTER;
+ Unsigned Ascii Number L_LIABILITY;
+ Unsigned Ascii Number L_LINE_OF_BUSINESS[4];
+ Unsigned Ascii Number L_INSURED_COUNTER;
+ Unsigned Ascii Number L_AGENT_COUNTER;
+ Unsigned Ascii Number L_TWO_PLACER;
+ Unsigned Ascii Number L_SFSFORM[2];
+ Unsigned Ascii Number L_agqMASTER_FORM[1];
+ Unsigned Ascii Number L_LOOP;
+ Unsigned Ascii Number L_SCIPSCONTROL;
+ Unsigned Ascii Number L_STATE_NUM[2];
+ Unsigned Ascii Number L_PRINTED_DATED[1];  --delete after scipscontrol is set u
+ Unsigned Ascii Number L_LOC_COUNTER = 1;
+ Unsigned Ascii Number l_total_locations[3],
+                       l_total_boilers_premium;
+
+ Include "swsut100.var"
+ Include "csfonts.inc"
+ Include "sfsrevname.var"
+ Include "header.var"
+
+Initialization
+Deletefile (L_FILE_NAME)
+L_app_no = val(COMMANDLINE[1,11])
+
+Access agqNAME,
+   Set agqNAME:app_no    = l_app_no,exact
+
+Access agqOPERATIONS,
+   Set agqOPERATIONS:app_no    = l_app_no,generic
+
+Access agqGENERAL ,
+   Set agqGENERAL:app_no    = l_app_no,generic
+
+Access agqMASTER,
+   Set agqMASTER:app_no    = l_app_no,exact
+
+Access agqMASTSUPP,
+   Set agqMASTSUPP:app_no    = l_app_no,
+       agqmastsupp:line_of_business = agqgeneral:line_of_business, exact
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no    = l_app_no,generic
+
+Access agqEND,
+   Set agqEND:app_no    = l_app_no,generic
+
+Access SFSCOMPANY,
+   Set SFSCOMPANY:COMPANY_ID = agqgeneral:COMPANY_ID, Exact
+
+Access SFSLINE,
+   Set SFSLINE:COMPANY_ID       = agqgeneral:COMPANY_ID,
+       SFSLINE:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS,
+       sfsline:lob_subline      = "00", Generic
+
+Access SFSLINE_alias,
+   Set SFSLINE_alias:COMPANY_ID       = agqname:COMPANY_ID,
+       SFSLINE_alias:LINE_OF_BUSINESS = agqname:LINE_OF_BUSINESS,
+       sfsline_alias:lob_subline      = "00", Generic
+
+Access SFSAGENT,
+   Set SFSAGENT:COMPANY_ID = agqgeneral:COMPANY_ID,
+       SFSAGENT:AGENT_NO   =  agqgeneral:AGENT_NO, Exact
+
+Access SFSSTATE,
+   Set SFSSTATE:COMPANY_ID = agqGENERAL:COMPANY_ID,
+       SFSSTATE:STATE      = agqGENERAL:STATE,
+       SFSSTATE:COUNTY     = agqGENERAL:COUNTY, Exact
+
+Access SFSCONSTRUCTION,
+   Set SFSCONSTRUCTION:COMPANY_ID       = agqGENERAL:COMPANY_ID,
+       SFSCONSTRUCTION:STATE            = agqGENERAL:STATE,
+       SFSCONSTRUCTION:LINE_OF_BUSINESS = agqGENERAL:LINE_OF_BUSINESS,
+       SFSCONSTRUCTION:CONSTRUCTION     = agqGENERAL:CONSTRUCTION, Exact
+
+Access agqSUPP,
+   Set agqSUPP:app_no    = l_app_no,generic
+
+if sfsline_alias:lob_code = "CPORTFOLIO" then
+    L_SFSFORM = agqmastsupp:FORM
+else
+    L_SFSFORM = agqMASTER:FORM
+
+Access SFSFORM,
+   Set SFSFORM:COMPANY_ID       = agqGENERAL:COMPANY_ID,
+       SFSFORM:STATE            = agqGENERAL:STATE,
+       SFSFORM:LINE_OF_BUSINESS = agqGENERAL:LINE_OF_BUSINESS,
+       SFSFORM:POLICY_FORM      = L_SFSFORM, Exact
+
+L_POLICY_DECLARATION = Trun(SFSLINE:DESCRIPTION) + " " + "POLICY DECLARATIONS"
+
+L_AGENT_TEL = SFSAGENT:TELEPHONE[1];
+
+L_SFSAGENT = If (Val(SFSAGENT:ZIPCODE_1_4) = 0) Then
+                      SFSAGENT:ZIPCODE_5_9
+                    Else
+                      SFSAGENT:ZIPCODE_5_9 + "-" + SFSAGENT:ZIPCODE_1_4
+
+L_agqNAME_ZIP = If (Val(agqname:STR_ZIPCODE[6,9]) = 0) Then
+                        agqname:STR_ZIPCODE[1,5]
+                        Else
+                        agqname:STR_ZIPCODE[1,5] + "-" +
+                        agqname:STR_ZIPCODE[6,9]
+
+L_INSURED_CITY_STATE = Trun(agqname:CITY) + ", " + agqname:STR_STATE + "  " + L_agqNAME_ZIP
+
+L_AGENT_ZIP =  If (Val(SFSAGENT:STR_ZIPCODE[6,9]) = 0) Then
+                  SFSAGENT:STR_ZIPCODE[1,5]
+                  Else
+                  SFSAGENT:STR_ZIPCODE[1,5] + "-" +
+                  SFSAGENT:STR_ZIPCODE[6,9]
+
+L_COMPANY_ZIP =  If (Val(SFSCOMPANY:STR_ZIPCODE[6,9]) = 0) Then
+                       SFSCOMPANY:STR_ZIPCODE[1,5]
+                     Else
+                       SFSCOMPANY:STR_ZIPCODE[1,5] + "-" +
+                       SFSCOMPANY:STR_ZIPCODE[6,9]
+
+L_COMPANY_ID = agqgeneral:COMPANY_ID
+
+L_AGENT_ADDRESS = SFSAGENT:CITY + ", " + SFSAGENT:STR_STATE
+
+if sfsline_alias:lob_code = "CPORTFOLIO" then
+    L_MED_LIMIT = agqmastsupp:MEDICAL_LIMIT
+else
+    L_MED_LIMIT = agqMASTER:MEDICAL_LIMIT
+
+Switch(agqMASTER:FORM_OF_BUSINESS)
+  Case 'C' : L_FOB = "Corporation"
+  Case 'I' : L_FOB = "Individual"
+  Case 'J' : L_FOB = "Joint Venture"
+  Case 'O' : L_FOB = "Organization"
+  Case 'P' : L_FOB = "Partnership"
+  Case 'L' : l_FOB = "LLC"
+  Case 'T' : L_FOB = agqMASTER:FOB_DESCRIPTION
+End
+
+L_TRANS_CODE = agqMASTER:TRANS_CODE
+
+Include "swudeccs.inc"
+
+if sfsline_alias:lob_code = "CPORTFOLIO" then
+    begin
+    Switch(agqmastsupp:LIABILITY_CODE)
+                 Case 1 : L_LIABILITY = 300000
+                 Case 2 : L_LIABILITY = 500000
+                 Case 3 : L_LIABILITY = 1000000
+                 End
+    end
+else
+    begin
+    Switch(agqMASTER:LIABILITY_CODE)
+                 Case 1 : L_LIABILITY = 300000
+                 Case 2 : L_LIABILITY = 500000
+                 Case 3 : L_LIABILITY = 1000000
+                 End
+    end
+
+L_MAX_LINES = 62
+L_SIZE_COUNTER = 0
+L_LINE_COUNTER = 1
+L_PAGENUMBER = 1
+L_LOCATION_COUNTER = 0
+L_INSURED_COUNTER = 0
+L_AGENT_COUNTER = 0
+L_LOB_CODE = SFSLINE:LOB_CODE
+
+Include "swsut100.inc"
+
+Access SCIPSCONTROL,
+             Set SCIPSCONTROL:COMPANY_ID          = L_COMPANY_ID,
+                 SCIPSCONTROL:STATE               = agqgeneral:STATE,
+                 SCIPSCONTROL:LOB_CODE            = L_LOB_CODE, Exact
+
+If SCIPSCONTROL:DUPLEX_SHORT_EDGE = 1 Then
+  {
+    Writefile(L_FILE_NAME,"%s",L_SEDUP)
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s",L_LEDUP)
+  }
+--border
+
+  --box on page 1
+  Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c10a3045b0P")   --left vertical li
+  Writefile(L_FILE_NAME,"%s","<033>&a5585h0V<033>*c10a3045b0P")   --right vertical
+  Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c5467h20v0P") --top horizontal line to
+  Writefile(L_FILE_NAME,"%s","<033>&a140h7300V<033>*c5467h20v0P") --bottom horizontal line
+
+
+Writefile(L_FILE_NAME,"%s%s%s%n",L_ARIAL_BOLD_9,
+                      "<033>&a5000h7250V",
+                      "Page ",L_PAGE_NUMBER)
+
+Writefile(L_FILE_NAME,"%s","<033>&a0h0V")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+L_STRING = trun(sfscompany:name[1])
+L_FONT = L_ARIAL_BOLD_14
+L_PITCH_HALF = 8
+L_PITCH_FULL = 16
+L_VERTICAL_POS = "+240"
+Include "center2.pro"
+
+if scipscontrol:quotation_lob_wording_change = 1 then
+    begin
+    L_PLEASED_WORDING = trun(sfsline:description)
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+    L_STRING = L_PLEASED_WORDING
+    L_FONT = L_ARIAL_BOLD_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+160"
+    Include "center2.pro"
+
+    L_PLEASED_WORDING = "We are pleased to submit the following quotation to you."
+
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+    L_STRING = L_PLEASED_WORDING
+    L_FONT = L_ARIAL_BOLD_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+160"
+    Include "center2.pro"
+    end
+else
+    begin
+    L_PLEASED_WORDING = "We are pleased to submit the following " +
+                        trun(sfsline:description) + " " + "quotation to you."
+
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+    L_STRING = L_PLEASED_WORDING
+    L_FONT = L_ARIAL_BOLD_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+160"
+    Include "center2.pro"
+    end
+
+Writefile(L_FILE_NAME,"%s%s","<NL>","<033>&f0S") --pushed memory location on stack
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Writefile(L_FILE_NAME,"%s%s%s%s","<033>&f1S",L_ARIAL_12,"<033>&a200h+30V",
+                      "Application Number: ")
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Writefile(L_FILE_NAME,"%s%s",trun(L_ARIAL_BOLD_14),trun(str(l_app_no)))
+
+If agqname:quote_no <> 0 then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s%s","<NL>",L_ARIAL,"<033>&a200h+120V","Quote Number: ")
+    Writefile(L_FILE_NAME,"%s%s%s",trun(L_ARIAL_BOLD_12),"Q",trun(str(agqname:quote_no)))
+  }
+
+Writefile(L_FILE_NAME,"%s","<NL>")
+L_LINE_HEIGHT = L_LINE_HEIGHT + 120
+Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s",L_ARIAL_12,"<033>&a300h900V",
+                  "<033>&a2300h-85V<033>*c85h10v0P",  -- top horizontal
+                  "<033>&a2300h+0V<033>*c5a40b0P", -- left vertical
+                  "<033>&a2380h+0V<033>*c5a40b0P", -- right vertical
+                  "<033>&a2300h+85V<033>*c85h10v0P", -- bottom horizontal
+                  L_ARIAL_BOLD_12,"<033>&a2500h+0V","BASIC PLUS")
+L_LINE_HEIGHT = L_LINE_HEIGHT +30  --was -85
+
+if sfsline_alias:lob_code = "CPORTFOLIO" then
+    begin
+    If agqmastsupp:FORM = 1 Then
+        Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD,"<033>&a2310h-2V","X")
+    end
+else
+    begin
+    If agqMASTER:FORM = 1 Then
+        Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD,"<033>&a2310h-2V","X")
+    end
+
+if agqgeneral:company_id <> "GGUND" then
+    begin
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s","<NL>","<033>&a300h+30V",
+                      L_ARIAL_12,"<033>&a2300h-85V<033>*c85h10v0P",  -- top horizontal
+                      "<033>&a2300h+0V<033>*c5a40b0P", -- left vertical
+                      "<033>&a2380h+0V<033>*c5a40b0P", -- right vertical
+                      "<033>&a2300h+85V<033>*c85h10v0P", -- bottom horizontal
+                      L_ARIAL_BOLD_12,"<033>&a2500h-0V","NAMED PERILS")
+    if sfsline_alias:lob_code = "CPORTFOLIO" then
+        begin
+        If agqmastsupp:FORM = 2 Then
+            Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL,"<033>&a2310h-2V","X")
+        end
+    else
+        begin
+        If agqMASTER:FORM = 2 Then
+            Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL,"<033>&a2310h-2V","X")
+        end
+    end
+
+Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s","<NL>","<033>&a300h+30V",
+                  L_ARIAL_12,"<033>&a2300h-85V<033>*c85h10v0P",  -- top horizontal
+                  "<033>&a2300h+0V<033>*c5a40b0P", -- left vertical
+                  "<033>&a2380h+0V<033>*c5a40b0P", -- right vertical
+                  "<033>&a2300h+85V<033>*c85h10v0P", -- bottom horizontal
+                  L_ARIAL_BOLD_12,"<033>&a2500h-0V","EXPANDED")
+if sfsline_alias:lob_code = "CPORTFOLIO" then
+    begin
+    If agqmastsupp:FORM = 3 Then
+        Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL,"<033>&a2310h-2V","X")
+    end
+else
+    begin
+    If agqMASTER:FORM = 3 Then
+        Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL,"<033>&a2310h-2V","X")
+    end
+
+L_LINE_HEIGHT = L_LINE_HEIGHT + 30
+L_LINE_COUNTER = L_LINE_COUNTER + 4
+
+if sfscompany:company_id one of "FARMERS" then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%n%s","<NL>","<NL>",L_ARIAL_BOLD,
+                          "<033>&a350h+0V","Applicant Name and Mailing Address",
+                          "<033>&a3000h+0V","Agent -","<033>&a3400h+0V",
+                           SFSAGENT:AGENT_NO,"<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 3
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%n%s","<NL>","<NL>",L_ARIAL_BOLD,
+                          "<033>&a350h+0V","Named Insured and Mailing Address",
+                          "<033>&a3000h+0V","Agent -","<033>&a3400h+0V",
+                          SFSAGENT:AGENT_NO,"<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 3
+  }
+
+Writefile(L_FILE_NAME,"%s","<033>&f0S")   --push the cursor position on the stack
+Writefile(L_FILE_NAME,"%s","<033>&f0S")   --used to see if agent or insured
+                                          --name/address has more lines
+
+L_LINE_HEIGHT = L_LINE_HEIGHT + 360
+--L_LINE_HEIGHT = L_LINE_HEIGHT + 360
+L_LINE_COUNTER = (L_LINE_HEIGHT Div 120) + 2
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL)
+For L_LOOP = 1 To 3
+  {
+    I_NAME=agqname:NAME[L_LOOP,1,40]
+    if i_name = "" then
+        i_name = agqgeneral:business_name[l_loop]
+    Include "sfsrevname7.pro"
+    If i_rev_name <> "" Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",I_REV_NAME,"<NL>")
+        L_INSURED_COUNTER = L_INSURED_COUNTER +1
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+      }
+  }
+
+For L_LOOP = 1 To 3
+  {
+    If len(trun(agqname:address[L_LOOP])) <> 0 Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",trun(agqname:address[L_LOOP,1,40]),"<NL>")
+        L_INSURED_COUNTER = L_INSURED_COUNTER +1
+        L_LINE_COUNTER = L_LINE_COUNTER + 1
+      }
+  }
+if agqlocation:prem_no  <> 0 and
+   agqlocation:build_no <> 0 then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",trun(L_INSURED_CITY_STATE),"<NL>")
+  }
+L_INSURED_COUNTER = L_INSURED_COUNTER +1
+L_LINE_COUNTER= L_LINE_COUNTER + 1
+
+--START OF AGENT PRINTING
+  Writefile(L_FILE_NAME,"%s","<033>&f1S")  --pop agent cursor postion off stack
+
+  If SCIPSCONTROL:PRODUCER_LABEL One Of 1 Then
+    {
+      Access SFSAGENT,
+         Set SFSAGENT:COMPANY_ID = agqgeneral:COMPANY_ID,
+             SFSAGENT:AGENT_NO   = agqgeneral:AGENT_NO, Exact
+      L_MASTER_CODE = SFSAGENT:AGENT_MASTER_CODE
+      Access SFSAGENT,
+         Set SFSAGENT:COMPANY_ID = agqgeneral:COMPANY_ID,
+             SFSAGENT:AGENT_NO   = L_MASTER_CODE, Exact
+      Writefile(L_FILE_NAME,"%s","<033>&a3000h+0V")
+      Writefile(L_FILE_NAME,"%s",SFSAGENT:NAME[1])  --prints master agent code
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+      Writefile(L_FILE_NAME,"%s","<033>&a3000h+120V")
+      Writefile(L_FILE_NAME,"%s",L_PRODUCER_LABEL)
+      Writefile(L_FILE_NAME,"%s",L_ARIAL)
+      Writefile(L_FILE_NAME,"%s","<NL>")
+    }
+--reaccessing producer agent
+
+  Access SFSAGENT,
+     Set SFSAGENT:COMPANY_ID = agqgeneral:COMPANY_ID,
+         SFSAGENT:AGENT_NO   = agqgeneral:AGENT_NO, Exact
+
+  For L_LOOP = 1 To 3
+    {
+      If SFSAGENT:NAME[L_LOOP] <> "" Then
+        {
+          Writefile(L_FILE_NAME,"%s%s","<033>&a3000h+0V",SFSAGENT:NAME[L_LOOP])
+          Writefile(L_FILE_NAME,"%s","<NL>")
+          L_LINE_COUNTER = L_LINE_COUNTER + 1
+          l_agent_counter = l_agent_counter + 1
+        }
+    }
+  For L_LOOP = 1 To 3
+    {
+      If SFSAGENT:ADDRESS[L_LOOP] <> "" Then
+        {
+          Writefile(L_FILE_NAME,"%s%s%s","<033>&a3000h+0V",SFSAGENT:ADDRESS[L_LOOP],"<NL>")
+          L_LINE_COUNTER = L_LINE_COUNTER + 1
+          l_agent_counter = l_agent_counter + 1
+        }
+    }
+  Writefile(L_FILE_NAME,"%s%s, %s%s%s%s","<033>&a3000h+0V",Trun(SFSAGENT:CITY),
+                       SFSAGENT:STR_STATE," ",L_AGENT_ZIP,"<NL>")
+  L_LINE_COUNTER= L_LINE_COUNTER + 1
+  l_agent_counter = l_agent_counter + 1
+  Writefile(L_FILE_NAME,"%s%s%s%s %s-%s","<033>&a3000h+0V",
+                        "(",L_AGENT_TEL[1,3],")",L_AGENT_TEL[4,6],
+                        L_AGENT_TEL[7,10])
+
+  Writefile(L_FILE_NAME,"%s","<033>&f1S")  --pop agent cursor postion off stack
+
+    If l_agent_counter > l_insured_counter Then
+      {
+        For l_loop = 1 to l_agent_counter
+          {
+            Writefile(L_FILE_NAME,"%s","<NL>")
+          }
+      }
+  Else
+      {
+        For l_loop = 1 to l_insured_counter
+          {
+            Writefile(L_FILE_NAME,"%s","<NL>")
+          }
+      }
+--**********************************************************************
+--putting in the QUOTE TERM LINE ON THE DEC PAGE
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s%s", "Quoted Term: ",trun(L_ARIAL))
+Writefile(L_FILE_NAME,"%d%s%d",agqgeneral:EFF_DATE," to ",agqgeneral:EXP_DATE)
+
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+Writefile(L_FILE_NAME,"%s%d","Quote Valid Until: ", todaysdate + 30)
+
+Writefile(L_FILE_NAME,"%s%s","<NL>","<NL>")
+
+--**********************************************************************
+
+Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL_BOLD,
+                      "<033>&a200h+0V","You are a:  ",
+                      trun(L_ARIAL),Uppercase(L_FOB),"<NL>")
+l_line_counter = l_line_counter + 2
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no = L_app_no,generic
+
+if agqgeneral:business_desc[1] <> "" then
+    begin
+    Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,
+              "<033>&a200h+0V","Your Business/Operation: ",trun(L_ARIAL))
+
+    Writefile(L_FILE_NAME,"%s",agqGENERAL:BUSINESS_DESC[1])
+
+    If agqGENERAL:BUSINESS_DESC[2] <> "" Then
+        {
+        Writefile(L_FILE_NAME,"%s","<NL>")
+        Writefile(L_FILE_NAME,"%s","<033>&a1650h+0V")
+        Writefile(L_FILE_NAME,"%s",agqGENERAL:BUSINESS_DESC[2])
+        l_line_counter = l_line_counter + 1
+        }
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    l_line_counter = l_line_counter + 2
+    end
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no     = l_app_no,generic
+
+Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD,
+                      "<033>&a2200h+80V","SCHEDULE OF PREMISES")
+l_line_counter = l_line_counter + 1
+
+Access agqlocation ,
+   Set agqlocation:app_no    = L_app_no,generic
+
+l_total_locations = 0
+
+While agqlocation:app_no = L_app_no
+  {
+    l_total_locations = l_total_locations + 1
+    next agqlocation
+  }
+
+
+If l_total_locations > 1 Then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_italic,
+                          "<033>&a2155h+100V","additional locations applicable")
+  }
+
+L_S_LINE_FOR_LOCATION = l_line_counter + 2
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a150h+40V<033>*c5455h20v0P","<NL>")
+
+While agqgeneral:app_no = L_app_no
+  {
+    Access agqlocation ,
+       Set agqlocation:app_no    = L_app_no,
+           agqlocation:PREM_NO   = agqgeneral:PREM_NO,
+           agqlocation:BUILD_NO  = agqgeneral:BUILD_NO, generic
+
+    Access SFSSTATE,
+       Set SFSSTATE:COMPANY_ID = agqGENERAL:COMPANY_ID,
+           SFSSTATE:STATE      = agqGENERAL:STATE,
+           SFSSTATE:COUNTY     = agqGENERAL:COUNTY, Exact
+
+    Access SFSCONSTRUCTION,
+       Set SFSCONSTRUCTION:COMPANY_ID       = agqGENERAL:COMPANY_ID,
+           SFSCONSTRUCTION:STATE            = agqGENERAL:STATE,
+           SFSCONSTRUCTION:LINE_OF_BUSINESS = agqGENERAL:LINE_OF_BUSINESS,
+           SFSCONSTRUCTION:CONSTRUCTION     = agqGENERAL:CONSTRUCTION, Exact
+
+       --checking to see if the address field are blank in they are not blank then we need
+       --to adjust the counter to the appropriate line to make sure that the next grouip
+       --of data that prints will print all together.
+
+    If l_page_number >= 2 and l_top_of_page = 0 then
+      {
+        l_top_of_page = 1
+        Writefile(L_FILE_NAME,"%s","<033>&a+0h+0V") --sets starting point for newpage
+        Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,"<033>&a2000h+0V",
+                              "SCHEDULE OF PREMISES CONTINUED","<NL>")
+        Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+        l_line_counter = l_line_counter + 2
+      }
+
+    If (Val(agqLOCATION:STR_ZIPCODE[6,9]) = 0) Then
+      {
+        L_agqLOCATION_ZIP = agqLOCATION:STR_ZIPCODE[1,5]
+      }
+    Else
+      {
+        L_agqLOCATION_ZIP = agqLOCATION:STR_ZIPCODE[1,5] + "-" +
+                            agqLOCATION:STR_ZIPCODE[6,9]
+      }
+
+    if agqgeneral:prem_no  <> 0 or
+       agqgeneral:build_no <> 0 then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s%s%n%s%s%s%n%s%s",L_ARIAL,
+                               "<033>&a200h+10V","Location","<033>&a700h+0V",
+                               agqgeneral:PREM_NO,"<033>&a1000h+0V","Building",
+                               "<033>&a1500h+0V",agqgeneral:BUILD_NO,"<033>&a2500h+0V",
+                               "Rating Territory")
+      }
+    Else
+      {
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s",L_ARIAL,
+                               "<033>&a200h+10V","Location","<033>&a1000h+0V","Building",
+                               "<033>&a2500h+0V","Rating Territory")
+      }
+    If (SFSCOMPANY:PRINT_INFO_ON_BOP_DEC = 1) Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%S%S%S%S","<033>&a3400h+0V","Construction",
+                       "<033>&a4100h+0V","Occupancy","<033>&a4700h+0V",
+                        "Rating Class")
+      }
+    Writefile(L_FILE_NAME,"%s","<NL>")
+    l_line_counter = l_line_counter + 1
+
+    writefile(l_file_name,"%s",l_push)
+    L_FONT             = L_arial_9
+    L_V_POSITION       = "+0"
+    L_H_POSITION       = "2500"
+    L_CHARACTER_STRING = sfsstate:description
+    L_MAX_CHAR         = 13
+    include "line_spacing.inc"
+    writefile(l_file_name,"%s",l_pop)
+
+    If (SFSCOMPANY:PRINT_INFO_ON_BOp_DEC = 1) Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s%n%s%s%s%s%s%s%n","<033>&a3650h+0V",
+                        SFSCONSTRUCTION:CODE,"<033>&a4300h+0V",
+                        agqGENERAL:CLASS_CODE,"<033>&a4700h+0V","Basic: (",
+                        Str(agqGENERAL:RATE_NO),")",
+                        "<033>&a5170h+0V"," Exp: ",agqGENERAL:RATE_GROUP)
+
+      }
+    Writefile(L_FILE_NAME,"%s%s%s","<033>&a200h+0V",agqLOCATION:ADDRESS,"<NL>")
+    l_line_counter = l_line_counter + 1
+    if agqlocation:prem_no  <> 0 or
+       agqlocation:build_no <> 0 then
+      {
+        For L_LOOP = 1 To 3
+          {
+            If agqLOCATION:ADDRESS1[L_LOOP] <> "" Then
+              {
+                Writefile(L_FILE_NAME,"%s%s%s","<033>&a200h+0V",agqLOCATION:ADDRESS1[L_LOOP],"<NL>")
+                L_LINE_COUNTER = L_LINE_COUNTER + 1
+              }
+          }
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s","<033>&a200h+0V",Trun(agqLOCATION:CITY),", ",
+                              Trun(agqLOCATION:STR_STATE)," ",L_agqLOCATION_ZIP,"<NL>")
+          l_line_counter = l_line_counter + 1
+      }
+    Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h5v0P","<NL>")
+    l_line_counter = l_line_counter + 1
+
+    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD,"<033>&a1000h+0V",
+                      "PART I - BUSINESS   PROPERTY   AND   LOSS   OF   ",
+                      "BUSINESS   INCOME","<NL>")
+    l_line_counter = l_line_counter + 1
+
+    Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h5v0P","<NL>")
+    l_line_counter = l_line_counter + 1
+
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL,"<033>&a1000h-0V",
+                          "LIMIT OF LIABILITY","<033>&a3500h+0V",
+                          "COVERAGES","<NL>")
+    l_line_counter = l_line_counter + 1
+
+    Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h5v0P","<NL>")
+
+    if sfsline_alias:lob_code = "CPORTFOLIO" then
+        begin
+        Writefile(L_FILE_NAME,"%s%s%s%s%n%s%s%s%n%s%s%n%s%s%s",L_ARIAL_BOLD,
+                          "<033>&a500h+0V","Location",
+                          "<033>&a1000h+0V",agqGENERAL:PREM_NO,"<033>&a1500h+0V",
+                          "Building","<033>&a2000h+0V",agqGENERAL:BUILD_NO,
+                          "<033>&a3000h+0V","$",agqmastsupp:DEDUCTIBLE,
+                          "<033>&a3410h+0V","< Deductible - Coverages A and B",
+                          "<NL>")
+        end
+    else
+        begin
+        Writefile(L_FILE_NAME,"%s%s%s%s%n%s%s%s%n%s%s%n%s%s%s",L_ARIAL_BOLD,
+                          "<033>&a500h+0V","Location",
+                          "<033>&a1000h+0V",agqGENERAL:PREM_NO,"<033>&a1500h+0V",
+                          "Building","<033>&a2000h+0V",agqGENERAL:BUILD_NO,
+                          "<033>&a3000h+0V","$",agqMASTER:DEDUCTIBLE,
+                          "<033>&a3410h+0V","< Deductible - Coverages A and B",
+                          "<NL>")
+        end
+
+    l_line_counter = l_line_counter + 1
+
+    Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h5v0P","<NL>")
+    l_line_counter = l_line_counter + 1
+
+    If agqGENERAL:LIABILITY_ONLY = 1 then
+      {
+        Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+        Writefile(L_FILE_NAME,"%s%s","<033>&a500h+0V","Not Applicable")
+      }
+    Else
+    If agqGENERAL:BUILDING_LIMIT = 0 Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V","$",
+                          L_LETTER_GOTHIC_BOLD_10,"<033>&a800h+0V",
+                          SCIPSCONTROL:BLANK_WORDING)
+      }
+    Else
+      {
+        Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V","$",
+                          trun(L_LETTER_GOTHIC_BOLD_10),
+                          Str(agqGENERAL:BUILDING_LIMIT +
+                              agqgeneral:other_structures,"ZZ,ZZZ,ZZZ"))
+      }
+    If Uppercase(agqGENERAL:ACV_BUILDING) = "Y" Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s",L_ARIAL_8,"<033>&a1500h+0V",
+        "Actual Cash Value",
+        "<033>&a2200h-85V<033>*c85h10v0P",  -- top horizontal
+        "<033>&a2200h+0V<033>*c5a40b0P", -- left vertical
+        "<033>&a2280h+0V<033>*c5a40b0P", -- right vertical
+        "<033>&a2200h+85V<033>*c85h10v0P", -- bottom horizontal
+        L_ARIAL_BOLD,"<033>&a2210h-0V","X")
+      }
+    Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_9,"<033>&a2800h-0V","A. Building*",
+                          "<NL>")
+    l_line_counter = l_line_counter + 1
+
+    Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+    If agqGENERAL:LIABILITY_ONLY = 1 then
+      {
+        Writefile(L_FILE_NAME,"%s%s","<033>&a500h+0V","Not Applicable")
+      }
+    Else
+      If (agqGENERAL:PROPERTY_LIMIT = 0) Then
+        {
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V","$",
+                                 L_LETTER_GOTHIC_BOLD_10,"<033>&a800h+0V",
+                                 SCIPSCONTROL:BLANK_WORDING)
+        }
+      Else
+        {
+          Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V","$",
+                                trun(L_LETTER_GOTHIC_BOLD_10),
+                                Str(agqGENERAL:PROPERTY_LIMIT,"ZZ,ZZZ,ZZZ"))
+        }
+      If Uppercase(agqGENERAL:ACV_CONTENTS) = "Y" Then
+        {
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s",L_ARIAL_8,"<033>&a1500h+0V",
+          "Actual Cash Value",
+          "<033>&a2200h-85V<033>*c85h10v0P",  -- top horizontal
+          "<033>&a2200h+0V<033>*c5a40b0P", -- left vertical
+          "<033>&a2280h+0V<033>*c5a40b0P", -- right vertical
+          "<033>&a2200h+85V<033>*c85h10v0P", -- bottom horizontal
+          L_ARIAL_BOLD,"<033>&a2210h-0V","X")
+        }
+
+      Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_9,"<033>&a2800h+0V",
+                         "B. Business Personal Property","<NL>")
+   l_line_counter = l_line_counter + 1
+
+
+   Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+   If agqGENERAL:LIABILITY_ONLY = 1 then
+     {
+       Writefile(L_FILE_NAME,"%s%s","<033>&a500h+0V","Not Applicable")
+     }
+   Else
+   If (agqGENERAL:DELETE_LOSS_INCOME = "Y") Then
+     {
+       Writefile(L_FILE_NAME,"%s%s","<033>&a800h-0V",SCIPSCONTROL:BLANK_WORDING)
+     }
+   Else
+     If (agqGENERAL:LOSS_INCOME_LIMIT = 0) Then
+       {
+         Writefile(L_FILE_NAME,"%s%s","<033>&a640h-0V","Included")
+       }
+     Else
+       {
+         Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V","$",
+                         trun(L_LETTER_GOTHIC_BOLD_10),
+                         Str(agqGENERAL:LOSS_INCOME_LIMIT,"ZZ,ZZZ,ZZZ"))
+       }
+   Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_9,"<033>&a2800h+0V",
+                         "C. Loss of Business Income - Included Unless ",
+                         "marked 'nil'","<NL>")
+   l_line_counter = l_line_counter + 1
+
+   If agqMASTER:FORM = 1 And (agqGENERAL:BUILDING_LIMIT > 0 And
+      sfsline_alias:lob_code <> "CPORTFOLIO" and
+      agqGENERAL:PROPERTY_LIMIT = 0) And
+      SCIPSCONTROL:PRINT_MONEY_SECURITY_WORDING = 0 Then
+     {
+       Writefile(L_FILE_NAME,"%s%s","<NL>","<NL>")
+       l_line_counter = l_line_counter + 2
+     }
+   Else
+   If agqmastsupp:FORM = 1 And (agqGENERAL:BUILDING_LIMIT > 0 And
+      sfsline_alias:lob_code = "CPORTFOLIO" and
+      agqGENERAL:PROPERTY_LIMIT = 0) And
+      SCIPSCONTROL:PRINT_MONEY_SECURITY_WORDING = 0 Then
+     {
+       Writefile(L_FILE_NAME,"%s%s","<NL>","<NL>")
+       l_line_counter = l_line_counter + 2
+     }
+   else
+     {
+       If agqGENERAL:LIABILITY_ONLY = 1 then
+         {
+           Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+           Writefile(L_FILE_NAME,"%s","<033>&a500h+0V")
+           Writefile(L_FILE_NAME,"%s","Not Applicable")
+           Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+           Writefile(L_FILE_NAME,"%s","<033>&a2800h+0V")
+           Writefile(L_FILE_NAME,"%s","D. Money and Securities - On Premises - All Locations")
+           Writefile(L_FILE_NAME,"%s","<NL>")
+           l_line_counter = l_line_counter + 1
+         }
+       Else
+       If (agqGENERAL:MONEY_LIMIT_ON = 0) Then
+         {
+           Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s",L_ARIAL_BOLD_9,
+                         "<033>&a500h+0V",
+                         "$",L_LETTER_GOTHIC_BOLD_10,"<033>&a800h+0V",
+                         SCIPSCONTROL:BLANK_WORDING,L_ARIAL_9,
+                         "<033>&a2800h+0V","D. Money and Securities - On ",
+                         "Premises - All Locations","<NL>")
+           l_line_counter = l_line_counter + 1
+         }
+       Else
+         {
+           Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V",
+                         "$",trun(L_LETTER_GOTHIC_BOLD_10),
+                         Str(agqGENERAL:MONEY_LIMIT_ON,"ZZ,ZZZ,ZZZ"),L_ARIAL_9,
+                         "<033>&a2800h+0V","D. Money and Securities - On ",
+                         "Premises - All Locations","<NL>")
+           l_line_counter = l_line_counter + 1
+         }
+
+       If agqGENERAL:LIABILITY_ONLY = 1 then
+         {
+           Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+           Writefile(L_FILE_NAME,"%s","<033>&a500h+0V")
+           Writefile(L_FILE_NAME,"%s","Not Applicable")
+           Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+           Writefile(L_FILE_NAME,"%s","<033>&a2915h+0V")
+           Writefile(L_FILE_NAME,"%s","Money and Securities - Off Premises - All Locations")
+         }
+       Else
+       If (agqGENERAL:MONEY_LIMIT_OFF = 0) Then
+         {
+           Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V",
+                         "$",L_LETTER_GOTHIC_BOLD_10,"<033>&a800h+0V",
+                         SCIPSCONTROL:BLANK_WORDING,L_ARIAL_9,
+                         "<033>&a2915h+0V","Money and Securities - Off Premises ",
+                         "- All Locations")
+         }
+       Else
+         {
+           Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V",
+                         "$",trun(L_LETTER_GOTHIC_BOLD_10),
+                         Str(agqGENERAL:MONEY_LIMIT_OFF,"ZZ,ZZZ,ZZZ"),L_ARIAL_9,
+                         "<033>&a2915h+0V","Money and Securities - Off Premises ",
+                         "- All Locations")
+         }
+          --        l_line_counter = l_line_counter + 1
+     }
+    Writefile(L_FILE_NAME,"%s%s","<033>&a150h+40V<033>*c5455h20v0P","<NL>")
+    l_line_counter = l_line_counter + 1
+
+    --l_location_counter = l_location_counter + 1
+
+    if l_line_counter >= l_max_lines - 18 then
+      {
+        --do fraud_warning
+        do insert_newpage
+      }
+
+    next agqgeneral
+  }
+
+    if l_loc_counter <> 0 then
+      {
+        do part_II_business_liability
+        l_loc_counter = l_loc_counter + 1
+        --do fraud_warning
+        do insert_newpage
+      }
+
+
+/***********************************************************************************
+ if there are no additional interests then section 7. will be on the second page
+ so I do not need to draw the line above 7. that is why I have the else there
+ ***********************************************************************************/
+/*
+If l_page_number >= 2 and
+   l_total_locations > 1 Then
+  {
+    --do fraud_warning
+    do insert_newpage
+  }
+*/
+Writefile(L_FILE_NAME,"%s","<033>&a5479h+120V<033>*c5a120b0P")         --right vertical
+Writefile(L_FILE_NAME,"%s","<033>&a200h+0V<033>*c5a120b0P")            --left vertical
+Writefile(L_FILE_NAME,"%s%s","<033>&a200h+0V<033>*c5289h5v0P","<NL>")  --HORZ
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+L_STRING = "QUOTE PREMIUM BREAKDOWN"
+L_FONT = L_ARIAL_BOLD_14
+L_PITCH_HALF = 7
+L_PITCH_FULL = 14
+L_VERTICAL_POS = "+80"
+Include "center2.pro"
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a200h-40V<033>*c5289h5v0P",
+                      "<NL>")  --HORZ LINE deductible section I coverage PG. 1
+                      L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+Access agqGENERAL ,
+   Set agqGENERAL:app_no    = L_app_no,Generic
+
+L_LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS
+if sfsline_alias:lob_code = "CPORTFOLIO" then
+    l_agqmaster_form = agqmastsupp:form
+else
+    L_agqMASTER_FORM   = agqMASTER:FORM
+L_COMPANY_ID       = agqgeneral:COMPANY_ID
+L_MAX_LINES        = 55
+
+/*-----------------------------------------------------------------------------
+ The following code prints out the manditory and non-mandatory endorsements
+-----------------------------------------------------------------------------*/
+
+Access agqEND,
+   Set agqEND:app_no = L_app_no ,generic
+
+access sfsend,
+   set sfsend:company_id       = l_company_id,
+       sfsend:state            = agqgeneral:state,
+       sfsend:line_of_business = l_line_of_business,
+       sfsend:form             = l_agqmaster_form, generic
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+Writefile(L_FILE_NAME,"%s","Form Edition")
+Writefile(L_FILE_NAME,"%s","<033>&a1750h+0V")
+Writefile(L_FILE_NAME,"%s","Description")
+Writefile(L_FILE_NAME,"%s","<NL>")
+
+Access SFSMSOTERROR,
+   Set SFSMSOTERROR:COMPANY_ID       = agqgeneral:COMPANY_ID,
+       SFSMSOTERROR:STATE            = agqgeneral:STATE,
+       SFSMSOTERROR:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS, Generic
+
+While  SFSMSOTERROR:COMPANY_ID       = agqgeneral:COMPANY_ID And
+       SFSMSOTERROR:STATE            = agqgeneral:STATE And
+       SFSMSOTERROR:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS
+     begin
+        if SFSMSOTERROR:EFF_DATE <= agqgeneral:EFF_DATE then
+            L_TERROR_FORM = SFSMSOTERROR:TERRORISM_FORM_TO_ADD
+
+        Next SFSMSOTERROR
+     end
+
+While sfsend:company_id       = l_company_id and
+      sfsend:state            = agqgeneral:state and
+      sfsend:line_of_business = l_line_of_business and
+      sfsend:form             = l_agqmaster_form
+
+  {   --Start of Outside While
+    if (agqname:eff_date >= sfsend:eff_date and
+       (agqname:eff_date < sfsend:exp_date or
+                           sfsend:exp_date = 0)) then
+
+--    if (agqgeneral:eff_date >= sfsend:eff_date and
+--       (agqgeneral:eff_date < sfsend:Exp_date or
+--       sfsend:exp_date = 0)) then
+
+      {
+      if (agqgeneral:condo = 0 and
+         agqmaster:form <> 2 and
+         (agqgeneral:class_code <> 56 or
+         (agqgeneral:class_code = 56 and
+         agqgeneral:company_id <> "FARMERS")) and
+         sfsend:code one of "BU0401", "BU0403") then
+          begin
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL,
+          "<033>&a350h+0V",sfsend:FORM_EDITION,
+          "<033>&a1750h+0V",sfsend:DESCRIPTION,"<NL>")
+          l_line_counter = l_line_counter +1
+          end
+      else
+      if agqgeneral:condo = 1 and
+         sfsend:code one of "BU0406", "BU0423" then
+          begin
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL,
+          "<033>&a350h+0V",sfsend:FORM_EDITION,
+          "<033>&a1750h+0V",sfsend:DESCRIPTION,"<NL>")
+          l_line_counter = l_line_counter +1
+          end
+      else
+      if agqmaster:form = 2 and
+         sfsend:code one of "BU0402", "BU0413" then
+          begin
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL,
+          "<033>&a350h+0V",sfsend:FORM_EDITION,
+          "<033>&a1750h+0V",sfsend:DESCRIPTION,"<NL>")
+          l_line_counter = l_line_counter +1
+          end
+      else
+      if agqgeneral:class_code = 56 and
+         agqgeneral:company_id = "FARMERS" and
+         sfsend:code one of "BU0432", "BU0431" then
+          begin
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL,
+          "<033>&a350h+0V",sfsend:FORM_EDITION,
+          "<033>&a1750h+0V",sfsend:DESCRIPTION,"<NL>")
+          l_line_counter = l_line_counter +1
+          end
+      else
+      if sfsend:code not one of "BU0401", "BU0403", "BU0406", "BU0423", "BU0432", "BU0431" then
+          begin
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL,
+          "<033>&a350h+0V",sfsend:FORM_EDITION,
+          "<033>&a1750h+0V",sfsend:DESCRIPTION,"<NL>")
+          l_line_counter = l_line_counter +1
+          end
+      }
+    next sfsend
+
+    While agqend:app_no    = L_app_no
+      {   --Start of Inside While
+        if add_and_check_print_array(agqend:code) = 1 then
+          {
+            If agqend:CODE = L_TERROR_FORM Then
+              {
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL,"<033>&a350h+0V",
+                                      agqend:FORM_EDITION,"<033>&a1750h+0V",
+                                      agqend:DESCRIPTION)
+                Writefile(L_FILE_NAME,"%s","<033>&a4500h+0V")
+                Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+                Writefile(L_FILE_NAME,"%s","$")
+                Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_12)
+                Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+                if sfsline_alias:lob_code <> "CPORTFOLIO" then
+                    Writefile(L_FILE_NAME,"%s",Str(AGQMASTER:TERRORISM_PREMIUM,"ZZ,ZZZ,ZZZ"))
+                else
+                    Writefile(L_FILE_NAME,"%s",Str(AGQMASTSUPP:TERRORISM_PREMIUM,"ZZ,ZZZ,ZZZ"))
+              }
+            else
+              {
+                Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL,"<033>&a350h+0V",
+                                      agqend:FORM_EDITION,"<033>&a1750h+0V",
+                                      agqend:DESCRIPTION)
+              }
+            If agqend:code one of "BU2514" then
+
+              {
+                Writefile(L_FILE_NAME,"%s","<033>&a4500h+0V")
+                Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+                Writefile(L_FILE_NAME,"%s","$")
+
+                Access agqprint1,
+                   Set agqprint1:app_NO    = l_app_NO, generic
+
+                Access agqGENERAL,
+                   Set agqGENERAL:app_NO    = agqprint1:app_NO, generic
+
+                l_total_boilers_premium = 0
+                while agqGENERAL:app_NO    = agqPRINT1:app_NO
+                  {
+                    l_total_boilers_premium = l_total_boilers_premium + agqgeneral:boilers_PREMIUM
+                    next agqgeneral
+                  }
+
+                if agqname:line_of_business one of 99 then
+                  {
+                     Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+                     Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_12)
+                     Writefile(L_FILE_NAME,"%s",Str(agqmastsupp:total[2],"ZZ,ZZZ,ZZZ"))
+                  }
+                else
+                  {
+                    Writefile(L_FILE_NAME,"%s","<033>&a4800h+0V")
+                    Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_12)
+                    Writefile(L_FILE_NAME,"%s",Str(agqmaster:total[2],"ZZ,ZZZ,ZZZ"))
+                  }
+              }
+           Writefile(L_FILE_NAME,"%s","<NL>")
+
+          }
+          l_line_counter = l_line_counter +1
+          Next agqend
+
+        If l_line_counter + 15 = L_MAX_LINES Then
+          {
+            Writefile(L_FILE_NAME,"%s","<033>&a150h-80V<033>*c5455h20v0P")
+            --do fraud_warning
+            do insert_newpage
+            Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,"<033>&a1800h+0V",
+                                  "FORMS AND ENDORSEMENTS CONTINUED","<NL>")
+                                  l_line_counter = l_line_counter +1
+            Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+          }
+
+      }   --End of Inside While
+  }   --End or Outside While
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no    = L_app_no,Generic
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+Writefile(L_FILE_NAME,"%s","<033>&a200h+200V")
+Writefile(L_FILE_NAME,"%s","*    ")
+Writefile(L_FILE_NAME,"%s","<033>&a350h+0V")
+Writefile(L_FILE_NAME,"%s`",agqLOCATION:STR_STATE)
+Writefile(L_FILE_NAME,"%s"," Mandatory Forms")
+Writefile(L_FILE_NAME,"%s","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+l_line_counter = l_line_counter + 1
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a220h+200V",
+                      "TOTAL ESTIMATED PREMIUM")
+
+if sfsline_alias:lob_code <> "CPORTFOLIO" then
+    begin
+    if agqmaster:total[19] = 0 then
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<033>&a4750h+0V","$",
+                      L_LETTER_GOTHIC_BOLD_12,"<033>&a4800h+0V",
+                      Str(agqMASTER:TOTAL[1] + agqmaster:total[2] + agqmaster:total[6] + agqMASTER:TERRORISM_PREMIUM + agqmaster:total[8] + agqmaster:total[9] + agqmaster:total[7],"(ZZ,ZZZ,ZZZ)"),"<NL>")
+    else
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<033>&a4750h+0V","$",
+                      L_LETTER_GOTHIC_BOLD_12,"<033>&a4800h+0V",
+                      Str(agqMASTER:TOTAL[1] + agqmaster:total[2] + agqmaster:total[6] + agqMASTER:TERRORISM_PREMIUM + agqmaster:total[8] + agqmaster:total[7],"(ZZ,ZZZ,ZZZ)"),"<NL>")
+    end
+else
+    begin
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<033>&a4750h+0V","$",
+                      L_LETTER_GOTHIC_BOLD_12,"<033>&a4800h+0V",
+                      Str(agqmastsupp:TOTAL[1] + agqmastsupp:total[2] + agqmastsupp:total[6] + agqmastsupp:TERRORISM_PREMIUM + agqmastsupp:total[8] + agqmastsupp:total[9],"(ZZ,ZZZ,ZZZ)"),"<NL>")
+    end
+
+L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+--surcharge
+
+--Writefile(L_FILE_NAME,"%s%n","<033>&a4750h+0V",SCIPScontrol:state)
+if sfsline_alias:lob_code <> "CPORTFOLIO" then
+    begin
+    If (SCIPSCONTROL:SURCHARGE_WORDING <> "") Then
+        {
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s",L_ARIAL,"<033>&a220h+0V",
+                      Trun(SCIPSCONTROL:SURCHARGE_WORDING),"<033>&a4750h+0V","$",
+                      L_LETTER_GOTHIC_BOLD_12,"<033>&a4800h+0V",
+                      Str(agqMASTER:SURCHARGE,"(ZZ,ZZZ,ZZZ)"),
+                      L_ARIAL,"<NL>","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 2
+        }
+    end
+else
+    begin
+    If (SCIPSCONTROL:SURCHARGE_WORDING <> "") Then
+        {
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s",L_ARIAL,"<033>&a220h+0V",
+                      Trun(SCIPSCONTROL:SURCHARGE_WORDING),"<033>&a4750h+0V","$",
+                      L_LETTER_GOTHIC_BOLD_12,"<033>&a4800h+0V",
+                      Str(agqmastsupp:SURCHARGE,"(ZZ,ZZZ,ZZZ)"),
+                      L_ARIAL,"<NL>","<NL>")
+        L_LINE_COUNTER = L_LINE_COUNTER + 2
+        }
+    end
+
+Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL,"<033>&a220h+0V",
+                      "TOTAL QUOTE PREMIUM")
+
+if sfsline_alias:lob_code <> "CPORTFOLIO" then
+    begin
+    if agqmaster:total[19] = 0 then
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<033>&a4750h+0V","$",
+                      L_LETTER_GOTHIC_BOLD_12,"<033>&a4800h+0V",
+                      Str(agqMASTER:TOTAL[1] + agqmaster:total[2] + agqmaster:total[6] + agqMASTER:SURCHARGE + agqMASTER:TERRORISM_PREMIUM + agqmaster:total[8] + agqmaster:total[9] + agqmaster:total[7],"(ZZ,ZZZ,ZZZ)")
+                      ,"<NL>")
+    else
+        Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<033>&a4750h+0V","$",
+                      L_LETTER_GOTHIC_BOLD_12,"<033>&a4800h+0V",
+                      Str(agqMASTER:TOTAL[1] + agqmaster:total[2] + agqmaster:total[6] + agqMASTER:SURCHARGE + agqMASTER:TERRORISM_PREMIUM + agqmaster:total[8] + agqmaster:total[7],"(ZZ,ZZZ,ZZZ)")
+                      ,"<NL>")
+
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+else
+    begin
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<033>&a4750h+0V","$",
+                      L_LETTER_GOTHIC_BOLD_12,"<033>&a4800h+0V",
+                      Str((agqmastsupp:TOTAL[1] + agqmastsupp:total[2] + agqmastsupp:total[6] + agqMASTsupp:SURCHARGE + agqMASTsupp:TERRORISM_PREMIUM + agqmastsupp:total[8] + agqmastsupp:total[9]),"(ZZ,ZZZ,ZZZ)")
+                      ,"<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+    end
+
+if scipscontrol:breakout_pliga = 1 and
+   sfsline_alias:lob_code <> "CPORTFOLIO" then
+   begin
+     If L_TRANS_CODE One Of 11, 16 Then  --these are endorsements transcodes
+       begin
+         Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                L_LETTER_GOTHIC_BOLD_10,
+                                Str(agqMASTER:amt_due_total[1],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                SCIPSCONTROL:CANCELLATION_DEFINITION)
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                L_LETTER_GOTHIC_BOLD_10,
+                                Str(agqMASTER:amt_due_total[3],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                SCIPSCONTROL:CANCELLATION_DEFINITION_1)
+       end
+    else
+      If L_TRANS_CODE One Of 12,13 Then  --these are endorsements transcodes
+         begin
+           Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                  L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                  L_LETTER_GOTHIC_BOLD_10,
+                                  Str(agqMASTER:amt_due_total[1],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                  "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                  SCIPSCONTROL:endorsement_DEFINITION)
+           Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                  L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                  L_LETTER_GOTHIC_BOLD_10,
+                                  Str(agqMASTER:amt_due_total[3],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                  "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                  SCIPSCONTROL:endorsement_DEFINITION_1)
+         end
+    end
+else
+if scipscontrol:breakout_pliga = 1 and
+   sfsline_alias:lob_code = "CPORTFOLIO" then
+   begin
+     If L_TRANS_CODE One Of 11, 16 Then  --these are endorsements transcodes
+       begin
+         Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                L_LETTER_GOTHIC_BOLD_10,
+                                Str(agqMASTsupp:amt_due_total[1],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                SCIPSCONTROL:CANCELLATION_DEFINITION)
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                L_LETTER_GOTHIC_BOLD_10,
+                                Str(agqMASTsupp:amt_due_total[3],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                SCIPSCONTROL:CANCELLATION_DEFINITION_1)
+       end
+    else
+      If L_TRANS_CODE One Of 12,13 Then  --these are endorsements transcodes
+         begin
+           Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                  L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                  L_LETTER_GOTHIC_BOLD_10,
+                                  Str(agqMASTsupp:amt_due_total[1],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                  "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                  SCIPSCONTROL:endorsement_DEFINITION)
+           Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                  L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                  L_LETTER_GOTHIC_BOLD_10,
+                                  Str(agqMASTsupp:amt_due_total[3],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                  "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                  SCIPSCONTROL:endorsement_DEFINITION_1)
+         end
+    end
+else
+if sfsline_alias:lob_code <> "CPORTFOLIO" then
+    begin
+    If L_TRANS_CODE One Of 11, 12, 13, 16 Then
+        begin
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                L_LETTER_GOTHIC_BOLD_10,
+                                Str(agqMASTER:TOTAL[20],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                SCIPSCONTROL:CANCELLATION_DEFINITION)
+        end
+    end
+else
+if sfsline_alias:lob_code = "CPORTFOLIO" then
+    begin
+    If L_TRANS_CODE One Of 11, 12, 13, 16 Then
+        begin
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s%s","<NL>",
+                                L_ARIAL_BOLD,"<033>&a750h+0V","$",
+                                L_LETTER_GOTHIC_BOLD_10,
+                                Str(agqMASTsupp:TOTAL[20],"(ZZ,ZZZ,ZZ9)"),L_ARIAL,
+                                "<033>&a1900h+0V",L_ARIAL_BOLD,"< ",
+                                SCIPSCONTROL:CANCELLATION_DEFINITION)
+        end
+    end
+
+do insert_newpage
+
+Access agqSUPP,
+   Set agqSUPP:app_no    = L_app_no,Generic
+
+L_MORGAGE_ID = agqSUPP:MORTGAGE_ID
+
+Access SFSMORT,
+       Set SFSMORT:COMPANY_ID  = agqgeneral:COMPANY_ID,
+           SFSMORT:MORTGAGE_ID = L_MORGAGE_ID, Exact
+
+If agqSUPP:app_no = L_app_no and
+   agqsupp:agent_payor = 0 Then
+  {
+     Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+     Writefile(L_FILE_NAME,"%s","<033>&a80h+0V")
+--     Writefile(L_FILE_NAME,"%n",l_line_counter)
+
+     Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,
+                       "<033>&a2300h+120V","ADDITIONAL INTERESTS","<NL>")
+     l_line_counter = l_line_counter +1
+
+     Writefile(L_FILE_NAME,"%s%s%s%s","<033>&a1550h+0V","We cover the following ",
+                       "as their interest are indicated below:","<NL>")
+     l_line_counter = l_line_counter + 1
+  }
+
+While agqSUPP:app_no = L_app_no
+{
+  L_MORGAGE_ID = agqSUPP:MORTGAGE_ID
+
+  Access SFSMORT,
+       Set SFSMORT:COMPANY_ID  = agqgeneral:COMPANY_ID,
+           SFSMORT:MORTGAGE_ID = L_MORGAGE_ID, Exact
+
+  L_agqSUPP_ZIP = If (Val(agqSUPP:STR_ZIPCODE[6,9]) = 0) Then
+                        agqSUPP:STR_ZIPCODE[1,5]
+                        Else
+                        agqSUPP:STR_ZIPCODE[1,5] + "-" +
+                        agqSUPP:STR_ZIPCODE[6,9]
+
+  L_SFSMORT_ZIP = If (Val(SFSMORT:STR_ZIPCODE[6,9]) = 0) Then
+                        SFSMORT:STR_ZIPCODE[1,5]
+                        Else
+                        SFSMORT:STR_ZIPCODE[1,5] + "-" +
+                        SFSMORT:STR_ZIPCODE[6,9]
+
+  Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+
+  If (agqSUPP:MORTGAGE_ID <> "") Then
+    {
+     Writefile(L_FILE_NAME,"%s","<033>&a80h+0V")
+--      Writefile(L_FILE_NAME,"%n",l_line_counter)
+
+      Writefile(L_FILE_NAME,"%s%s%s%s%n%s%s%s%n%s",L_ARIAL_BOLD,"<033>&a350h+0V",
+                            "Location","<033>&a900h+0V",agqSUPP:PREM_NO,
+                            "<033>&a1350h+0V","Building","<033>&a1800h+0V",
+                            agqSUPP:BUILD_NO,"<NL>")
+      l_line_counter = l_line_counter +1
+
+      Writefile(L_FILE_NAME,"%s%s%s","<033>&a350h+0V","Interest ",L_ARIAL)
+       --accesses the paytype file to print the description on the dec page
+      L_COMPANY_ID      = agqgeneral:COMPANY_ID
+      L_MORTGAGE_TYPE_2 = agqSUPP:MORTGAGE_TYPE_2
+
+     Access SFSMORTTYPE,
+        Set SFSMORTTYPE:COMPANY_ID = L_COMPANY_ID,
+            SFSMORTTYPE:MORTGAGE_CODE = L_MORTGAGE_TYPE_2, Exact
+      --access the sfsmorttype to print out firt mortgage or loss payee ...etc
+      Writefile(L_FILE_NAME,"%s%s","<033>&a900h+0V",SFSMORTTYPE:DESCRIPTION)
+
+      Writefile(L_FILE_NAME,"%s%s%s%s%s","<NL>",L_ARIAL_BOLD,"<033>&a350h-0V",
+                            "Name",L_ARIAL)
+
+      For L_LOOP = 1 To 3   --mortgage company name loop
+        {
+          If SFSMORT:NAME[L_LOOP] <> "" Then
+            {
+              Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V",SFSMORT:NAME[L_LOOP],"<NL>")
+              L_LINE_COUNTER = L_LINE_COUNTER + 1
+              l_agent_counter = l_agent_counter + 1
+            }
+        }
+
+      If (SFSMORT:SUCCESSOR = "Y") Then
+        {
+          Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V",
+                   Uppercase("It's Successors and/or Assigns"),"<NL>")
+          l_line_counter = l_line_counter +1
+        }
+      If (SFSMORT:ATIMA = "Y") Then
+        {
+          Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V","ATIMA","<NL>")
+          l_line_counter = l_line_counter +1
+        }
+      If (agqSUPP:ACCOUNT_NO <> "") Then
+        {
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s",L_ARIAL_BOLD,"<033>&a350h+0V",
+                                "Loan # ",L_ARIAL,"<033>&a900h+0V",
+                                agqSUPP:ACCOUNT_NO,"<NL>")
+          l_line_counter = l_line_counter +1
+        }
+      Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,"<033>&a350h+0V","Address ",
+                            L_ARIAL)
+
+      For L_LOOP = 1 To 3   --mortgage company address loop
+        {
+          If SFSMORT:ADDRESS[L_LOOP] <> "" Then
+            {
+              Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V",SFSMORT:ADDRESS[L_LOOP],"<NL>")
+              L_LINE_COUNTER = L_LINE_COUNTER + 1
+              l_agent_counter = l_agent_counter + 1
+            }
+        }
+      Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s","<033>&a900h+0V",Trun(SFSMORT:CITY),", ",
+                           SFSMORT:STR_STATE,"  ",L_SFSMORT_ZIP,"<NL>")
+      l_line_counter = l_line_counter +1
+    }
+
+  Else
+    {
+      If agqSUPP:app_no = L_app_no and
+         agqsupp:agent_payor = 0 Then
+        {
+          Writefile(L_FILE_NAME,"%s%s%s%s%n%s%s%s%n%s",L_ARIAL_BOLD,
+                            "<033>&a350h+0V","Location",
+                            "<033>&a900h+0V",agqSUPP:PREM_NO,"<033>&a1350h+0V",
+                            "Building","<033>&a1800h+0V",agqSUPP:BUILD_NO,"<NL>")
+          l_line_counter = l_line_counter +1
+
+          Writefile(L_FILE_NAME,"%s%s%s","<033>&a350h+0V","Interest ",L_ARIAL)
+          L_COMPANY_ID      = agqgeneral:COMPANY_ID
+          L_MORTGAGE_TYPE_2 = agqSUPP:MORTGAGE_TYPE_2
+          Access SFSMORTTYPE,
+             Set SFSMORTTYPE:COMPANY_ID    = L_COMPANY_ID,
+                 SFSMORTTYPE:MORTGAGE_CODE = L_MORTGAGE_TYPE_2, Exact
+
+          --access the sfspayotype to print out description firt mortgage or loss payee ...etc
+          Writefile(L_FILE_NAME,"%s%s","<033>&a900h+0V",SFSMORTTYPE:DESCRIPTION)
+          Writefile(L_FILE_NAME,"%s%s%s%s%s","<NL>",L_ARIAL_BOLD,"<033>&a350h+0V",
+                                "Name",L_ARIAL)
+
+          For L_LOOP = 1 To 3
+            {
+              If agqSUPP:NAME[L_LOOP] <> "" Then
+                {
+                  Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V",agqSUPP:NAME[L_LOOP],"<NL>")
+                  L_LINE_COUNTER = L_LINE_COUNTER + 1
+                  l_agent_counter = l_agent_counter + 1
+                }
+            }
+          If (agqSUPP:SUCCESSOR = "Y") Then
+            {
+              Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V",
+                    Uppercase("It's Successors and/or Assigns"),"<NL>")
+              l_line_counter = l_line_counter +1
+            }
+          If (agqSUPP:ATIMA = "Y") Then
+            {
+              Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V","ATIMA","<NL>")
+              l_line_counter = l_line_counter +1
+            }
+          If (agqSUPP:ACCOUNT_NO <> "") Then
+            {
+              Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s",L_ARIAL_BOLD,"<033>&a350h+0V",
+                             "Loan # ",L_ARIAL,"<033>&a900h+0V",
+                             agqSUPP:ACCOUNT_NO,"<NL>")
+              l_line_counter = l_line_counter +1
+            }
+          Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,"<033>&a350h+0V",
+                                "Address ",L_ARIAL)
+          For L_LOOP = 1 To 3
+            {
+              If agqSUPP:ADDRESS[L_LOOP] <> "" Then
+                {
+                  Writefile(L_FILE_NAME,"%s%s%s","<033>&a900h+0V",agqSUPP:ADDRESS[L_LOOP],"<NL>")
+                  L_LINE_COUNTER = L_LINE_COUNTER + 1
+                  l_agent_counter = l_agent_counter + 1
+                }
+            }
+          Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s","<033>&a900h+0V",Trun(agqSUPP:CITY),", ",
+                            agqSUPP:STR_STATE," ",L_agqSUPP_ZIP,"<NL>")
+          l_line_counter = l_line_counter +1
+        }
+    }
+  Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+  l_line_counter = l_line_counter +1
+
+  Next agqSUPP
+
+}
+
+--***********************************************************
+--                    Rating Information section
+--***********************************************************
+
+Writefile(L_FILE_NAME,"%s%s%s%s","<NL>","<033>&a160h+0V<033>*c5420h5v0P","<NL>","<NL>")
+L_LINE_COUNTER = L_LINE_COUNTER + 2
+
+If (L_LINE_COUNTER >= (L_MAX_LINES - 10)) Then
+  {
+    Do INSERT_NEWPAGE
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,"<033>&a2400h+0V",
+                      "RATING INFORMATION ","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    --the follow access will give me the correct construction description
+
+    Access SFSCONSTRUCTION,
+       Set SFSCONSTRUCTION:COMPANY_ID       = agqGENERAL:COMPANY_ID,
+           SFSCONSTRUCTION:STATE            = agqGENERAL:STATE,
+           SFSCONSTRUCTION:LINE_OF_BUSINESS = agqGENERAL:LINE_OF_BUSINESS,
+           SFSCONSTRUCTION:CONSTRUCTION     = agqGENERAL:CONSTRUCTION, Exact
+
+    access agqgeneral, set agqgeneral:app_no = l_app_no, generic
+
+    Writefile(L_FILE_NAME,"%s",L_ARIAL)
+    Writefile(L_FILE_NAME,"%s","<033>&a220h+0V")
+    Writefile(L_FILE_NAME,"%s","Year of Construction")
+    Writefile(L_FILE_NAME,"%n",agqGENERAL:CONSTRUCTION_YEAR)
+    Writefile(L_FILE_NAME,"%s",", ")
+
+
+    If Uppercase(SFSLINE:LOB_CODE) = "BOP" Then
+      {
+        If agqGENERAL:TENANT = "Y" Then
+          {
+            Writefile(L_FILE_NAME,"%s%s","Tenant Occupied","<NL>")
+          }
+        Else
+          {
+            Writefile(L_FILE_NAME,"%s","Owner Occupied ")
+            Writefile(L_FILE_NAME,"%n",agqgeneral:percent_occupied)
+            Writefile(L_FILE_NAME,"%s","%")
+            Writefile(L_FILE_NAME,"%s","<NL>")
+          }
+       }
+
+    Access SFSPROTECTION,
+       Set SFSPROTECTION:COMPANY_ID       = agqGENERAL:COMPANY_ID,
+           SFSPROTECTION:STATE            = agqGENERAL:STATE,
+           SFSPROTECTION:LINE_OF_BUSINESS = agqGENERAL:LINE_OF_BUSINESS,
+           SFSPROTECTION:PROTECTION       = agqGENERAL:PROTECTION, Exact
+
+    writefile(l_file_name,"%s",l_arial)
+    writefile(l_file_name,"%s","<033>&a220h+0V")
+    Writefile(L_FILE_NAME,"%s%n%s%s%s%s",
+                      "Protection Class ",agqGENERAL:PROTECTION,", ",
+                      Trun(Lowercase(SFSPROTECTION:DESCRIPTION)),",","<NL>")
+    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    --Writefile(L_FILE_NAME,"%s%s%n","<033>&a220h+0V","Territory Code ",
+    --                       agqGENERAL:TERRITORY,")
+
+    Writefile(L_FILE_NAME,"%s%s%d","<033>&a220h+0V",
+                          "First Insured Date ",agqname:ORIGINAL_EFF_DATE)
+
+    --Writefile(L_FILE_NAME,"%s%s","County-",SFSSTATE:DESCRIPTION,"<NL>")
+    --    L_LINE_COUNTER = L_LINE_COUNTER + 1
+
+    Writefile(L_FILE_NAME,"%s%s%s","<NL>","<033>&a160h+30V<033>*c5420h5v0P","<NL>")  --rating information line
+    L_LINE_COUNTER = L_LINE_COUNTER + 2
+  }
+
+Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<NL>","<NL>",L_ARIAL_BOLD,"<033>&a200h+0V","Printed Date ",
+                      Str(TODAYSDATE,"mm/dd/yyyy"))
+
+  Writefile(L_FILE_NAME,"%s%s%s%s%s%n",L_ARIAL_BOLD_9,
+                        "<033>&a2400h+120V",L_COPY_NAME,"<033>&a5000h7250V",
+                        "Page ",L_PAGE_NUMBER)
+--do fraud_warning
+
+If L_PAGE_NUMBER Mod 2 > 0 Then
+  {
+    Writefile(L_FILE_NAME,"%s","<FF>")
+  }
+
+update
+
+
+Screen Exit
+  Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET)
+  Closefile(L_FILE_NAME)
+
+procedure definition
+
+procedure insert_newpage
+{
+  Writefile(L_FILE_NAME,"%s%s%s%s%s%n",L_ARIAL_BOLD_9,
+                        "<033>&a2400h+120V",L_COPY_NAME,"<033>&a5000h7250V",
+                        "Page ",L_PAGE_NUMBER)
+  Writefile(L_FILE_NAME,"%s","<FF>")
+  l_top_of_page = 0
+  L_LINE_COUNTER = 0
+  Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c10a3045b0P")   --left ve
+  Writefile(L_FILE_NAME,"%s","<033>&a5585h0V<033>*c10a3045b0P")   --right
+  Writefile(L_FILE_NAME,"%s","<033>&a140h0V<033>*c5467h20v0P") --top horiz
+  Writefile(L_FILE_NAME,"%s","<033>&a140h7300V<033>*c5467h20v0P") --bottom
+  L_PAGE_NUMBER = L_PAGE_NUMBER + 1
+
+  Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+  Writefile(L_FILE_NAME,"%s","<033>&a220h120V")
+  Writefile(L_FILE_NAME,"%s",Trun(SFSLINE:DESCRIPTION))
+  Writefile(L_FILE_NAME,"%s"," QUOTE LETTER")
+  Writefile(L_FILE_NAME,"%s","<033>&a4200h+0V")
+  Writefile(L_FILE_NAME,"%s","App No. ")
+  Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+  --Writefile(L_FILE_NAME,"%s","A")
+  Writefile(L_FILE_NAME,"%n",L_app_no)
+
+  Writefile(L_FILE_NAME,"%s%s","<033>&a200h+40V<033>*c5289h5v0P","<NL>")
+  L_LINE_COUNTER = L_LINE_COUNTER + 1
+}
+
+procedure check_payor_flags
+
+{
+  if scipscontrol:payor_code_bottom_of_page one of 1 and
+     agqgeneral:eff_date >= scipscontrol:payor_code_bottom_page_date then
+    {
+      Writefile(L_FILE_NAME,"%s","<033>&a4000h+0V")
+      If SCIPSCONTROL:DONT_PRINT_PAYOR_CODE_ALL_COPY = 1 then
+        {
+          If SCIPSCONTROL:payor_code_bottom_of_page one of 1 and
+             trun(uppercase(SCIPSCONTROL:PAY_CODE_COPY_NAME)) = trun(uppercase(L_COPY_NAME)) Then
+            {
+              do print_payor_codes
+            }
+        }
+      else
+        {
+          If SCIPSCONTROL:payor_code_bottom_of_page one of 1 then
+            {
+              do print_payor_codes
+            }
+        }
+    }
+}
+
+number function add_and_check_print_array(string p_code)
+
+BEGIN
+  l_loop = 1
+  while l_no_duplicate_printing[l_loop] <> p_code and
+        l_no_duplicate_printing[l_loop] <> "" and
+        l_loop < 120   --prevents out of arrary out of bounds
+    {
+      L_loop = l_loop + 1
+    }
+  --found position of where to put the next form in the loop
+
+  if l_no_duplicate_printing[l_loop] <> p_code then
+    {
+      l_no_duplicate_printing[l_loop] = p_code
+      return 1
+    }
+  else
+    {
+      return 0
+    }
+END
+
+
+Procedure print_payor_codes
+
+{
+  L_BILL_PLAN = agqname:BILL_PLAN
+  If agqSUPP:MORTGAGE_TYPE_1 = "" Then
+    {
+      L_MORTGAGE_TYPE_1 = " "
+    }
+  Else
+    {
+      L_MORTGAGE_TYPE_1 = agqSUPP:MORTGAGE_TYPE_1
+    }
+  Access SFSPAYCODE,
+     Set SFSPAYCODE:COMPANY_ID      = L_COMPANY_ID,
+         SFSPAYCODE:BILL_PLAN       = L_BILL_PLAN,
+         SFSPAYCODE:MORTGAGE_TYPE_1 = L_MORTGAGE_TYPE_1, Generic
+  Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+  Writefile(L_FILE_NAME,"%s","<033>&a+0h+0V")
+  Writefile(L_FILE_NAME,"%s"," - ")
+  Writefile(L_FILE_NAME,"%s",agqname:BILL_PLAN)
+  Writefile(L_FILE_NAME,"%s"," - ")
+  Writefile(L_FILE_NAME,"%s",SFSPAYCODE:PAY_CODE)
+}
+
+Procedure part_II_business_liability
+Begin
+Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_BOLD,"<033>&a2050h+0V",
+                      "PART II -  BUSINESS   LIABILITY","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h20v0P","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s%s%s%s%s%s",L_ARIAL,"<033>&a750h+0V","LIMIT OF LIABILITY",
+                      "<033>&a2500h+0V","COVERAGES","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s%s","<033>&a150h-80V<033>*c5455h5v0P","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V",
+                      "$",trun(L_LETTER_GOTHIC_BOLD_10),Str(L_LIABILITY,"ZZ,ZZZ,ZZZ"),
+                      L_ARIAL_9,"<033>&a2200h+0V",
+                      "Each Occurrence Limit - Coverage E and F","<NL>")
+l_line_counter = l_line_counter +1
+
+if sfsline_alias:lob_code <> "CPORTFOLIO" then
+    begin
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V",
+                      "$",trun(L_LETTER_GOTHIC_BOLD_10),
+                      Str(agqMASTER:MEDICAL_LIMIT,"ZZ,ZZZ,ZZZ"),
+                      L_ARIAL_9,"<033>&a2200h+0V",
+                      "Medical Payments (Cov. F) - Limit Per Person","<NL>")
+    end
+else
+    begin
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V",
+                      "$",trun(L_LETTER_GOTHIC_BOLD_10),
+                      Str(agqMASTSUPP:MEDICAL_LIMIT,"ZZ,ZZZ,ZZZ"),
+                      L_ARIAL_9,"<033>&a2200h+0V",
+                      "Medical Payments (Cov. F) - Limit Per Person","<NL>")
+    end
+l_line_counter = l_line_counter +1
+
+if sfsline_alias:lob_code <> "CPORTFOLIO" then
+    begin
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V",
+                      "$",trun(L_LETTER_GOTHIC_BOLD_10),
+                      Str(agqMASTER:GENERAL_AGGREGATE,"ZZ,ZZZ,ZZZ"),
+                      L_ARIAL_9,"<033>&a2200h+0V","General Aggregate/Total ",
+                      "Limits - All Other Than Products / Completed Operations",
+                      "<NL>")
+    end
+else
+    begin
+    Writefile(L_FILE_NAME,"%s%s%s%s%s%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V",
+                      "$",trun(L_LETTER_GOTHIC_BOLD_10),
+                      Str(agqMASTSUPP:GENERAL_AGGREGATE,"ZZ,ZZZ,ZZZ"),
+                      L_ARIAL_9,"<033>&a2200h+0V","General Aggregate/Total ",
+                      "Limits - All Other Than Products / Completed Operations",
+                      "<NL>")
+    end
+l_line_counter = l_line_counter +1
+
+If agqOPERATIONS:EXCLUDE_PRODUCTS = "Y" Then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL,"<033>&a750h+0V",
+    "Not Applicable")
+  }
+Else
+  {
+    Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_BOLD_9,"<033>&a500h+0V",
+                      "$",trun(L_LETTER_GOTHIC_BOLD_10),
+                      Str(L_LIABILITY,"ZZ,ZZZ,ZZZ"))
+  }
+Writefile(L_FILE_NAME,"%s%s%s%s%s",L_ARIAL_9,"<033>&a2200h+0V",
+                        "General Aggregate/Total Limits - Products / ",
+                        "Completed Operations","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s","<033>&a150h-80V<033>*c5455h20v0P")
+    -- the line under last general aggregate
+
+Writefile(L_FILE_NAME,"%s%s%s%s%s%s","<NL>",L_ARIAL_BOLD,"<033>&a700h+0V",
+                      "THIS QUOTE CONTAINS AGGREGATE LIMITS: REFER TO LIMITS ",
+                      "OF INSURANCE SECTION.","<NL>")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s%s%s",L_ARIAL_BOLD,"<033>&a1700h+0V",
+                      "PART II A OF THE COVERAGE FORM FOR DETAILS.")
+l_line_counter = l_line_counter +1
+
+Writefile(L_FILE_NAME,"%s","<033>&a150h+40V<033>*c5455h20v0P")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+Writefile(L_FILE_NAME,"%s%s","<033>&a2130h+240V",
+                      "THIS IS NOT A POLICY")
+l_line_counter = l_line_counter + 1
+
+End --part_II_business_liability
+
+
+procedure fraud_warning
+Begin
+--  l_line_counter = 1   --l_next_pos + 120
+  Access SCIPSFRAUD,
+     Set SCIPSFRAUD:COMPANY_ID = L_COMPANY_ID, approximate
+
+  Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+  Writefile(L_FILE_NAME,"%s","<033>&a200h6800V")
+  Writefile(L_FILE_NAME,"%s","FRAUD WARNING")
+  Writefile(L_FILE_NAME,"%s",l_arial_bold_7)
+  Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+  --  Writefile(L_FILE_NAME,"%s","APPLICANT'S SIGNATURE")
+  Writefile(L_FILE_NAME,"%s",l_arial_8)
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+  Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+--  l_max_lines        = 60
+  L_FONT             = l_arial_8
+  L_V_POSITION       = "+0"
+  L_H_POSITION       = "200"
+  L_CHARACTER_STRING = trun(SCIPSFRAUD:FRAUD_WARNING)
+  L_MAX_CHAR         = 75
+  include "line_spacing.inc"
+
+  Writefile(L_FILE_NAME,"%s%s%s%s%s%n",L_ARIAL_BOLD_9,
+                        "<033>&a2400h+120V",L_COPY_NAME,"<033>&a5000h7250V",
+                        "Page ",L_PAGE_NUMBER)
+End -- End of Fraud Warning Procedure
+
+End --End of Program

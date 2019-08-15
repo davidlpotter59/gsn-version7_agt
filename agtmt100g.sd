@@ -1,0 +1,2152 @@
+%%
+Screen
+        Name = "agtmt100g";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--        Windowtitle="%a     %s Optional Coverages - Ver. 7.00     %m";
+        Domain="agqgeneral" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_no[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number G_FORM[1] ;
+        global unsigned ascii number g_line_of_business[4] ;
+        global unsigned ascii number g_enhancement[1] ;
+
+        global string g_inquiry[1] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_code_8[7],
+                     l_code_9[7],
+                     l_code_10[7],
+                     l_code_11[7],
+                     l_code_12[7],
+                     l_code_13[7],
+                     l_code_14[7],
+                     l_code_15[7],
+                     l_code_16[7],
+                     l_code_17[7],
+                     l_enter,
+                     l_server_name[100],
+                     l_supplemental_form[7],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_company_id[10],
+                     l_first_str_location[8],
+                     l_last_str_location[8],
+                     l_str_location[8],
+                     l_first_location[1]="Y",
+                     l_user_id[15]="",
+                     l_continue_1[3]="",
+                     l_prior_sprinklered[1]="",
+                     l_add_endorsement[1],
+                     l_form_edition[18],
+                     l_description[75] ,
+                     l_location_wording[9]="Location:",
+                     l_burglary_string[20]="",
+                     l_money_string[30]="",
+                     l_building_wording[9]="Building:" ;
+
+        local unsigned ascii number l_sub_code[4]=0 ,
+                                    l_state[2]=0 ,
+                                    l_no_locations[2]=0,
+                                    l_interruption[8],
+                                    l_dependent_property[8],
+                                    l_employee_dis_limit[8],
+                                    l_employee_dis_deductible[5],
+                                    l_employee_dis_no_employees[4],
+                                    l_restaurant[1],
+                                    l_fire_limit[8],
+                                    l_money_limit_on[8]=0,
+                                    l_default_ar_limit[8]=0,
+                                    l_default_customer_prop_limit[8]=0,
+                                    l_default_utility_limit[8]=0,
+                                    l_default_signs_limit[8]=0,
+                                    l_weather_related_1[1],
+                                    l_weather_related_2[1],
+                                    l_default_valuable_papers_limit[8]=0,
+                                    l_first_prem_no[4]=0,
+                                    l_first_build_no[4]=0,
+                                    l_last_prem_no[4]=0,
+                                    l_last_build_no[4]=0,
+                                    l_form[1]=0,
+                                    l_money_limit_off[8]=0,
+                                    l_credit_card[8],
+                                    l_electronic_data[8],
+                                    l_deductible[5]=0;
+
+        local wdate l_bpsdefault2_eff_date ;
+
+        Include "virtualdecs.var"
+
+        Access agqgeneral, Set agqgeneral:app_no = G_app_no , generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "change" sequence "chg" tagged change_fn ;
+        "chg" change/hidden ;
+
+        "calc" display "agtmt200" tagged calc_fn ;
+
+        include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+disable(accept_fn)
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+l_form = agqmaster:form
+Access agsdefault_bop, Set agsdefault_bop:COMPANY_ID       = agqgeneral:company_id,
+                           agsdefault_bop:state            = agqgeneral:state,
+                           agsdefault_bop:agent_no         = agqgeneral:agent_no,
+                           agsdefault_bop:LINE_OF_BUSINESS = agqgeneral:line_of_business,
+                           agsdefault_bop:FORM             = L_FORM, Generic
+
+l_user_id = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_supple_coverages.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id = l_user_id, generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = agqgeneral:COMPANY_ID,
+                    SFSLINE:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access sfscompany, set sfscompany:company_id = agqgeneral:company_id, generic
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+Access Validation
+If agqgeneral:app_no <> G_app_no then
+    Error 1000 ;
+
+access agqgeneral_alias, set agqgeneral_alias:app_no = agqgeneral:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqgeneral_alias:app_no = agqgeneral:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqgeneral_alias:prem_no) +
+                               str(agqgeneral_alias:build_no)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqgeneral_alias:prem_no) +
+                           str(agqgeneral_alias:build_no)
+    l_no_locations  = l_no_locations + 1
+
+    next agqgeneral_alias
+    end
+
+l_str_location = str(agqgeneral:prem_no) +
+                 str(agqgeneral:build_no)
+
+if l_no_locations = 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30, 100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "Supplemental Coverages..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,1 to 7,12 Tagged location
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,12
+             properties
+               {
+                 text = "Location No:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 6,13 to 7,17 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+____
+%%
+
+components
+
+fields
+101   agqgeneral:prem_no/displayonly ;
+
+}
+
+Panel at 6,16 to 7,27
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,12
+             properties
+               {
+                 text = "Building No:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 6,28 to 7,31 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+____
+
+%%
+
+components
+
+fields
+101     agqgeneral:build_no/displayonly
+        g_prem_no = agqgeneral:prem_no
+        g_build_no = agqgeneral:build_no ;
+
+}
+
+Panel at 6,35 to 6,50 tagged change_fn
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_edit_entries.bmp"
+                }
+            Events
+                {
+                Action = change_fn
+                }
+
+    }
+
+Panel at 6,60 to 6,75 tagged change_fn
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35  tagged accept_fn
+            properties
+                {
+                Iconname = "btn_accept_edits.bmp"
+                }
+            Events
+                {
+                mouseclicked=accept
+                }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt100g.sd"
+                      fontsize = 9
+                    }
+      }
+
+panel at 7,1 to 7,100 tagged line_panel_1
+     {
+     Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 15,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,18
+             properties
+               {
+                 text = "Wind Deductible:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+            guidetext at 2,1 to 2,18
+             properties
+               {
+                 text = "Fire Legal:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+           guidetext at 3,1 to 3,18
+             properties
+               {
+                 text = "Burglary/Robbery:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 4,1 to 4,18
+             properties
+               {
+                 text = "Attach BU5001:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 5,1 to 5,18
+             properties
+               {
+                 text = "Money/Securities:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 6,1 to 6,18
+             properties
+               {
+                 text = "Accts Receivables:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 7,1 to 7,18
+             properties
+               {
+                 text = "Utility Services:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 8,1 to 8,18
+             properties
+               {
+                 text = "Mechanical Breakdown:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 1,33 to 1,49
+             properties
+               {
+                 text = "Customers' Property:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 2,33 to 2,49
+             properties
+               {
+                 text = "Valuable Papers:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+           guidetext at 3,33 to 3,49
+             properties
+               {
+                 text = "Boiler & Machinery:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 4,33 to 4,49
+             properties
+               {
+                 text = "Pollution Cleanup:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 5,33 to 5,49
+             properties
+               {
+                 text = "Water Backup Limit:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 6,33 to 6,49
+             properties
+               {
+                 text = "Sprinklered:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 7,33 to 7,55
+             properties
+               {
+                 text = "Outdoor Signs/Satellite Dishes:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 8,33 to 8,49
+             properties
+               {
+                 text = "Signs Deductible:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 1,65 to 1,85
+             properties
+               {
+                 text = "Bldg Code/Law %:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+           guidetext at 2,65 to 2,85
+             properties
+               {
+                 text = "Exterior Glass:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 3,65 to 3,85
+             properties
+               {
+                 text = "Include Glass Deductible:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 4,65 to 4,85
+             properties
+               {
+                 text = "Central Station Burglar Alarm:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 5,65 to 5,85
+             properties
+               {
+                 text = "Central Station Fire Alarm:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 6,65 to 6,85
+             properties
+               {
+                 text = "Debris Removal:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 7,65 to 7,85
+             properties
+               {
+                 text = "Credit Card Forgery:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 8,65 to 8,85
+             properties
+               {
+                 text = "Electronic Data Coverage:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+         }
+
+Panel at 8,20 to 15, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_____                          __________                            ___
+___________                    __________                            __________
+___________                    ~_                                    ~_
+~_                             __________                            ~_
+___________                    __________                            ~_
+___________                    ~_                                    __________
+___________                          __________                      __________
+___________                    _____                                 __________
+
+
+%%
+
+components
+
+Fields
+101     begin
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            enable(accept_fn)
+            disable(calc_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            enable(calc_fn)
+            end
+
+            l_form = agqmaster:form
+            do check_limits
+            access bpssupplemental, set bpssupplemental:company_id       = agqgeneral:company_id,
+                                        bpssupplemental:state            = agqgeneral:state,
+                                        bpssupplemental:line_of_business = agqgeneral:line_of_business, generic
+
+            switch(l_form)
+              case 1, 3 : begin
+                          if l_restaurant = 1 then
+                              l_supplemental_form = "BU0421"/raw
+                          else
+                              l_supplemental_form = "BU0403"/raw
+                          end
+              default   : begin
+                          if l_restaurant = 1 then
+                              l_supplemental_form = "BU0424"/raw
+                          else
+                              l_supplemental_form = "BU0413"/raw
+                          end
+              end
+
+        Access BPSDEFAULT2, Set BPSDEFAULT2:COMPANY_ID        = agqgeneral:company_id,
+                                bpsdefault2:state             = agqgeneral:state,
+                                BPSDEFAULT2:LINE_OF_BUSINESS  = agqgeneral:line_of_business,
+                                BPSDEFAULT2:SUPPLEMENTAL_FORM = l_supplemental_form, Generic
+
+        l_bpsdefault2_eff_date = 0
+        while BPSDEFAULT2:COMPANY_ID        = agqgeneral:company_id and
+              bpsdefault2:state             = agqgeneral:state and
+              BPSDEFAULT2:LINE_OF_BUSINESS  = agqgeneral:line_of_business and
+              BPSDEFAULT2:SUPPLEMENTAL_FORM = l_supplemental_form
+            begin
+            if (agqgeneral:eff_date >= bpsdefault2:eff_date and
+               (agqgeneral:eff_date <= bpsdefault2:exp_date or
+               bpsdefault2:exp_date = 0)) then
+                l_bpsdefault2_eff_date = bpsdefault2:eff_date
+
+            next bpsdefault2
+            end
+
+        Access BPSDEFAULT2, Set BPSDEFAULT2:COMPANY_ID        = agqgeneral:company_id,
+                                bpsdefault2:state             = agqgeneral:state,
+                                BPSDEFAULT2:LINE_OF_BUSINESS  = agqgeneral:line_of_business,
+                                BPSDEFAULT2:SUPPLEMENTAL_FORM = l_supplemental_form,
+                                bpsdefault2:eff_date          = l_bpsdefault2_eff_date, Generic
+
+        end
+        agqgeneral:wind_deductible/tabstop
+        if agqgeneral:wind_deductible <> sfswinddeduct:wind_deductible then
+            error 1207
+
+        activehelp sfswinddeduct_alias:wind_deductible ;
+
+201     agqgeneral:FIRE_LIMIT/default/tabstop
+        If agqgeneral:FIRE_LIMIT <> BPSFIRE:FIRE_LIMIT Then
+            Error 1238
+
+        Activehelp if ((bpsfire_alias:hide_if_supplemental = 0 and
+                      agqgeneral:special_enhancement = 1) or
+                      agqgeneral:special_enhancement = 0) then
+                        BPSFIRE_ALIAS:FIRE_LIMIT
+                    else
+                        null ;
+301     agqgeneral:BURGLARY_LIMIT_ON/default/tabstop
+        Hide If agqgeneral:PROPERTY_LIMIT = 0 Or
+                L_FORM = 3
+
+        agqgeneral:burglary_limit_off = bpsburglmt:burglary_limit_off
+
+        If agqgeneral:BURGLARY_LIMIT_ON <> BPSBURGLMT:BURGLARY_LIMIT_ON Then
+            Error 1238
+
+        Activehelp BPSBURGLMT_ALIAS:BURGLARY_LIMIT_ON,
+                   BPSBURGLMT_ALIAS:BURGLARY_LIMIT_OFF ;
+301     agqgeneral:BURGLARY_LIMIT_ON/displayonly
+        If agqgeneral:BURGLARY_LIMIT_ON = 0 Or
+           agqgeneral:PROPERTY_LIMIT = 0 Or
+           L_FORM = 3 Then
+            Begin
+            agqgeneral:BURGLARY_LIMIT_ON = 0
+            agqgeneral:BURGLARY_LIMIT_OFF = 0
+            agqgeneral:BURGLARY_PREMIUM = 0
+            End ;
+301     Begin
+        If FUNCTION one of "CHANGE", "CHG" Then
+            agqgeneral:BURGLARY_LIMIT_OFF = BPSBURGLMT:BURGLARY_LIMIT_OFF
+        End
+        agqgeneral:BURGLARY_LIMIT_OFF/displayonly
+        Hide If agqgeneral:PROPERTY_LIMIT = 0 Or
+                L_FORM = 3 ;
+301     begin
+        if agqgeneral:burglary_limit_on <> 0 then
+            begin
+            l_burglary_string = str(agqgeneral:burglary_limit_on) +
+                                "/" +
+                                str(agqgeneral:burglary_limit_off)
+            end
+        end
+        l_burglary_string/displayonly
+        Hide If agqgeneral:PROPERTY_LIMIT = 0 Or
+                L_FORM = 3 ;
+
+401     agqgeneral:ATTACH_BU5001/checkbox/values="N,Y"/tabstop
+        Hide If agqgeneral:PROPERTY_LIMIT <> 0;
+401     Begin
+        If agqgeneral:ATTACH_BU5001 = "N" And
+           L_FORM = 1 Then
+            Begin
+            agqgeneral:MONEY_LIMIT_ON = 0
+            agqgeneral:MONEY_LIMIT_OFF = 0
+            End
+        End
+        agqgeneral:ATTACH_BU5001/displayonly/checkbox/values="N,Y"
+        hide if agqgeneral:special_enhancement = 1;
+501     Begin
+        l_form = agqmaster:form
+        Access agsdefault_bop, Set agsdefault_bop:COMPANY_ID       = agqgeneral:company_id,
+                                   agsdefault_bop:state            = agqgeneral:state,
+                                   agsdefault_bop:agent_no         = agqgeneral:agent_no,
+                                   agsdefault_bop:LINE_OF_BUSINESS = agqgeneral:line_of_business,
+                                   agsdefault_bop:FORM             = L_FORM, Generic
+
+        l_money_limit_off = agqgeneral:money_limit_off
+        If FUNCTION one of "ADD", "NEW" and
+           agqgeneral:special_enhancement = 0 Then
+            Begin
+            agqgeneral:MONEY_LIMIT_ON  = agsdefault_bop:MONEY_LIMIT_ON
+            agqgeneral:MONEY_LIMIT_OFF = agsdefault_bop:MONEY_LIMIT_OFF
+            End
+        If FUNCTION one of "CHANGE", "CHG" And
+           agqgeneral:MONEY_LIMIT_ON = 0 And
+           agqgeneral:PROPERTY_LIMIT > 0 And
+           L_FORM = 3 and
+           g_form not one of 3 and
+           agqgeneral:special_enhancement = 0 Then
+            Begin
+            agqgeneral:MONEY_LIMIT_ON  = agsdefault_bop:MONEY_LIMIT_ON
+            agqgeneral:MONEY_LIMIT_OFF = agsdefault_bop:MONEY_LIMIT_OFF
+            End
+        End
+        agqgeneral:MONEY_LIMIT_ON/default/tabstop
+        hide if agqgeneral:special_enhancement = 1
+        Hide If ((agqgeneral:PROPERTY_LIMIT = 0 Or
+                L_FORM <> 3) And
+                agqgeneral:ATTACH_BU5001 = "N")
+
+        If agqgeneral:MONEY_LIMIT_ON <> BPSMNYLMT:MONEY_LIMIT_ON Then
+            Error 1238
+
+        if sfscompany:boiler_rating = 4 and
+           function one of "CHG", "CHANGE" and
+           l_money_limit_off <> bpsmnylmt_alias:money_limit_off then
+            begin
+            agqgeneral:money_limit_off = bpsmnylmt_alias:money_limit_off
+            end
+
+        Activehelp if bpsmnylmt_alias:enhancement = 0 then
+                       BPSMNYLMT_ALIAS:MONEY_LIMIT_ON
+                   else
+                       null,
+                   if bpsmnylmt_alias:enhancement = 0 then
+                       BPSMNYLMT_ALIAS:MONEY_LIMIT_OFF
+                   else
+                       null ;
+501     agqgeneral:MONEY_LIMIT_ON/displayonly
+        hide if agqgeneral:special_enhancement = 1
+        If ((agqgeneral:MONEY_LIMIT_ON = 0 Or
+           agqgeneral:PROPERTY_LIMIT = 0 Or
+           L_FORM <> 3) And
+           agqgeneral:ATTACH_BU5001 = "N") Then
+            Begin
+            agqgeneral:MONEY_LIMIT_ON = 0
+            agqgeneral:MONEY_LIMIT_OFF = 0
+            agqgeneral:MONEY_PREMIUM = 0
+            End ;
+501     Begin
+        If FUNCTION one of "CHANGE", "CHG", "ADD", "NEW" and
+           sfscompany:boiler_rating <> 4 and
+           agqgeneral:special_enhancement = 0 Then
+            agqgeneral:MONEY_LIMIT_OFF = BPSMNYLMT:MONEY_LIMIT_OFF
+        End
+        agqgeneral:MONEY_LIMIT_OFF/displayonly
+        hide if agqgeneral:special_enhancement = 1
+        Hide If ((agqgeneral:PROPERTY_LIMIT = 0 Or
+                L_FORM <> 3) And
+                agqgeneral:ATTACH_BU5001 = "N") ;
+
+501     agqgeneral:MONEY_LIMIT_ON/default
+        hide if agqgeneral:special_enhancement = 0
+
+        if agqgeneral:money_limit_on <> bpsmnylmt:money_limit_on then
+            error 1238
+
+        if agqgeneral:special_enhancement = 1 then
+            begin
+            do access_bpssupplemental
+            if agqgeneral:money_limit_on = bpssupplemental:money_limit_on then
+                agqgeneral:money_limit_off = bpssupplemental:money_limit_off
+            if agqgeneral:money_limit_on <> l_money_limit_on then
+                agqgeneral:money_limit_off = bpsmnylmt_alias:money_limit_off
+            end
+
+        activehelp if bpsmnylmt_alias:enhancement = 1 then
+                       bpsmnylmt_alias:money_limit_on
+                   else
+                       null,
+                   if bpsmnylmt_alias:enhancement = 1 then
+                       bpsmnylmt_alias:money_limit_off
+                   else
+                       null;
+501     begin
+            l_money_string = str(agqgeneral:money_limit_on) +
+                             "/" +
+                             str(agqgeneral:money_limit_off)
+        end
+        l_money_string/displayonly
+--        hide if agqgeneral:special_enhancement = 1
+        Hide If ((agqgeneral:PROPERTY_LIMIT = 0 Or
+                L_FORM <> 3) And
+                agqgeneral:ATTACH_BU5001 = "N") ;
+
+601     agqgeneral:AR_LIMIT/default/tabstop
+        if bpsdefault2:ar_limit <> 0 and
+           agqgeneral:ar_limit < bpsdefault2:ar_limit then
+            error "$10,000 Basic limit - cannot be decreased" ;
+701     agqgeneral:UTILITY_LIMIT/default/tabstop
+        if bpsdefault2:utility_limit <> 0 and
+           agqgeneral:utility_limit < bpsdefault2:utility_limit then
+            error "$1,000 Basic limit - cannot be decreased"
+        Access SFSLINE, Set SFSLINE:COMPANY_ID = agqgeneral:COMPANY_ID,
+                            SFSLINE:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS,
+                            SFSLINE:LOB_SUBLINE = "00", Generic
+
+        l_form = agqmaster:form
+        Access agsdefault_bop, Set agsdefault_bop:COMPANY_ID       = agqgeneral:company_id,
+                                   agsdefault_bop:state            = agqgeneral:state,
+                                   agsdefault_bop:agent_no         = agqgeneral:agent_no,
+                                   agsdefault_bop:LINE_OF_BUSINESS = agqgeneral:line_of_business,
+                                   agsdefault_bop:FORM             = L_FORM, Generic
+
+        If agqgeneral:UTILITY_LIMIT > agsdefault_bop:UTILITY_MAX And
+           SFSLINE:OPTION = "P" And
+           agsdefault_bop:UTILITY_MAX <> 0 Then
+            Error "Invalid Limit Entered" ;
+801     agqgeneral:MECHANICAL_LIMIT/default/tabstop
+        if bpsdefault2:mechanical_breakdown <> 0 and
+           agqgeneral:mechanical_limit < bpsdefault2:mechanical_breakdown then
+            error "$500 Basic limit - cannot be decreased"
+        Access SFSLINE, Set SFSLINE:COMPANY_ID = agqgeneral:COMPANY_ID,
+                            SFSLINE:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS,
+                            SFSLINE:LOB_SUBLINE = "00", Generic
+
+        l_form = agqmaster:form
+        Access agsdefault_bop, Set agsdefault_bop:COMPANY_ID       = agqgeneral:company_id,
+                                   agsdefault_bop:state            = agqgeneral:state,
+                                   agsdefault_bop:agent_no         = agqgeneral:agent_no,
+                                   agsdefault_bop:LINE_OF_BUSINESS = agqgeneral:line_of_business,
+                                   agsdefault_bop:FORM             = L_FORM, Generic
+
+        If agqgeneral:MECHANICAL_LIMIT > agsdefault_bop:MECHANICAL_MAX And
+           agsdefault_bop:MECHANICAL_MAX <> 0 Then
+            Error "Maximum limit is 15,000" ;
+801     agqgeneral:mechanical_limit/displayonly ;
+
+102     agqgeneral:CUSTOMER_PROP_LIMIT/default/tabstop
+        if bpsdefault2:customers_property_limit <> 0 and
+           agqgeneral:customer_prop_limit < bpsdefault2:customers_property_limit then
+            error "$1,000 Basic limit - cannot be decreased" ;
+202     agqgeneral:VALUABLE_PAPERS_LIMIT/default/tabstop
+        if bpsdefault2:valuable_papers <> 0 and
+           agqgeneral:valuable_papers_limit < bpsdefault2:valuable_papers then
+            error "$10,000 Basic limit - cannot be decreased" ;
+302     begin
+        If FUNCTION one of "ADD", "NEW" Or
+           FUNCTION one of "CHANGE", "CHG" Then
+            begin
+            if agqgeneral:boilers not one of "Y" then
+                agqgeneral:boilers = "N"
+            end
+        end
+        agqgeneral:BOILERS/default/checkbox/values="N,Y"/tabstop ;
+
+402     agqgeneral:POLLUTION_LIMIT/default/tabstop
+        if bpsdefault2:pollution_cleanup <> 0 and
+           agqgeneral:pollution_limit < bpsdefault2:pollution_cleanup then
+            error "$10,000 Basic limit - cannot be decreased"
+
+        if agqgeneral:pollution_limit > 10000 and
+           agqgeneral:company_id = "FARMERS" and
+           sfsemail:agent_no <> 0 then
+            begin
+            error "Refer to Underwriting for limits over $10,000"
+            agqgeneral:pollution_limit = 10000
+            end ;
+402     agqgeneral:pollution_limit/displayonly ;
+
+502     agqgeneral:WATER_BACKUP_LIMIT/default/tabstop
+        if agqgeneral:water_backup_limit > 25000 then
+            error "Maximum Limit is 25,000"
+
+        if agqgeneral:water_backup_limit <> 0 then
+            agqgeneral:water_backup_limited = "Y"
+        else
+            agqgeneral:water_backup_limited = "N";
+602     begin
+            l_prior_sprinklered = agqgeneral:sprinklers
+        end
+        agqgeneral:sprinklers/checkbox/values="N,Y"/tabstop
+        if agqgeneral:sprinklers = "Y" and
+           l_prior_sprinklered <> "Y" then
+            begin
+            if agqgeneral:company_id = "FARMERS" then
+                begin
+                l_continue_1 = dialog("WARNING","warning.bmp","Sprinkler protected risks must be referred to company underwriter to be rated properly","Ok")
+                agqgeneral:sprinklers = "N"
+                end
+            else
+                begin
+                l_continue_1 = dialog("WARNING","question.bmp","Is 60% of entire building area - including basement sprinklered?","Yes","No")
+                if l_continue_1 = "No" then
+                    agqgeneral:sprinklers = "N"
+                end
+            end ;
+602     agqgeneral:sprinklers/checkbox/values="N,Y"/displayonly ;
+702     begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        l_form = agqmaster:form
+        end
+        agqgeneral:SIGNS_LIMIT/default/tabstop
+        if bpsdefault2:outdoor_signs <> 0 and
+           agqgeneral:signs_limit < bpsdefault2:outdoor_signs then
+            error "$2,500 Basic limit - cannot be decreased" ;
+802     agqgeneral:SIGNS_DEDUCTIBLE[1]/displayonly/tabstop
+        hide if sfscompany:boiler_rating = 4 ;
+
+103     agqgeneral:BUILDING_CODE_PERCENT/default/tabstop
+        hide if agqgeneral:acv_building one of "Y"
+        hide if agqgeneral:acv_contents one of "Y"
+
+        if agqgeneral:building_code_percent < 10 or
+           agqgeneral:building_code_percent > 30 then
+            error "Valid percent is 10, 20 or 30"
+
+        if bpsbuildingcode:display_warning = 1 then
+            warning "Contact an Underwriter before Binding"
+
+        activehelp bpsbuildingcode_alias:building_code_percent;
+103     agqgeneral:BUILDING_CODE_PERCENT/displayonly ;
+203     agqgeneral:GLASS_LIMIT/tabstop ;
+303     Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            agqgeneral:INCLUDE_GLASS_DEDUCTIBLE = "N"
+        End
+        agqgeneral:INCLUDE_GLASS_DEDUCTIBLE/checkbox/values="N,Y"/tabstop ;
+403     agqgeneral:alarm_option[2]/checkbox/values="N,Y"/tabstop ;
+503     agqgeneral:alarm_option[1]/checkbox/values="N,Y"/tabstop ;
+603     agqgeneral:debris_removal_limit/tabstop
+        if bpsdefault2:debris_removal_limit <> 0 and
+           agqgeneral:debris_removal_limit < bpsdefault2:debris_removal_limit then
+            error "$10,000 - Basic limit - cannot be decreased" ;
+703     begin
+        access agqgeneral2, set agqgeneral2:app_no   = agqgeneral:app_no,
+                                agqgeneral2:prem_no  = agqgeneral:prem_no,
+                                agqgeneral2:build_no = agqgeneral:build_no, generic
+
+        l_credit_card = agqgeneral2:credit_card
+        end
+        l_credit_card/default/mask="ZZ,ZZZ,ZZZ"
+        if bpsdefault2:credit_card <> 0 and
+           l_credit_card < bpsdefault2:credit_card then
+            error "$2,500 - Basic limit - cannot be decreased"
+
+        if l_credit_card <> agqgeneral2:credit_card then
+            begin
+            change agqgeneral2
+                begin
+                agqgeneral2:credit_card = l_credit_card
+                end
+            end;
+803     begin
+        access agqgeneral2, set agqgeneral2:app_no   = agqgeneral:app_no,
+                                agqgeneral2:prem_no  = agqgeneral:prem_no,
+                                agqgeneral2:build_no = agqgeneral:build_no, generic
+
+        l_electronic_data = agqgeneral2:electronic_data
+        end
+        l_electronic_data/default/mask="ZZ,ZZZ,ZZZ"
+        if bpsdefault2:electronic_data <> 0 and
+           l_electronic_data < bpsdefault2:electronic_data then
+            error "$10,000 - Basic limit - cannot be decreased"
+
+        if l_electronic_data <> agqgeneral2:electronic_data then
+            begin
+            change agqgeneral2
+                begin
+                agqgeneral2:electronic_data = l_electronic_data
+                end
+            end;
+
+}
+
+Panel at 17,40 to 17,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,25
+             properties
+               {
+                 text = "Employee Dishonesty"
+                 fontsize = 12
+                 fontstyle = BOLD
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 18,1 to 19,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,40
+             properties
+               {
+                 text = "Employee Dishonesty:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+            guidetext at 2,1 to 2,40
+             properties
+               {
+                 text = "Employees For All Locations:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+        }
+
+Panel at 18,45 to 19,100
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+___________
+____  Deductible: _____
+
+%%
+
+components
+
+fields
+101     begin
+        access agqgeneral2, set agqgeneral2:app_no   = agqgeneral:app_no,
+                                agqgeneral2:prem_no  = agqgeneral:prem_no,
+                                agqgeneral2:build_no = agqgeneral:build_no, generic
+
+        access bpsdishonesty_alias, set bpsdishonesty_alias:company_id       = agqgeneral:company_id,
+                                        bpsdishonesty_alias:state            = agqgeneral:state,
+                                        bpsdishonesty_alias:line_of_business = agqgeneral:line_of_business, generic
+
+        l_employee_dis_limit        = agqgeneral2:employee_dis_limit
+        l_employee_dis_no_employees = agqgeneral2:employee_dis_no_employees
+        l_employee_dis_deductible   = agqgeneral2:employee_dis_deductible
+        if l_employee_dis_deductible = 0 then
+            l_employee_dis_deductible = 200
+        end
+        l_employee_dis_limit/default/mask="ZZ,ZZZ,ZZZ"
+        if bpsdefault2:employee_dishonesty <> 0 and
+           l_employee_dis_limit < bpsdefault2:employee_dishonesty and
+           l_employee_dis_limit <> 0 then
+            error "$5,000 - Basic limit - cannot be decreased"
+
+        if l_employee_dis_limit = 0 then
+            begin
+            l_employee_dis_no_employees = 0
+            l_employee_dis_deductible = 0
+            end
+        access bpsdishonesty, set bpsdishonesty:company_id       = agqgeneral:company_id,
+                                  bpsdishonesty:state            = agqgeneral:state,
+                                  bpsdishonesty:line_of_business = agqgeneral:line_of_business,
+                                  bpsdishonesty:limit            = l_employee_dis_limit, generic
+
+        if l_employee_dis_limit <> bpsdishonesty:limit then
+            error "Invalid Limit Entered"
+        activehelp bpsdishonesty_alias:limit ;
+201     l_employee_dis_no_employees/default/mask="ZZZZ" ;
+--        hide if l_employee_dis_limit = bpsdefault2:employee_dishonesty ;
+202     l_employee_dis_deductible/default/mask="ZZZZZ" ;
+--        hide if l_employee_dis_limit = bpsdefault2:employee_dishonesty or
+--                l_employee_dis_limit = 0 ;
+202     begin
+        access agqgeneral2, set agqgeneral2:app_no   = agqgeneral:app_no,
+                                agqgeneral2:prem_no  = agqgeneral:prem_no,
+                                agqgeneral2:build_no = agqgeneral:build_no, generic
+
+        if agqgeneral2:app_no   = agqgeneral:app_no and
+           agqgeneral2:prem_no  = agqgeneral:prem_no and
+           agqgeneral2:build_no = agqgeneral:build_no then
+            begin
+            change agqgeneral2
+                begin
+                agqgeneral2:employee_dis_limit        = l_employee_dis_limit
+                agqgeneral2:employee_dis_no_employees = l_employee_dis_no_employees
+                agqgeneral2:employee_dis_deductible   = l_employee_dis_deductible
+                end
+            end
+
+        access agqgeneral2_alt, set agqgeneral2_alt:app_no = g_app_no, generic
+
+        while agqgeneral2_alt:app_no = g_app_no
+            begin
+            change agqgeneral2_alt
+                begin
+                agqgeneral2_alt:employee_dis_limit        = agqgeneral2:employee_dis_limit
+                agqgeneral2_alt:employee_dis_no_employees = agqgeneral2:employee_dis_no_employees
+                agqgeneral2_alt:employee_dis_deductible   = agqgeneral2:employee_dis_deductible
+                end
+
+            next agqgeneral2_alt
+            end
+        end
+        l_employee_dis_deductible/displayonly/mask="ZZZZZ" ;
+}
+
+Panel at 21,40 to 21,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,25
+             properties
+               {
+                 text = "Loss Of Income (Coverage C)"
+                 fontsize = 12
+                 fontstyle = BOLD
+--                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 22,1 to 26,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,40
+             properties
+               {
+                 text = "To Delete:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+            guidetext at 2,1 to 2,40
+             properties
+               {
+                 text = "To Limit Loss Of Income:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 3,1 to 3,40
+             properties
+               {
+                 text = "Limit Coverage to Extra Expense/Rental Income (BU5010):"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 4,1 to 4,40
+             properties
+               {
+                 text = "Loss Of Income/Dependent Property:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 5,1 to 5,40
+             properties
+               {
+                 text = "Loss Of Income/Interruption of Computer Services:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+        }
+
+Panel at 22,45 to 26, 100 Tagged rating_pl
+{
+%%
+_
+__________
+_
+__________
+__________
+
+%%
+
+components
+
+fields
+101    agqgeneral:DELETE_LOSS_INCOME/checkbox/values="N,Y"/tabstop
+       if agqgeneral:delete_loss_income = "Y" then
+            begin
+            agqgeneral:limit_loss_income = "N"
+            agqgeneral:loss_income_limit = 0
+            end ;
+
+201     agqgeneral:LOSS_INCOME_LIMIT/tabstop
+        Hide If agqgeneral:DELETE_LOSS_INCOME = "Y"
+        If agqgeneral:LOSS_INCOME_LIMIT <> BPSLOSSINCOME:LIMIT Then
+            error "Invalid Limit Entered"
+
+        if agqgeneral:loss_income_limit = bpslossincome:limit then
+            agqgeneral:loss_income_factor = 0
+
+        Activehelp If BPSLOSSINCOME_ALIAS:DISPLAY = "Y" Then
+                       BPSLOSSINCOME_ALIAS:LIMIT
+                   Else
+                        NULL ;
+
+301     agqgeneral:limit_loss_income/checkbox/values="N,Y"/tabstop;
+401     begin
+        access agqgeneral2, set agqgeneral2:app_no   = agqgeneral:app_no,
+                                agqgeneral2:prem_no  = agqgeneral:prem_no,
+                                agqgeneral2:build_no = agqgeneral:build_no, generic
+
+        l_dependent_property = agqgeneral2:dependent_property
+        end
+        l_dependent_property/default/mask="ZZ,ZZZ,ZZZ"
+        if bpsdefault2:loss_of_income_dependent <> 0 and
+           l_dependent_property < bpsdefault2:loss_of_income_dependent then
+            error "$5,000 - Basic limit - cannot be decreased"
+
+        if l_dependent_property <> agqgeneral2:dependent_property then
+            begin
+            change agqgeneral2
+                begin
+                agqgeneral2:dependent_property = l_dependent_property
+                end
+            end;
+501     begin
+        access agqgeneral2, set agqgeneral2:app_no   = agqgeneral:app_no,
+                                agqgeneral2:prem_no  = agqgeneral:prem_no,
+                                agqgeneral2:build_no = agqgeneral:build_no, generic
+
+        l_interruption = agqgeneral2:interruption
+        end
+        l_interruption/default/mask="ZZ,ZZZ,ZZZ"
+        if bpsdefault2:loss_of_income_interruption <> 0 and
+           l_interruption < bpsdefault2:loss_of_income_interruption then
+            error "$10,000 - Basic limit - cannot be decreased"
+
+        if l_interruption <> agqgeneral2:interruption then
+            begin
+            change agqgeneral2
+                begin
+                agqgeneral2:interruption = l_interruption
+                end
+            end;
+
+
+}
+
+-- draw a line
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,32    tagged previous_fn
+        Properties {
+                Iconname = "btn_prev_loc.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+
+        Button at 1, 48 tagged next_fn
+        Properties {
+                Iconname = "btn_next_loc.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+
+
+        Button at 1,75   tagged calc_fn
+        Properties {
+                Iconname = "btn_view_summary_totals.bmp"
+                }
+        Events  {
+                Action = calc_fn
+                }
+
+}
+
+-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+}
+
+panel at 31,1 to 32,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+
+update
+if updateok = "NO" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+if abort = "YES" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+
+    Access agqgeneral_ALIAS, Set agqgeneral_ALIAS:app_no = G_app_no,
+                                 agqgeneral_ALIAS:PREM_NO  = G_PREM_NO,
+                                 agqgeneral_ALIAS:BUILD_NO = G_BUILD_NO, Generic
+
+Access bpsrate,
+   Set bpsrate:COMPANY_ID       = agqgeneral:company_id,
+       bpsrate:STATE            = agqgeneral:state,
+       bpsrate:LINE_OF_BUSINESS = agqgeneral:line_of_business, Generic
+
+l_code_1 = ""
+while bpsrate:COMPANY_ID       = agqgeneral:company_id and
+      bpsrate:STATE            = agqgeneral:STATE and
+      bpsrate:LINE_OF_BUSINESS = agqgeneral:line_of_business
+    begin
+    If (agqgeneral:EFF_DATE >= bpsrate:eff_date and
+       (agqgeneral:eff_date <= bpsrate:exp_date or
+       bpsrate:exp_date = 0)) Then
+        Begin
+        L_CODE_1 = bpsrate:sprinkler_code
+        end
+
+    Next bpsrate
+    End
+
+If L_CODE_1 <> "" Then
+    Begin
+    L_CODE = L_CODE_1
+    Do ACCESS_agqend
+    If L_ADD_ENDORSEMENT = "Y" and
+       agqgeneral:sprinklers = "Y" Then
+        begin
+        Do ADD_agqend
+        end
+    If L_ADD_ENDORSEMENT = "N" and
+       agqgeneral:sprinklers = "N" Then
+        begin
+        Do DELETE_agqend
+        end
+    End
+
+    Access BPSRATE, Set BPSRATE:COMPANY_ID       = agqgeneral:company_id,
+                        BPSRATE:STATE            = agqgeneral:STATE,
+                        BPSRATE:LINE_OF_BUSINESS = agqgeneral:line_of_business, Generic
+
+    l_code_1  = ""
+    l_code_2  = ""
+    l_code_3  = ""
+    l_code_4  = ""
+    l_code_5  = ""
+    l_code_6  = ""
+    l_code_7  = ""
+    l_code_8  = ""
+    l_code_9  = ""
+    l_code_10 = ""
+    l_code_11 = ""
+    l_code_12 = ""
+    l_code_13 = ""
+    l_code_14 = ""
+    l_code_15 = ""
+    l_code_16 = ""
+    Repeat Begin
+        Exit If BPSRATE:COMPANY_ID <> agqgeneral:company_id Or
+                BPSRATE:STATE <> agqgeneral:STATE Or
+                BPSRATE:LINE_OF_BUSINESS <> agqgeneral:line_of_business
+
+        If agqgeneral:EFF_DATE >= BPSRATE:EFF_DATE Then
+            Begin
+            L_CODE_1  = BPSRATE:BOILERS_CODE
+            L_CODE_2  = BPSRATE:WATERBKUP_CODE[1] -- chatham square added auto
+            L_CODE_3  = BPSRATE:BUILDING_CODE
+            L_CODE_4  = BPSRATE:SPRINKLER_CODE
+            L_CODE_5  = BPSRATE:LIMIT_LOSS_INCOME_CODE
+            L_CODE_6  = BPSRATE:BUILDING_LAW_CODE
+            L_CODE_7  = BPSRATE:SIGNS_NOT_ATTACHED_CODE
+            L_CODE_8  = BPSRATE:SIGNS_ALL_RISK_CODE
+            L_CODE_9  = BPSRATE:MONEY_CODE
+            L_CODE_10 = BPSRATE:WATERBKUP_CODE[1]
+            L_CODE_11 = BPSRATE:WATERBKUP_CODE[2]
+            L_CODE_12 = BPSRATE:GLASS_DEDUCTIBLE_CODE
+            L_CODE_13 = BPSRATE:WIND_DEDUCT_CODE
+            l_code_14 = bpsrate:boiler_code_1 -- delos has 2 forms for boiler
+            l_code_15 = bpsrate:weather_code[1] -- with deductible
+            l_code_16 = bpsrate:weather_code[2] -- no deductible
+            End
+
+        Next BPSRATE
+        End
+
+    If L_CODE_1 <> "" Then
+        Begin
+        -- boiler endorsement if answer BU2519 applies
+        L_CODE = L_CODE_1
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:BOILERS = "Y" Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:BOILERS = "N" Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_14 <> "" Then
+        Begin
+        -- boiler endorsement if answer mcm025
+        L_CODE = L_CODE_14
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:BOILERS = "Y" Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:BOILERS = "N" Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_2 <> "" Then
+        Begin
+        -- water bkup BU5003
+        L_CODE = L_CODE_2
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:WATER_BACKUP_LIMIT <> 0 Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:WATER_BACKUP_LIMIT = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_3 <> "" Then
+        Begin
+        -- building Law code
+        L_CODE = L_CODE_3
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:BUILDING_LIMIT <> 0 Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:BUILDING_LIMIT = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_4 <> "" Then
+        Begin
+        -- sprinkler code
+        L_CODE = L_CODE_4
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:SPRINKLERS = "Y" Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:SPRINKLERS = "N" Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_5 <> "" Then
+        Begin
+        -- BU5010
+        L_CODE = L_CODE_5
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:LIMIT_LOSS_INCOME = "Y" Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:LIMIT_LOSS_INCOME = "N" Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_6 <> "" Then
+        Begin
+        -- building code/law endorsement, only add if no limit
+        L_CODE = L_CODE_6
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:BUILDING_CODE_PERCENT = 0 Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:BUILDING_CODE_PERCENT <> 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_7 <> "" Then
+        Begin
+        -- signs not attached endorsement, only add if there is a limit
+        L_CODE = L_CODE_7
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:SIGNS_NOT_ATTACHED_LIMIT <> 0 Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:SIGNS_NOT_ATTACHED_LIMIT = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_8 <> "" Then
+        Begin
+        -- signs all risk endorsement, only add if there is a limit and
+        -- l_form <> 1
+        L_CODE = L_CODE_8
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:SIGNS_NOT_ATTACHED_LIMIT <> 0 And
+           L_FORM <> 1 Then
+            Do ADD_agqEND
+        else
+        If ((L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:SIGNS_NOT_ATTACHED_LIMIT = 0) Or
+           L_FORM = 1) Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_9 <> "" Then
+        Begin
+        -- money endorsement if answer BU5001 applies
+        L_CODE = L_CODE_9
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:ATTACH_BU5001 = "Y" Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:ATTACH_BU5001 = "N" Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_11 <> "" Then
+        Begin
+        -- water backup exclusion deleted (BU5002)
+        L_CODE = L_CODE_11
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:WATER_BACKUP_EXCLUSION = "Y" Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:WATER_BACKUP_EXCLUSION = "N" Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_12 <> "" Then
+        Begin
+        -- glass deductible (BU0522)
+        L_CODE = L_CODE_12
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:INCLUDE_GLASS_DEDUCTIBLE = "Y" Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:INCLUDE_GLASS_DEDUCTIBLE = "N" Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_13 <> "" Then
+        Begin
+        -- wind deductible
+        L_CODE = L_CODE_13
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:WIND_DEDUCTIBLE <> 0 Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:WIND_DEDUCTIBLE = 0 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_15 <> "" Then
+        Begin
+        L_CODE = L_CODE_15
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqGENERAL_ALIAS:weather_related = 1 Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqGENERAL_alias:weather_related <> 1 Then
+            Do DELETE_agqEND
+        End
+
+    If L_CODE_16 <> "" Then
+        Begin
+        L_CODE = L_CODE_16
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqGENERAL_ALIAS:weather_related = 2 Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqGENERAL_alias:weather_related <> 2 Then
+            Do DELETE_agqEND
+        End
+
+    Access bpstrigger, Set bpstrigger:COMPANY_ID       = agqgeneral:company_id,
+                           bpstrigger:STATE            = L_STATE,
+                           bpstrigger:LINE_OF_BUSINESS = agqgeneral:line_of_business, Generic
+
+    l_code_14 = ""
+    Repeat Begin
+        Exit If bpstrigger:COMPANY_ID <> agqgeneral:company_id Or
+                bpstrigger:STATE <> L_STATE Or
+                bpstrigger:LINE_OF_BUSINESS <> agqgeneral:line_of_business
+
+        If agqgeneral:EFF_DATE >= bpstrigger:rate_DATE Then
+            Begin
+            L_CODE_14  = bpstrigger:code[9] --BU5012
+            end
+
+        next bpstrigger
+        end
+
+    If L_CODE_14 <> "" Then
+        Begin
+        L_CODE = L_CODE_14
+        Do ACCESS_agqEND
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqgeneral:delete_loss_coverage = 1 Then
+            Do ADD_agqEND
+        else
+        If L_ADD_ENDORSEMENT = "N" And
+           agqgeneral:delete_loss_coverage = 0 Then
+            Do DELETE_agqEND
+        End
+
+        Access BPSCREDITS, Set BPSCREDITS:COMPANY_ID = agqGENERAL:COMPANY_ID,
+                               BPSCREDITS:STATE = agqGENERAL:STATE,
+                               BPSCREDITS:LINE_OF_BUSINESS = agqGENERAL:LINE_OF_BUSINESS, Generic
+
+        Repeat Begin
+            Exit If BPSCREDITS:COMPANY_ID <> agqGENERAL:COMPANY_ID Or
+                    BPSCREDITS:STATE <> agqGENERAL:STATE Or
+                    BPSCREDITS:LINE_OF_BUSINESS <> agqGENERAL:LINE_OF_BUSINESS
+
+            If agqgeneral:EFF_DATE >= BPSCREDITS:EFF_DATE Then
+                Begin
+                L_CODE_1 = BPSCREDITS:ALARM_CODE[1]
+                L_CODE_2 = BPSCREDITS:ALARM_CODE[2]
+                End
+
+        Next BPSCREDITS
+        End
+
+        If L_CODE_1 <> "" Then
+            Begin
+            -- burglary
+            L_CODE = L_CODE_1
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqGENERAL:ALARM_OPTION[2] = "Y" then
+                Do ADD_agqend
+            If L_ADD_ENDORSEMENT = "N" And
+               agqGENERAL:ALARM_OPTION[2] = "N" then
+                Do DELETE_agqend
+            End
+
+        If L_CODE_2 <> "" Then
+            Begin
+            -- fire alarm
+            L_CODE = L_CODE_2
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqGENERAL:ALARM_OPTION[1] = "Y" then
+                Do ADD_agqend
+            If L_ADD_ENDORSEMENT = "N" And
+               agqGENERAL:ALARM_OPTION[1] = "N" then
+                Do DELETE_agqend
+            End
+
+    end
+
+screen exit
+if function one of "EXIT", "BACK" and
+   g_inquiry not one of "Y" then
+    function = "update_totals"
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+
+procedure check_limits
+begin
+if agqgeneral:special_enhancement = 1 then
+    begin
+    Access bpssupplemental, Set bpssupplemental:COMPANY_ID       = agqgeneral:company_id,
+                                bpssupplemental:state            = agqgeneral:state,
+                                bpssupplemental:LINE_OF_BUSINESS = agqgeneral:line_of_business, generic
+
+    while bpssupplemental:company_id       = agqgeneral:company_id and
+          bpssupplemental:state            = agqgeneral:state and
+          bpssupplemental:line_of_business = agqgeneral:line_of_business
+            begin
+            if agqgeneral:eff_date >= bpssupplemental:eff_date then
+                begin
+                l_default_AR_LIMIT                   = bpssupplemental:ar_limit
+                l_default_CUSTOMER_PROP_LIMIT        = bpssupplemental:CUSTOMER_PROP_LIMIT
+                l_default_UTILITY_LIMIT              = bpssupplemental:UTILITY_LIMIT
+                l_default_SIGNS_LIMIT                = bpssupplemental:SIGNS_LIMIT
+                l_default_VALUABLE_PAPERS_LIMIT      = bpssupplemental:VALUABLE_PAPERS_LIMIT
+                end
+
+           next bpssupplemental
+           end
+    end
+
+end
+
+procedure access_bpssupplemental
+begin
+Access bpssupplemental, Set bpssupplemental:COMPANY_ID       = agqgeneral:company_id,
+                            bpssupplemental:state            = agqgeneral:state,
+                            bpssupplemental:LINE_OF_BUSINESS = agqgeneral:line_of_business, generic
+
+l_money_limit_on = 0
+l_money_limit_off = 0
+l_fire_limit = 0
+while bpssupplemental:company_id       = agqgeneral:company_id and
+      bpssupplemental:state            = agqgeneral:state and
+      bpssupplemental:line_of_business = agqgeneral:line_of_business
+        begin
+        if agqgeneral:eff_date >= bpssupplemental:eff_date then
+            begin
+            L_MONEY_LIMIT_ON  = bpssupplemental:MONEY_LIMIT_ON
+            l_money_limit_off = bpssupplemental:Money_limit_off
+            l_fire_limit      = bpssupplemental:fire_limit
+            end
+
+       next bpssupplemental
+       end
+
+end
+
+procedure add_coverage_back_on
+begin
+Access agqgeneral_ALIAS, Set agqgeneral_ALIAS:app_no = G_app_no,
+                             agqgeneral_ALIAS:PREM_NO  = G_PREM_NO,
+                             agqgeneral_ALIAS:BUILD_NO = G_BUILD_NO, Generic
+
+l_form = agqmaster:form
+Access agsdefault_bop, Set agsdefault_bop:COMPANY_ID       = agqgeneral_alias:company_id,
+                           agsdefault_bop:state            = agqgeneral_alias:state,
+                           agsdefault_bop:agent_no         = agqgeneral_alias:agent_no,
+                           agsdefault_bop:LINE_OF_BUSINESS = agqgeneral_alias:line_of_business,
+                           agsdefault_bop:FORM             = L_FORM, Generic
+
+agqgeneral:UTILITY_LIMIT              = agsdefault_bop:UTILITY_LIMIT
+agqgeneral:MECHANICAL_LIMIT           = agsdefault_bop:MECHANICAL_LIMIT
+
+end
+
+Procedure ACCESS_agqend
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> G_PREM_NO Or
+            agqend:BUILD_NO <> G_BUILD_NO
+
+    If agqend:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend
+    End
+
+End
+
+Procedure ACCESS_agqend_1
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqend:app_no = G_app_no and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+    begin
+    If agqend:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend
+    End
+
+End
+
+Procedure ADD_agqend
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO  = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> G_PREM_NO Or
+            agqend:BUILD_NO <> G_BUILD_NO
+
+    L_SUB_CODE = agqend:SUB_CODE
+
+    Next agqend
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access agqgeneral_ALIAS, Set agqgeneral_ALIAS:app_no = G_app_no,
+                             agqgeneral_ALIAS:PREM_NO = G_PREM_NO,
+                             agqgeneral_ALIAS:BUILD_NO = G_BUILD_NO, Generic
+
+L_STATE = agqgeneral_ALIAS:STATE
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqgeneral_alias:company_id,
+                      SFSOPTEND:STATE = L_STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral_alias:line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqgeneral_alias:company_id Or
+            SFSOPTEND:STATE <> L_STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqgeneral_alias:line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If (agqgeneral:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqgeneral:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqend
+    Begin
+    agqend:app_no             =       G_app_no
+    agqend:PREM_NO              =       G_PREM_NO
+    agqend:BUILD_NO             =       G_BUILD_NO
+    agqend:SUB_CODE             =       L_SUB_CODE
+    agqend:CODE                 =       L_CODE
+    agqend:FORM_EDITION         =       L_FORM_EDITION
+    agqend:DESCRIPTION          =       L_DESCRIPTION
+    agqend:PREMIUM              =       0
+    agqend:lob_end_code         =       "X"
+    End
+
+End
+
+Procedure ADD_agqend_1
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO  = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+L_SUB_CODE = 0
+while agqend:app_no = G_app_no and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+    begin
+    L_SUB_CODE = agqend:SUB_CODE
+
+    Next agqend
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqgeneral_alias:company_id,
+                      SFSOPTEND:STATE            = agqgeneral_alias:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral_alias:line_of_business,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqgeneral_alias:company_id and
+      SFSOPTEND:STATE            = agqgeneral_alias:STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral_alias:line_of_business and
+      SFSOPTEND:CODE             = L_CODE
+    begin
+    If (agqgeneral:EFF_DATE >= SFSOPTEND:EFF_DATE and
+       (agqgeneral:eff_date <= sfsoptend:exp_date or
+       sfsoptend:exp_date = 0)) Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION  = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqend
+    Begin
+    agqend:app_no             =       G_app_no
+    agqend:PREM_NO              =       0
+    agqend:BUILD_NO             =       0
+    agqend:SUB_CODE             =       L_SUB_CODE
+    agqend:CODE                 =       L_CODE
+    agqend:FORM_EDITION         =       L_FORM_EDITION
+    agqend:DESCRIPTION          =       L_DESCRIPTION
+    agqend:PREMIUM              =       0
+    agqend:lob_end_code         =       "X"
+    End
+
+End
+
+Procedure DELETE_agqend
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> G_PREM_NO Or
+            agqend:BUILD_NO <> G_BUILD_NO
+
+    If agqend:CODE = L_CODE Then
+        Delete agqend
+
+    Next agqend
+    End
+
+End
+
+Procedure DELETE_agqend_1
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO  = 0,
+                   agqend:BUILD_NO = 0, Generic
+
+while agqend:app_no = G_app_no and
+      agqend:PREM_NO  = 0 and
+      agqend:BUILD_NO = 0
+    begin
+    If agqend:CODE = L_CODE Then
+        Delete agqend
+
+    Next agqend
+    End
+
+End
+
+End

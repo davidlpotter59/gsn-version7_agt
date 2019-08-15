@@ -1,0 +1,648 @@
+%%                      
+Screen
+        Name = "agtmt4005";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="agqcontact" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_line_of_business[4];
+
+        local string l_first_str_location[8],
+                     l_last_str_location[8],
+                     l_str_location[8],
+                     l_first_location[1]="Y",
+                     l_first[1],
+                     l_add_endorsement[1],
+                     l_form_edition[25],
+                     l_description[75],
+                     l_code[7],
+                     l_code_1[7],
+                     l_server_name[100] ,
+                     l_screen_name[9],
+                     l_username[15] ,
+                     l_company_id[10] ;
+
+        Local Unsigned Ascii Number l_first_prem_no[4],
+                                    l_first_build_no[4],
+                                    l_last_prem_no[4],
+                                    l_last_build_no[4],
+                                    l_no_locations[2]=0,
+                                    l_field_no[4] ,
+                                    l_sub_code[4],
+                                    l_state[2];
+
+        Access agqcontact,
+           Set agqcontact:app_no = G_app_no, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt4005" ;
+
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+
+        "displayit"  display "agtmt4006" tagged nextscreen_fn;
+        "displayit1"  display "agtmt4004" tagged back_fn;
+
+        reaccess ;
+
+        include "stdfunc7.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+disable(accept_fn)
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER                            --"http://192.168.1.197/"
+
+l_username = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = sfsemail:agent_no, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+setproperty(t_line_of_business,iconname,"title_workers_comp.bmp")
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+Access SFSLINE_ALIAS, Set SFSLINE_alias:COMPANY_ID       = l_company_id,
+                          SFSLINE_alias:LINE_OF_BUSINESS = g_line_of_business,
+                          SFSLINE_alias:LOB_SUBLINE      = "00", Generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = l_company_id,
+                    SFSLINE:LINE_OF_BUSINESS = g_line_of_business,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access agqcontact,
+   set agqcontact:app_no = g_app_no, generic
+
+/*if l_company_id = "FLEMINGTON" then
+    begin
+    if agqcontact:app_no = 0 then
+        {
+        l_current_web_page = "webhelp_scr_bop_rating_no_proposal_num.htm"
+        do change_current_browser(l_server_name,l_current_web_page)
+        }
+    else
+        {
+        l_current_web_page = "webhelp_scr_bop_rating_yes_proposal_num.htm"
+        do change_current_browser(l_server_name,l_current_web_page)
+        }
+    end*/
+
+access agqname, set agqname:app_no = g_app_no,generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(delete_fn)
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+if agqcontact:app_no = 0 then
+    begin
+    disable(previous_fn)
+    disable(next_fn)
+    end
+
+access sfscompany, set sfscompany:company_id = l_company_id, generic
+
+l_screen_name = "agtmt4005"
+if g_app_no = 0 then
+    l_field_no = 9997
+else
+    l_field_no = 9999
+
+
+access validation
+if agqcontact:app_no <> g_app_no then
+    error 1000
+
+access agqcontact_alias, set agqcontact_alias:app_no = agqcontact:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqcontact_alias:app_no = agqcontact:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqcontact_alias:prem_no) +
+                               str(agqcontact_alias:build_no)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqcontact_alias:prem_no) +
+                           str(agqcontact_alias:build_no)
+    l_no_locations  = l_no_locations + 1
+
+    next agqcontact_alias
+    end
+
+l_str_location = str(agqcontact:prem_no) +
+                 str(agqcontact:build_no)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+    Properties {
+               Layouttype = screen
+               transparent = False
+               backgroundcolor = "#ADD8E6"
+--               scrollbarpolicy = asneeded
+               }
+{
+
+Panel at 1,1 to 2,100
+    Properties {
+               layouttype = screen
+               }
+{
+components
+    guidetext at 1,1 to 2,40
+        properties {
+                   iconname = "qp_logo.gif"
+                   }
+
+    guidetext at 1,83 to 2,100 tagged ficof_fn
+        properties {
+                   iconname = "ficof_logo.gif"
+                   }
+
+    guidetext at 1,83 to 2,100 tagged farmers_fn
+        properties {
+                   iconname = "salem_logo.gif"
+                   }
+
+    guidetext at 1,83 to 2,100 tagged lebins_fn
+        properties {
+                   iconname = ""
+                   }
+
+    guidetext at 1,30 to 2,100 tagged t_line_of_business
+        Properties {
+                   iconname = ""
+                   }
+
+}
+
+panel at 3,1 to 4,100
+    Properties {
+               LayoutType = screen
+               backgroundcolor = "Grey"
+               transparent = False
+               }
+{
+components
+    guidetext at 1.45,1 to 1.45,100     tagged display_information_box
+        properties {
+                   text = "Underwriting Submission: Contact Information..."
+                   fontsize = 18
+                   fontstyle = BOLD
+                   fontname = "arial"
+                   transparent = False
+                   backgroundcolor = "Grey"
+                   }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+    Properties {
+               LayoutType = screen
+               }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     Begin
+        access agqworkerscomp1, set agqworkerscomp1:app_no = g_app_no, generic
+
+        If FUNCTION = "ADD" Then
+            Begin
+            agqcontact:app_no   = G_app_no
+            End
+        End
+        agqcontact:APP_NO/displayonly ;
+
+}
+
+Panel at 5,3 to 6,100 Tagged icon_line2_tg
+    Properties {
+               LayoutType = screen
+               }
+{
+Components
+    Button at 1.5,1   tagged add_fn
+        Properties {
+                   Iconname = "btn_add.bmp"
+                   }
+        Events     {
+                   Action = add_fn
+                   }
+
+    Button at 1.5,38    tagged change_fn
+        Properties {
+                   Iconname = "btn_edit.bmp"
+                   }
+        Events     {
+                   Action = change_fn
+                   }
+
+    Button at 1.5, 70 tagged delete_fn
+        Properties {
+                   Iconname = "btn_delete.bmp"
+                   }
+        Events     {
+                   Action = delete_fn
+                   }
+
+}
+
+Panel at 8,70 to 8,100
+Properties {
+           layouttype = row
+           }
+{
+Components
+    Button at 1,55 tagged accept_fn
+        properties {
+                   Iconname = "btn_accept_edits.bmp"
+                   }
+        Events    {
+                  mouseclicked = accept
+                  }
+
+}
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = column
+               }
+{
+Components
+    Button to 1,1
+        properties {
+                   Iconname = "btn_print_screen.bmp"
+                   }
+        events     {
+                   action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                   }
+
+}
+
+Panel at 6.45,92
+    Properties {
+               layouttype = column
+               }
+{
+Components
+    guidetext to 1,1
+        properties {
+                   text = "agtmt4005.sd"
+                   fontsize = 9
+                   }
+
+}
+
+Panel at 8,1 to 8,100 Tagged location
+    Properties {
+               LayoutType = screen
+               }
+{
+Components
+    guidetext at 1,24 to 1,36
+        properties {
+                   text = "Location No:"
+                   fontsize = 12
+                   fontname = "arial"
+                   }
+
+    guidetext at 1,44 to 1,56
+        properties {
+                   text = "Building No:"
+                   fontsize = 12
+                   fontname = "arial"
+                   }
+
+}
+
+Panel at 8,33 to 8,60 Tagged rating_pl
+{
+%%
+____                ____
+%%
+
+components
+
+fields
+101     begin
+        if function = "ADD" then
+            begin
+            agqcontact:prem_no  = g_prem_no
+            agqcontact:build_no = g_build_no
+            end
+        end
+        agqcontact:prem_no/default ;
+102     agqcontact:build_no/default ;
+
+}
+
+Panel at 10,1 to 23,100
+    Properties {
+               LayoutType = screen
+               }
+{
+Components
+    guidetext at 1,1 to 1,22
+        properties {
+                   text = "Name:"
+                   fontsize = 12
+                   contentalignment = right
+                   fontname = "arial"
+                   }
+
+    guidetext at 4,1 to 4,22
+        properties {
+                   text = "Telephone:"
+                   fontsize = 12
+                   contentalignment = right
+                   fontname = "arial"
+                   }
+
+    guidetext at 5,1 to 5,22
+        properties {
+                   text = "Cell Phone:"
+                   fontsize = 12
+                   contentalignment = right
+                   fontname = "arial"
+                   }
+
+    guidetext at 6,1 to 6,22
+        properties {
+                   text = "Pager:"
+                   fontsize = 12
+                   contentalignment = right
+                   fontname = "arial"
+                   }
+
+    guidetext at 7,1 to 7,22
+        properties {
+                   text = "Fax:"
+                   fontsize = 12
+                   contentalignment = right
+                   fontname = "arial"
+                   }
+
+    guidetext at 8,1 to 8,22
+        properties {
+                   text = "Email Address:"
+                   fontsize = 12
+                   contentalignment = right
+                   fontname = "arial"
+                   }
+
+    guidetext at 9,1 to 9,22
+        properties {
+                   text = "Change Date:"
+                   fontsize = 12
+                   contentalignment = right
+                   fontname = "arial"
+                   }
+
+    guidetext at 10,1 to 10,22
+        properties {
+                   text = "Change Type:"
+                   fontsize = 12
+                   contentalignment = right
+                   fontname = "arial"
+                   }
+
+}
+
+Panel at 10,24 to 23,100
+{
+%%
+__________________________________________________
+__________________________________________________
+__________________________________________________
+________________  Ext: _____
+________________
+________________
+________________
+__________________________________________________
+__________
+_____      [EFF  - New Primary
+            EXP  - Primary Contact no longer there
+            CORR - Correct Primary Contact Info]
+
+%%
+
+components
+
+Fields
+101     agqCONTACT:NAME[1] mandatory;
+201     agqcontact:name[2];
+301     agqcontact:name[3];
+401     agqCONTACT:TELEPHONE[1] mandatory;
+402     agqCONTACT:EXTENSION;
+501     agqcontact:telephone[2];
+601     agqcontact:telephone[3];
+701     agqCONTACT:FAX;
+801     agqCONTACT:EMAIL;
+901     agqCONTACT:CHANGE_DATE;
+1001    agqCONTACT:CHANGE_TYPE/uppercase;
+
+}
+
+Panel at 25,1 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,10   tagged back_screen
+        Properties {
+                Iconname = "btn_back.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+    Button at 1,35    tagged previous_fn
+        Properties {
+                   Iconname = "btn_previous.bmp"
+                   }
+        Events     {
+                   Action = previous_fn
+                   }
+
+    Button at 1,51 tagged next_fn
+        Properties {
+                   Iconname = "btn_next.bmp"
+                   }
+        Events     {
+                   Action = next_fn
+                   }
+
+
+        Button at 1,70   tagged next_screen
+        Properties {
+
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                Action = nextscreen_fn
+                }
+
+}
+
+panel at 26,1 to 26,120 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,120
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+panel at 27,1 to 32,100  tagged ficof_fn
+Properties {
+           LayoutType = screen
+           backgroundcolor = "white"
+           }
+{
+Components
+    browser at 1,1 to 7,100  tagged helper_tg
+        properties {
+                   url = ""
+                   }
+}
+
+}
+
+Update
+if UPDATEOK = "NO" then
+    begin
+    access agqcontact_alias, set agqcontact_alias:app_no = g_app_no, generic
+
+    if agqcontact_alias:app_no <> g_app_no then
+        g_app_no = 0
+
+    disable(accept_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    disable(accept_fn)
+    end
+
+screen exit
+
+End

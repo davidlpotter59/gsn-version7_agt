@@ -1,0 +1,262 @@
+%%
+Program
+        Name = "agqcv100sc" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+        Global Unsigned Ascii Number G_QUOTE_NO[8] ;
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_prem_no[4],
+                                    l_build_no[4] ;
+
+        Local String L_PROCEDURE[20] ,
+                     L_POLICY_NO[9] ,
+                     l_code[7],
+                     L_QUOTE_NO[8] ;
+
+Initialisation
+G_APP_NO       = val(COMMANDLINE[1,11])
+G_QUOTE_NO     = val(COMMANDLINE[12,19])
+
+Access SFQNAME, Set SFQNAME:QUOTE_NO = g_app_no, Exact
+
+L_PROCEDURE = "scqcontractor FILE UPDATE"
+
+Access agqCONTRACTOR, Set agqCONTRACTOR:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqCONTRACTOR:app_no <> g_app_no
+
+    Add scqCONTRACTOR
+        Begin
+        scqCONTRACTOR:quote_no                 = G_quote_no
+        scqCONTRACTOR:PREM_NO                  = agqCONTRACTOR:PREM_NO
+        scqCONTRACTOR:BUILD_NO                 = agqCONTRACTOR:BUILD_NO
+        scqCONTRACTOR:RECORD_RDF               = agqCONTRACTOR:RECORD_RDF/raw
+        End
+
+    Next agqCONTRACTOR
+    End
+
+-- scqADDIN FILE UPDATE LOGIC
+
+L_PROCEDURE = "scqADDIN FILE UPDATE"
+
+Access agqaddin3, Set agqaddin3:app_NO = g_app_no, Approximate
+
+while agqaddin3:app_no = g_app_no
+    begin
+    l_prem_no  = agqaddin3:prem_no
+    l_build_no = agqaddin3:build_no
+    l_code     = agqaddin3:code
+    do access_sfqend
+    Add scqADDIN
+        Begin
+        scqADDIN:quote_no               = G_quote_no
+        scqADDIN:PREM_NO                = agqaddin3:PREM_NO
+        scqADDIN:BUILD_NO               = agqaddin3:BUILD_NO
+        scqADDIN:CODE                   = agqaddin3:CODE/raw
+        scqADDIN:SUB_CODE               = L_SUB_CODE
+        scqADDIN:RECORD_RDF             = agqaddin3:RECORD_RDF/raw
+        End
+
+    Next agqaddin3
+    End
+
+L_PROCEDURE = "scqclasscode FILE UPDATE"
+
+Access agqCLASSCODE, Set agqCLASSCODE:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqCLASSCODE:app_no <> g_app_no
+
+    Add scqCLASSCODE
+        Begin
+        scqCLASSCODE:quote_no               = G_quote_no
+        scqCLASSCODE:PREM_NO                = agqCLASSCODE:PREM_NO
+        scqCLASSCODE:BUILD_NO               = agqCLASSCODE:BUILD_NO
+        scqCLASSCODE:CLASS_CODE             = agqCLASSCODE:CLASS_CODE
+        scqCLASSCODE:RECORD_RDF             = agqCLASSCODE:RECORD_RDF/raw
+        End
+
+    Next agqCLASSCODE
+    End
+
+L_PROCEDURE = "scqliablimits FILE UPDATE"
+
+Access agqLIABLIMITS, Set agqLIABLIMITS:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqLIABLIMITS:app_no <> g_app_no
+
+    Add scqLIABLIMITS
+        Begin
+        scqLIABLIMITS:quote_no               = G_quote_no
+        scqLIABLIMITS:RECORD_RDF             = agqLIABLIMITS:RECORD_RDF/raw
+        End
+
+    Next agqLIABLIMITS
+    End
+
+L_PROCEDURE = "scqmoney FILE UPDATE"
+
+Access agqMONEY, Set agqMONEY:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqMONEY:app_no <> g_app_no
+
+    Add scqMONEY
+        Begin
+        scqMONEY:quote_no              = G_quote_no
+        scqMONEY:RECORD_RDF             = agqMONEY:RECORD_RDF/raw
+        End
+
+    Next agqMONEY
+    End
+
+L_PROCEDURE = "scqendorse FILE UPDATE"
+
+Access agqendorse3,
+    Set agqendorse3:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqendorse3:app_no <> g_app_no
+
+    Add scqENDORSE
+        Begin
+        scqENDORSE:quote_no               = G_quote_no
+        scqENDORSE:PREM_NO                = agqendorse3:PREM_NO
+        scqENDORSE:BUILD_NO               = agqendorse3:BUILD_NO
+        scqENDORSE:CODE                   = agqendorse3:CODE/raw
+        scqENDORSE:SUB_CODE               = agqendorse3:SUB_CODE
+        scqENDORSE:RECORD_RDF             = agqendorse3:RECORD_RDF/raw
+        if agqendorse3:code = "MIM100" then
+            begin
+            scqendorse:limit[1]           = agqendorse3:limit[1] +
+                                            agqendorse3:limit[3]
+            end
+        End
+
+    Next agqendorse3
+    End
+
+L_PROCEDURE = "scqadditionalclass FILE UPDATE"
+
+Access agqadditionalclass,
+   Set agqadditionalclass:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqadditionalclass:app_no <> g_app_no
+
+    Add scqadditionalclass
+      Begin
+        scqadditionalclass:quote_no              = G_quote_no
+        scqadditionalclass:PREM_NO                = agqadditionalclass:PREM_NO
+        scqadditionalclass:BUILD_NO               = agqadditionalclass:BUILD_NO
+        scqadditionalclass:class_code             = agqadditionalclass:class_code
+        scqadditionalclass:exposure_type          = agqadditionalclass:exposure_type
+        scqadditionalclass:RECORD_RDF             = agqadditionalclass:RECORD_RDF/raw
+      End
+
+    Next agqadditionalclass
+    End
+
+L_PROCEDURE = "scqdesc FILE UPDATE"
+
+Access agqdesc3, Set agqdesc3:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqdesc3:app_no <> g_app_no
+
+    Add scqDESC
+        Begin
+        scqDESC:quote_no               = G_quote_no
+        scqDESC:PREM_NO                = agqdesc3:PREM_NO
+        scqDESC:BUILD_NO               = agqdesc3:BUILD_NO
+        scqDESC:CODE                   = agqdesc3:CODE/raw
+        scqDESC:SUB_CODE               = agqdesc3:SUB_CODE
+        scqDESC:RECORD_RDF             = agqdesc3:RECORD_RDF/raw
+        End
+
+    Next agqdesc3
+    End
+
+L_PROCEDURE = "scqprotect FILE UPDATE"
+
+Access agqPROTECT, Set agqPROTECT:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqPROTECT:app_no <> g_app_no
+
+    Add scqPROTECT
+        Begin
+        scqPROTECT:quote_no               = G_quote_no
+        scqPROTECT:PREM_NO                = agqPROTECT:PREM_NO
+        scqPROTECT:BUILD_NO               = agqPROTECT:BUILD_NO
+        scqPROTECT:RECORD_RDF             = agqPROTECT:RECORD_RDF/raw
+        End
+
+    Next agqPROTECT
+    End
+
+L_PROCEDURE = "scqprotective FILE UPDATE"
+
+Access agqPROTECTIVE, Set agqPROTECTIVE:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqPROTECTIVE:app_no <> g_app_no
+
+    Add scqPROTECTIVE
+        Begin
+        scqPROTECTIVE:quote_no               = G_quote_no
+        scqPROTECTIVE:PREM_NO                = agqPROTECTIVE:PREM_NO
+        scqPROTECTIVE:BUILD_NO               = agqPROTECTIVE:BUILD_NO
+        scqPROTECTIVE:RECORD_RDF             = agqPROTECTIVE:RECORD_RDF/raw
+        End
+
+    Next agqPROTECTIVE
+    End
+
+Update
+
+Errors
+Writefile("agqcv100sc.err","<NL>")
+Writefile("agqcv100sc.err","%S",L_PROCEDURE)
+Writefile("agqcv100sc.err","<NL>")
+Writefile("agqcv100sc.err","%N%S agqcv100.err",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv100sc.err","<NL>")
+Writefile("agqcv100sc.err","<NL>")
+
+procedure definition
+
+procedure access_sfqend
+begin
+access sfqend, set sfqend:quote_no = g_quote_no,
+                   sfqend:prem_no  = l_prem_no,
+                   sfqend:build_no = l_build_no, generic
+
+l_sub_code = 0
+while sfqend:quote_no = g_quote_no and
+      sfqend:prem_no  = l_prem_no and
+      sfqend:build_no = l_build_no
+        begin
+        if sfqend:code = l_code and
+           sfqend:updated <> 1 and
+           l_sub_code = 0 then
+            begin
+            l_sub_code = sfqend:sub_code
+            change sfqend
+                begin
+                sfqend:updated = 1
+                end
+            end
+
+        next sfqend
+        end
+
+end
+
+End

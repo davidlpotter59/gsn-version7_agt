@@ -1,0 +1,412 @@
+%%                      
+Screen
+        Name = "agtmt600a";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="sfsdefault" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_type[1] ;
+        global unsigned ascii number g_state[2] ;
+
+        global string g_company_id[10] ,
+                      g_ok_to_add[1] ,
+                      g_display_modal[1] ;
+
+        local string l_continue_2[3] ,
+                     l_continue_1[2] ,
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     i_csexec_application[25] ,
+                     l_company_id[10] ,
+                     l_username[15] ;
+
+        local unsigned ascii number l_csexec_number[12],
+                                    i_csexec_number[12] ,
+                                    l_state[2] ,
+                                    l_agent_no[4] ;
+
+        Access sfsdefault, Set sfsdefault:sfs_code = "SFS", generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        add/update="NO" tagged add_fn;
+
+        "nextscreen" display/noreturn "agtmt600" ;
+        "func1"      display/noreturn "agtmt600b" ;
+
+        include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_company_id = sfsdefault:company_id
+l_username   = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+
+l_agent_no   = sfsemail:agent_no
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = l_agent_no, generic
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+l_server_name = sfsprofile:UNIX_SERVER
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_current_web_page = "001webhelp_agtmt600a_scr_rating_info_veh_type.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+if g_display_modal <> "Y" then
+    function = "ADD"
+
+/*access validation
+if agqvehicle:app_no <> g_app_no then
+    error 1000*/
+
+screen at 1,1 to 33,100
+Properties
+        {
+          Layouttype = screen
+          layoutconstraints = stretch
+          bordercolor = "black"
+          borderwidth = 2
+          transparent = false
+          backgroundimagename="quotebackground.jpg"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_com_auto_std.gif"
+                   }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,50     tagged display_information_box
+                properties
+                  {
+                    text = "Rating Information - Select Line of Business..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     begin
+        if g_app_no = 0 then
+            begin
+            do access_sfscsexec
+            g_app_no                 = i_csexec_number
+            end
+        end
+        G_APP_NO/displayonly ;
+
+}
+
+-- top button bar
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+
+        Button at 1.5,20    tagged change_fn
+        Properties {
+                Iconname = "btn_accept_edits.bmp"
+                }
+        Events  {
+                mouseclicked = accept
+                }
+        Button at 1.5,50    tagged back_fn
+        Properties {
+                Iconname = "btn_abort_entries.bmp"
+                }
+        Events  {
+                    action
+                        {
+                        function = "back"
+                        abort()
+                        }
+                }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_printscreen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt600a.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+              }
+    }
+
+Panel at 8,1 to 11,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 2,1 to 2,40
+             properties
+               {
+                 text = "Select a Line of Business from the list:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+         }
+
+
+Panel at 9,42 to 9,100
+{
+%%
+____   _______________________________
+%%
+
+components
+
+fields
+
+0101    begin
+        access sfsline_alias, set sfsline_alias:company_id = l_company_id, generic
+
+        activehelp()
+        end
+        g_line_of_business
+        access sfsline, set sfsline:company_id       = l_company_id,
+                            sfsline:line_of_business = g_line_of_business,
+                            sfsline:lob_subline      = "00", generic
+
+        If g_line_of_business = 0 Then
+            Error "Invalid Line of Business Entered"
+
+        Activehelp if sfsline_alias:line_of_business one of 15, 16 and
+                      sfsline_alias:lob_subline = "00" then
+                       sfsline_alias:line_of_business
+                   else
+                       null,
+                   if sfsline_alias:line_of_business one of 15, 16 and
+                      sfsline_alias:lob_subline = "00" then
+                       sfsline_alias:DESCRIPTION
+                   else
+                       null/width=25;
+102     sfsline:DESCRIPTION ;
+
+}
+
+-- draw a line
+panel at 25,1 to 25,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                foregroundcolor = "black"
+              }
+    }
+
+panel at 25,1 to 33,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+}
+
+update
+if abort = "YES" then
+    begin
+    g_line_of_business = 0
+    end
+
+if abort = "NO" then
+    begin
+    g_ok_to_add = "Y"
+    if g_display_modal <> "Y" and
+       g_line_of_business <> 16 then
+        function = "nextscreen"
+    if g_display_modal <> "Y" and
+       g_line_of_business = 16 then
+        function = "func1"
+    end
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END
+
+procedure access_sfscsexec
+begin
+i_csexec_application = "APQQUOTE                 "
+
+access sfscsexec, set sfscsexec:application = i_csexec_application, generic
+
+change sfscsexec
+    begin
+    i_csexec_number = sfscsexec:application_number + 1
+    sfscsexec:application_number = i_csexec_number
+    end
+
+end
+
+End

@@ -1,0 +1,138 @@
+%%
+Program
+        Name = "agq" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+         Global Unsigned Ascii Number G_OLD_QUOTE[8] ,
+                                      G_QUOTE_NO[8] ;
+
+         String L_PROCEDURE[20] ,
+                L_QUOTE_NO[8] ,
+                L_NEW_QUOTE_NO[8] ;
+
+Initialisation
+L_QUOTE_NO = COMMANDLINE[1,8]
+L_NEW_QUOTE_NO = COMMANDLINE[10,17]
+G_OLD_QUOTE = Val(L_QUOTE_NO)
+G_QUOTE_NO = Val(L_NEW_QUOTE_NO)
+
+Access SFQNAME, Set SFQNAME:QUOTE_NO = G_OLD_QUOTE, Exact
+
+L_PROCEDURE = "cpqartdeduct FILE UPDATE"
+
+Access CPQartdeduct_ALIAS, Set CPQartdeduct_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If CPQartdeduct_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add CPQartdeduct
+        Begin
+        CPQartdeduct:QUOTE_NO               = G_QUOTE_NO
+        CPQartdeduct:RECORD_RDF             = CPQartdeduct_ALIAS:RECORD_RDF/raw
+        End
+
+    Next CPQartdeduct_ALIAS
+    End
+
+L_PROCEDURE = "cpqartisan FILE UPDATE"
+
+Access CPQartisan_ALIAS, Set CPQartisan_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If CPQartisan_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add CPQartisan
+        Begin
+        CPQartisan:QUOTE_NO               = G_QUOTE_NO
+        CPQartisan:PREM_NO                = CPQartisan_ALIAS:PREM_NO
+        CPQartisan:BUILD_NO               = CPQartisan_ALIAS:BUILD_NO
+        CPQartisan:CLASS_CODE             = CPQartisan_ALIAS:CLASS_CODE
+        CPQartisan:RECORD_RDF             = CPQartisan_ALIAS:RECORD_RDF/raw
+        End
+
+    Next CPQartisan_ALIAS
+    End
+
+L_PROCEDURE = "cpqartlimits FILE UPDATE"
+
+Access CPQartlimits_ALIAS, Set CPQartlimits_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If CPQartlimits_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add CPQartlimits
+        Begin
+        CPQartlimits:QUOTE_NO               = G_QUOTE_NO
+        CPQartlimits:RECORD_RDF             = CPQartlimits_ALIAS:RECORD_RDF/raw
+        End
+
+    Next CPQartlimits_ALIAS
+    End
+
+L_PROCEDURE = "cpqartdeviation FILE UPDATE"
+
+Access CPQartdeviation_ALIAS, Set CPQartdeviation_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If CPQartdeviation_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add CPQartdeviation
+        Begin
+        CPQartdeviation:QUOTE_NO               = G_QUOTE_NO
+        CPQartdeviation:RECORD_RDF             = CPQartdeviation_ALIAS:RECORD_RDF/raw
+        End
+
+    Next CPQartdeviation_ALIAS
+    End
+
+L_PROCEDURE = "cpqisocrime FILE UPDATE"
+
+Access CPQisocrime_ALIAS, Set CPQisocrime_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If CPQisocrime_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add CPQisocrime
+        Begin
+        CPQisocrime:QUOTE_NO               = G_QUOTE_NO
+        CPQisocrime:PREM_NO                = CPQisocrime_ALIAS:PREM_NO
+        CPQisocrime:BUILD_NO               = CPQisocrime_ALIAS:BUILD_NO
+        CPQisocrime:crime_form             = CPQisocrime_ALIAS:crime_form
+        CPQisocrime:RECORD_RDF             = CPQisocrime_ALIAS:RECORD_RDF/raw
+        End
+
+    Next CPQisocrime_ALIAS
+    End
+
+L_PROCEDURE = "cpqisoblanket FILE UPDATE"
+
+Access CPQisoblanket_ALIAS, Set CPQisoblanket_ALIAS:QUOTE_NO = G_OLD_QUOTE, Approximate
+
+Repeat Begin
+    Exit If CPQisoblanket_ALIAS:QUOTE_NO <> G_OLD_QUOTE
+
+    Add CPQisoblanket
+        Begin
+        CPQisoblanket:QUOTE_NO               = G_QUOTE_NO
+        CPQisoblanket:PREM_NO                = CPQisoblanket_ALIAS:PREM_NO
+        CPQisoblanket:BUILD_NO               = CPQisoblanket_ALIAS:BUILD_NO
+        CPQisoblanket:rate_type              = CPQisoblanket_ALIAS:rate_type
+        CPQisoblanket:RECORD_RDF             = CPQisoblanket_ALIAS:RECORD_RDF/raw
+        End
+
+    Next CPQisoblanket_ALIAS
+    End
+
+Update
+
+Errors
+Writefile("cpqcv200.err","<NL>")
+Writefile("cpqcv200.err","%S",L_PROCEDURE)
+Writefile("cpqcv200.err","<NL>")
+Writefile("cpqcv200.err","%N%S cpqcv200 errors ",ERRORNUMBER, ERRORTEXT)
+Writefile("cpqcv200.err","<NL>")
+Writefile("cpqcv200.err","<NL>")
+
+End

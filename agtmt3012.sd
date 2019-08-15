@@ -1,0 +1,663 @@
+%%                 
+Screen
+        Name = "agtmt3012";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqaddin1" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_form[1] ;
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_article[20],
+                      g_answer[1],
+                      g_code[7] ;
+
+        local array[2] of tag l_the_tag[15] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_remove_form[1],
+                                    l_additional_insured[1],
+                                    l_additional_interest[1],
+                                    l_prior_additional_insured[1],
+                                    l_prior_additional_interest[1],
+                                    l_rate[6]=0/dec=3,
+                                    l_per[5]=0,
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ,
+                                    l_limit[8],
+                                    l_option_1,
+                                    l_option_2,
+                                    l_option_3,
+                                    l_option_4,
+                                    l_option_5,
+                                    l_option_6,
+                                    l_option_7,
+                                    l_option_8,
+                                    l_option_9,
+                                    l_option_10,
+                                    l_agqend_sub_code[4] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_mpl49[1],
+                     l_system_id[15],
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_screen[10],
+                     l_valid[1]="N",
+                     l_description[55] ;
+
+        Access agqaddin1,
+           Set agqaddin1:app_NO   = G_app_NO ,
+               agqaddin1:prem_no  = g_prem_no,
+               agqaddin1:build_no = g_build_no;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        add/update="no"   tagged add_fn ;
+
+        "redisplay" display/noreturn "agtmt3012" ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+do read_agqaddin1
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access plsdefault, set plsdefault:company_id = agqpersonal:company_id,
+                       plsdefault:line_of_business = agqpersonal:line_of_business, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : if agqpersonal:company_id = "FARMERS" and
+                   agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+                   plsdefault:rating_algorithm_date <> 0 then
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3_new,iconname,"title_mho3.bmp")
+                      case 4  : setproperty(t_mho4_new,iconname,"title_mho4.bmp")
+                      case 6  : setproperty(t_mho6_new,iconname,"title_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3_new,iconname,"")
+                                setproperty(t_mho4_new,iconname,"")
+                                setproperty(t_mho6_new,iconname,"")
+                                end
+                      end
+                    end
+                else
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                      case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                      case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3,iconname,"")
+                                setproperty(t_mho4,iconname,"")
+                                setproperty(t_mho6,iconname,"")
+                                end
+                      end
+                   end
+
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+--if agqaddin1:app_no <> g_app_no or
+--   agqaddin1:prem_no <> g_prem_no or
+--   agqaddin1:build_no <> g_build_no then
+--    function = "ADD"
+
+Access Validation
+If agqaddin1:app_NO <> G_app_NO or
+   agqaddin1:prem_no <> g_prem_no or
+   agqaddin1:build_no <> g_build_no Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+    fontstyle = BOLD
+
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho3_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,20 tagged t_mho4_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho6_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,55     tagged display_information_box
+                properties
+                  {
+                    text = "MPL 40 - Additional Insureds/Additional Interests"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt3012.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 12,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,20 to 1,45 tagged add_insured
+             properties
+                 {
+                 text = "Additional Insured:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              do display_view("agtmt3012a")
+                              }
+                 }
+
+           guidetext at 2,20 to 2,45 tagged add_interest
+             properties
+                 {
+                 text = "Additional Interest:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              do display_view("agtmt3012b")
+                              }
+                 }
+        }
+
+Panel at 8,50 to 12, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~~_
+~~~_
+
+%%
+
+components
+
+Fields
+101     begin
+        if l_additional_insured = 1 then
+            begin
+            l_the_tag[1] = tag("add_insured")
+            l_screen = "agtmt3012a"
+            do display_blue(l_the_tag[1],"blue",l_screen)
+            end
+        l_prior_additional_insured = l_additional_insured
+        End
+        l_additional_insured/checkbox/values="0,1"/tabstop
+        if l_additional_insured = 1 and
+           l_prior_additional_insured = 0 then
+            begin
+            display modal screen "agtmt3012a"
+            end
+
+        if l_additional_insured = 0 and
+           l_prior_additional_insured = 1 then
+            do delete_add_insured ;
+201     begin
+        if l_additional_interest = 1 then
+            begin
+            l_the_tag[2] = tag("add_interest")
+            l_screen = "agtmt3012b"
+            do display_blue(l_the_tag[2],"blue",l_screen)
+            end
+        l_prior_additional_interest = l_additional_interest
+        end
+        l_additional_interest/checkbox/values="0,1"/tabstop
+        if l_additional_interest = 1 and
+           l_prior_additional_interest = 0 then
+            display modal screen "agtmt3012b"
+        if l_additional_interest = 0 and
+           l_prior_additional_interest = 1 then
+            do delete_add_interest ;
+
+}
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,35 to 23,100 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+Update
+function = "redisplay"
+
+
+procedure definition
+
+Procedure read_agqaddin1
+Begin
+Access agqaddin1_ALIAS, Set agqaddin1_ALIAS:app_no  = G_app_no,
+                           agqaddin1_ALIAS:PREM_NO  = G_PREM_NO,
+                           agqaddin1_ALIAS:BUILD_NO = G_BUILD_NO, Generic
+
+l_additional_insured  = 0
+l_additional_interest = 0
+while agqaddin1_ALIAS:app_no   = G_app_no and
+      agqaddin1_ALIAS:PREM_NO  = G_PREM_NO and
+      agqaddin1_ALIAS:BUILD_NO = G_BUILD_NO
+        begin
+        if agqaddin1_alias:name[1] <> "" then
+            l_additional_insured = 1
+        if agqaddin1_alias:name[4] <> "" then
+            l_additional_interest = 1
+
+        Next agqaddin1_ALIAS
+        End
+
+End
+
+procedure display_blue(tag l_tag, string l_color, string l_display_screen)
+begin
+    setproperty(l_tag,foregroundcolor,l_color)
+end
+
+procedure display_view (string l_screen_name)
+begin
+l_screen = l_screen_name
+display modal screen l_screen
+function = "redisplay"
+abort()
+
+end
+
+Procedure delete_add_insured
+Begin
+Access agqaddin1_ALIAS, Set agqaddin1_ALIAS:app_no  = G_app_no,
+                            agqaddin1_ALIAS:PREM_NO  = G_PREM_NO,
+                            agqaddin1_ALIAS:BUILD_NO = G_BUILD_NO, Generic
+
+while agqaddin1_ALIAS:app_no   = G_app_no and
+      agqaddin1_ALIAS:PREM_NO  = G_PREM_NO and
+      agqaddin1_ALIAS:BUILD_NO = G_BUILD_NO
+        begin
+        change agqaddin1_alias
+            begin
+            agqaddin1_alias:name[1] = ""
+            agqaddin1_alias:name[2] = ""
+            agqaddin1_alias:name[3] = ""
+            agqaddin1_alias:address[1] = ""
+            agqaddin1_alias:address[2] = ""
+            agqaddin1_alias:address[3] = ""
+            agqaddin1_alias:city[1] = ""
+            agqaddin1_alias:str_state[1] = ""
+            agqaddin1_alias:str_zipcode[1] = ""
+            agqaddin1_alias:interest[1] = ""
+            agqaddin1_alias:location[1] = ""
+            agqaddin1_alias:location[2] = ""
+            agqaddin1_alias:location[3] = ""
+            end
+
+        Next agqaddin1_ALIAS
+        End
+
+function = "redisplay"
+End
+
+Procedure delete_add_interest
+Begin
+Access agqaddin1_ALIAS, Set agqaddin1_ALIAS:app_no  = G_app_no,
+                            agqaddin1_ALIAS:PREM_NO  = G_PREM_NO,
+                            agqaddin1_ALIAS:BUILD_NO = G_BUILD_NO, Generic
+
+while agqaddin1_ALIAS:app_no   = G_app_no and
+      agqaddin1_ALIAS:PREM_NO  = G_PREM_NO and
+      agqaddin1_ALIAS:BUILD_NO = G_BUILD_NO
+        begin
+        change agqaddin1_alias
+            begin
+            agqaddin1_alias:name[4] = ""
+            agqaddin1_alias:name[5] = ""
+            agqaddin1_alias:name[6] = ""
+            agqaddin1_alias:address[4] = ""
+            agqaddin1_alias:address[5] = ""
+            agqaddin1_alias:address[6] = ""
+            agqaddin1_alias:city[2] = ""
+            agqaddin1_alias:str_state[2] = ""
+            agqaddin1_alias:str_zipcode[2] = ""
+            agqaddin1_alias:interest[2] = ""
+            agqaddin1_alias:section = 0
+            end
+
+        Next agqaddin1_ALIAS
+        End
+
+function = "redisplay"
+End
+
+End

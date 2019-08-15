@@ -1,0 +1,548 @@
+%%                      
+Screen
+        Name = "agtmt8004z";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="agqdesc4" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_state[2] ;
+        global unsigned ascii number g_sub_code[4] ;
+
+        global string g_company_id[10] ,
+                      g_code[7] ;
+
+        Local Unsigned Ascii Number L_SUB_CODE[4]=0,
+                                    l_line_of_business[4]=0008 ,
+                                    l_class_code[5]=0,
+                                    l_deductible[5]=0 ,
+                                    l_deductible_factor[6]=0/dec=3,
+                                    l_premium[8]=0,
+                                    l_rmf[5]=0/dec=3,
+                                    l_lob[4]=0,
+                                    l_state[2],
+                                    l_loss_cost[6]=0/dec=4,
+                                    l_rate_1[7]=0/dec=4,
+                                    l_rate_2[7]=0/dec=4,
+                                    l_rate_3[7]=0/dec=4,
+                                    l_rate_4[7]=0/dec=4,
+                                    l_rate_5[7]=0/dec=4,
+                                    l_limit_1[8]=0,
+                                    l_limit_2[8]=0,
+                                    l_limit_3[8]=0,
+                                    l_limit_4[8]=0,
+                                    l_limit_5[8]=0;
+
+        Local String L_CODE[7],
+                     L_CODE_1[7],
+                     L_FORM_EDITION[18],
+                     l_username[15],
+                     L_DESCRIPTION[55],
+                     L_ADD_ENDORSEMENT[1]="N" ,
+                     l_desc[50] ,
+                     l_company_id[10],
+                     l_desc_1[50] ;
+
+        Access agqdesc4,
+           Set agqdesc4:app_no     = G_app_no,
+               agqdesc4:prem_no    = g_prem_no,
+               agqdesc4:build_no   = g_build_no,
+               agqdesc4:code = g_code, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt8004z" ;
+
+        reaccess ;
+
+        include "stdfunc7.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+disable(accept_fn)
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+l_username = username
+l_company_id = sfsdefault:company_id
+
+l_username = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = sfsemail:agent_no, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+Access SFSLINE_ALIAS, Set SFSLINE_alias:COMPANY_ID       = l_company_id,
+                          SFSLINE_alias:LINE_OF_BUSINESS = g_line_of_business,
+                          SFSLINE_alias:LOB_SUBLINE      = "00", Generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = l_company_id,
+                    SFSLINE:LINE_OF_BUSINESS = g_line_of_business,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access agqname, set agqname:app_no = g_app_no,generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(delete_fn)
+    disable(accept_fn)
+    end
+
+/*if agqdesc4:app_no = 0 then
+    begin
+    disable(previous_fn)
+    disable(next_fn)
+    end*/
+
+access validation
+if agqdesc4:app_no     <> g_app_no or
+   agqdesc4:prem_no    <> g_prem_no or
+   agqdesc4:build_no   <> g_build_no or
+   agqdesc4:code <> g_code then
+    error 1000
+
+/*access agqdesc4_alias, set agqdesc4_alias:app_no = agqdesc4:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqdesc4_alias:app_no = agqdesc4:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqdesc4_alias:prem_no) +
+                               str(agqdesc4_alias:build_no)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqdesc4_alias:prem_no) +
+                           str(agqdesc4_alias:build_no)
+    l_no_locations  = l_no_locations + 1
+
+    next agqdesc4_alias
+    end
+
+l_str_location = str(agqdesc4:prem_no) +
+                 str(agqdesc4:build_no)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end*/
+
+screen at 1,1 to 30,100
+Properties
+        {
+          Layouttype = screen
+          transparent = False
+          fontstyle = BOLD
+          backgroundcolor = "#ADD8E6"
+          scrollbarpolicy = asneeded
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,65     tagged display_information_box
+                properties
+                  {
+                    text = "Inland Marine Information - Detail..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+Properties {
+           LayoutType = screen
+           }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     begin
+        access agqinland, set agqinland:app_no   = g_app_no,
+                              agqinland:prem_no  = g_prem_no,
+                              agqinland:build_no = g_build_no, generic
+
+        if function one of "ADD", "CHANGE" then
+            begin
+            disable(back_fn)
+            enable(accept_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            enable(back_fn)
+            end
+
+        access agqinland, set agqinland:app_no   = g_app_no,
+                              agqinland:prem_no  = g_prem_no,
+                              agqinland:build_no = g_build_no, generic
+
+        if function one of "ADD", "NEW" then
+            begin
+            agqdesc4:app_no                  = g_app_no
+            agqdesc4:prem_no                 = g_prem_no
+            agqdesc4:build_no                = g_build_no
+            agqdesc4:code                    = g_code
+            end
+        end
+        agqdesc4:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        Button at 1.5,1   tagged add_fn
+            Properties {
+                       Iconname = "btn_add.bmp"
+                       }
+            Events     {
+                       Action = add_fn
+                       }
+
+        Button at 1.5,38    tagged change_fn
+            Properties {
+                       Iconname = "btn_edit.bmp"
+                       }
+            Events     {
+                       Action = change_fn
+                       }
+
+        Button at 1.5, 70 tagged delete_fn
+            Properties {
+                       Iconname = "btn_delete.bmp"
+                       }
+            Events     {
+                       Action = delete_fn
+                       }
+    }
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        Button to 1,1
+            properties {
+                       Iconname = "btn_print_screen.bmp"
+                       }
+            events     {
+                       action {
+                              function = "print"
+                              abort()
+                              }
+                       }
+    }
+
+Panel at 6.45,92
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        guidetext to 1,1
+            properties {
+                       text = "agtmt8004z.sd"
+                       fontsize = 9
+                       }
+    }
+
+Panel at 7,1 to 9,100
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        guidetext at 1.5,24 to 2.5,36
+            properties {
+                       text = "Location No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+
+        guidetext at 1.5,44 to 2.5,56
+            properties {
+                       text = "Building No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+    }
+
+Panel at 7.5,33 to 9,60 Tagged rating_pl
+{
+%%
+____                ____
+
+%%
+
+components
+
+fields
+101   agqdesc4:prem_no/displayonly ;
+102   agqdesc4:build_no/displayonly ;
+
+}
+
+Panel at 7,70 to 7,100
+    Properties {
+               layouttype = row
+               }
+    {
+    Components
+        Button at 1,55 tagged accept_fn
+            properties {
+                       Iconname = "btn_accept_edits.bmp"
+                       }
+            Events     {
+                       mouseclicked = accept
+                       }
+
+    }
+
+
+Panel at 9,5 to 28,100
+{
+%%
+Limit:   __________
+
+                              Description
+
+___________________________________________________________________________
+
+
+
+
+
+
+
+
+
+
+
+%%
+
+components
+
+Fields
+101     agqdesc4:LIMIT;
+501     agqdesc4:DESCRIPTION/freetextlines=10 ;
+
+}
+
+-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,120
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+Panel at 30,1 to 30,100 Tagged icon_line2_tg
+Properties {
+           LayoutType = screen
+           }
+{
+Components
+    Button at 1,75   tagged back_fn
+        Properties {
+                   Iconname = "btn_close.bmp"
+                   }
+        Events     {
+                   Action {
+                          function = "back"
+                          abort()
+                          }
+                    }
+
+}
+
+}
+
+Update
+if UPDATEOK = "NO" then
+    begin
+    disable(accept_fn)
+    enable(back_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(back_fn)
+    End
+
+Procedure Definition
+
+Procedure SUBCODE
+Begin
+Access agqdesc4_ALIAS, Set agqdesc4_ALIAS:app_no   = G_app_no,
+                           agqdesc4_ALIAS:PREM_NO  = G_PREM_NO,
+                           agqdesc4_ALIAS:BUILD_NO = G_BUILD_NO,
+                           agqdesc4_ALIAS:CODE     = G_CODE, generic
+
+L_SUB_CODE = 0
+while agqdesc4_ALIAS:app_no   = G_app_no and
+      agqdesc4_ALIAS:PREM_NO  = G_PREM_NO and
+      agqdesc4_ALIAS:BUILD_NO = G_BUILD_NO and
+      agqdesc4_ALIAS:CODE     = G_CODE
+        begin
+        L_SUB_CODE = agqdesc4_ALIAS:SUB_CODE
+
+        Next agqdesc4_ALIAS
+        End
+
+agqdesc4:SUB_CODE = L_SUB_CODE + 10
+
+End
+
+End

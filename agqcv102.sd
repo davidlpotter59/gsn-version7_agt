@@ -1,0 +1,376 @@
+%%
+Program
+        Name = "agqcv102" ;
+        Type = "file" ;
+        Padcharacter = Space ;
+        Domain = "flat" ;
+
+        Global Unsigned Ascii Number G_POLICY_NO[9] ,
+                                     G_YEAR[4],
+                                     G_END_SEQUENCE[4],
+                                     G_QUOTE_NO[8] ,
+                                     g_new_quote_no[8],
+                                     g_agent_no[4],
+                                     g_app_no[11],
+                                     G_PREM_NO[4],
+                                     G_BUILD_NO[4],
+                                     G_LINE_OF_BUSINESS[4] ;
+
+        global string g_agent_name[50] ,
+                      g_renewal[1] ;
+
+        Local String L_ADD_SUPP[1] ,
+                     L_LOCATION_EMPTY[1]="N",
+                     l_mortgage_id_error[1]="N",
+                     l_sfqmaster_totals[1]="N",
+                     l_underlying_empty[1]="N",
+                     l_inland_empty[1]="N",
+                     l_str_year[4]="",
+                     l_detail_empty[1]="N",
+                     l_no_receipts[1]="N",
+                     L_POLICY_STRING[25] ,
+                     L_POLICY_STAT_STRING[29],
+                     L_CLOSE_QUOTE[1]="Y",
+                     L_STATUS[10]="" ,
+                     L_LOB_SUBLINE[2]="01" ,
+                     l_contact[50],
+                     l_telephone[12],
+                     L_CODE[7]="" ,
+                     L_STAT_PROGRAM[8]="" ;
+
+        Local Signed Ascii Number I_ANNUAL[8]=0 ,
+                                  I_AMT_DUE[8]=0 ;
+
+        Local Unsigned Ascii Number L_YEAR[4]=0 ,
+                                    L_END_SEQUENCE[4]=0,
+                                    l_history[1]=0,
+                                    l_class_code[5]=0,
+                                    l_year_1[4]=0,
+                                    l_group_no[2]=0,
+                                    l_no_days[3]=0,
+                                    l_build_no[4]=0,
+                                    L_YEAR_IN[4]=0,
+                                    L_DIFF_YEAR[4]=0,
+                                    l_bop_type[1]=0,
+                                    l_policy_premium[6]=0,
+                                    l_first_premium[10]=0/dec=2 ,
+                                    l_second_premium[10]=0/dec=2 ,
+                                    l_total_premium[10]=0/dec=2 ;
+
+        local date l_hold_date[8] ;
+
+        String L_ENTER[1];
+
+        Include "update.var"
+
+        Include "csexec.var"
+
+initialisation
+g_app_no   = val(commandline[1,11])
+g_quote_no = val(commandline[12,19])
+
+do update_files
+
+update
+
+Procedure Definition
+
+Procedure UPDATE_FILES
+Begin
+access sfqname, set sfqname:quote_no = g_quote_no, generic
+
+If SFQNAME:POLICY_NO = 0 Then
+    Begin
+    Access SFSLINE, Set SFSLINE:COMPANY_ID       = SFQNAME:COMPANY_ID,
+                        SFSLINE:LINE_OF_BUSINESS = SFQNAME:LINE_OF_BUSINESS,
+                        SFSLINE:LOB_SUBLINE      = "00", Generic
+
+
+    Access SFSCOMPANY, Set SFSCOMPANY:COMPANY_ID = SFQNAME:COMPANY_ID, Generic
+
+    If SFSCOMPANY:GENERATE_POLICY_NO = 1 Then
+        Do GET_POLICY_NO
+
+    G_YEAR             = Year(SFQNAME:EFF_DATE)
+    G_END_SEQUENCE     = 0
+    G_LINE_OF_BUSINESS = SFQNAME:LINE_OF_BUSINESS
+
+    Switch(SFSLINE:LOB_CODE)
+      Case "BOP"              : Do UPDATE_BOP
+      Case "AUTO"             : Do UPDATE_CAS
+      Case "HOME", "DWELLING" : do update_pls
+      Case "SCP"              : Do UPDATE_SCS
+      End
+
+    I_STATUS      = ""
+    I_STATUS1     = 0
+    I_STATUS_DATE = SFQNAME:EFF_DATE
+
+    access agqname, set agqname:app_no = g_app_no, generic
+
+    if agqname:app_no = g_app_no then
+        begin
+        change agqname
+            begin
+            agqname:policy_no = g_policy_no
+            end
+        end
+
+    If SFQNAME:PREVIOUS_POLICY_NO = 0 Then
+        I_TRANS_CODE = 10
+    Else
+    If SFQNAME:PREVIOUS_POLICY_NO <> 0 And
+       SFQNAME:QUOTE_TYPE = "W" Then
+         Begin
+         access sfpcurrent, set sfpcurrent:policy_no = sfqname:previous_policy_no, generic
+
+         L_YEAR         = sfpcurrent:pol_year
+         L_END_SEQUENCE = 0
+         Access SFPMASTER, Set SFPMASTER:POLICY_NO    = SFQNAME:PREVIOUS_POLICY_NO,
+                               SFPMASTER:POL_YEAR     = L_YEAR,
+                               SFPMASTER:END_SEQUENCE = L_END_SEQUENCE, Generic
+
+         I_TRANS_CODE = SFPMASTER:TRANS_CODE
+         If I_TRANS_CODE = 0 Then
+             begin
+             I_TRANS_CODE = 10
+             end
+         End
+    Else
+        I_TRANS_CODE = 14
+
+    Switch(SFSLINE:LOB_CODE)
+      Case "BOP" :  L_CODE = "MCM400"
+      Default    :  L_CODE = ""
+      End
+
+    L_STATUS = "CURRENT"
+    Include "sfpname.pro"
+
+    include "sfpnamewc.pro"
+
+    access sfsagent, set sfsagent:company_id = sfqname:company_id,
+                         sfsagent:agent_no   = sfqname:agent_no, generic
+
+    G_AGENT_NAME = SFSAGENT:NAME[1]
+    Do COMM_RATE
+
+    L_DIFF_YEAR = Year(SFPNAME:EXP_DATE) - Year(SFPNAME:EFF_DATE)
+    Include "sfpmaster.pro"
+
+    include "sfpamt.pro"
+
+    include "sfpamt1.pro"
+
+    include "sfpmastsupp.pro"
+
+    Include "sfpani.pro"
+
+    Include "sfplocation.pro"
+
+    Include "sfpsupp.pro"
+
+    Include "sfpsupp1.pro"
+
+    Include "sfpend.pro"
+
+    Include "sfpend1.pro"
+
+    Include "sfpmisc.pro"
+
+    Include "sfpnotes.pro"
+
+    Include "sfppoint.pro"
+
+    Include "sfpcurrent.pro"
+
+    Include "sfpreins.pro"
+
+    include "sfpreins1.pro"
+
+    include "sfpmailingaddress.pro"
+
+    include "sfpproperty.pro"
+
+    include "sfpclaim.pro"
+
+    include "sfplosses.pro"
+
+    include "sfpcreditscore.pro"
+
+    include "sfpemail.pro"
+
+    include "sfpepl.pro"
+
+    include "sfpfobinfo.pro"
+
+    If SFSDEFAULT:INSPECTIONS = "Y" and
+       sfsline:lob_code not one of "AUTO" Then
+        Begin
+        Include "sfpinspections.pro"
+        End
+
+    If SFSDEFAULT:INSPECTIONS = "Y" and
+       sfsline:lob_code one of "AUTO" Then
+        Begin
+        Include "sfpinspections1.pro"
+        End
+
+    If SFSDEFAULT:PREMIUMS = "Y" Then
+        Begin
+        Do UPDATE_PRTRANS
+        End
+
+    If SFSDEFAULT:AR = "Y" Then
+        Begin
+        If SFSCOMPANY:DEBUG_MODE = 0 Then
+            Proc("cli csbatch arsup001")/noconsole
+        Else
+            Proc("cli csbatch arsup001")
+        End
+
+/*    If SFSDEFAULT:SORT_BY_AGENT = "Y" Then
+        Begin
+        Include "sfpprint6.pro"
+        End
+    Else
+        Begin
+        Include "sfpprint.pro"
+        End*/
+
+    L_CLOSE_QUOTE = "Y"
+    G_NEW_QUOTE_NO = 0
+    Include "sfqname_alias.pro"
+    end
+
+End
+
+Procedure UPDATE_BOP
+Begin
+L_POLICY_STRING = Str(g_app_no,11) + Str(G_POLICY_NO,9) +
+                  str(g_year,4) + str(g_end_sequence,4)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv102b %s",L_POLICY_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv102b %s",L_POLICY_STRING)
+
+End
+
+Procedure UPDATE_SCS
+Begin
+L_POLICY_STRING = Str(g_app_no,11) + Str(G_POLICY_NO,9) +
+                  str(g_year,4) + str(g_end_sequence,4)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv102sc %s",L_POLICY_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv102sc %s",L_POLICY_STRING)
+
+End
+
+Procedure UPDATE_CAS
+Begin
+L_POLICY_STRING = Str(g_app_no,11) + Str(G_POLICY_NO,9) +
+                  str(g_year,4) + str(g_end_sequence,4)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv102a %s",L_POLICY_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv102a %s",L_POLICY_STRING)
+
+End
+
+Procedure UPDATE_PLS
+Begin
+L_POLICY_STRING = Str(g_quote_no,8) + Str(G_POLICY_NO,9) +
+                  str(g_year,4) + str(g_end_sequence,4)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc ("cli csbatch agqcv102p %s",L_POLICY_STRING)/noconsole
+Else
+    Proc ("cli csbatch agqcv102p %s",L_POLICY_STRING)
+End
+
+Procedure UPDATE_PRTRANS
+Begin
+If SFSCOMPANY:DEBUG_MODE = 1 Then
+    Proc (":cli csbatch %s %s%s%s",SFSCOMPANY:PRSTRANS_BATCH_PROGRAM[1],Str(G_POLICY_NO,"999999999"),Str(G_YEAR,"9999"),Str(G_END_SEQUENCE,"9999"))
+Else
+    Proc (":cli csbatch %s %s%s%s",SFSCOMPANY:PRSTRANS_BATCH_PROGRAM[1],Str(G_POLICY_NO,"999999999"),Str(G_YEAR,"9999"),Str(G_END_SEQUENCE,"9999"))/noconsole
+End
+
+Procedure GET_POLICY_NO
+Begin
+Switch(SFSLINE:LOB_CODE)
+  Case "BOP"       : Begin
+                     If SFSLINE:OPTION = "P" Then
+                         I_CSEXEC_APPLICATION = "BOPSPOLICY               " -- bop restaurant
+                     else
+                     if sfsline:option = "S" then
+                         i_csexec_application = "BOPCPOLICY               " -- bop condo
+                     Else
+                         I_CSEXEC_APPLICATION = "BOPPOLICY                " -- bop standard
+                     End
+  Case "AUTO"      : I_CSEXEC_APPLICATION = "CAPPOLICY                " -- auto
+  Case "HOME"      : I_CSEXEC_APPLICATION = "HOPPOLICY                " -- homeowners
+  Case "DWELLING"  : I_CSEXEC_APPLICATION = "CDPPOLICY                " -- dwelling fire
+  Case "SCP"       : I_CSEXEC_APPLICATION = "SCPPOLICY                " -- special contractors
+  End
+
+Include "sfscsexec.pro"
+
+G_POLICY_NO = I_CSEXEC_NUMBER
+End
+
+Procedure SFPINSPECTION_SUBCODE
+Begin
+Access SFPINSPECTIONS_ALIAS, Set SFPINSPECTIONS_ALIAS:POLICY_NO    = G_POLICY_NO,
+                                 SFPINSPECTIONS_ALIAS:POL_YEAR     = G_YEAR,
+                                 SFPINSPECTIONS_ALIAS:END_SEQUENCE = G_END_SEQUENCE,
+                                 SFPINSPECTIONS_ALIAS:PREM_NO      = SFQLOCATION:PREM_NO,
+                                 SFPINSPECTIONS_ALIAS:BUILD_NO     = SFQLOCATION:BUILD_NO, Generic
+
+I_SUB_CODE = 0
+while SFPINSPECTIONS_ALIAS:POLICY_NO    = G_POLICY_NO and
+      SFPINSPECTIONS_ALIAS:POL_YEAR     = G_YEAR and
+      SFPINSPECTIONS_ALIAS:END_SEQUENCE = G_END_SEQUENCE and
+      SFPINSPECTIONS_ALIAS:PREM_NO      = SFQLOCATION:PREM_NO and
+      SFPINSPECTIONS_ALIAS:BUILD_NO     = SFQLOCATION:BUILD_NO
+    begin
+    I_SUB_CODE = SFPINSPECTIONS_ALIAS:SUB_CODE
+
+    Next SFPINSPECTIONS_ALIAS
+    End
+
+I_SUB_CODE = I_SUB_CODE + 10
+End
+
+Procedure COMM_RATE
+Begin
+I_COMPANY_ID = SFQNAME:COMPANY_ID
+I_AGENT_NO   = SFQNAME:AGENT_NO
+I_LOB        = SFQNAME:LINE_OF_BUSINESS
+I_EFF_DATE   = SFQNAME:EFF_DATE
+I_COMM       = 0
+
+Include "sfsagtcomm.pro"
+
+if sfqname:previous_policy_no <> 0 then
+    i_comm = i_renewal_comm
+
+access bopgeneral, set bopgeneral:policy_no    = g_policy_no,
+                       bopgeneral:pol_year     = g_year,
+                       bopgeneral:end_sequence = g_end_sequence, generic
+
+l_bop_type   = bopgeneral:bop_type
+l_class_code = bopgeneral:class_code
+
+if ((l_bop_type one of 3 or
+   l_class_code one of 22) and
+   sfsline:lob_code one of "BOP" and
+   i_habitational_comm <> 0) then
+    i_comm = i_habitational_comm
+End
+
+End

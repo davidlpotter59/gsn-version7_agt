@@ -1,0 +1,105 @@
+%%
+/*
+Date Written: January 20, 2011
+
+Name: hopcomments.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+01/20/2011            JLB            Adverse Action Notification Insurance Scoring Notice
+10/20/2011            JLB            revised as per Salem
+===========================
+*/
+
+Program
+  Name = "hopcomments";
+  Type = "File";
+  Domain = "sfsdefault";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[14] = "hopcomments.cq";
+
+ unsigned ascii number l_policy_no[9] ;
+ Unsigned Ascii Number  l_page_counter;
+ string l_hopcomments_exists[1]="N";
+ String L_COMPANY_ID[10];
+ string l_enter;
+ Number L_BREAK = 40;     --number of characters printed before break
+ Number L_BREAK_POINT;    --where the break occurs and newline is inserted
+ Number L_LOOP=0;
+ Number L_PAGE_NUMBER = 0;
+ Number L_ITEM_NO = 1;
+
+ String L_SFPLOCATION_ZIP,
+        l_credit_error_message[300],
+        l_risk_scoring_code;
+
+ Unsigned Ascii Number l_form[2],
+                       l_max_lines = 60;
+ Unsigned Ascii Number L_YEAR[4];
+ Unsigned Ascii number L_LINE_OF_BUSINESS[4];
+ Unsigned ascii number l_found[1];
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_LINE_COUNTER=0;
+ Unsigned Ascii Number L_STATE[2]=0;
+ wdate L_EFF_DATE;
+
+   Include "csfonts.inc"
+   Include "swsut100.var"
+   Include "swsut200.var"
+ --Include "swsut300.var"
+   Include "center2.var"
+   Include "line_spacing.var"
+   Include "sfsrevname.var"
+
+Initialization
+Deletefile (L_FILE_NAME);
+writefile  (l_file_name,"%s","<FF>")
+l_policy_no = val(commandline[1,9])
+Access sfpname, Set sfpname:policy_no = l_policy_no, generic
+
+access sfqname, set sfqname:quote_no = sfpname:quote_no, generic
+
+access agqstatusnotes, set agqstatusnotes:app_no = sfqname:app_no, generic
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s%s%s%s",L_ARIAL_12,"<033>&a400h+120V",
+                      "Policy Number:     ",str(sfpname:policy_no,"ZZZZZZZZ"))
+Writefile(L_FILE_NAME,"%s","<033>&a2000h+400V")
+Writefile(L_FILE_NAME,"%s","COMMENTS")
+writefile(l_file_name,"%s%s","<NL>","<NL>")
+
+while agqstatusnotes:app_no = sfqname:app_no
+    begin
+    Writefile(L_FILE_NAME,"%s",l_arial_8)
+    Writefile(L_FILE_NAME,"%s","<033>&a400h+100V")
+    Writefile(L_FILE_NAME,"%s","Transaction Date: ")
+    Writefile(L_FILE_NAME,"%s",str(agqstatusnotes:trans_date,"MM/DD/YYYY"))
+    Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+    Writefile(L_FILE_NAME,"%s","Note Created By: ")
+    Writefile(L_FILE_NAME,"%s",agqstatusnotes:note_created_by)
+    writefile(l_file_name,"%s%s","<NL>","<NL>")
+
+    l_max_lines        = 60
+    L_FONT             = l_arial_8
+    L_V_POSITION       = "+0"
+    L_H_POSITION       = "600"
+    L_CHARACTER_STRING = trun(agqstatusnotes:notes)
+    L_MAX_CHAR         = 75
+    include "line_spacing.inc"
+
+    writefile(l_file_name,"%s","<NL>")
+
+    next agqstatusnotes
+    end
+
+update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+
+End

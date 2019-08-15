@@ -1,0 +1,954 @@
+%%
+Screen
+        Name = "agtmt827" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "agqcontractor" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4],
+                                     g_state[2],
+                                     g_enhancement[1] ;
+
+        global string g_zipcode_change[1] ,
+                      g_initial_screen[50] ;
+
+
+        Local Unsigned Ascii Number L_LINE_OF_BUSINESS[4]=0,
+                                    l_val_zipcode[5],
+                                    l_zipcode_5[5],
+                                    l_checkbox_1[1],
+                                    l_checkbox_2[1],
+                                    l_checkbox_3[1],
+                                    l_checkbox_4[1],
+                                    l_checkbox_5[1],
+                                    l_checkbox_6[1],
+                                    l_checkbox_7[1],
+                                    l_csexec_number[12],
+                                    i_csexec_number[12],
+                                    l_restricted[1]=0,
+                                    l_restricted_distance[5]=0/dec=2,
+                                    l_tier[2]=0 ;
+
+        local string l_zipcode[9],
+                     l_csexec_application[25],
+                     l_app[3]="agq",
+                     l_dec[15],
+                     l_business_desc_1[30],
+                     l_business_desc_2[30],
+                     l_lawn_care[1],
+                     l_scp102[1],
+                     l_scp103[1],
+                     l_screen[8],
+                     l_continue_1[2],
+                     l_str_zipcode[9],
+                     l_str_state[2],
+                     l_sub_line[2],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_user_id[15]="",
+                     l_lob_code[10],
+                     L_COMPANY_ID[10] ;
+
+        include "swsut100.var"
+
+        include "virtualdecs.var"
+
+        include "print.var"
+
+        Access agqcontractor,
+           Set agqcontractor:app_NO = G_app_NO, generic ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+                include "styles.inc"
+                Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "func1" sequence "final" tagged submit_fn ;
+        "final" continue begin
+                         if l_checkbox_1 = 1 and
+                            l_checkbox_2 = 1 and
+                            l_checkbox_4 = 1 and
+                            l_checkbox_5 = 1 and
+                            l_checkbox_6 = 1 then
+                             function = "popup"
+                         else
+                             error "You need to complete all the information before you can submit to underwriting"
+                         end ;
+        "popup" display/noreturn "agtmt728" ;
+
+        "func2" display/noreturn "agtmt802" tagged back_fn ;
+
+        "func3" sequence "worksheet"  tagged worksheet_fn ;
+        "worksheet" continue begin
+                             do create_macro
+                             end  ;
+
+        "func4" sequence "quoteletter"  tagged quote_letter_fn ;
+        "quoteletter" continue begin
+                               do print_quote_letter
+                               end ;
+        "func5"  display/noreturn "agtmt801" tagged rating_info_fn;
+        "func7" display/noreturn "agtmt801d" tagged optional_info_fn ;
+        "func8" display/noreturn "agtmt801c" tagged supplemental_info_fn ;
+        "func9" display/noreturn "agtmt720" tagged mailing_address_fn ;
+        "func10" display/noreturn "agtmt721" tagged location_address_fn ;
+        "func11" display/noreturn "agtmt729" tagged application_fn ;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+l_user_id = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+access agqcontractor_alias, set agqcontractor_alias:app_no = g_app_no, generic
+
+if agqcontractor_alias:form = 4 then
+    disable(supplemental_info_fn)
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_final_check.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+g_initial_screen = ""
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+Access Validation
+If agqcontractor:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Underwriting Submission: Final Checklist..."
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100 Tagged quote_no
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101  g_APP_NO/displayonly ;
+}
+
+Panel at 6,5 to 6,100 Tagged icon_line1_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_print_worksheet.bmp"
+                }
+        Events  {
+                Action = worksheet_fn
+                }
+        }
+
+Panel at 6,60 to 6,90 Tagged icon_line1_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_print_proposal.bmp"
+                }
+        Events  {
+                Action = quote_letter_fn
+                }
+
+}
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt827.sd"
+                      fontsize = 9
+                    }
+      }
+
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+
+Panel at 10,30 to 10,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1   tagged rating_info
+        Properties {
+                Iconname = "btn_rating_infomation.bmp"
+                }
+        Events  {
+                Action = rating_info_fn
+                }
+        }
+
+Panel at 12,30 to 12,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1    tagged optional_info
+        Properties {
+                Iconname = "btn_opt_endt.bmp"
+                }
+        Events  {
+                Action = optional_info_fn
+                }
+
+        }
+
+Panel at 14,30 to 14,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1     tagged supplemental_info
+        Properties {
+                Iconname = "btn_supp_coverages.bmp"
+                }
+        Events  {
+                Action = supplemental_info_fn
+                }
+
+}
+
+Panel at 16,30 to 16,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_mail_address.bmp"
+                }
+        Events  {
+                Action = mailing_address_fn
+                }
+
+}
+
+Panel at 18,30 to 18,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_loc_address.bmp"
+                }
+        Events  {
+                Action = location_address_fn
+                }
+
+}
+
+Panel at 20,30 to 20,60 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1
+        Properties {
+                Iconname = "btn_view_application.bmp"
+                }
+        Events  {
+                Action = application_fn
+                }
+
+}
+
+Panel at 10,65 to 10,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     begin
+            do check_files
+        end
+        l_checkbox_1/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 12,65 to 12,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_2/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 14,65 to 14,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_3/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 16,65 to 16,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_4/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 18,65 to 18,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_5/checkbox/values="0,1"/displayonly ;
+
+}
+
+Panel at 20,65 to 20,90 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_
+
+%%
+
+components
+
+Fields
+101     l_checkbox_6/checkbox/values="0,1"/displayonly ;
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 25,10 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,1   tagged back_info
+        Properties {
+                Iconname = "btn_view_summary_totals.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+        }
+
+Panel at 25,70 to 25,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged submit_info
+        Properties {
+                Iconname = "btn_submit_to_uw.bmp"
+                }
+        Events  {
+                Action = submit_fn
+                }
+
+}
+
+-- draw a line
+/*panel at 26,1 to 26,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }*/
+panel at 26,1 to 30,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+
+
+}
+
+procedure definition
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+procedure check_files
+begin
+l_checkbox_1 = 1
+access agqcontractor_alias, set agqcontractor_alias:app_no = g_app_no, generic
+
+if agqcontractor_alias:form = 4 then
+    l_checkbox_3 = 0
+else
+    l_checkbox_3 = 1
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+if agqend:app_no = g_app_no then
+    l_checkbox_2 = 1
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+if agqname:name[1] = "" or
+   agqname:address[1] = "" or
+   agqname:city = "" or
+   agqname:str_state = "" or
+   agqname:str_zipcode = "" then
+    l_checkbox_4 = 0
+else
+    l_checkbox_4 = 1
+
+access agqcontractor_alias, set agqcontractor_alias:app_no = g_app_no, generic
+
+l_checkbox_5 = 1
+while agqcontractor_alias:app_no = g_app_no
+    begin
+    access agqlocation, set agqlocation:app_no   = agqcontractor_alias:app_no,
+                            agqlocation:prem_no  = agqcontractor_alias:prem_no,
+                            agqlocation:build_no = agqcontractor_alias:build_no, generic
+
+    if agqlocation:address = "" or
+       agqlocation:city = "" or
+       agqlocation:str_state = "" or
+       agqlocation:str_zipcode = "" or
+       agqcontractor_alias:business_desc[1] = "" then
+        l_checkbox_5 = 0
+
+    next agqcontractor_alias
+    end
+
+access agqapplication, set agqapplication:app_no = g_app_no, generic
+
+l_checkbox_6 = 1
+while agqapplication:app_no = g_app_no
+    begin
+    if agqapplication:literal <> "" and
+       agqapplication:answer not one of "N", "Y" and
+       agqapplication:sub_code < 60 and
+       agqapplication:screen_name not one of "phone", "contact", "social"  then
+        begin
+        l_checkbox_6 = 0
+        end
+
+    next agqapplication
+    end
+
+end
+
+procedure print_quote_letter
+begin
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+If agqcontractor:company_id = "FLEMINGTON" then
+  {
+    proc("cli csbatch agqmso005 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso005.cq %s<nl>",l_dec)/noconsole
+  }
+else
+  {
+    proc("cli csbatch agqmso004 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004.cq %s<nl>",l_dec)/noconsole
+  }
+
+if sfscompany:debug_mode = 0 then
+    begin
+    proc("cli csbatch agqmso002 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso002.cq %s<nl>",l_dec)/noconsole
+    end
+else
+    begin
+    proc("cli csbatch agqmso002 %s",str(g_app_no,11))
+    Proc("cli joinit agqmso002.cq %s<nl>",l_dec)
+    end
+
+access agqclasscode, set agqclasscode:app_no = g_app_no, generic
+
+l_lawn_care = "N"
+while agqclasscode:app_no = g_app_no
+    begin
+    if agqclasscode:class_code = 3985 then
+        l_lawn_care = "Y"
+
+    next agqclasscode
+    end
+
+if l_lawn_care = "Y" then
+    begin
+    proc("cli csbatch agqmso004a %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004a.cq %s<nl>",l_dec)/noconsole
+    end
+
+access agqend, set agqend:app_no = g_app_no, generic
+
+l_scp102 = "N"
+l_scp103 = "N"
+while agqend:app_no = g_app_no
+    begin
+    if agqend:code = "SCP102" then
+        l_scp102 = "Y"
+    if agqend:code = "SCP103" then
+        l_scp103 = "Y"
+
+    next agqend
+    end
+
+if l_scp102 = "Y" then
+    begin
+    proc("cli csbatch agqmso004b %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004b.cq %s<nl>",l_dec)/noconsole
+    end
+
+if l_scp103 = "Y" then
+    begin
+    proc("cli csbatch agqmso004c %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso004c.cq %s<nl>",l_dec)/noconsole
+    end
+
+L_LOB_CODE = SFSLINE:LOB_CODE
+Access SCIPSCONTROL, Set SCIPSCONTROL:COMPANY_ID = agqcontractor:COMPANY_ID,
+                         SCIPSCONTROL:STATE      = agqcontractor:STATE,
+                         SCIPSCONTROL:LOB_CODE   = L_LOB_CODE,Exact
+
+if agqcontractor:company_id = "FARMERS" then
+    begin
+    proc(":cli csbatch tpd4q %s",str(g_app_no,11))/noconsole
+    Proc(":cli joinit tpd4q.cq %s<nl>",l_dec)/noconsole
+    end
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+    Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+    Proc("chmod 777 %s ",L_DEC_PDF)
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+end
+
+Procedure CREATE_MACRO
+Begin
+Do REFRESH_WORK_FILES
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+L_USERNAME = USERNAME
+I_REPORTA = "agqpr700"
+I_REPORT = "agqpr700.cq"
+I_REPORT_CQE = "agqpr700.cqe"
+I_APP = "agq"
+l_app = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF = L_APP+Str(I_CSEXEC_NUMBER)+".txt"
+I_PARAMETER = I_APP+Str(I_CSEXEC_NUMBER)+".par"
+I_MACROA = I_APP+Str(I_CSEXEC_NUMBER)
+I_MACRO = I_APP+Str(I_CSEXEC_NUMBER)+".mf"
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+if agqprint1:app_no <> g_app_no then
+    begin
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+else
+    begin
+    delete agqprint1
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+
+Deletefile(I_MACRO)
+Writefile(I_MACRO,"clear list<nl>")
+Writefile(I_MACRO,"clear find<nl>")
+Writefile(I_MACRO,"clear sum<nl>")
+Writefile(I_MACRO,"run agqpr700<nl>")
+Writefile(I_MACRO,"cli rm agqpr700.cq<nl>")
+Writefile(I_MACRO,"rsave agqpr700<nl>")
+Writefile(I_MACRO,"cli joinit agqpr700.cq %s<nl>",L_DEC)
+Closefile(I_MACRO)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc("cli cq %s",I_MACRO)/noconsole
+Else
+    Proc("cli cq %s",I_MACRO)
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)/noconsole
+    Proc("cli chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("cli rm %s",L_DEC)/noconsole
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)
+    Proc("cli chmod 777 %s ",L_DEC_PDF)
+    Proc("cli rm %s",L_DEC)
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client/noconsole
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+delete agqprint1
+
+Do REFRESH_WORK_FILES
+End
+
+Procedure REFRESH_WORK_FILES
+Begin
+Proc ("cli agqprint1.mk")/noconsole
+End
+
+end

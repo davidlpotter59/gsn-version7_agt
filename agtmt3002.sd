@@ -1,0 +1,1753 @@
+%%                 
+Screen
+        Name = "agtmt3002";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqendorse1" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_form[1];
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_article[20],
+                      g_answer[1],
+                      g_code[7] ;
+
+        local array[13] of tag l_the_tag[15] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_sub_code_1[4],
+                                    l_popup_complete[1],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_liability_code[2] ,
+                                    l_limit[8],
+                                    l_option_1,
+                                    l_option_2,
+                                    l_option_3,
+                                    l_option_4,
+                                    l_option_5,
+                                    l_option_6,
+                                    l_option_7,
+                                    l_option_8,
+                                    l_option_9,
+                                    l_option_10,
+                                    l_agqend_sub_code[4] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_system_id[15],
+                     l_st_type[6],
+                     l_st_direction[2],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_blank[10],
+                     l_screen[10],
+                     l_valid[1]="N",
+                     l_description[55] ;
+
+        Access agqendorse1,
+           Set agqendorse1:app_NO   = G_app_NO ,
+               agqendorse1:prem_no  = g_prem_no,
+               agqendorse1:build_no = g_build_no,
+               agqendorse1:code     = g_code ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt3002" ;
+        "func1" display "agtmt3002a"  tagged detail_fn ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+access plsdefault, set plsdefault:company_id = agqpersonal:company_id,
+                       plsdefault:line_of_business = agqpersonal:line_of_business, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : if agqpersonal:company_id = "FARMERS" and
+                   agqpersonal:eff_date >= plsdefault:rating_algorithm_date and
+                   plsdefault:rating_algorithm_date <> 0 then
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3_new,iconname,"title_mho3.bmp")
+                      case 4  : setproperty(t_mho4_new,iconname,"title_mho4.bmp")
+                      case 6  : setproperty(t_mho6_new,iconname,"title_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3_new,iconname,"")
+                                setproperty(t_mho4_new,iconname,"")
+                                setproperty(t_mho6_new,iconname,"")
+                                end
+                      end
+                    end
+                else
+                    begin
+                    switch(g_form)
+                      case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                      case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                      case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                      default : begin
+                                setproperty(t_mho3,iconname,"")
+                                setproperty(t_mho4,iconname,"")
+                                setproperty(t_mho6,iconname,"")
+                                end
+                      end
+                   end
+
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+l_username = username
+l_company_id = sfsdefault:company_id
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if agqendorse1:app_no <> g_app_no or
+   agqendorse1:prem_no <> g_prem_no or
+   agqendorse1:build_no <> g_build_no or
+   agqendorse1:code <> g_code then
+    function = "ADD"
+
+Access Validation
+If agqendorse1:app_NO <> G_app_NO or
+   agqendorse1:prem_no <> g_prem_no or
+   agqendorse1:build_no <> g_build_no or
+   agqendorse1:code <> g_code Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+    fontstyle = BOLD
+
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho3_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,20 tagged t_mho4_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho6_new
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "MPL 15 - Scheduled Property - Section I"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,20 to 6,35 tagged button_panel
+      Properties
+         {
+           layouttype = row
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,35
+          properties
+            {
+--              text = "Edit Entries"
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+    }
+
+Panel at 6,55 to 6,70 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt3002.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,1 to 25,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,5 to 1,30 tagged cameras_fn
+             properties
+                 {
+                 text = "Cameras:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              g_article = "CAMERAS"
+                              do display_view(1,"agtmt3002a")
+                              }
+                 }
+
+           guidetext at 2,5 to 2,30 tagged coins_fn
+             properties
+                 {
+                 text = "Coin Collections:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              g_article = "COIN COLLECTIONS"
+                              do display_view(2,"agtmt3002a")
+                              }
+                 }
+           guidetext at 3,5 to 3,30 tagged furs_fn
+             properties
+                 {
+                 text = "Furs:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              g_article = "FURS"
+                              do display_view(3,"agtmt3002a")
+                              }
+                 }
+           guidetext at 4,5 to 4,30 tagged golf_fn
+             properties
+                 {
+                 text = "Golf Equipment:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              g_article = "GOLFER'S EQUIPMENT"
+                              do display_view(4,"agtmt3002a")
+                              }
+                 }
+           guidetext at 5,5 to 5,30 tagged jewelry_fn
+             properties
+                 {
+                 text = "Jewelry:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              g_article = "JEWELRY"
+                              do display_view(5,"agtmt3002b")
+                              }
+                 }
+           guidetext at 6,5 to 6,30 tagged music_fn
+             properties
+                 {
+                 text = "Musical Instruments:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              g_article = "MUSICAL INSTRUMENTS"
+                              do display_view(6,"agtmt3002d")
+                              }
+                 }
+           guidetext at 8,5 to 8,30  tagged silverware_fn
+             properties
+                 {
+                 text = "Silverware:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              g_article = "SILVERWARE"
+                              do display_view(7,"agtmt3002a")
+                              }
+                 }
+           guidetext at 9,5 to 9,30  tagged sports_fn
+             properties
+                 {
+                 text = "Sports Equipment:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              g_article = "SPORTING EQUIPMENT"
+                              do display_view(8,"agtmt3002a")
+                              }
+                 }
+           guidetext at 10,5 to 10,30  tagged stamps_fn
+             properties
+                 {
+                 text = "Stamp Collection:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              g_article = "STAMP COLLECTION"
+                              do display_view(9,"agtmt3002a")
+                              }
+                 }
+           guidetext at 11,5 to 11,30  tagged arts_fn
+             properties
+                 {
+                 text = "Fine Arts:"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+                 }
+             events
+                 {
+                 mouseclicked {
+                              g_article = "FINE ARTS"
+                              do display_view(10,"agtmt3002c")
+                              }
+                 }
+        }
+
+/*Panel at 8,1 to 25,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 2,50 to 2,77
+             properties
+               {
+                 text = "Vehicle Theft (MPL 93):"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+               }
+           guidetext at 6,50 to 6,77
+             properties
+               {
+                 text = "Professional Use (Y/N) (MPL 91):"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+               }
+           guidetext at 7,50 to 7,77
+             properties
+               {
+                 text = "Electronic Damage (Y/N) (MPL 92):"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+               }
+           guidetext at 10,50 to 10,77
+             properties
+               {
+                 text = "Vehicle Theft (Y/N) (MPL 93):"
+                 fontsize = 12
+                 fontname = "arial"
+                 contentalignment = right
+               }
+        }*/
+
+Panel at 8,35 to 25, 100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_   __________
+~~_   __________      Vehicle~Theft~(MPL 93)~(Y/N):~~~~~~_
+~~_   __________
+~~_   __________
+~~_   __________
+~~_   __________      Professional~Use~(MPL 91)~(Y/N):~~~_
+      __________      Electronic~Damage~(MPL 92)~(Y/N):~~_
+~~_   __________
+~~_   __________
+~~_   __________      Vehicle~Theft~(MPL 93)~(Y/N):~~~~~~_
+~~_   __________
+
+%%
+
+components
+
+Fields
+-- cameras
+101     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqendorse1:app_no   = G_app_no
+            agqendorse1:PREM_NO  = G_PREM_NO
+            agqendorse1:BUILD_NO = G_BUILD_NO
+            agqendorse1:CODE     = G_CODE
+            agqendorse1:SUB_CODE = 10
+            End
+        if agqendorse1:option[1] = 1 then
+            begin
+            do check_popup(1)
+            l_sub_code_1 = 1
+            l_the_tag[1] = tag("cameras_fn")
+            l_screen = "agtmt3002a"
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_screen)
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_screen)
+            end
+        l_option_1 = agqendorse1:option[1]
+        End
+        agqendorse1:OPTION[1]/checkbox/values="0,1"/tabstop;
+102     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqendorse1:OPTION[1] = 1 Then
+                Begin
+                G_ARTICLE = "CAMERAS"
+                Display Modal Screen "agtmt3002a"
+                Do GET_LIMIT
+                agqendorse1:LIMIT[1] = L_LIMIT
+                End
+            End
+        If FUNCTION = "CHANGE" Then
+            Begin
+            If agqendorse1:OPTION[1] = 1 Then
+                Begin
+                G_ARTICLE = "CAMERAS"
+                if agqendorse1:option[1] = 1 and
+                   l_option_1 = 0 then
+                    Do ACCESS_agqdesc1
+                Do GET_LIMIT
+                agqendorse1:LIMIT[1] = L_LIMIT
+                End
+            If agqendorse1:OPTION[1] = 0 and
+               l_option_1 = 1 Then
+                Begin
+                G_ARTICLE = "CAMERAS"
+                Do DELETE_agqdesc1
+                agqendorse1:LIMIT[1] = 0
+                agqendorse1:premium[1] = 0
+                End
+            End
+        End
+        agqendorse1:LIMIT[1]/displayonly ;
+
+-- coin collections
+201     begin
+        if agqendorse1:option[2] = 1 then
+            begin
+            do check_popup(2)
+            l_sub_code_1 = 2
+            l_the_tag[2] = tag("coins_fn")
+            l_screen = "agtmt3002a"
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_screen)
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_screen)
+            end
+            l_option_2 = agqendorse1:option[2]
+        end
+        agqendorse1:OPTION[2]/checkbox/values="0,1"/tabstop ;
+202     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqendorse1:OPTION[2] = 1 Then
+                Begin
+                G_ARTICLE = "COIN COLLECTIONS"
+                Display Modal Screen "agtmt3002a"
+                Do GET_LIMIT
+                agqendorse1:LIMIT[2] = L_LIMIT
+                End
+            End
+        If FUNCTION = "CHANGE" Then
+            Begin
+            If agqendorse1:OPTION[2] = 1 Then
+                Begin
+                G_ARTICLE = "COIN COLLECTIONS"
+                if agqendorse1:option[2] = 1 and
+                   l_option_2 = 0 then
+                    Do ACCESS_agqdesc1
+                Do GET_LIMIT
+                agqendorse1:LIMIT[2] = L_LIMIT
+                End
+            If agqendorse1:OPTION[2] = 0 and
+               l_option_2 = 1 Then
+                Begin
+                G_ARTICLE = "COIN COLLECTIONS"
+                Do DELETE_agqdesc1
+                agqendorse1:LIMIT[2] = 0
+                agqendorse1:COIN_THEFT = 0
+                agqendorse1:premium[2] = 0
+                End
+            End
+        End
+        agqendorse1:LIMIT[2]/displayonly ;
+203     agqendorse1:COIN_THEFT/tabstop/default/checkbox/values="0,1"
+        Hide If agqendorse1:OPTION[2] = 0  ;
+
+-- furs
+301     begin
+        if agqendorse1:option[3] = 1 then
+            begin
+            do check_popup(3)
+            l_sub_code_1 = 3
+            l_the_tag[3] = tag("furs_fn")
+            l_screen = "agtmt3002a"
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_screen)
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_screen)
+            end
+            l_option_3 = agqendorse1:option[3]
+        end
+        agqendorse1:OPTION[3]/checkbox/values="0,1"/tabstop;
+302     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqendorse1:OPTION[3] = 1 Then
+                Begin
+                G_ARTICLE = "FURS"
+                Display Modal Screen "agtmt3002a"
+                Do GET_LIMIT
+                agqendorse1:LIMIT[3] = L_LIMIT
+                End
+            End
+        If FUNCTION = "CHANGE" Then
+            Begin
+            If agqendorse1:OPTION[3] = 1 Then
+                Begin
+                G_ARTICLE = "FURS"
+                if agqendorse1:option[3] = 1 and
+                   l_option_3 = 0 then
+                    Do ACCESS_agqdesc1
+                Do GET_LIMIT
+                agqendorse1:LIMIT[3] = L_LIMIT
+                End
+            If agqendorse1:OPTION[3] = 0 and
+               l_option_3 = 1 Then
+                Begin
+                G_ARTICLE = "FURS"
+                Do DELETE_agqdesc1
+                agqendorse1:LIMIT[3] = 0
+                agqendorse1:premium[3] = 0
+                End
+            End
+        End
+        agqendorse1:LIMIT[3]/displayonly ;
+
+-- golf equipment
+401     begin
+        if agqendorse1:option[4] = 1 then
+            begin
+            do check_popup(4)
+            l_sub_code_1 = 4
+            l_the_tag[4] = tag("golf_fn")
+            l_screen = "agtmt3002a"
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_screen)
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_screen)
+            end
+            l_option_4 = agqendorse1:option[4]
+        end
+        agqendorse1:OPTION[4]/checkbox/values="0,1"/tabstop;
+402     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqendorse1:OPTION[4] = 1 Then
+                Begin
+                G_ARTICLE = "GOLFER'S EQUIPMENT"
+                Display Modal Screen "agtmt3002a"
+                Do GET_LIMIT
+                agqendorse1:LIMIT[4] = L_LIMIT
+                End
+            End
+        If FUNCTION = "CHANGE" Then
+            Begin
+            If agqendorse1:OPTION[4] = 1 Then
+                Begin
+                G_ARTICLE = "GOLFER'S EQUIPMENT"
+                if agqendorse1:option[4] = 1 and
+                   l_option_4 = 0 then
+                    Do ACCESS_agqdesc1
+                Do GET_LIMIT
+                agqendorse1:LIMIT[4] = L_LIMIT
+                End
+            If agqendorse1:OPTION[4] = 0 and
+               l_option_4 = 1 Then
+                Begin
+                G_ARTICLE = "GOLFER'S EQUIPMENT"
+                Do DELETE_agqdesc1
+                agqendorse1:LIMIT[4] = 0
+                agqendorse1:premium[4] = 0
+                End
+            End
+        End
+        agqendorse1:LIMIT[4]/displayonly ;
+
+-- jewelry
+501     begin
+        if agqendorse1:option[5] = 1 then
+            begin
+            do check_popup(5)
+            l_sub_code_1 = 5
+            l_the_tag[5] = tag("jewelry_fn")
+            l_screen = "agtmt3002b"
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_screen)
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_screen)
+            end
+            l_option_5 = agqendorse1:option[5]
+        end
+        agqendorse1:OPTION[5]/checkbox/values="0,1"/tabstop;
+502     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqendorse1:OPTION[5] = 1 Then
+                Begin
+                G_ARTICLE = "JEWELRY"
+                Display Modal Screen "agtmt3002b"
+                Do GET_LIMIT
+                agqendorse1:LIMIT[5] = L_LIMIT
+                End
+            End
+        If FUNCTION = "CHANGE" Then
+            Begin
+            If agqendorse1:OPTION[5] = 1 Then
+                Begin
+                G_ARTICLE = "JEWELRY"
+                if agqendorse1:option[5] = 1 and
+                   l_option_5 = 0 then
+                    Do ACCESS_agqdesc1
+                Do GET_LIMIT
+                agqendorse1:LIMIT[5] = L_LIMIT
+                End
+            If agqendorse1:OPTION[5] = 0 and
+               l_option_5 = 1 Then
+                Begin
+                G_ARTICLE = "JEWELRY"
+                Do DELETE_agqdesc1
+                agqendorse1:LIMIT[5] = 0
+                agqendorse1:premium[5] = 0
+                End
+            End
+        End
+        agqendorse1:LIMIT[5]/displayonly ;
+
+-- musical instruments
+601     begin
+        if agqendorse1:option[6] = 1 then
+            begin
+            do check_popup(6)
+            l_sub_code_1 = 6
+            l_the_tag[6] = tag("music_fn")
+            l_screen = "agtmt3002d"
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_screen)
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_screen)
+            end
+            l_option_6 = agqendorse1:option[6]
+        end
+        agqendorse1:OPTION[6]/checkbox/values="0,1"/tabstop;
+602     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqendorse1:OPTION[6] = 1 Then
+                Begin
+                G_ARTICLE = "MUSICAL INSTRUMENTS"
+                Display Modal Screen "agtmt3002d"
+                Do GET_LIMIT
+                agqendorse1:LIMIT[6] = L_LIMIT
+                End
+            End
+        If FUNCTION = "CHANGE" Then
+            Begin
+            If agqendorse1:OPTION[6] = 1 Then
+                Begin
+                G_ARTICLE = "MUSICAL INSTRUMENTS"
+                if agqendorse1:option[6] = 1 and
+                   l_option_6 = 0 then
+                    Do ACCESS_agqdesc1
+                Do GET_LIMIT
+                agqendorse1:LIMIT[6] = L_LIMIT
+                End
+            If agqendorse1:OPTION[6] = 0 and
+               l_option_6 = 1 Then
+                Begin
+                G_ARTICLE = "MUSICAL INSTRUMENTS"
+                Do DELETE_agqdesc1
+                agqendorse1:LIMIT[6] = 0
+                agqendorse1:premium[6] = 0
+                agqendorse1:ELECTRONIC_DAMAGE = 0
+                agqendorse1:PROFESSIONAL_USE = 0
+                End
+            End
+        End
+        agqendorse1:LIMIT[6]/displayonly ;
+603     agqendorse1:PROFESSIONAL_USE/tabstop/default/checkbox/values="0,1"
+        Hide If agqendorse1:OPTION[6] = 0 ;
+701     l_blank/showasguidetext/displayonly ;
+702     agqendorse1:ELECTRONIC_DAMAGE/tabstop/default/checkbox/values="0,1"
+        Hide If agqendorse1:OPTION[6] = 0 ;
+
+-- silverware
+801     begin
+        if agqendorse1:option[7] = 1 then
+            begin
+            do check_popup(7)
+            l_sub_code_1 = 7
+            l_the_tag[7] = tag("silverware_fn")
+            l_screen = "agtmt3002a"
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_screen)
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_screen)
+            end
+            l_option_7 = agqendorse1:option[7]
+        end
+        agqendorse1:OPTION[7]/checkbox/values="0,1"/tabstop;
+802     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqendorse1:OPTION[7] = 1 Then
+                Begin
+                G_ARTICLE = "SILVERWARE"
+                Display Modal Screen "agtmt3002a"
+                Do GET_LIMIT
+                agqendorse1:LIMIT[7] = L_LIMIT
+                End
+            End
+        If FUNCTION = "CHANGE" Then
+            Begin
+            If agqendorse1:OPTION[7] = 1 Then
+                Begin
+                G_ARTICLE = "SILVERWARE"
+                if agqendorse1:option[7] = 1 and
+                   l_option_7 = 0 then
+                    Do ACCESS_agqdesc1
+                Do GET_LIMIT
+                agqendorse1:LIMIT[7] = L_LIMIT
+                End
+            If agqendorse1:OPTION[7] = 0 and
+               l_option_7 = 1 Then
+                Begin
+                G_ARTICLE = "SILVERWARE"
+                Do DELETE_agqdesc1
+                agqendorse1:LIMIT[7] = 0
+                agqendorse1:premium[7] = 0
+                End
+            End
+        End
+        agqendorse1:LIMIT[7]/displayonly ;
+
+-- sports equipment
+901     begin
+        if agqendorse1:option[8] = 1 then
+            begin
+            do check_popup(8)
+            l_sub_code_1 = 8
+            l_the_tag[8] = tag("sports_fn")
+            l_screen = "agtmt3002a"
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_screen)
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_screen)
+            end
+            l_option_8 = agqendorse1:option[8]
+        end
+        agqendorse1:OPTION[8]/checkbox/values="0,1"/tabstop;
+902     Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqendorse1:OPTION[8] = 1 Then
+                Begin
+                G_ARTICLE = "SPORTING EQUIPMENT"
+                Display Modal Screen "agtmt3002a"
+                Do GET_LIMIT
+                agqendorse1:LIMIT[8] = L_LIMIT
+                End
+            End
+        If FUNCTION = "CHANGE" Then
+            Begin
+            If agqendorse1:OPTION[8] = 1 Then
+                Begin
+                G_ARTICLE = "SPORTING EQUIPMENT"
+                if agqendorse1:option[8] = 1 and
+                   l_option_8 = 0 then
+                    Do ACCESS_agqdesc1
+                Do GET_LIMIT
+                agqendorse1:LIMIT[8] = L_LIMIT
+                End
+            If agqendorse1:OPTION[8] = 0 and
+               l_option_8 = 1 Then
+                Begin
+                G_ARTICLE = "SPORTING EQUIPMENT"
+                Do DELETE_agqdesc1
+                agqendorse1:LIMIT[8] = 0
+                agqendorse1:premium[8] = 0
+                End
+            End
+        End
+        agqendorse1:LIMIT[8]/displayonly ;
+
+-- stamp collections
+1001    begin
+        if agqendorse1:option[9] = 1 then
+            begin
+            do check_popup(9)
+            l_sub_code_1 = 9
+            l_the_tag[9] = tag("stamps_fn")
+            l_screen = "agtmt3002a"
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_screen)
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_screen)
+            end
+            l_option_9 = agqendorse1:option[9]
+        end
+        agqendorse1:OPTION[9]/checkbox/values="0,1"/tabstop;
+1002    Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqendorse1:OPTION[9] = 1 Then
+                Begin
+                G_ARTICLE = "STAMP COLLECTION"
+                Display Modal Screen "agtmt3002a"
+                Do GET_LIMIT
+                agqendorse1:LIMIT[9] = L_LIMIT
+                End
+            End
+        If FUNCTION = "CHANGE" Then
+            Begin
+            If agqendorse1:OPTION[9] = 1 Then
+                Begin
+                G_ARTICLE = "STAMP COLLECTION"
+                if agqendorse1:option[9] = 1 and
+                   l_option_9 = 0 then
+                    Do ACCESS_agqdesc1
+                Do GET_LIMIT
+                agqendorse1:LIMIT[9] = L_LIMIT
+                End
+            If agqendorse1:OPTION[9] = 0 and
+               l_option_9 = 1 Then
+                Begin
+                G_ARTICLE = "STAMP COLLECTION"
+                Do DELETE_agqdesc1
+                agqendorse1:LIMIT[9] = 0
+                agqendorse1:premium[9] = 0
+                agqendorse1:STAMP_THEFT = 0
+                End
+            End
+        End
+        agqendorse1:LIMIT[9]/displayonly ;
+1003    agqendorse1:STAMP_THEFT/tabstop/default/uppercase/checkbox/values="0,1"
+        Hide If agqendorse1:OPTION[9] = 0 ;
+
+-- fine arts
+1101    begin
+        if agqendorse1:option[10] = 1 then
+            begin
+            do check_popup(10)
+            l_sub_code_1 = 10
+            l_the_tag[10] = tag("arts_fn")
+            l_screen = "agtmt3002c"
+            if l_popup_complete = 1 then
+                do display_blue(l_the_tag[l_sub_code_1],"blue",l_screen)
+            else
+                do display_red(l_the_tag[l_sub_code_1],"red",l_screen)
+            end
+            l_option_10 = agqendorse1:option[10]
+        end
+        agqendorse1:OPTION[10]/checkbox/values="0,1"/tabstop;
+1102    Begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqendorse1:OPTION[10] = 1 Then
+                Begin
+                G_ARTICLE = "FINE ARTS"
+                Display Modal Screen "agtmt3002c"
+                Do GET_LIMIT
+                agqendorse1:LIMIT[10] = L_LIMIT
+                End
+            End
+        If FUNCTION = "CHANGE" Then
+            Begin
+            If agqendorse1:OPTION[10] = 1 Then
+                Begin
+                G_ARTICLE = "FINE ARTS"
+                if agqendorse1:option[10] = 1 and
+                   l_option_10 = 0 then
+                    Do ACCESS_agqdesc1
+                Do GET_LIMIT
+                agqendorse1:LIMIT[10] = L_LIMIT
+                End
+            If agqendorse1:OPTION[10] = 0 and
+               l_option_10 = 1 Then
+                Begin
+                G_ARTICLE = "FINE ARTS"
+                Do DELETE_agqdesc1
+                agqendorse1:LIMIT[10] = 0
+                agqendorse1:premium[10] = 0
+                End
+            End
+        End
+        agqendorse1:LIMIT[10]/displayonly ;
+
+}--End of Screen Panel
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 27,40 to 27,55 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_close.bmp"
+                }
+            Events
+                {
+                Action = back_fn
+                }
+
+    }
+
+/*Panel at 27,55 to 27,70 tagged button_panel
+    Properties
+        {
+        layouttype = row
+        }
+    {
+    Components
+        Button at 1,35
+            properties
+                {
+                Iconname = "btn_View_Detail.bmp"
+                }
+            Events
+                {
+                Action = detail_fn
+                }
+
+    }*/
+
+-- draw a line
+panel at 28,1 to 28,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+Update
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+    Access PLSPREPRINTED, Set PLSPREPRINTED:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                              PLSPREPRINTED:STATE            = agqpersonal:state,
+                              PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS, Generic
+
+    while PLSPREPRINTED:COMPANY_ID       = agqpersonal:COMPANY_ID and
+          PLSPREPRINTED:STATE            = agqpersonal:state and
+          PLSPREPRINTED:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS
+        begin
+        If agqpersonal:EFF_DATE >= PLSPREPRINTED:REFF_DATE Then
+            Begin
+            L_CODE_1 = PLSPREPRINTED:CODE[13] -- mpl91
+            L_CODE_2 = PLSPREPRINTED:CODE[14] -- mpl92
+            L_CODE_3 = PLSPREPRINTED:CODE[11] -- mpl93
+            L_CODE_4 = PLSPREPRINTED:CODE[12] -- mpl90
+            End
+
+        Next PLSPREPRINTED
+        End
+
+    If L_CODE_1 <> "" Then
+        Begin
+        L_CODE = L_CODE_1
+        Do ACCESS_agqend
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqendorse1:PROFESSIONAL_USE = 1 Then
+            Do ADD_agqend
+        If L_ADD_ENDORSEMENT = "N" And
+           agqendorse1:PROFESSIONAL_USE = 0 Then
+            Do DELETE_agqend
+        End
+
+    If L_CODE_2 <> "" Then
+        Begin
+        L_CODE = L_CODE_2
+        Do ACCESS_agqend
+        If L_ADD_ENDORSEMENT = "Y" And
+           agqendorse1:ELECTRONIC_DAMAGE = 1 Then
+            Do ADD_agqend
+        If L_ADD_ENDORSEMENT = "N" And
+           agqendorse1:ELECTRONIC_DAMAGE = 0 Then
+            Do DELETE_agqend
+        End
+
+    If L_CODE_3 <> "" Then
+        Begin
+        L_CODE = L_CODE_3
+        Do ACCESS_agqend
+        If ((L_ADD_ENDORSEMENT = "Y" And
+           agqendorse1:STAMP_THEFT = 1) Or
+           (L_ADD_ENDORSEMENT = "Y" And
+           agqendorse1:COIN_THEFT = 1)) Then
+            Do ADD_agqend
+        If L_ADD_ENDORSEMENT = "N" And
+           agqendorse1:STAMP_THEFT = 0 And
+           agqendorse1:COIN_THEFT = 0 Then
+            Do DELETE_agqend
+        End
+
+    If L_CODE_4 <> "" Then
+        Begin
+        L_CODE = L_CODE_4
+        Do ACCESS_agqend
+        If L_ADD_ENDORSEMENT = "N" And
+           agqendorse1:OPTION[10] = 0 Then
+            Do DELETE_agqend
+        End
+
+    function = "redisplay"
+    End
+
+procedure definition
+
+procedure check_popup(number l_sub_code_1)
+begin
+l_popup_complete = 0
+access agqdesc1, set agqdesc1:app_no   = g_app_no,
+                     agqdesc1:prem_no  = g_prem_no,
+                     agqdesc1:build_no = g_build_no,
+                     agqdesc1:code     = g_code,
+                     agqdesc1:article  = g_article, generic
+
+if agqdesc1:article <> "" and
+   agqdesc1:limit <> 0 and
+   agqdesc1:description <> "" then
+    l_popup_complete = 1
+
+end
+
+procedure display_blue(tag l_tag, string l_color, string l_display_screen)
+begin
+    setproperty(l_tag,foregroundcolor,l_color)
+end
+
+procedure display_red(tag l_tag, string l_color, string l_display_screen)
+begin
+    setproperty(l_tag,foregroundcolor,l_color)
+end
+
+procedure display_view (number l_sub_code_1, string l_screen_name)
+begin
+if agqendorse1:option[l_sub_code_1] = 1 then
+    begin
+    l_screen = l_screen_name
+    display modal screen l_screen
+    function = "redisplay"
+    abort()
+    end
+
+end
+
+Procedure ACCESS_agqend
+Begin
+Access agqend, Set agqend:app_no   = G_app_no ,
+                   agqend:PREM_NO  = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+while agqend:app_no   = G_app_no and
+      agqend:PREM_NO  = G_PREM_NO and
+      agqend:BUILD_NO = G_BUILD_NO
+        begin
+        If agqend:CODE = L_CODE Then
+            L_ADD_ENDORSEMENT = "N"
+
+        Next agqend
+        End
+
+End
+
+Procedure ADD_agqend
+Begin
+Access agqend, Set agqend:app_no   = G_app_no ,
+                   agqend:PREM_NO  = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+L_agqend_SUB_CODE = 0
+while agqend:app_no   = G_app_no and
+      agqend:PREM_NO  = G_PREM_NO and
+      agqend:BUILD_NO = G_BUILD_NO
+        begin
+        L_agqend_SUB_CODE = agqend:SUB_CODE
+
+        Next agqend
+        End
+
+If L_agqend_SUB_CODE <= G_SUB_CODE Then
+    L_agqend_SUB_CODE = L_agqend_SUB_CODE + 20
+Else
+    L_agqend_SUB_CODE = L_agqend_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqpersonal:state,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqpersonal:COMPANY_ID and
+      SFSOPTEND:STATE            = agqpersonal:state and
+      SFSOPTEND:LINE_OF_BUSINESS = agqpersonal:LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+        begin
+        If agqpersonal:EFF_DATE >= SFSOPTEND:EFF_DATE Then
+            Begin
+            L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+            L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+            End
+
+        Next SFSOPTEND
+        End
+
+Add agqend
+    Begin
+    agqend:app_no               =       G_app_no
+    agqend:PREM_NO              =       G_PREM_NO
+    agqend:BUILD_NO             =       G_BUILD_NO
+    agqend:SUB_CODE             =       L_agqend_SUB_CODE
+    agqend:CODE                 =       L_CODE
+    agqend:FORM_EDITION         =       L_FORM_EDITION
+    agqend:DESCRIPTION          =       L_DESCRIPTION
+    agqend:PREMIUM              =       0
+    End
+
+End
+
+Procedure DELETE_agqend
+Begin
+Access agqend, Set agqend:app_no   = G_app_no ,
+                   agqend:PREM_NO  = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+while agqend:app_no   = G_app_no and
+      agqend:PREM_NO  = G_PREM_NO and
+      agqend:BUILD_NO = G_BUILD_NO
+        begin
+        If agqend:CODE = L_CODE Then
+            Delete agqend
+
+        Next agqend
+        End
+
+End
+
+Procedure GET_LIMIT
+Begin
+Access agqdesc1, Set agqdesc1:app_no   = G_app_no,
+                     agqdesc1:PREM_NO  = G_PREM_NO ,
+                     agqdesc1:BUILD_NO = G_BUILD_NO ,
+                    agqdesc1:CODE = G_CODE,
+                    agqdesc1:ARTICLE = G_ARTICLE, Generic
+
+L_LIMIT = 0
+while agqdesc1:app_no   = G_app_no and
+      agqdesc1:PREM_NO  = G_PREM_NO and
+      agqdesc1:BUILD_NO = G_BUILD_NO and
+      agqdesc1:CODE     = G_CODE and
+      agqdesc1:ARTICLE  = G_ARTICLE
+        begin
+        L_LIMIT = L_LIMIT + agqdesc1:LIMIT
+
+        Next agqdesc1
+        End
+
+End
+
+Procedure DELETE_agqdesc1
+Begin
+Access agqdesc1, Set agqdesc1:app_no   = G_app_no,
+                     agqdesc1:PREM_NO  = G_PREM_NO ,
+                     agqdesc1:BUILD_NO = G_BUILD_NO ,
+                    agqdesc1:CODE      = G_CODE,
+                    agqdesc1:ARTICLE   = G_ARTICLE, Generic
+
+while agqdesc1:app_no   = G_app_no and
+      agqdesc1:PREM_NO  = G_PREM_NO and
+      agqdesc1:BUILD_NO = G_BUILD_NO and
+      agqdesc1:CODE     = G_CODE and
+      agqdesc1:ARTICLE  = G_ARTICLE
+        begin
+        Delete agqdesc1
+
+        Next agqdesc1
+        End
+
+End
+
+Procedure ACCESS_agqdesc1
+Begin
+Access agqdesc1, Set agqdesc1:app_no   = G_app_no,
+                     agqdesc1:PREM_NO  = G_PREM_NO ,
+                     agqdesc1:BUILD_NO = G_BUILD_NO ,
+                     agqdesc1:CODE     = G_CODE,
+                    agqdesc1:ARTICLE = G_ARTICLE, Generic
+
+If agqdesc1:app_no   = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    If FUNCTION = "CHANGE" Then
+        Begin
+        G_ARTICLE = agqdesc1:ARTICLE
+        If G_ANSWER = "Y" Then
+           Begin
+           Switch(G_ARTICLE)
+             Case "CAMERAS",
+                  "COIN COLLECTIONS",
+                  "FURS",
+                  "GOLFER'S EQUIPMENT",
+                  "SILVERWARE",
+                  "SPORTING EQUIPMENT",
+                  "STAMP COLLECTION"     : L_SCREEN = "agtmt3002a"
+             Case "JEWELRY"              : L_SCREEN = "agtmt3002b"
+             Case "FINE ARTS"            : L_SCREEN = "agtmt3002c"
+             Case "MUSICAL INSTRUMENTS"  : L_SCREEN = "agtmt3002d"
+             End
+          Display Modal Screen L_SCREEN
+          End
+        End
+    End
+Else
+    Begin
+    Switch(G_ARTICLE)
+      Case "CAMERAS",
+           "COIN COLLECTIONS",
+           "FURS",
+           "GOLFER'S EQUIPMENT",
+           "SILVERWARE",
+           "SPORTING EQUIPMENT",
+           "STAMP COLLECTION"     : L_SCREEN = "agtmt3002a"
+      Case "JEWELRY"              : L_SCREEN = "agtmt3002b"
+      Case "FINE ARTS"            : L_SCREEN = "agtmt3002c"
+      Case "MUSICAL INSTRUMENTS"  : L_SCREEN = "agtmt3002d"
+      End
+    Display Modal Screen L_SCREEN
+    End
+
+End
+
+Procedure Show_camera
+begin
+G_ARTICLE = "CAMERAS"
+Access agqdesc1, Set agqdesc1:app_no   = G_app_no,
+                     agqdesc1:PREM_NO  = G_PREM_NO ,
+                     agqdesc1:BUILD_NO = G_BUILD_NO ,
+                     agqdesc1:CODE     = G_CODE,
+                     agqdesc1:ARTICLE  = G_ARTICLE, Generic
+
+If agqdesc1:app_no   = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    l_screen = "agtmt3002a"
+    Display Modal Screen L_SCREEN
+    function = "redisplay"
+    End
+
+end
+
+Procedure Show_coins
+begin
+G_ARTICLE = "COIN COLLECTIONS"
+Access agqdesc1, Set agqdesc1:app_no   = G_app_no,
+                     agqdesc1:PREM_NO  = G_PREM_NO ,
+                     agqdesc1:BUILD_NO = G_BUILD_NO ,
+                     agqdesc1:CODE     = G_CODE,
+                     agqdesc1:ARTICLE  = G_ARTICLE, Generic
+
+If agqdesc1:app_no   = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    l_screen = "agtmt3002a"
+    Display Modal Screen L_SCREEN
+    function = "redisplay"
+    End
+
+end
+
+Procedure Show_furs
+begin
+G_ARTICLE = "FURS"
+Access agqdesc1, Set agqdesc1:app_no = G_app_no,
+                    agqdesc1:PREM_NO  = G_PREM_NO ,
+                    agqdesc1:BUILD_NO = G_BUILD_NO ,
+                    agqdesc1:CODE     = G_CODE,
+                    agqdesc1:ARTICLE  = G_ARTICLE, Generic
+
+If agqdesc1:app_no = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    l_screen = "agtmt3002a"
+    Display Modal Screen L_SCREEN
+    function = "redisplay"
+    End
+
+end
+
+Procedure Show_golf_equipment
+begin
+G_ARTICLE = "GOLFER'S EQUIPMENT"
+Access agqdesc1, Set agqdesc1:app_no = G_app_no,
+                    agqdesc1:PREM_NO  = G_PREM_NO ,
+                    agqdesc1:BUILD_NO = G_BUILD_NO ,
+                    agqdesc1:CODE     = G_CODE,
+                    agqdesc1:ARTICLE  = G_ARTICLE, Generic
+
+If agqdesc1:app_no = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    l_screen = "agtmt3002a"
+    Display Modal Screen L_SCREEN
+    function = "redisplay"
+    End
+
+end
+
+Procedure Show_silverware
+begin
+G_ARTICLE = "SILVERWARE"
+Access agqdesc1, Set agqdesc1:app_no = G_app_no,
+                    agqdesc1:PREM_NO  = G_PREM_NO ,
+                    agqdesc1:BUILD_NO = G_BUILD_NO ,
+                    agqdesc1:CODE     = G_CODE,
+                    agqdesc1:ARTICLE  = G_ARTICLE, Generic
+
+If agqdesc1:app_no = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    l_screen = "agtmt3002a"
+    Display Modal Screen L_SCREEN
+    function = "redisplay"
+    End
+
+end
+
+Procedure Show_sporting_equipment
+begin
+G_ARTICLE = "SPORTING EQUIPMENT"
+Access agqdesc1, Set agqdesc1:app_no = G_app_no,
+                    agqdesc1:PREM_NO  = G_PREM_NO ,
+                    agqdesc1:BUILD_NO = G_BUILD_NO ,
+                    agqdesc1:CODE     = G_CODE,
+                    agqdesc1:ARTICLE  = G_ARTICLE, Generic
+
+If agqdesc1:app_no = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    l_screen = "agtmt3002a"
+    Display Modal Screen L_SCREEN
+    function = "redisplay"
+    End
+
+end
+
+Procedure Show_stamps
+begin
+G_ARTICLE = "STAMP COLLECTION"
+Access agqdesc1, Set agqdesc1:app_no = G_app_no,
+                    agqdesc1:PREM_NO  = G_PREM_NO ,
+                    agqdesc1:BUILD_NO = G_BUILD_NO ,
+                    agqdesc1:CODE     = G_CODE,
+                    agqdesc1:ARTICLE  = G_ARTICLE, Generic
+
+If agqdesc1:app_no = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    l_screen = "agtmt3002a"
+    Display Modal Screen L_SCREEN
+    function = "redisplay"
+    End
+
+end
+
+Procedure Show_jewelry
+begin
+G_ARTICLE = "JEWELRY"
+Access agqdesc1, Set agqdesc1:app_no = G_app_no,
+                    agqdesc1:PREM_NO  = G_PREM_NO ,
+                    agqdesc1:BUILD_NO = G_BUILD_NO ,
+                    agqdesc1:CODE     = G_CODE,
+                    agqdesc1:ARTICLE  = G_ARTICLE, Generic
+
+If agqdesc1:app_no = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    l_screen = "agtmt3002b"
+    Display Modal Screen L_SCREEN
+    function = "redisplay"
+    End
+
+end
+
+Procedure Show_fine_arts
+begin
+G_ARTICLE = "FINE ARTS"
+Access agqdesc1, Set agqdesc1:app_no = G_app_no,
+                    agqdesc1:PREM_NO  = G_PREM_NO ,
+                    agqdesc1:BUILD_NO = G_BUILD_NO ,
+                    agqdesc1:CODE     = G_CODE,
+                    agqdesc1:ARTICLE  = G_ARTICLE, Generic
+
+If agqdesc1:app_no = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    l_screen = "agtmt3002c"
+    Display Modal Screen L_SCREEN
+    function = "redisplay"
+    End
+
+end
+
+Procedure Show_musical_instruments
+begin
+G_ARTICLE = "MUSICAL INSTRUMENTS"
+Access agqdesc1, Set agqdesc1:app_no   = G_app_no,
+                     agqdesc1:PREM_NO  = G_PREM_NO ,
+                     agqdesc1:BUILD_NO = G_BUILD_NO ,
+                     agqdesc1:CODE     = G_CODE,
+                     agqdesc1:ARTICLE  = G_ARTICLE, Generic
+
+If agqdesc1:app_no   = G_app_no And
+   agqdesc1:PREM_NO  = G_PREM_NO And
+   agqdesc1:BUILD_NO = G_BUILD_NO And
+   agqdesc1:CODE     = G_CODE And
+   agqdesc1:ARTICLE  = G_ARTICLE Then
+    Begin
+    l_screen = "agtmt3002d"
+    Display Modal Screen L_SCREEN
+    function = "redisplay"
+    End
+
+end
+
+End

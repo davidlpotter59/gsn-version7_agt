@@ -1,0 +1,541 @@
+%%
+Screen
+        Name = "agtmt9002b" ;
+        Type = "Detail" ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+        Domain = "agqmailingaddress" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number g_line_of_business[4],
+                                     g_state[2],
+                                     g_form[1] ;
+
+        global string g_zipcode_change[1] ;
+
+
+        Local Unsigned Ascii Number L_LINE_OF_BUSINESS[4]=0,
+                                    l_val_zipcode[5],
+                                    l_zipcode_5[5],
+                                    l_restricted[1]=0,
+                                    l_restricted_distance[5]=0/dec=2,
+                                    l_tier[2]=0 ;
+
+        local string l_zipcode[9],
+                     l_username[15],
+                     l_prior_street_type[6],
+                     l_business_desc_1[30],
+                     l_business_desc_2[30],
+                     l_continue_1[2],
+                     l_str_zipcode[9],
+                     l_str_state[2],
+                     l_sub_line[2],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_server_name[100],
+                     l_lob_code[10],
+                     L_COMPANY_ID[10] ;
+
+        include "swsut100.var"
+
+        Access agqmailingaddress,
+           Set agqmailingaddress:app_NO = G_app_NO, generic ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+                include "styles.inc"
+                Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+                             }
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+disable(accept_fn)
+
+l_username = username
+access sfsemail,
+     set sfsemail:company_id = agqpersonal:company_id,
+         sfsemail:user_id    = l_username, generic
+
+switch(g_line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : switch(g_form)
+                  case 3  : setproperty(t_mho3,iconname,"title_mho3.bmp")
+                  case 4  : setproperty(t_mho4,iconname,"title_mho4.bmp")
+                  case 6  : setproperty(t_mho6,iconname,"title_mho6.bmp")
+                  default : begin
+                            setproperty(t_mho3,iconname,"")
+                            setproperty(t_mho4,iconname,"")
+                            setproperty(t_mho6,iconname,"")
+                            end
+                  end
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+access agqpersonal, set agqpersonal:app_no = g_app_no, generic
+
+l_username = username
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(add_fn)
+    disable(delete_fn)
+    end
+
+Access Validation
+If agqmailingaddress:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        scrollbarpolicy = asneeded
+        backgroundcolor = "#ADD8E6"
+        fontstyle = BOLD
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,28 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,20 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+  Panel at 3,1 to 4,100
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1.45,1 to 1.45,60
+             properties
+               {
+                 text = "Prior Address"
+                 fontsize = 18
+                 fontstyle = BOLD
+                 transparent = False
+                 fontname = "Arial"
+                 backgroundcolor = "Grey"
+               }
+         }
+
+panel at 3.6,75 to 3.6, 100 Tagged quote_no
+Properties
+        {
+                LayoutType = row
+                transparent = false
+        }
+{
+%%
+App No:  ___________
+
+%%
+fields
+101     begin
+        if function one of "ADD", "NEW" then
+            agqmailingaddress:app_no = g_app_no
+        end
+        agqmailingaddress:APP_NO/displayonly ;
+}
+
+
+
+Panel at 5,1 to 6,100 tagged button_panel
+    Properties
+         {
+         layouttype = screen
+         }
+    {
+    Components
+        Button at 1.5,10
+          properties
+              {
+              Iconname = "btn_edit_entries.bmp"
+              }
+          Events
+              {
+              Action = change_fn
+              }
+
+        Button at 1.5,60  tagged accept_fn
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+    }
+
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt9002b.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 8,10 to 21, 95 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+     Number  Direction           Street              Type  Designation  Apt No
+   __________   ___    ___________________________  ______    _______    _____
+
+                 City              State    Zip Code
+   ______________________________   ___    ___________
+
+%%
+
+components
+
+Fields
+
+201     begin
+        if function one of "ADD","NEW","CHG","CHANGE" then
+            {
+            enable(accept_fn)
+            }
+        else
+            {
+            disable(accept_fn)
+            }
+
+        access agqpersonal, set agqpersonal:app_no   = g_app_no, generic
+
+        l_company_id = agqpersonal:company_id
+        end
+        agqmailingaddress:prior_house_number/default/uppercase/tabstop ;
+202     begin
+        access sfsdirection_alias,
+            set sfsdirection_alias:company_id = l_company_id, approximate
+        end
+        agqmailingaddress:prior_street_direction/default/uppercase/tabstop
+        access sfsdirection,
+          set sfsdirection:company_id = l_company_id,
+              sfsdirection:direction  = agqmailingaddress:prior_street_direction, exact
+
+        If agqmailingaddress:prior_street_direction <> SFSDIRECTION:DIRECTION Then
+            Error 1404
+
+        Activehelp SFSDIRECTION_ALIAS:DIRECTION ,
+                   SFSDIRECTION_ALIAS:DESCRIPTION;
+
+203     agqmailingaddress:prior_street_name/uppercase/tabstop ;
+204     begin
+        access SFSSTRTYPE_alias,
+            set SFSSTRTYPE_alias:company_id = l_company_id, approximate
+
+        l_prior_street_type = agqmailingaddress:prior_street_type_1
+        end
+        l_prior_street_type/default/uppercase/tabstop
+        access SFSSTRTYPE,
+          set SFSSTRTYPE:company_id = l_company_id,
+              sfsstrtype:st_type    = l_prior_street_type, generic
+
+        agqmailingaddress:prior_street_type   = l_prior_street_type
+        agqmailingaddress:prior_street_type_1 = l_prior_street_type
+
+        If l_prior_street_type <> SFSSTRTYPE:ST_TYPE Then
+            Error 1307
+
+        Activehelp SFSSTRTYPE_alias:ST_TYPE,
+                   SFSSTRTYPE_alias:DESCRIPTION ;
+205     begin
+        access SFSdesignation_alias,
+             set SFSdesignation_alias:company_id = l_company_id, approximate
+        end
+        agqmailingaddress:prior_designation/uppercase/default/tabstop
+
+        access SFSdesignation,
+           set SFSdesignation:company_id  = l_company_id,
+               sfsdesignation:designation = agqmailingaddress:prior_designation, exact
+
+        If agqmailingaddress:prior_designation <> SFSdesignation:designation Then
+            Error 1307
+
+        activehelp sfsdesignation_alias:designation,
+                   sfsdesignation_alias:description;
+
+206     agqmailingaddress:prior_apt_number/uppercase/default/tabstop
+        if agqmailingaddress:prior_house_number = "" and
+           agqmailingaddress:prior_street_direction = "" and
+           agqmailingaddress:prior_street_name = "" and
+           agqmailingaddress:prior_street_type_1 = "" then
+            error "You must enter an address" ;
+
+501     agqmailingaddress:prior_city/uppercase/default/tabstop mandatory;
+502     agqmailingaddress:prior_state/uppercase/default/tabstop mandatory;
+503     agqmailingaddress:prior_zip_code/uppercase/default/mask="99999-9999"/tabstop mandatory
+        if val(agqmailingaddress:prior_zip_code) = 0 then
+            error "Please enter only numbers"
+
+        if len(trun(agqmailingaddress:prior_zip_code)) not one of 5, 9 and
+           len(trun(agqmailingaddress:prior_zip_code)) <> 0 then
+            error "Length of Zipcode must 5 or 9 characters"
+
+        If val(agqmailingaddress:prior_zip_code[6,9]) = 0 and
+           trun(agqmailingaddress:prior_zip_code[6,9]) = "" then
+            begin
+            agqmailingaddress:prior_zip_code[6,9] = "0000"
+            end
+
+        putfield(agqmailingaddress:prior_zip_code) ;
+
+}
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,1 to 23,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,40   tagged calc_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+panel at 25,1 to 32,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+}
+
+}
+
+Update
+  if UPDATEOK = "NO" Then
+      disable(accept_fn)
+
+if abort = "YES" then
+    disable(accept_fn)
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+      disable(accept_fn)
+
+end

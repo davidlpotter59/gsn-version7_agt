@@ -1,0 +1,443 @@
+%% 
+/*
+Date Written: March 05, 2003
+
+Name: agqidcard1.sd               SALEM TEMPORARY AUTO ID CARD
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+07/21/2010             REL        Commercial Temporary Quote ID Card for Farmers of Salem
+===========================
+*/
+
+Program
+  Name = "agqidcard1" ;
+  Type = "File" ;
+  Domain = "dummy";
+  Padcharacter = Space ;
+
+  String L_FILE_NAME[13] = "agqidcard1.cq" ;
+  String L_COPY_NAME[20];
+  String L_PRINTER[4];
+  String L_STATE[15];
+  String L_ALPHA_POLICY_NO = "";
+  String L_SFSAGENT_ZIP;
+  String L_PREV_STRING;
+  String L_TYPE_STR[29];
+  String L_TRANS_EFF;
+  String L_AUDIT="";
+  String L_SYMBOL_STRING[5] ="";
+  String L_COMPANY[10]="";
+  String L_SFPNAME_ZIP = "";
+  String L_FOB[75];
+  String L_LOB_CODE[10];
+  string l_enter[1];
+  String L_COMPANY_ID[10];
+  String L_USER_ID[15];
+  String L_SIGNATURE_STRING[55];
+  String L_agqNAME_ZIP="";
+  String L_INSURED_CITY_STATE[100];
+  String L_AGENT_TEL[13];
+  String L_AGENT_ZIP;
+  String L_ADRESS_WORDING[50];
+
+
+  Number L_SWITCH_COL_COUNTER = 1;
+  Number L_AGENT_CODE_LINE;    --print line of the agent code line
+  Number L_INSURED__LINE;      --print line of the insured top line
+  Number L_RENEWAL[9];
+  Number L_MM_1;
+  Number L_DD_1;
+  Number L_YY_1;
+  Number L_CAL_VERTICAL_POS_1;  --get the starting location of the insured
+  Number L_CAL_VERTICAL_POS;    --location on the pol eff date heading line
+  Number L_TRANS_CODE;
+
+  Ascii Number L_LENGTH;
+  Ascii Number L_WIDTH;
+  Ascii Number L_HORZ_LOC;
+  Ascii Number L_VERT_LOC;
+  Ascii Number L_VERT_LOC2;
+
+  Unsigned ascii number l_app_no[11];
+  Unsigned ascii number l_quote_no[11];
+  Unsigned Ascii Number L_PRINTER_NO[4]; --the actual printer number
+  Unsigned Ascii Number L_LINE_COUNTER = 1;  --line counter per page
+  Unsigned Ascii Number L_agqvehicle_STATE[2];
+  Unsigned Ascii Number L_agqvehicle_COUNTY[3];
+  Unsigned Ascii Number L_LINE_OF_BUSINESS[4];
+  Unsigned Ascii Number L_TOTAL_VEHICLE;
+  Unsigned Ascii Number L_CURRENT_VEHICLE;
+  Unsigned Ascii Number L_NO_VEHICLE[3];
+  Unsigned Ascii Number L_COUNTER[3];
+  Unsigned Ascii Number L_LOOP;
+  Unsigned Ascii Number L_state_var[3];
+  Unsigned Ascii Number L_LAST_VEH;
+  Unsigned Ascii Number L_LOOP_NUMBER;
+  String L_COMPANY_ZIP[10];
+  Unsigned Ascii Number L_LOOP_2;
+  Unsigned Ascii Number L_LOOP1;
+  Unsigned Ascii Number L_LOOP3;
+  unsigned ascii number l_individual_id_card[1];
+
+  Include "csfonts.inc"
+  Include "center2.var"
+  Include "sfsrevname.var"
+
+  Initialisation
+  Deletefile(L_FILE_NAME);
+  L_APP_NO = val(COMMANDLINE[1,11])
+
+
+  Access AGQNAME,
+     Set AGQNAME:APP_NO    = L_APP_NO, Exact
+
+  Access SFSAGENT ,
+     Set SFSAGENT:COMPANY_ID = AGQVEHICLE:COMPANY_ID,
+         SFSAGENT:AGENT_NO   = AGQVEHICLE:AGENT_NO, Exact
+
+  Access SFSCOMPANY,
+     Set SFSCOMPANY:COMPANY_ID = AGQVEHICLE:COMPANY_ID , Exact
+
+  Access SFSLINE,
+     Set SFSLINE:COMPANY_ID       = AGQVEHICLE:COMPANY_ID ,
+         SFSLINE:LINE_OF_BUSINESS = AGQVEHICLE:LINE_OF_BUSINESS, Generic
+
+  Access AGQMASTER,
+     Set AGQMASTER:APP_NO    = L_APP_NO, Exact
+
+  Access CASDEFAULT,
+     Set CASDEFAULT:COMPANY_ID       = AGQVEHICLE:COMPANY_ID,
+         CASDEFAULT:LINE_OF_BUSINESS = AGQVEHICLE:LINE_OF_BUSINESS, Exact
+
+  Access agqvehicle,
+     Set agqvehicle:APP_NO    = L_APP_NO, Generic
+
+  Access AGQADDIN,
+     Set AGQADDIN:APP_NO    = L_APP_NO,Generic
+
+  Access AGQADDLPIP,
+     Set AGQADDLPIP:APP_NO      = L_APP_NO,Generic
+
+  Access AGQNONOWNED,
+     Set AGQNONOWNED:APP_NO    = L_APP_NO, Exact
+
+  Access AGQNONOWNED,
+     Set AGQNONOWNED:APP_NO    = L_APP_NO, Exact
+
+  L_LOB_CODE = SFSLINE:LOB_CODE
+  L_COMPANY_ID = AGQNAME:COMPANY_ID
+
+  L_COMPANY = AGQNAME:COMPANY_ID
+
+  Access agqvehicle,
+     Set agqvehicle:APP_NO    = L_APP_NO,Generic
+
+  L_USER_ID = USERNAME  -- getting current user name
+  --L_PRINTER_NO = Val(L_PRINTER)   --converting l_printer to the number
+
+  L_agqvehicle_STATE = agqvehicle:STATE
+  L_agqvehicle_COUNTY = agqvehicle:COUNTY
+
+  Access SCIPSCONTROL,
+     Set SCIPSCONTROL:COMPANY_ID = L_COMPANY_ID,
+         SCIPSCONTROL:STATE      = L_agqvehicle_STATE,
+         SCIPSCONTROL:LOB_CODE   = L_LOB_CODE, Exact
+
+  Access SFSSTATE,
+     Set SFSSTATE:COMPANY_ID = L_COMPANY_ID,
+         SFSSTATE:STATE      = L_agqvehicle_STATE,
+         SFSSTATE:COUNTY     = L_agqvehicle_COUNTY, Exact
+
+  Access SFSPRINTER,
+     Set SFSPRINTER:COMPANY_ID = L_COMPANY_ID,
+         SFSPRINTER:USER_ID    = L_USER_ID,
+         SFSPRINTER:PRINTER_NO = L_PRINTER_NO, Exact
+
+  L_agqname_ZIP =  If (Val(agqNAME:STR_ZIPCODE[6,9]) = 0) Then
+                      agqNAME:STR_ZIPCODE[1,5]
+                   Else
+                   agqNAME:STR_ZIPCODE[1,5] + "-" + agqNAME:STR_ZIPCODE[6,9]
+
+  L_AGENT_TEL = SFSAGENT:TELEPHONE[1];
+
+  L_AGENT_ZIP =  If (Val(SFSAGENT:STR_ZIPCODE[6,9]) = 0) Then
+                         SFSAGENT:STR_ZIPCODE[1,5]
+                 Else
+                    SFSAGENT:STR_ZIPCODE[1,5] + "-" + SFSAGENT:STR_ZIPCODE[6,9]
+
+
+  L_SFSAGENT_ZIP = If (Val(SFSAGENT:ZIPCODE_1_4) = 0) Then
+                    SFSAGENT:ZIPCODE_5_9
+                  Else
+                    SFSAGENT:ZIPCODE_5_9 + "-" + SFSAGENT:ZIPCODE_1_4
+
+  L_COMPANY_ZIP =  If (Val(SFSCOMPANY:STR_ZIPCODE[6,9]) = 0) Then
+                      SFSCOMPANY:STR_ZIPCODE[1,5]
+                   Else
+                      SFSCOMPANY:STR_ZIPCODE[1,5] + "-" +
+                      SFSCOMPANY:STR_ZIPCODE[6,9]
+
+
+  Switch(AGQMASTER:FORM_OF_BUSINESS)
+    Case 'C' : L_FOB = "Corporation"
+    Case 'I' : L_FOB = "Individual"
+    Case 'J' : L_FOB = "Joint Venture"
+    Case 'O' : L_FOB = "Organization"
+    Case 'P' : L_FOB = "Partnership"
+    Case 'T' : L_FOB = AGQMASTER:FOB_DESCRIPTION
+  End
+
+  L_state_var=000
+
+  Access SFSSTATE_ALIAS,
+     Set SFSSTATE_ALIAS:COMPANY_ID = L_COMPANY_ID,
+         SFSSTATE_ALIAS:STATE      = L_agqvehicle_STATE,
+         SFSSTATE_ALIAS:COUNTY     = L_state_var, Exact
+
+  L_STATE=SFSSTATE_ALIAS:DESCRIPTION
+
+Writefile(L_FILE_NAME,"%s","<033>&l0E")    --sets the top margin to 0
+Writefile(L_FILE_NAME,"%s","<033>&l65F")   --sets the page length to 65 lines
+
+do temp_id_card
+
+
+update
+Screen Exit
+--  Writefile(L_FILE_NAME,"%s%s",L_FORMFEED,L_RESET)
+  Closefile(L_FILE_NAME)
+
+Procedure Definition
+
+procedure temp_id_card
+
+BEGIN
+Writefile(L_FILE_NAME,"%s","<FF>")
+Writefile(L_FILE_NAME,"%s","<033>&a1300h+600V")
+Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+Writefile(L_FILE_NAME,"%s","Farmers Mutual Fire Insurance Co. of Salem County")
+Writefile(L_FILE_NAME,"%s",l_arial_italic_9)
+Writefile(L_FILE_NAME,"%s","<033>&a1750h+140V")
+Writefile(L_FILE_NAME,"%s","Superior Service with Personal Attention Since 1851")
+
+Writefile(L_FILE_NAME,"%s",l_arial_9)
+Writefile(L_FILE_NAME,"%s","<033>&a1700h+120V")
+Writefile(L_FILE_NAME,"%s","125 W. Broadway P.O. Box 263 Salem NJ 08079-0263")
+Writefile(L_FILE_NAME,"%s","<033>&a1500h+140V")
+Writefile(L_FILE_NAME,"%s","(856) 935-1851 FAX (856) 935-7955 Claims FAX (856) 935-2460")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold_14)
+Writefile(L_FILE_NAME,"%s","<033>&a2000h+340V")
+Writefile(L_FILE_NAME,"%s","TEMPORARY ID CARD")
+Writefile(L_FILE_NAME,"%s","<033>&a1300h+180V")
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","THIS CARD EXPIRES 60 DAYS AFTER THE EFFECTIVE DATE")
+
+Writefile(L_FILE_NAME,"%s","<033>&a370h+240V")
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","INSURED")
+
+Writefile(L_FILE_NAME,"%s","<033>&a600h+120V")
+
+Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+For L_LOOP = 1 To 3
+  {
+    I_NAME=agqname:NAME[L_LOOP,1,40]
+    Include "sfsrevname7.pro"
+    If agqname:NAME[L_LOOP] <> "" Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",I_REV_NAME,"<NL>")
+      }
+  }
+
+For L_LOOP = 1 To 3
+  {
+    If (agqNAME:ADDRESS[L_LOOP] <> "") Then
+      {
+         Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",agqNAME:ADDRESS[L_LOOP,1,40],"<NL>")
+      }
+  }
+if agqNAME:STR_STATE <> "" or
+   agqNAME:city <> "" then
+  {
+    Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",L_INSURED_CITY_STATE,"<NL>")
+  }
+
+Writefile(L_FILE_NAME,"%s",l_push)
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD))
+Writefile(L_FILE_NAME,"%s","<033>&a370h+120V")
+Writefile(L_FILE_NAME,"%s","QUOTE NUMBER ")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+Writefile(L_FILE_NAME,"%s","<033>&a370h+120V")
+If agqname:quote_no <> 0 then
+  {
+    Writefile(L_FILE_NAME,"%s%s",trun(L_ARIAL_BOLD_12),trun(str(agqname:quote_no)))
+  }
+
+Writefile(L_FILE_NAME,"%s",l_pop)
+Writefile(L_FILE_NAME,"%s",l_push)
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD))
+Writefile(L_FILE_NAME,"%s","<033>&a2100h+120V")
+Writefile(L_FILE_NAME,"%s","EFFECTIVE DATE")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+Writefile(L_FILE_NAME,"%s","<033>&a2100h+120V")
+Writefile(L_FILE_NAME,"%d",agqvehicle:EFF_DATE)
+
+Writefile(L_FILE_NAME,"%s",l_pop)
+Writefile(L_FILE_NAME,"%s",l_push)
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD))
+Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+Writefile(L_FILE_NAME,"%s","EXPIRATION DATE")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+Writefile(L_FILE_NAME,"%d",agqvehicle:EXP_DATE)
+
+Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+
+Writefile(L_FILE_NAME,"%s",l_push)
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD))
+Writefile(L_FILE_NAME,"%s","<033>&a370h+120V")
+Writefile(L_FILE_NAME,"%s","YEAR")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+Writefile(L_FILE_NAME,"%s","<033>&a370h+120V")
+Writefile(L_FILE_NAME,"%n",agqVEHICLE:YEAR)
+
+
+Writefile(L_FILE_NAME,"%s",l_pop)
+Writefile(L_FILE_NAME,"%s",l_push)
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD))
+Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+Writefile(L_FILE_NAME,"%s","MAKE")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+Writefile(L_FILE_NAME,"%s","<033>&a800h+120V")
+Writefile(L_FILE_NAME,"%s",agqVEHICLE:MAKE)
+Writefile(L_FILE_NAME,"%s","<033>&a2300h+0V")
+
+Writefile(L_FILE_NAME,"%s",l_pop)
+Writefile(L_FILE_NAME,"%s",l_push)
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD))
+Writefile(L_FILE_NAME,"%s","<033>&a2100h+120V")
+Writefile(L_FILE_NAME,"%s","MODEL")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+Writefile(L_FILE_NAME,"%s","<033>&a2100h+120V")
+Writefile(L_FILE_NAME,"%s",agqVEHICLE:MODEL)
+
+Writefile(L_FILE_NAME,"%s",l_pop)
+Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+Writefile(L_FILE_NAME,"%s",trun(l_arial_bold))
+Writefile(L_FILE_NAME,"%s","VIN")
+Writefile(L_FILE_NAME,"%s",trun(l_arial_9))
+Writefile(L_FILE_NAME,"%s","<033>&a3800h+120V")
+Writefile(L_FILE_NAME,"%s",agqVEHICLE:SERIAL_NO)
+
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_BOLD))
+Writefile(L_FILE_NAME,"%s","<033>&a370h+370V")
+Writefile(L_FILE_NAME,"%s","AGENCY NAME AND ADDRESS")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+
+Writefile(L_FILE_NAME,"%s","<033>&a370h+120V")
+
+For L_LOOP = 1 To 3
+  {
+    If SFSAGENT:NAME[L_LOOP] <> "" Then
+      {
+        Writefile(L_FILE_NAME,"%s%s","<033>&a370h+0V",SFSAGENT:NAME[L_LOOP])
+        Writefile(L_FILE_NAME,"%s","<NL>")
+      }
+  }
+For L_LOOP = 1 To 3
+  {
+    If SFSAGENT:ADDRESS[L_LOOP] <> "" Then
+      {
+        Writefile(L_FILE_NAME,"%s%s%s","<033>&a370h+0V",SFSAGENT:ADDRESS[L_LOOP],"<NL>")
+      }
+  }
+
+Writefile(L_FILE_NAME,"%s%s, %s%s%s%s","<033>&a370h+0V",Trun(SFSAGENT:CITY),
+                      SFSAGENT:STR_STATE," ",L_AGENT_ZIP,"<NL>")
+
+Writefile(L_FILE_NAME,"%s","<033>&a1700h+40V")
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","THIS CARD MUST BE KEPT IN THE INSURED")
+
+Writefile(L_FILE_NAME,"%s","<033>&a1720h+180V")
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","VEHICLE AND PRESENTED UPON DEMAND")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","<033>&a370h+300V")
+Writefile(L_FILE_NAME,"%s","WARNING:  ")
+Writefile(L_FILE_NAME,"%s",l_arial_9)
+Writefile(L_FILE_NAME,"%s","Any person who presents or uses this card to show that there is in force a policy of")
+Writefile(L_FILE_NAME,"%s","<033>&a370h+140V")
+Writefile(L_FILE_NAME,"%s","Insurance as indicated herein, that is in fact not in effect, is liable to a heavy fine and/or")
+Writefile(L_FILE_NAME,"%s","<033>&a370h+140V")
+Writefile(L_FILE_NAME,"%s","imprisonment and his license and/or registration may be suspended or revoked.")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","<033>&a2010h+240V")
+Writefile(L_FILE_NAME,"%s","ADDRESS FOR NOTIFICATION OF")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","<033>&a1710h+180V")
+Writefile(L_FILE_NAME,"%s","COMMENCEMENT OF MEDICAL TREATMENT:")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","<033>&a1470h+180V")
+Writefile(L_FILE_NAME,"%s","FARMERS MUTUAL FIRE INS. CO. OF SALEM COUNTY")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","<033>&a1190h+180V")
+Writefile(L_FILE_NAME,"%s","C/O CMR 1120 WELSH ROAD SUITE 220 NORTH WALES, PA 19454")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","<033>&a370h+300V")
+Writefile(L_FILE_NAME,"%s","IN CASE OF ACCIDENT:  ")
+
+Writefile(L_FILE_NAME,"%s",l_arial_9)
+Writefile(L_FILE_NAME,"%s","Report all accidents to our claims depsrtment as soon as possible.")
+
+Writefile(L_FILE_NAME,"%s","<033>&a370h+140V")
+Writefile(L_FILE_NAME,"%s","Obtain the following information:")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","<033>&a570h+200V")
+Writefile(L_FILE_NAME,"%s","1.")
+
+Writefile(L_FILE_NAME,"%s",l_arial_9)
+Writefile(L_FILE_NAME,"%s","<033>&a770h+0V")
+Writefile(L_FILE_NAME,"%s","Name and address of each driver, passenger and witness.")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","<033>&a570h+180V")
+Writefile(L_FILE_NAME,"%s","2.")
+
+Writefile(L_FILE_NAME,"%s",l_arial_9)
+Writefile(L_FILE_NAME,"%s","<033>&a770h+V")
+Writefile(L_FILE_NAME,"%s","Name of insurance Company and policy number for each vehicle involved.")
+
+Writefile(L_FILE_NAME,"%s",l_arial_bold)
+Writefile(L_FILE_NAME,"%s","<033>&a1450h+300V")
+Writefile(L_FILE_NAME,"%s","TO REPORT YOUR CLAIM PLEASE CALL: 1-888-268-3720")
+
+
+
+Writefile(L_FILE_NAME,"%s","<033>&a370h+240V")
+Writefile(L_FILE_NAME,"%s",trun(L_ARIAL_9))
+Writefile(L_FILE_NAME,"%s","<033>&a370h+120V")
+Writefile(L_FILE_NAME,"%s","QUOTE NUMBER ")
+Writefile(L_FILE_NAME,"%s","<033>&a370h+120V")
+If agqname:quote_no <> 0 then
+  {
+    Writefile(L_FILE_NAME,"%s%s",trun(L_ARIAL_BOLD_12),trun(str(agqname:quote_no)))
+  }
+Writefile(L_FILE_NAME,"%s","<033>&a0h0V")
+closefile(l_file_name)
+proc ("cli cat /software/shells/agqidcard1_watermark.pcl >> agqidcard1.cq")
+End
+
+end

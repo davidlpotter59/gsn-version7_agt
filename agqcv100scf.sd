@@ -1,0 +1,51 @@
+%%
+Program
+        Name = "agqcv100scf" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+        Global Unsigned Ascii Number G_QUOTE_NO[8] ;
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_prem_no[4],
+                                    l_build_no[4] ;
+
+        Local String L_PROCEDURE[20] ,
+                     L_POLICY_NO[9] ,
+                     l_code[7],
+                     L_QUOTE_NO[8] ;
+
+Initialisation
+G_APP_NO       = val(COMMANDLINE[1,11])
+G_QUOTE_NO     = val(COMMANDLINE[12,19])
+
+L_PROCEDURE = "caqschedule FILE UPDATE"
+
+Access agqschedule, Set agqschedule:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqschedule:app_no <> g_app_no
+
+    Add caqschedule
+        Begin
+        caqschedule:quote_no                 = G_quote_no
+        caqschedule:RECORD_RDF               = agqschedule:RECORD_RDF/raw
+        End
+
+    Next agqschedule
+    End
+
+
+Update
+
+Errors
+Writefile("agqcv100scf.err","<NL>")
+Writefile("agqcv100scf.err","%S",L_PROCEDURE)
+Writefile("agqcv100scf.err","<NL>")
+Writefile("agqcv100scf.err","%N%S agqcv100.err",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv100scf.err","<NL>")
+Writefile("agqcv100scf.err","<NL>")
+
+End

@@ -1,0 +1,144 @@
+%%
+Program
+        Name = "agqcv101smp" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+         Global Unsigned Ascii Number G_OLD_QUOTE[8] ,
+                                      G_QUOTE_NO[8] ,
+                                      g_app_no[11];
+
+         String L_PROCEDURE[20] ,
+                L_QUOTE_NO[8] ,
+                l_app_no[11],
+                l_code[7],
+                l_enter,
+                L_NEW_QUOTE_NO[8] ;
+
+        unsigned ascii number l_prem_no[4],
+                              l_build_no[4],
+                              l_sub_code[4] ;
+
+Initialisation
+g_app_no   = val(commandline[1,11])
+g_quote_no = val(COMMANDLINE[12,19])
+
+Access agqname, set agqname:app_no = g_app_no, generic
+
+L_PROCEDURE = "cpqartdeduct FILE UPDATE"
+
+Access agqartdeduct, Set agqartdeduct:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqartdeduct:app_no <> g_app_no
+
+    Add CPQartdeduct
+        Begin
+        CPQartdeduct:QUOTE_NO               = G_QUOTE_NO
+        CPQartdeduct:RECORD_RDF             = agqartdeduct:RECORD_RDF/raw
+        End
+
+    Next agqartdeduct
+    End
+
+L_PROCEDURE = "cpqartisan FILE UPDATE"
+
+Access agqartisan, Set agqartisan:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqartisan:app_no <> g_app_no
+
+    Add CPQartisan
+        Begin
+        CPQartisan:QUOTE_NO               = G_QUOTE_NO
+        CPQartisan:PREM_NO                = agqartisan:PREM_NO
+        CPQartisan:BUILD_NO               = agqartisan:BUILD_NO
+        CPQartisan:CLASS_CODE             = agqartisan:CLASS_CODE
+        CPQartisan:RECORD_RDF             = agqartisan:RECORD_RDF/raw
+        End
+
+    Next agqartisan
+    End
+
+L_PROCEDURE = "cpqartlimits FILE UPDATE"
+
+Access agqartlimits, Set agqartlimits:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqartlimits:app_no <> g_app_no
+
+    Add CPQartlimits
+        Begin
+        CPQartlimits:QUOTE_NO               = G_QUOTE_NO
+        CPQartlimits:RECORD_RDF             = agqartlimits:RECORD_RDF/raw
+        End
+
+    Next agqartlimits
+    End
+
+L_PROCEDURE = "cpqartdeviation FILE UPDATE"
+
+Access agqartdeviation, Set agqartdeviation:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqartdeviation:app_no <> g_app_no
+
+    Add CPQartdeviation
+        Begin
+        CPQartdeviation:QUOTE_NO               = G_QUOTE_NO
+        CPQartdeviation:RECORD_RDF             = agqartdeviation:RECORD_RDF/raw
+        End
+
+    Next agqartdeviation
+    End
+
+L_PROCEDURE = "cpqisocrime FILE UPDATE"
+
+Access agqisocrime, Set agqisocrime:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqisocrime:app_no <> g_app_no
+
+    Add CPQisocrime
+        Begin
+        CPQisocrime:QUOTE_NO               = G_QUOTE_NO
+        CPQisocrime:PREM_NO                = agqisocrime:PREM_NO
+        CPQisocrime:BUILD_NO               = agqisocrime:BUILD_NO
+        CPQisocrime:crime_form             = agqisocrime:crime_form
+        CPQisocrime:RECORD_RDF             = agqisocrime:RECORD_RDF/raw
+        End
+
+    Next agqisocrime
+    End
+
+L_PROCEDURE = "cpqisoblanket FILE UPDATE"
+
+Access agqisoblanket, Set agqisoblanket:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqisoblanket:app_no <> g_app_no
+
+    Add CPQisoblanket
+        Begin
+        CPQisoblanket:QUOTE_NO               = G_QUOTE_NO
+        CPQisoblanket:PREM_NO                = agqisoblanket:PREM_NO
+        CPQisoblanket:BUILD_NO               = agqisoblanket:BUILD_NO
+        CPQisoblanket:rate_type              = agqisoblanket:rate_type
+        CPQisoblanket:RECORD_RDF             = agqisoblanket:RECORD_RDF/raw
+        End
+
+    Next agqisoblanket
+    End
+
+Update
+
+Errors
+Writefile("agqcv101smp.err","<NL>")
+Writefile("agqcv101smp.err","%S",L_PROCEDURE)
+Writefile("agqcv101smp.err","<NL>")
+Writefile("agqcv101smp.err","%N%S agqcv101smp errors ",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv101smp.err","<NL>")
+Writefile("agqcv101smp.err","<NL>")
+
+End

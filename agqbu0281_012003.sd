@@ -1,0 +1,342 @@
+%%
+/*
+Date Written: February 06, 2006
+
+Name: agqbu0281_012003.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+02/06/2006             DWR     New program name for new MSO Edition
+10/02/2008             JLB     changed accesses
+===========================
+*/
+
+Program
+  Name = "agqbu0281_012003";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[19] = "agqbu0281_012003.cq";
+ String L_COPY_NAME[20] ;
+ String L_agqLOCATION_ZIP;
+ unsigned ascii number l_app_no[11] ;
+ unsigned ascii number l_prem_no[4];
+ unsigned ascii number l_build_no[4] ;
+ Unsigned ascii number l_max_lines;
+ Unsigned Ascii Number L_YEAR[4];
+ Unsigned Ascii number L_LINE_OF_BUSINESS[4];
+ Unsigned ascii number l_found[1];
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_STATE[2]=0;
+ Unsigned Ascii Number L_LOOP;
+ wdate L_EFF_DATE;
+ Unsigned Ascii Number L_LINE_COUNTER;
+ Unsigned Ascii Number L_PAGE_NUMBER;
+
+   Include "swsut100.var"
+   Include "swsut200.var"
+   Include "swsut300.var"
+   Include "csfonts.inc"
+
+Initialization
+  l_app_no = val(commandline[1,11])
+  l_prem_no = val(commandline[12,15])
+  l_build_no = val(commandline[16,19])
+
+  Deletefile (L_FILE_NAME);
+
+Access agqLOCATION,
+   Set agqLOCATION:app_no    = l_app_no ,
+       agqlocation:prem_no   = l_prem_no,
+       agqlocation:build_no  = l_build_no,generic
+
+Access agqNAME,
+   Set agqNAME:app_no    = l_app_no , generic
+
+Access agqend_alias,
+   Set agqend_alias:app_no    = l_app_no ,
+       agqend_alias:prem_no   = l_prem_no,
+       agqend_alias:build_no  = l_build_no,    generic
+
+Access agqendorse,
+   Set agqendorse:app_no    = l_app_no ,
+       agqendorse:prem_no   = l_prem_no,
+       agqendorse:build_no  = l_build_no, generic
+
+Access agqgeneral,
+   Set agqgeneral:app_no    = l_app_no ,
+       agqgeneral:prem_no   = l_prem_no,
+       agqgeneral:build_no  = l_build_no, generic
+
+Access sfsline,
+   Set sfsline:line_of_business = agqgeneral:line_of_business,
+       sfsline:company_id       = agqgeneral:company_id,
+       sfsline:lob_subline      = "00", exact
+
+Include "swsut100.inc"
+I_CODE = "BU0281"
+Include "swsut200.inc"
+
+While agqend_alias:app_no       = l_app_no and
+      agqend_alias:prem_no   = l_prem_no and
+      agqend_alias:build_no  = l_build_no
+{
+  If agqend_alias:CODE = I_CODE Then
+    {
+      L_STATE            = agqGENERAL:STATE
+      L_COMPANY_ID       = agqgeneral:COMPANY_ID
+      L_LINE_OF_BUSINESS = agqgeneral:line_of_business
+
+      Access SFSOPTEND,
+         Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+             SFSOPTEND:STATE            = L_STATE,
+             SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+             SFSOPTEND:CODE             = I_CODE, generic
+
+       While SFSOPTEND:COMPANY_ID       = L_COMPANY_ID and
+             SFSOPTEND:STATE            = L_STATE and
+             SFSOPTEND:LINE_OF_BUSINESS = l_LINE_OF_BUSINESS and
+             SFSOPTEND:CODE             = I_CODE
+
+         {  --start of sfsoptend check
+           If (agqgeneral:eff_date >= sfsoptend:eff_date and
+              (agqgeneral:eff_date <= sfsoptend:exp_date or
+               sfsoptend:exp_date = 0)) then
+             {
+               l_eff_date = sfsoptend:eff_date
+             }
+           next sfsoptend
+         }
+
+      Access SFSOPTEND,
+         Set SFSOPTEND:COMPANY_ID       = L_COMPANY_ID,
+             SFSOPTEND:STATE            = L_STATE,
+             SFSOPTEND:LINE_OF_BUSINESS = L_LINE_OF_BUSINESS,
+             SFSOPTEND:CODE             = I_CODE,
+             SFSOPTEND:EFF_DATE         = L_EFF_DATE, exact
+
+        Access agqLOCATION,
+           Set agqLOCATION:app_no    = l_app_no ,
+               agqLOCATION:PREM_NO      = agqendorse:PREM_NO,
+               agqLOCATION:BUILD_NO     = agqendorse:BUILD_NO, Generic
+
+        L_agqLOCATION_ZIP = If (Val(agqLOCATION:STR_ZIPCODE[6,9]) = 0) Then
+                               agqLOCATION:STR_ZIPCODE[1,5]
+                            Else
+                               agqLOCATION:STR_ZIPCODE[1,5] + "-" +
+                               agqLOCATION:STR_ZIPCODE[6,9]
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a420h7200V")
+      Writefile(L_FILE_NAME,"%s",l_copyright_6)
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s",sfsoptend:COPYRIGHT)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_12)
+      Writefile(L_FILE_NAME,"%s","<033>&a4300h120V")
+      Writefile(L_FILE_NAME,"%s",Trun(SFSOPTEND:FORM_PRINT))
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s",SFSOPTEND:EDITION_PRINT)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+      Writefile(L_FILE_NAME,"%s","PEAK SEASON COVERAGE ")
+      Writefile(L_FILE_NAME,"%s","<033>&a+0h+20V")
+      Writefile(L_FILE_NAME,"%s",L_BULLET_6)
+      Writefile(L_FILE_NAME,"%s","<033>&a+0h-20V")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s"," PART I")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_italic_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+      Writefile(L_FILE_NAME,"%s","This endorsement establishes specific amounts of peak season coverage in connection with Coverage B. The required information ")
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+      Writefile(L_FILE_NAME,"%s","may be shown below or elsewhere in this policy.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+      Writefile(L_FILE_NAME,"%s","The provisions of this endorsement apply only when the endorsement number is listed in the Declarations.")
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+      Writefile(L_FILE_NAME,"%s","Except as provided below, all other provisions in this policy are unchanged.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+100V")
+      Writefile(L_FILE_NAME,"%s","<033>&a200h-60V<033>*c5200h5v0P") --Horizontal
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+240V")
+      Writefile(L_FILE_NAME,"%s","Application # ")
+      Writefile(L_FILE_NAME,"%n",l_app_no)
+      Writefile(L_FILE_NAME,"%s",l_arial_bold_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+200V")
+      Writefile(L_FILE_NAME,"%s","SCHEDULE")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+      Writefile(L_FILE_NAME,"%s","Location No. ")
+      Writefile(L_FILE_NAME,"%n",agqLOCATION:PREM_NO)
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a2200h+0V")
+      Writefile(L_FILE_NAME,"%s","From")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a3200h+0V")
+      Writefile(L_FILE_NAME,"%s","To")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a4200h+0V")
+      Writefile(L_FILE_NAME,"%s","Amount of Insurance")
+      --**********************************************************************
+      --the following is a request from Salem to not break coverage down to  *
+      --the building level.  option left displaying for all other companies  *
+      --**********************************************************************
+      If l_company_id not one of "FARMERS" then
+        {
+          Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+          Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+          Writefile(L_FILE_NAME,"%s","Building No: ")
+          Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+          Writefile(L_FILE_NAME,"%n",agqLOCATION:BUILD_NO)
+          Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+        }
+      Else
+        {
+          Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+        }
+      If agqLOCATION:ADDRESS <> "" Then
+        {
+          Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+          Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+          Writefile(L_FILE_NAME,"%s",agqLOCATION:ADDRESS)
+          Writefile(L_FILE_NAME,"%s","<033>&a200h+0V")
+        }
+      Else
+        {
+          If agqLOCATION:ST_NUMBER <> 0 Then
+            {
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%n",agqLOCATION:ST_NUMBER)
+              Writefile(L_FILE_NAME,"%s"," ")
+            }
+          If agqLOCATION:ST_DIRECTION <> "" Then
+            {
+              Writefile(L_FILE_NAME,"%s",agqLOCATION:ST_DIRECTION)
+              Writefile(L_FILE_NAME,"%s"," ")
+            }
+          If agqLOCATION:STREET <> "" Then
+            {
+              Writefile(L_FILE_NAME,"%s",Trun(agqLOCATION:STREET))
+              Writefile(L_FILE_NAME,"%s"," ")
+            }
+          If agqLOCATION:STREET <> "" Then
+            {
+              Writefile(L_FILE_NAME,"%s",agqLOCATION:ST_TYPE)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+            }
+        }
+      For L_LOOP = 1 to 3
+        {
+          If agqLOCATION:ADDRESS1[L_LOOP] <> "" Then
+            {
+              Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+              Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+              Writefile(L_FILE_NAME,"%s",agqLOCATION:ADDRESS1[L_LOOP])
+            }
+        }
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+      Writefile(L_FILE_NAME,"%s",Trun(agqLOCATION:CITY))
+      Writefile(L_FILE_NAME,"%s",", ")
+      Writefile(L_FILE_NAME,"%s",agqLOCATION:STR_STATE)
+      Writefile(L_FILE_NAME,"%s"," ")
+      Writefile(L_FILE_NAME,"%s",L_agqLOCATION_ZIP)
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+      Writefile(L_FILE_NAME,"%s","<033>&a2500h1320V")
+      Writefile(L_FILE_NAME,"%d",agqENDORSE:EFF_DATE)
+      Writefile(L_FILE_NAME,"%s","<033>&a3380h+0V")
+      Writefile(L_FILE_NAME,"%d",agqENDORSE:EXP_DATE)
+      Writefile(L_FILE_NAME,"%s","<033>&a2500h+120V")
+      Writefile(L_FILE_NAME,"%d",agqENDORSE:EFF_DATE_1)
+      Writefile(L_FILE_NAME,"%s","<033>&a3380h+0V")
+      if agqendorse:eff_date_1 <> 0 then
+          Writefile(L_FILE_NAME,"%d",agqENDORSE:EXP_DATE_1)
+      Writefile(L_FILE_NAME,"%s","<033>&a2500h+120V")
+      Writefile(L_FILE_NAME,"%d",agqENDORSE:EFF_DATE_2)
+      Writefile(L_FILE_NAME,"%s","<033>&a3380h+0V")
+      if agqendorse:eff_date_2 <> 0 then
+          Writefile(L_FILE_NAME,"%d",agqENDORSE:EXP_DATE_2)
+
+      Writefile(L_FILE_NAME,"%s","<033>&a2500h+120V")
+      Writefile(L_FILE_NAME,"%d",agqENDORSE:EFF_DATE_3)
+      Writefile(L_FILE_NAME,"%s","<033>&a3380h+0V")
+      if agqendorse:eff_date_3 <> 0 then
+          Writefile(L_FILE_NAME,"%d",agqENDORSE:EXP_DATE_3)
+
+      Writefile(L_FILE_NAME,"%s","<033>&a2500h+120V")
+      Writefile(L_FILE_NAME,"%d",agqENDORSE:EFF_DATE_4)
+      Writefile(L_FILE_NAME,"%s","<033>&a3380h+0V")
+      if agqendorse:eff_date_4 <> 0 then
+          Writefile(L_FILE_NAME,"%d",agqENDORSE:EXP_DATE_4)
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD)
+      Writefile(L_FILE_NAME,"%s","<033>&a4200h1440V")
+      Writefile(L_FILE_NAME,"%s","$ ")
+      Writefile(L_FILE_NAME,"%s",L_LETTER_GOTHIC_BOLD_10)
+      Writefile(L_FILE_NAME,"%s",Str(agqENDORSE:LIMIT[1],"ZZ,ZZZ,ZZZ"))
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a90h3000V")
+      Writefile(L_FILE_NAME,"%s","COVERAGE B ")
+      Writefile(L_FILE_NAME,"%s","<033>&a+0h+20V")
+      Writefile(L_FILE_NAME,"%s",L_BULLET_6)
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a+0h-20V")
+      Writefile(L_FILE_NAME,"%s"," BUSINESS PERSONAL PROPERTY")
+      Writefile(L_FILE_NAME,"%s","<033>&a200h+120V")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1100h+0V")
+      Writefile(L_FILE_NAME,"%s","A.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1300h+0V")
+      Writefile(L_FILE_NAME,"%s","The specific additional amount of insurance as shown in the Schedule applies to Business ")
+      Writefile(L_FILE_NAME,"%s","<033>&a1300h+120V")
+      Writefile(L_FILE_NAME,"%s","Personal Property during the annual periods of time specified. This amount is in addition to the ")
+      Writefile(L_FILE_NAME,"%s","<033>&a1300h+120V")
+      Writefile(L_FILE_NAME,"%s","limit of liability shown in the Declarations or any additional limit under Supplemental Coverage ")
+      Writefile(L_FILE_NAME,"%s","<033>&a1300h+120V")
+      Writefile(L_FILE_NAME,"%s","2.B.")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1100h+240V")
+      Writefile(L_FILE_NAME,"%s","B.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1300h+0V")
+      Writefile(L_FILE_NAME,"%s","This additional limit may not be used to determine compliance with the requirement for 100% of")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_ITALIC_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1300h+120V")
+      Writefile(L_FILE_NAME,"%s","your ")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","average monthly values under Supplemental Coverage 2.B.")
+
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_BOLD_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1100h+240V")
+      Writefile(L_FILE_NAME,"%s","C.")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1300h+0V")
+      Writefile(L_FILE_NAME,"%s","If the inception or expiration date of this policy falls within any of the periods of time shown in")
+      Writefile(L_FILE_NAME,"%s",L_ARIAL_9)
+      Writefile(L_FILE_NAME,"%s","<033>&a1300h+120V")
+      Writefile(L_FILE_NAME,"%s","the Schedule, only the pro rata share of the amount of insurance applies through such period.")
+      Writefile(L_FILE_NAME,"%s","<FF>")
+
+    }
+  Next agqend_alias
+}
+
+Update
+
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+End

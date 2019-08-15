@@ -1,0 +1,1816 @@
+%%                      
+Screen
+        Name = "agtmt8001d";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="agqbusiness" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_state[2] ;
+        global unsigned ascii number g_rate_type[2] ;
+
+        global string g_company_id[10] ,
+                      g_initial_screen[50] ,
+                      g_code[7],
+                      g_zipcode_change[1] ,
+                      g_coverage[2],
+                      g_risk_type[1] ;
+
+        array[17] of string l_literal[60] ;
+        array[17] of tag l_the_tag[15] ;
+
+        Local Unsigned Ascii Number l_prem_no[4],
+                                    l_build_no[4],
+                                    l_tag_position[2],
+                                    l_abort_program[1],
+                                    l_count[3]=0,
+                                    l_symbol_no[2] ,
+                                    l_form[1] ,
+                                    l_building_form[1],
+                                    l_property_form[1],
+                                    l_symbol_number[2],
+                                    l_state[2],
+                                    l_construction[1],
+                                    l_csexec_number[12],
+                                    l_percent[4],
+                                    l_reinforced[1],
+                                    l_prior_class_code[5],
+                                    l_steel[1],
+                                    l_lob[4],
+                                    l_high[1],
+                                    l_line_of_business[4] ,
+                                    L_DEPENDENT_PROP[1],
+                                    L_AGREED_VALUE[1] ,
+                                    L_ELECTRONIC_MEDIA[1],
+                                    l_loop[2],
+                                    L_EXTENDED_PERIOD[1],
+                                    L_MONTHLY_RECOVERY[1],
+                                    L_LOSS_TUITION[1],
+                                    l_time_period[1] ,
+                                    L_PAYROLL[1],
+                                    L_OFF_PREM[1],
+                                    L_SEASONAL_LEASES[1],
+                                    l_utility[1],
+                                    L_ANTENNA_EXT[1] ,
+                                    l_sub_code[4]=0,
+                                    l_group_i[6]=0/dec=4,
+                                    l_territory_factor[6]=0/dec=4,
+                                    l_protection_factor[5]=0/dec=3,
+                                    l_coinsurance_factor[5]=0/dec=3,
+                                    l_deductible_factor[6]=0/dec=4,
+                                    l_inflation_factor[4]=0/dec=2,
+                                    l_loss_cost[6]=0/dec=4 ,
+                                    l_last_prem_no[4],
+                                    l_last_build_no[4],
+                                    l_first_prem_no[4],
+                                    l_first_build_no[4],
+                                    l_no_locations[2]=0 ;
+
+        local string l_first_str_location[8],
+                     l_last_str_location[8],
+                     l_str_location[8],
+                     l_first_location[1]="Y",
+                     l_system_id[15],
+                     L_FORM_EDITION[18],
+                     L_DESCRIPTION[55],
+                     l_code[7],
+                     L_ADD_ENDORSEMENT[1]="Y",
+                     l_continue_2[3]="",
+                     l_antenna_exists[1]="N",
+                     l_antenna_code[7]="",
+                     l_symbol[2],
+                     l_username[15] ,
+                     L_COMPANY_ID[10] ,
+                     l_desc[50] ,
+                     l_coverage[1] ,
+                     l_bceg_type[1] ,
+                     l_screen_1[10],
+                     l_screen[9],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_code_8[7],
+                     l_code_9[7],
+                     l_code_10[7],
+                     l_code_11[7],
+                     l_code_12[7],
+                     l_code_13[7],
+                     l_code_14[7],
+                     l_code_15[7],
+                     l_code_16[7],
+                     l_code_17[7],
+                     l_community[30] ,
+                     l_different_forms[1]="N",
+                     l_boiler[1]="N" ;
+
+        Access agqbusiness,
+           Set agqbusiness:app_no   = G_app_no, generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt8001d" ;
+
+        "add" sequence "new"      tagged add_fn ;
+        "new" add/hidden ;
+
+        "chg" sequence "change 1-24" tagged change_fn ;
+        "func1" sequence "irpm" tagged irpm_fn ;
+        "irpm" continue begin
+                        g_coverage = agqbusiness:coverage
+                        g_prem_no = agqbusiness:prem_No
+                        g_build_no = agqbusiness:build_no
+                        function = "popup"
+                        end ;
+        "popup" display "agtmt8001m" ;
+
+        reaccess ;
+
+        include "stdfunc7.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+do set_display
+disable(accept_fn)
+enable(back_fn)
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+g_initial_screen = ""
+l_username = username
+l_company_id = sfsdefault:company_id
+
+l_username = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = sfsemail:agent_no, generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+Access SFSLINE_ALIAS, Set SFSLINE_alias:COMPANY_ID       = l_company_id,
+                          SFSLINE_alias:LINE_OF_BUSINESS = g_line_of_business,
+                          SFSLINE_alias:LOB_SUBLINE      = "00", Generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = l_company_id,
+                    SFSLINE:LINE_OF_BUSINESS = g_line_of_business,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access agqname, set agqname:app_no = g_app_no,generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(delete_fn)
+    disable(accept_fn)
+    end
+
+if agqbusiness:app_no = 0 then
+    begin
+    disable(previous_fn)
+    disable(next_fn)
+    end
+
+if sfsemail:agent_no <> 0 then
+    hide(irpm_fn)
+
+access validation
+if agqbusiness:app_no <> g_app_no then
+    error 1000
+
+access agqbusiness_alias, set agqbusiness_alias:app_no = agqbusiness:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqbusiness_alias:app_no = agqbusiness:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqbusiness_alias:prem_no) +
+                               str(agqbusiness_alias:build_no)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqbusiness_alias:prem_no) +
+                           str(agqbusiness_alias:build_no)
+    l_no_locations  = l_no_locations + 1
+
+    next agqbusiness_alias
+    end
+
+l_str_location = str(agqbusiness:prem_no) +
+                 str(agqbusiness:build_no)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+Properties
+        {
+          Layouttype = screen
+          transparent = False
+          fontstyle = BOLD
+          backgroundcolor = "#ADD8E6"
+          scrollbarpolicy = always
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,70     tagged display_information_box
+                properties
+                  {
+                    text = "Property Information - Business Income..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+Properties {
+           LayoutType = screen
+           }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     begin
+        g_add_prem_no  = 0
+        g_add_build_no = 0
+        if function one of "ADD", "NEW" then
+            begin
+            access agqbusiness_alias, set agqbusiness_alias:app_no = g_app_no, generic
+
+            if agqbusiness_alias:app_no = g_app_no then
+                begin
+                l_screen_1 = "agtmt8001a"
+                display modal screen l_screen_1
+                with initial function "CHANGE|BACK"
+
+                if g_add_prem_no  = 0 and
+                   g_add_build_no = 0 then
+                    begin
+                    function = "redisplay"
+                    abort()
+                    end
+
+                if g_add_prem_no = 1 then
+                    begin
+                    l_prem_no = 0
+                    access agqbusiness_alias, set agqbusiness_alias:app_no = g_app_no, generic
+
+                    while agqbusiness_alias:app_no = g_app_no
+                        begin
+                        l_prem_no  = agqbusiness_alias:prem_no
+
+                        next agqbusiness_alias
+                        end
+
+                    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+                    access agqbusiness_alias, set agqbusiness_alias:app_no = g_app_no, generic
+
+                    agqbusiness:app_no            = g_app_no
+                    agqbusiness:prem_no           = l_prem_no + 1
+                    agqbusiness:build_no          = 1
+                    end
+                else
+                if g_add_build_no = 1 then
+                    begin
+                    access agqbusiness_alias, set agqbusiness_alias:app_no = g_app_no, generic
+
+                    l_build_no = 0
+                    while agqbusiness_alias:app_no = g_app_no
+                        begin
+                        if agqbusiness_alias:prem_no = g_prem_no then
+                            l_build_no  = agqbusiness_alias:build_no
+
+                        next agqbusiness_alias
+                        end
+
+                    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+                    access agqbusiness_alias, set agqbusiness_alias:app_no = g_app_no, generic
+
+                    agqbusiness:app_no           = g_app_no
+                    agqbusiness:prem_no          = g_prem_no
+                    agqbusiness:build_no         = l_build_no + 1
+                    end
+                end
+            else
+                begin
+                agqbusiness:app_no           = g_app_no
+                agqbusiness:prem_no          = 1
+                agqbusiness:build_no         = 1
+                end
+
+            g_prem_no                   = agqbusiness:prem_no
+            g_build_no                  = agqbusiness:build_no
+            end
+        end
+        agqbusiness:APP_NO/displayonly ;
+
+}
+
+Panel at 9,90 to 10,91 tagged irpm_fn
+    Properties
+        {
+        layouttype = column
+        }
+    {
+    Components
+        Button at 1,1
+            Properties {
+                Iconname = "btn_irpm.bmp"
+                }
+            Events  {
+                Action = irpm_fn
+                }
+    }
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        Button at 1.5,1   tagged add_fn
+            Properties {
+                       Iconname = "btn_add_location.bmp"
+                       tooltip = "Add Location, Building or Coverage"
+                       }
+            Events     {
+                       Action = add_fn
+                       }
+
+        Button at 1.5,38    tagged change_fn
+            Properties {
+                       Iconname = "btn_edit_location.bmp"
+                       }
+            Events     {
+                       Action = change_fn
+                       }
+
+        Button at 1.5, 70 tagged delete_fn
+            Properties {
+                       Iconname = "btn_delete_location.bmp"
+                       }
+            Events     {
+                       Action = delete_fn
+                       }
+    }
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        Button to 1,1
+            properties {
+                       Iconname = "btn_print_screen.bmp"
+                       }
+            events     {
+                       action {
+                              function = "print"
+                              abort()
+                              }
+                       }
+    }
+
+Panel at 6.45,92
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        guidetext to 1,1
+            properties {
+                       text = "agtmt8001d.sd"
+                       fontsize = 9
+                       }
+    }
+
+Panel at 7,1 to 9,75 Tagged location
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        guidetext at 1.5,24 to 2.5,36
+            properties {
+                       text = "Location No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+
+        guidetext at 1.5,44 to 2.5,56
+            properties {
+                       text = "Building No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+    }
+
+Panel at 7.5,33 to 9,60 Tagged rating_pl
+{
+%%
+____                ____
+
+%%
+
+components
+
+fields
+101   agqbusiness:prem_no/displayonly ;
+102   agqbusiness:build_no/displayonly ;
+
+}
+
+Panel at 8,70 to 8,100
+    Properties {
+               layouttype = row
+               }
+    {
+    Components
+        Button at 1,55 tagged accept_fn
+            properties {
+                       Iconname = "btn_accept_edits.bmp"
+                       }
+            Events     {
+                       mouseclicked = accept
+                       }
+
+    }
+
+carddialog GUI at 10,5 to 24,95
+Properties
+        {
+        layoutconstraints = stretch
+        }
+{
+Panel
+Properties
+        {
+        scrollbarpolicy = asneeded
+        text            = "Basic Information"
+        }
+{
+%%
+
+        Form: _     ________________________________________
+    Coverage: ___   ________________________________________
+       Limit: __________   New Rate: ______
+
+   Risk Type: __    ______________________________   Apartment/Condo:~~~_
+ Coinsurance: ___
+
+Recovery Set: _   ______________________________
+
+%%
+
+components
+
+fields
+201     Begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            begin
+            disable(back_fn)
+            enable(accept_fn)
+            end
+        else
+            begin
+            enable(back_fn)
+            disable(accept_fn)
+            end
+
+        L_FORM = agqbusiness:FORM
+        If FUNCTION one of "ADD", "NEW" Then
+            begin
+            agqbusiness:company_id              = agqgeneral1:company_id
+            agqbusiness:state                   = agqgeneral1:state
+            agqbusiness:rating_line_of_business = agqgeneral1:rating_line_of_business
+            agqbusiness:company_deviation[1]    = agqgeneral1:company_deviation[1]
+            agqbusiness:package_mod[1]          = agqgeneral1:package_mod[1]
+            agqbusiness:form                    = agqgeneral1:form
+            end
+        g_state = agqbusiness:state
+        g_company_id = agqbusiness:company_id
+        g_line_of_business = agqbusiness:rating_line_of_business
+        End
+        agqbusiness:FORM/default/tabstop
+        If agqbusiness:FORM <> SFSFORM:POLICY_FORM Then
+            Error 1205
+
+        Activehelp SFSFORM_ALIAS:POLICY_FORM ,
+                   SFSFORM_ALIAS:DESCRIPTION ;
+202     SFSFORM:DESCRIPTION ;
+
+301     Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            agqBUSINESS:COVERAGE = CPSBUSDEFAULT:COVERAGE
+        End
+        agqBUSINESS:COVERAGE/default/uppercase/tabstop mandatory
+        hide if agqbusiness:blanket = 1
+        If agqBUSINESS:COVERAGE <> CPSBUSCOVTYPES:COVERAGE Then
+            Error 1232
+
+        Activehelp CPSBUSCOVTYPES_ALIAS:COVERAGE,
+                   CPSBUSCOVTYPES_ALIAS:DESCRIPTION ;
+301     agqbusiness:coverage/displayonly ;
+302     CPSBUSCOVTYPES:DESCRIPTION;
+401     Begin
+        If agqBUSINESS:COVERAGE <> "D2" Then
+            Begin
+            agqBUSINESS:RECOVERY_PERIOD = 0
+            agqBUSINESS:RECOVERY_SET = 0
+            End
+        Else
+            Begin
+            agqBUSINESS:RISK_TYPE = ""
+            agqBUSINESS:COINSURANCE = 0
+            agqBUSINESS:APARTMENT_CONDO = 0
+            End
+        End
+        agqBUSINESS:LIMIT/tabstop mandatory
+        hide if agqbusiness:blanket = 1 ;
+401     agqbusiness:limit/displayonly ;
+402     agqbusiness:new_rate/tabstop tagged agent_fn
+        hide if sfsemail:agent_no <> 0 ;
+402     agqbusiness:new_rate/displayonly tagged agent_fn;
+
+
+601     Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqGENERAL1:GROUP_NO = 6 Then
+                agqBUSINESS:RISK_TYPE = "M"
+            Else
+                agqBUSINESS:RISK_TYPE = CPSBUSDEFAULT:RISK_TYPE
+            End
+        End
+        agqBUSINESS:RISK_TYPE/default/uppercase/tabstop
+        Hide If agqBUSINESS:COVERAGE = "D2"
+        hide if agqbusiness:blanket = 1
+        If agqBUSINESS:RISK_TYPE <> CPSBUSRISKTYPES:RISK_TYPE Then
+            Error "Invalid risk types"
+
+        Activehelp CPSBUSRISKTYPES_ALIAS:RISK_TYPE,
+                   CPSBUSRISKTYPES_ALIAS:DESCRIPTION ;
+601     agqbusiness:risk_type/displayonly ;
+602     CPSBUSRISKTYPES:DESCRIPTION
+        Hide If agqBUSINESS:COVERAGE = "D2" ;
+
+603     Begin
+        g_risk_type = agqbusiness:risk_type
+        If FUNCTION one of "ADD", "NEW" Then
+            agqBUSINESS:APARTMENT_CONDO = agqGENERAL1:APT_CONDO
+        End
+        agqBUSINESS:APARTMENT_CONDO/checkbox/values="0,1"/default/tabstop
+        Hide If agqBUSINESS:COVERAGE = "D2"
+        hide if agqbusiness:blanket = 1 ;
+
+701     Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            agqBUSINESS:COINSURANCE = CPSBUSDEFAULT:COINSURANCE
+        End
+        agqBUSINESS:COINSURANCE/default/tabstop
+        Hide If agqBUSINESS:COVERAGE = "D2"
+        hide if agqbusiness:blanket = 1
+        If agqBUSINESS:COINSURANCE <> CPSBUSCOINSURANCE:COINSURANCE Then
+            Error 1208
+
+        Activehelp CPSBUSCOINSURANCE_ALIAS:COINSURANCE ;
+701     agqbusiness:coinsurance/displayonly ;
+
+901     Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            agqBUSINESS:RECOVERY_SET = CPSBUSDEFAULT:RECOVERY_SET
+        End
+        agqBUSINESS:RECOVERY_SET/default/tabstop
+        hide if agqbusiness:blanket = 1
+        Hide If agqBUSINESS:COVERAGE <> "D2"
+
+        If agqBUSINESS:RECOVERY_SET <> CPSBUSRECOVERYSET:RECOVERY_SET Then
+            Error "Invalid recovery set"
+
+        Activehelp CPSBUSRECOVERYSET_ALIAS:RECOVERY_SET,
+                   CPSBUSRECOVERYSET_ALIAS:DESCRIPTION ;
+901     agqbusiness:recovery_set/displayonly ;
+902     CPSBUSRECOVERYSET:DESCRIPTION;
+
+}
+
+Panel at 1,1 to 8,55
+Properties
+        {
+        scrollbarpolicy = asneeded
+        text            = "Business Income Coverage Options"
+        }
+{
+    Panel at 1,1 to 8,55
+           Properties {
+                        LayoutType = screen
+                        backgroundcolor = "Grey"
+                      }
+                   {
+                     Components
+                        guidetext at 2,5 to 2,40 tagged tview1
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do show_form_4
+                                             }
+                                }
+                        guidetext at 3,5 to 3,40 tagged tview2
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do show_form_3
+                                             }
+                                }
+                        guidetext at 4,5 to 4,40 tagged tview3
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do show_form_1
+                                             }
+                                }
+                        guidetext at 5,5 to 5,40 tagged tview4
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked = accept
+                                }
+                        guidetext at 6,5 to 6,40 tagged tview5
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked = accept
+                                }
+                        guidetext at 7,5 to 7,40 tagged tview6
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do show_form_2
+                                             }
+                                }
+    }
+
+Panel at 1,30 to 8,49
+{
+%%
+
+~~~_
+~~~_
+~~~_
+~~~_
+~~~_
+~~~_
+
+%%
+
+components
+
+fields
+201     begin
+        l_monthly_recovery = agqbusiness:monthly_recovery_limitation
+        if agqbusiness:monthly_recovery_limitation = 1 then
+            do display_blue(l_the_tag[1],"blue")
+        else
+            do remove_blue(l_the_tag[1],"black")
+        end
+        agqbusiness:monthly_recovery_limitation/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0
+        if agqbusiness:monthly_recovery_limitation = 1 and
+           l_monthly_recovery = 0 then
+            begin
+            do show_form_4
+            agqbusiness:coinsurance = 0
+            end
+        else
+        if agqbusiness:monthly_recovery_limitation = 0 and
+           l_monthly_recovery = 1 then
+            begin
+            l_code = "CPQ304"
+            do delete_agqendorse5
+            if agqbusiness:coinsurance = 0 then
+                agqBUSINESS:COINSURANCE = CPSBUSDEFAULT:COINSURANCE
+            end ;
+301     begin
+        l_extended_period = agqbusiness:extended_period_indemnity
+        if agqbusiness:extended_period_indemnity = 1 then
+            do display_blue(l_the_tag[2],"blue")
+        else
+            do remove_blue(l_the_tag[2],"black")
+        end
+        agqbusiness:extended_period_indemnity/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0
+        if agqbusiness:extended_period_indemnity = 1 and
+           l_extended_period = 0 then
+            do show_form_3
+        else
+        if agqbusiness:extended_period_indemnity = 0 then
+            begin
+            do delete_agqextperiod
+            end ;
+401     begin
+        l_dependent_prop = agqbusiness:dependent_property
+        if agqbusiness:dependent_property = 1 then
+            do display_blue(l_the_tag[3],"blue")
+        else
+            do remove_blue(l_the_tag[3],"black")
+        end
+        agqbusiness:dependent_property/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0
+        if agqbusiness:dependent_property = 1 and
+           l_dependent_prop = 0 then
+            do show_form_1
+        else
+        if agqbusiness:dependent_property = 0 then
+            begin
+            l_code = "CPQ301"
+            do delete_agqendorse5
+            end ;
+501     agqbusiness:agreed_value/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0 ;
+601     agqbusiness:premium_adjustment/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0 ;
+701     begin
+        l_electronic_media = agqbusiness:electronic_media
+        if agqbusiness:electronic_media = 1 then
+            do display_blue(l_the_tag[6],"blue")
+        else
+            do remove_blue(l_the_tag[6],"black")
+        end
+        agqbusiness:electronic_media/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0
+        if agqbusiness:electronic_media = 1 and
+           l_electronic_media = 0 then
+            do show_form_2
+        else
+        if agqbusiness:electronic_media = 0 then
+            begin
+            do delete_agqelectmedia
+            end ;
+
+}
+
+    Panel at 1,40 to 8,70
+           Properties {
+                        LayoutType = screen
+                        backgroundcolor = "Grey"
+                      }
+                   {
+                     Components
+                        guidetext at 2,1 to 2,40 tagged tview7
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do show_form_5
+                                             }
+                                }
+                        guidetext at 3,1 to 3,40 tagged tview8
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked = accept
+                                }
+                        guidetext at 4,1 to 4,40 tagged tview9
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked = accept
+                                }
+                        guidetext at 5,1 to 5,40 tagged tview10
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked = accept
+                                }
+                        guidetext at 6,1 to 6,40 tagged tview11
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked = accept
+                                }
+                        guidetext at 7,1 to 7,40 tagged tview12
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do show_form_6
+                                             }
+                                }
+    }
+
+Panel at 1,70 to 8,90
+{
+%%
+
+~~~_
+~~~_
+~~~_
+~~~_
+~~~_
+~~~_
+
+%%
+
+components
+
+fields
+201     begin
+        l_payroll = agqbusiness:payroll_limitation
+        if agqbusiness:payroll_limitation = 1 then
+            do display_blue(l_the_tag[7],"blue")
+        else
+            do remove_blue(l_the_tag[7],"black")
+        end
+        agqbusiness:payroll_limitation/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0
+        if agqbusiness:payroll_limitation = 1 and
+           l_payroll = 0 then
+            do show_form_5
+        else
+        if agqbusiness:payroll_limitation = 0 then
+            begin
+            do delete_agqbuspayroll
+            end ;
+301     agqbusiness:max_recovery_period/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0    ;
+401     agqbusiness:mining_property/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0    ;
+501     agqbusiness:heat_power_refrig/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0    ;
+601     agqbusiness:seasonal_leases/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0    ;
+701     begin
+        l_loss_tuition = agqbusiness:loss_tuition_fees
+        if agqbusiness:loss_tuition_fees = 1 then
+            do display_blue(l_the_tag[12],"blue")
+        else
+            do remove_blue(l_the_tag[12],"black")
+        end
+        agqbusiness:loss_tuition_fees/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0
+        if agqbusiness:loss_tuition_fees = 1 and
+           l_loss_tuition = 0 then
+            do show_form_6
+        else
+        if agqbusiness:loss_tuition_fees = 0 then
+            begin
+            l_code = "CPQ305"
+            do delete_agqendorse5
+            end ;
+
+}
+
+}
+
+Panel at 1,1 to 8,65
+Properties
+        {
+        scrollbarpolicy = asneeded
+        text            = "Time Element Options"
+        }
+{
+    Panel at 1,1 to 8,65
+           Properties {
+                        LayoutType = screen
+                        backgroundcolor = "Grey"
+                      }
+                   {
+                     Components
+                        guidetext at 2,20 to 2,65 tagged tview13
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked = accept
+                                }
+                        guidetext at 3,20 to 3,65 tagged tview14
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do show_form_8
+                                             }
+                                }
+                        guidetext at 4,20 to 4,65 tagged tview15
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked = accept
+                                }
+                        guidetext at 5,20 to 5,65 tagged tview16
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do show_form_7
+                                             }
+                                }
+                        guidetext at 6,20 to 6,65 tagged tview17
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = left
+                               }
+                             events
+                                {
+                                mouseclicked = accept
+                                }
+    }
+
+Panel at 1,60 to 8,65
+Properties
+        {
+        scrollbarpolicy = asneeded
+        text            = "Other Plans"
+        }
+{
+%%
+
+~~~_
+~~~_
+~~~_
+~~~_
+~~~_
+
+%%
+
+components
+
+fields
+201     agqbusiness:building_law/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0    ;
+301     begin
+        l_utility = agqbusiness:utility
+        if agqbusiness:utility = 1 then
+            do display_blue(l_the_tag[14],"blue")
+        else
+            do remove_blue(l_the_tag[14],"black")
+        end
+        agqbusiness:utility/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0
+        if agqbusiness:utility = 1 and
+           l_utility = 0 then
+            do show_form_8
+        else
+        if agqbusiness:utility = 0 then
+            begin
+            l_code = "CPQ308"
+            do delete_agqendorse5
+            end ;
+401     agqbusiness:loss_adjustment/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0    ;
+501     begin
+        l_time_period = agqbusiness:time_period
+        if agqbusiness:time_period = 1 then
+            do display_blue(l_the_tag[16],"blue")
+        else
+            do remove_blue(l_the_tag[16],"black")
+        end
+        agqbusiness:time_period/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0
+        if agqbusiness:time_period = 1 and
+           l_time_period = 0 then
+            do show_form_7
+        else
+        if agqbusiness:time_period = 0 then
+            begin
+            l_code = "CPQ307"
+            do delete_agqendorse5
+            end ;
+601     agqbusiness:civil_authority/checkbox/values="0,1"/tabstop
+        hide if agqbusiness:coinsurance <> 0    ;
+
+}
+
+}
+
+}
+
+
+-- draw a line
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+Properties {
+           LayoutType = screen
+           }
+{
+Components
+    Button at 1,36    tagged previous_fn
+        Properties {
+                   Iconname = "btn_prev_loc.bmp"
+                   }
+        Events     {
+                   Action = previous_fn
+                   }
+
+    Button at 1,51 tagged next_fn
+        Properties {
+                   Iconname = "btn_next_loc.bmp"
+                   }
+        Events     {
+                   Action = next_fn
+                   }
+
+    Button at 1,75   tagged back_fn
+        Properties {
+                   Iconname = "btn_close.bmp"
+                   }
+        Events     {
+                   Action = "back"
+                   }
+
+    }
+
+-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+}
+
+Update
+if UPDATEOK = "NO" then
+    begin
+    access agqbusiness_alias, set agqbusiness_alias:app_no = g_app_no, generic
+
+    if agqbusiness_alias:app_no <> g_app_no then
+        g_app_no = 0
+
+    disable(accept_fn)
+    enable(back_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(back_fn)
+    if function = "DELETE" then
+        begin
+        access agqbusiness_alias, set agqbusiness_alias:app_no = g_app_no, generic
+
+        access agqend, set agqend:app_no = g_app_no, generic
+
+        while agqend:app_no = g_app_no
+            begin
+            if agqend:lob_end_code = "B" then
+                begin
+                if agqbusiness_alias:app_no <> g_app_no then
+                    delete agqend
+                else
+                if agqend:prem_no = agqbusiness:prem_no and
+                   agqend:build_no = agqbusiness:build_no then
+                    delete agqend
+                end
+
+            next agqend
+            end
+        end
+
+
+    if function one of "ADD", "NEW", "CHANGE", "CHG" then
+        begin
+        Access cpsbuscovtypes, Set cpsbuscovtypes:COMPANY_ID       = agqbusiness:company_id,
+                                   cpsbuscovtypes:STATE            = agqbusiness:state,
+                                   cpsbuscovtypes:LINE_OF_BUSINESS = agqbusiness:rating_line_of_business, generic
+
+        l_code = ""
+        While cpsbuscovtypes:COMPANY_ID       = agqbusiness:company_id And
+              cpsbuscovtypes:STATE            = agqbusiness:state And
+              cpsbuscovtypes:LINE_OF_BUSINESS = agqbusiness:rating_line_of_business
+                Begin
+                l_code = cpsbuscovtypes:code
+                Do ACCESS_AGQEND
+                If L_ADD_ENDORSEMENT = "Y" and
+                   cpsbuscovtypes:coverage = agqbusiness:coverage then
+                    Do ADD_AGQEND
+                else
+                if l_add_endorsement = "N" and
+                   cpsbuscovtypes:coverage <> agqbusiness:coverage then
+                    do delete_agqend
+
+                Next cpsbuscovtypes
+                End
+
+        l_code_1 = cpsbusdefault:civil_code
+        l_code   = ""
+        if l_code_1 <> "" then
+            begin
+            l_code = l_code_1
+            do access_agqend
+            if l_add_endorsement = "Y" and
+               agqbusiness:civil_authority = 1 then
+                do add_agqend
+            if l_add_endorsement = "N" and
+               agqbusiness:civil_authority = 0 then
+                do delete_agqend
+            end
+
+        Access CPSBUSMISCRATES, Set CPSBUSMISCRATES:COMPANY_ID = agqbusiness:company_id,
+                                    CPSBUSMISCRATES:STATE = agqbusiness:state,
+                                    CPSBUSMISCRATES:line_of_business = agqbusiness:rating_line_of_business, Generic
+
+        l_code_1 = ""
+        l_code_2 = ""
+        l_code_3 = ""
+        l_code_4 = ""
+        l_code_5 = ""
+        l_code   = ""
+        While CPSBUSMISCRATES:COMPANY_ID = agqbusiness:company_id And
+              CPSBUSMISCRATES:STATE = agqbusiness:state And
+              CPSBUSMISCRATES:line_of_business = agqbusiness:rating_line_of_business
+            Begin
+            If agqNAME:EFF_DATE >= CPSBUSMISCRATES:EFF_DATE Then
+                Begin
+                L_CODE_1 = CPSBUSMISCRATES:PAYROLL_LIMITATION_CODE[1]
+                L_CODE_2 = CPSBUSMISCRATES:time_period_code[1]
+                L_CODE_3 = CPSBUSMISCRATES:time_period_code[2]
+                L_CODE_4 = CPSBUSMISCRATES:dependant_prop_code[1]
+                l_code_5 = cpsbusmiscrates:dependant_prop_code[2]
+                End
+
+            Next CPSBUSMISCRATES
+            End
+
+
+        If L_CODE_1 <> "" Then
+            Begin
+            L_CODE = L_CODE_1
+            Do ACCESS_agqEND
+            If L_ADD_ENDORSEMENT = "N" and
+               agqbusiness:payroll_limitation = 0 Then
+                Do delete_agqEND
+            end
+
+        If L_CODE_2 <> "" Then
+            Begin
+            L_CODE = L_CODE_2
+            Do ACCESS_agqEND
+            If L_ADD_ENDORSEMENT = "N" And
+               agqbusiness:time_period = 0 Then
+                Do DELETE_agqEND
+            End
+
+        If L_CODE_3 <> "" Then
+            Begin
+            L_CODE = L_CODE_3
+            Do ACCESS_agqEND
+            If L_ADD_ENDORSEMENT = "N" And
+               agqbusiness:time_period = 0 Then
+                Do DELETE_agqEND
+            End
+
+        If L_CODE_4 <> "" Then
+            Begin
+            L_CODE = L_CODE_4
+            Do ACCESS_agqEND
+            if l_add_endorsement = "N" and
+               agqbusiness:dependent_property = 0 then
+                do delete_agqend
+            End
+
+        If L_CODE_5 <> "" Then
+            Begin
+            L_CODE = L_CODE_5
+            Do ACCESS_agqEND
+            if l_add_endorsement = "N" and
+               agqbusiness:dependent_property = 0 then
+                do delete_agqend
+            End
+
+
+        Access cpsutility, Set cpsutility:COMPANY_ID       = agqbusiness:company_id,
+                               cpsutility:STATE            = agqbusiness:state,
+                               cpsutility:LINE_OF_BUSINESS = agqbusiness:rating_line_of_business, Generic
+
+        l_code   = ""
+        l_code_1 = ""
+        While cpsutility:COMPANY_ID       = agqbusiness:company_id And
+              cpsutility:STATE            = agqbusiness:state And
+              cpsutility:LINE_OF_BUSINESS = agqbusiness:rating_line_of_business
+            Begin
+            If agqNAME:EFF_DATE >= cpsutility:EFF_DATE Then
+                Begin
+                L_CODE_1 = cpsutility:code
+                End
+            Next cpsutility
+            End
+
+        If L_CODE_1 <> "" Then
+            Begin
+            L_CODE = L_CODE_1
+            Do ACCESS_agqEND
+            If L_ADD_ENDORSEMENT = "N" and
+               agqbusiness:utility = 0 Then
+                Do delete_agqEND
+            End
+
+
+        End
+
+    function = "redisplay"
+    End
+
+screen exit
+g_coverage = agqbusiness:coverage
+
+Procedure Definition
+
+procedure display_blue(tag l_tag, string l_color)
+begin
+    setproperty(l_tag,foregroundcolor,l_color)
+end
+
+procedure remove_blue(tag l_tag, string l_color)
+begin
+    setproperty(l_tag,foregroundcolor,l_color)
+end
+
+procedure delete_agqendorse5
+begin
+access agqendorse5, set agqendorse5:app_no   = agqbusiness:app_no,
+                        agqendorse5:prem_no  = agqbusiness:prem_no,
+                        agqendorse5:build_no = agqbusiness:build_no,
+                        agqendorse5:code     = l_code, generic
+
+while agqendorse5:app_no   = agqbusiness:app_no and
+      agqendorse5:prem_no  = agqbusiness:prem_no and
+      agqendorse5:build_no = agqbusiness:build_no and
+      agqendorse5:code     = l_code
+        begin
+        delete agqendorse5
+
+        next agqendorse5
+        end
+
+end
+
+Procedure ACCESS_agqend
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> G_PREM_NO Or
+            agqend:BUILD_NO <> G_BUILD_NO
+
+    If agqend:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend
+    End
+
+End
+
+Procedure delete_agqend
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> G_PREM_NO Or
+            agqend:BUILD_NO <> G_BUILD_NO
+
+    If agqend:CODE = L_CODE Then
+        delete agqend
+
+    Next agqend
+    End
+
+End
+
+Procedure ADD_agqend
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> G_PREM_NO Or
+            agqend:BUILD_NO <> g_BUILD_NO
+
+    L_SUB_CODE = agqend:SUB_CODE
+
+    Next agqend
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqbusiness:COMPANY_ID,
+                      SFSOPTEND:STATE = agqbusiness:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqbusiness:rating_line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqbusiness:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqbusiness:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqbusiness:rating_line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If agqname:eff_date >= SFSOPTEND:EFF_DATE Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqend
+    Begin
+    agqend:app_no               =       G_app_no
+    agqend:PREM_NO              =       g_PREM_NO
+    agqend:BUILD_NO             =       g_BUILD_NO
+    agqend:SUB_CODE             =       L_SUB_CODE
+    agqend:CODE                 =       L_CODE
+    agqend:FORM_EDITION         =       L_FORM_EDITION
+    agqend:DESCRIPTION          =       L_DESCRIPTION
+    agqend:PREMIUM              =       0
+    agqend:LOB_END_CODE         =       "B"
+    if l_boiler = "Y" then
+        agqend:boiler_form      =       1
+    else
+        agqend:boiler_form      =       0
+    End
+
+End
+
+procedure delete_agqelectmedia
+begin
+access agqelectmedia, set agqelectmedia:app_no   = agqbusiness:app_no,
+                          agqelectmedia:prem_no  = agqbusiness:prem_no,
+                          agqelectmedia:build_no = agqbusiness:build_no, generic
+
+while agqelectmedia:app_no   = agqbusiness:app_no and
+      agqelectmedia:prem_no  = agqbusiness:prem_no and
+      agqelectmedia:build_no = agqbusiness:build_no
+        begin
+        delete agqelectmedia
+
+        next agqelectmedia
+        end
+
+end
+
+procedure delete_agqextperiod
+begin
+access agqextperiod, set agqextperiod:app_no   = agqbusiness:app_no,
+                         agqextperiod:prem_no  = agqbusiness:prem_no,
+                         agqextperiod:build_no = agqbusiness:build_no, generic
+
+while agqextperiod:app_no   = agqbusiness:app_no and
+      agqextperiod:prem_no  = agqbusiness:prem_no and
+      agqextperiod:build_no = agqbusiness:build_no
+        begin
+        delete agqextperiod
+
+        next agqextperiod
+        end
+
+end
+
+procedure delete_agqbuspayroll
+begin
+access agqbuspayroll, set agqbuspayroll:app_no   = agqbusiness:app_no,
+                          agqbuspayroll:prem_no  = agqbusiness:prem_no,
+                          agqbuspayroll:build_no = agqbusiness:build_no, generic
+
+while agqbuspayroll:app_no   = agqbusiness:app_no and
+      agqbuspayroll:prem_no  = agqbusiness:prem_no and
+      agqbuspayroll:build_no = agqbusiness:build_no
+        begin
+        delete agqbuspayroll
+
+        next agqbuspayroll
+        end
+
+end
+
+procedure set_display
+begin
+l_loop = 1
+while l_loop <= 17
+    begin
+    l_literal[1]  = "Monthly Limit of Indemnity:"
+    l_literal[2]  = "Extended Period of Indemnity:"
+    l_literal[3]  = "Dependent Properties:"
+    l_literal[4]  = "Agreed Value:"
+    l_literal[5]  = "Premium Adjustment:"
+    l_literal[6]  = "Electronic Media & Records:"
+    l_literal[7]  = "Ordinary Payroll Exclusion & Limitation:"
+    l_literal[8]  = "Maximum Period of Indemnity:"
+    l_literal[9]  = "Mining Properties:"
+    l_literal[10] = "Power, Heat & Refrigeration Deduction:"
+    l_literal[11] = "Seasonal Leases:"
+    l_literal[12] = "Loss Tuition:"
+    l_literal[13] = "Ordinance or Law - Increased Period of Restoration:"
+    l_literal[14] = "Utility Services:"
+    l_literal[15] = "Loss Adjustment:"
+    l_literal[16] = "Time Period:"
+    l_literal[17] = "Civil Authority Increased Coverage Period:"
+    l_tag_position = l_loop
+    l_the_tag[l_loop] = tag("tview" + trun(str(l_loop)))
+    do printguidetext(l_the_tag[l_tag_position],trun(l_literal[l_tag_position]))
+
+    l_loop = l_loop + 1
+    end
+
+end
+
+procedure printguidetext(tag current_tag, string display_string)
+BEGIN
+    Setproperty(current_tag, text, display_string)
+END
+
+Procedure show_form_1
+begin
+if agqbusiness:dependent_property = 1 then
+    begin
+    g_app_no     = agqbusiness:app_no
+    g_prem_no    = agqbusiness:prem_no
+    g_build_no   = agqbusiness:build_no
+    g_code       = "CPQ301"
+    display modal screen "agtmt8001e"
+    end
+
+end
+
+Procedure show_form_2
+begin
+if agqbusiness:electronic_media = 1 then
+    begin
+    g_app_no     = agqbusiness:app_no
+    g_prem_no    = agqbusiness:prem_no
+    g_build_no   = agqbusiness:build_no
+    display modal screen "agtmt8001f"
+    end
+
+end
+
+Procedure show_form_3
+begin
+if agqbusiness:extended_period_indemnity = 1 then
+    begin
+    g_app_no     = agqbusiness:app_no
+    g_prem_no    = agqbusiness:prem_no
+    g_build_no   = agqbusiness:build_no
+    display modal screen "agtmt8001g"
+    end
+
+end
+
+Procedure show_form_4
+begin
+if agqbusiness:monthly_recovery_limitation = 1 then
+    begin
+    g_app_no     = agqbusiness:app_no
+    g_prem_no    = agqbusiness:prem_no
+    g_build_no   = agqbusiness:build_no
+    g_code       = "CPQ304"
+    display modal screen "agtmt8001h"
+    end
+
+end
+
+Procedure show_form_5
+begin
+if agqbusiness:payroll_limitation = 1 then
+    begin
+    g_app_no     = agqbusiness:app_no
+    g_prem_no    = agqbusiness:prem_no
+    g_build_no   = agqbusiness:build_no
+    display modal screen "agtmt8001i"
+    end
+
+end
+
+Procedure show_form_6
+begin
+if agqbusiness:loss_tuition_fees = 1 then
+    begin
+    g_app_no     = agqbusiness:app_no
+    g_prem_no    = agqbusiness:prem_no
+    g_build_no   = agqbusiness:build_no
+    g_code       = "CPQ305"
+    display modal screen "agtmt8001j"
+    end
+
+end
+
+Procedure show_form_7
+begin
+if agqbusiness:time_period = 1 then
+    begin
+    g_app_no     = agqbusiness:app_no
+    g_prem_no    = agqbusiness:prem_no
+    g_build_no   = agqbusiness:build_no
+    g_code       = "CPQ307"
+    display modal screen "agtmt8001k"
+    end
+
+end
+
+Procedure show_form_8
+begin
+if agqbusiness:utility = 1 then
+    begin
+    g_app_no     = agqbusiness:app_no
+    g_prem_no    = agqbusiness:prem_no
+    g_build_no   = agqbusiness:build_no
+    g_code       = "CPQ308"
+    display modal screen "agtmt8001l"
+    end
+
+end
+
+End

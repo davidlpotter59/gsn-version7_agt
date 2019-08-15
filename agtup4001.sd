@@ -1,0 +1,2285 @@
+%%
+Program
+        Name = "agtup4001" ;
+        Type = "file" ;
+        Padcharacter = Space ;
+        Domain = "sfsdefault" ;
+
+        Global Unsigned Ascii Number g_app_no[11] ,
+                                     G_PREM_NO[4] ,
+                                     G_BUILD_NO[4] ,
+                                     G_STATE[2] ,
+                                     g_deductible[5] ;
+
+        local signed ascii number l_end_premium[9]=0/dec=0,
+                                  l_update_sfpend_premium[9]=0/dec=0 ,
+                                  l_prem_disc[9]=0/dec=0,
+                                  L_SUB_TOTAL[9]=0/decimals=2,
+                                  l_pro_rata_premium_3[9]=0/dec=0,
+                                  l_modified_premium_1[9]=0/dec=0,
+                                  l_modified_premium_2[9]=0/dec=0,
+                                  l_misc_premium[9]=0/dec=0 ;
+
+        Local Mmddyyyy Date L_CORRECT_DATE[8] ,
+                            i_eff_date[8],
+                            i_exp_date[8],
+                            i_trans_eff[8];
+
+        local array[23] of string l_description[60] ;
+
+        local array[23] of unsigned ascii number l_class_code[5] ;
+
+        local array[23] of signed ascii number l_premium[9]/dec=0 ;
+
+        local array[23] of signed ascii number l_factor[8]/dec=5 ;
+
+        local array[23] of signed ascii number l_factor1[6]/dec=4 ;
+
+        local date l_eff_date[8]=0 ,
+                   l_eff_date_1[8]=0 ;
+
+        local yyyymmdd date l_rate_date[8] ;
+
+        Local String L_FIRST_TIME[1]="Y",
+                     l_merit_rating_code[10],
+                     l_misc[1] ,
+                     l_continue_1[2]="",
+                     l_debit_1[1]="N",
+                     l_credit_1[1]="N",
+                     l_none_1[1]="N",
+                     l_debit[1]="N",
+                     l_credit[1]="N",
+                     l_mr_debit[1]="N",
+                     l_mr_credit[1]="N",
+                     l_none[1]="N",
+                     l_first[1]="Y",
+                     i_str_eff_date[8],
+                     l_company_id[10],
+                     l_username[15],
+                     l_schedule[1],
+                     l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_add_endorsement[1],
+                     l_form_edition[25],
+                     l_description_1[75] ,
+                     l_display_field[1] ,
+                     l_csexec_application[25] ;
+
+        local signed ascii number l_njccpap[9]=0/dec=0,
+                                  l_managed_care_premium[9]=0/dec=0,
+                                  l_merit_rating_premium[9]=0/dec=0,
+                                  l_deductible_premium[6]=0,
+                                  l_safety_premium[6]=0,
+                                  l_days,
+                                  l_irpm_2[8]=0/dec=4,
+                                  l_irpm[8]=0/dec=4,
+                                  l_irpm_1[8]=0/dec=4,
+                                  l_credit_mr[8],
+                                  l_credit_irpm_1[8],
+                                  l_credit_irpm[8];
+
+        Local Unsigned Ascii Number L_HOLD_PAYMENT_PLAN[4]=0,
+                                    l_csexec_number[12] ,
+                                    l_merit_rating_class_code[5],
+                                    l_debit_irpm[8] ,
+                                    l_debit_irpm_1[8],
+                                    l_irpm_sub[2]=0,
+                                    l_debit_mr[8],
+                                    l_safety_factor[3]=0/dec=2,
+                                    l_class_pro_rata_1[3]=0/dec=3,
+                                    l_class_pro_rata_2[3]=0/dec=3,
+                                    l_deductible_factor[4]=0/dec=3,
+                                    l_premium_amount[6]=0,
+                                    l_line_of_business_1[4],
+                                    l_anniversary[1]=0,
+                                    l_sub_code[4]=0,
+                                    l_installment[4]=0,
+                                    l_line_of_business[4]=0,
+                                    l_days_rate[7]=0/dec=4,
+                                    l_exposure[8],
+                                    l_hazard_group[1],
+                                    l_sub[2]=0,
+                                    l_stat_premium[6]=0,
+                                    l_end_factor[8]=0/dec=4,
+                                    l_final_total[8]=0,
+                                    l_end_premium1[8]=0/dec=4,
+                                    l_end_limit[8]=0,
+                                    l_statutory_charge[6]=0/dec=4,
+                                    l_statutory_premium[6]=0,
+                                    l_class_limit[10]=0,
+                                    l_class_limit_1[10]=0,
+                                    l_class_limit_2[10]=0,
+                                    l_short_rate[4]=0/dec=2,
+                                    l_exp_mod_1[6]=0/dec=4,
+                                    l_exp_mod_2[6]=0/dec=4,
+                                    l_liab_rate[6]=0/dec=3,
+                                    l_liab_rate_old[6]=0/dec=3,
+                                    l_liab_minimum[4]=0 ,
+                                    l_liab_minimum_old[4]=0,
+                                    l_class_premium[9]=0/dec=0,
+                                    l_class_minimum_premium[9]=0/dec=0,
+                                    l_class_premium_1[9]=0/dec=0,
+                                    l_class_premium_2[9]=0/dec=0,
+                                    l_class_premium_3[9]=0/dec=0,
+                                    l_class_premium_4[9]=0/dec=0,
+                                    l_class_premium_5[9]=0/dec=0,
+                                    l_class_diff[9]=0/dec=0,
+                                    l_increase[9]=0/dec=0,
+                                    l_minimum[9]=0/dec=0,
+                                    l_liab_total[9]=0/dec=0,
+                                    l_minimum_total[9]=0/dec=0,
+                                    l_minimum_premium[9]=0/dec=0,
+                                    l_minimum_premium_1[9]=0/dec=0,
+                                    l_subject_premium[9]=0/dec=0,
+                                    l_subject_premium_1[9]=0/dec=0,
+                                    l_pro_rata_premium[9]=0/dec=0,
+                                    l_pro_rata_premium_1[9]=0/dec=0,
+                                    l_pro_rata_premium_2[9]=0/dec=0,
+                                    l_managed_care[9]=0/dec=0,
+                                    l_standard_premium[9]=0/dec=0,
+                                    l_premium_discount[5]=0/dec=2,
+                                    l_premium_discount_1[5]=0/dec=2,
+                                    l_constant[4]=0,
+                                    l_liab_class_code[5]=0,
+                                    l_terrorism_rate[5]=0/dec=3,
+                                    l_dtec_rate[5]=0/dec=3,
+                                    l_second_injury_fund[5]=0/dec=3,
+                                    l_terrorism_premium[9]=0/dec=0,
+                                    l_terrorism_premium_1[9]=0/dec=0,
+                                    l_estimated_premium[9]=0/dec=0,
+                                    l_adj_minimum[9]=0/dec=0,
+                                    l_second_fund[9]=0/dec=0,
+                                    l_uninsured_premium[9]=0/dec=0,
+                                    l_uninsured_employers_fund[5]=0/dec=3,
+                                    l_cost[9]=0/dec=0,
+                                    l_total[9]=0/dec=0 ;
+
+        include "prorata.var"
+
+screen entry
+G_APP_NO   = val(commandline[1,11])
+
+Access agqworkerscomp1, Set agqworkerscomp1:app_no = g_app_no, generic
+
+access agsdefault_wcp, set agsdefault_wcp:company_id       = agqworkerscomp1:company_id,
+                           agsdefault_wcp:state            = agqworkerscomp1:state,
+                           agsdefault_wcp:agent_no         = agqworkerscomp1:agent_no,
+                           agsdefault_wcp:line_of_business = agqworkerscomp1:line_of_business, generic
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:line_of_business <> 0 then
+    l_line_of_business_1 = agqname:line_of_business
+else
+    l_line_of_business_1 = agqworkerscomp1:line_of_business
+access sfsline, set sfsline:company_id = agqworkerscomp1:company_id,
+                    sfsline:line_of_business = l_line_of_business_1,
+                    sfsline:lob_subline = "00", generic
+
+access sfscompany, set sfscompany:company_id = agqworkerscomp1:company_id, generic
+
+l_line_of_business = agqworkerscomp1:line_of_business
+Do LOC_TOTAL
+if agqworkerscomp1:anniversary_exp_date <> 0 then
+    begin
+    l_eff_date = dateadd(agqworkerscomp1:anniversary_exp_date,0,-1)
+    l_anniversary = 1
+    do get_rate
+    l_anniversary = 0
+    l_eff_date = agqworkerscomp1:eff_date
+    if agqworkerscomp1:state = 29 then
+        do get_rate
+    else
+        do get_rate_1
+    end
+else
+    begin
+    l_eff_date = agqworkerscomp1:eff_date
+    l_anniversary = 0
+    if agqworkerscomp1:state = 29 then
+        do get_rate
+    else
+        do get_rate_1
+    end
+if agqworkerscomp1:state = 29 then
+    do access_wcsstat_nj
+else
+    do access_wcsstat_pa
+
+do final_total
+
+update
+
+procedure definition
+
+procedure access_wcsstat_nj
+begin
+access agqclass, set agqclass:app_no = agqworkerscomp1:app_no, generic
+
+l_class_premium = 0
+l_first = "Y"
+while agqclass:app_no = agqworkerscomp1:app_no
+    begin
+    l_class_premium = agqclass:wc_premium[1] + l_class_premium
+    if l_first = "Y" then
+        begin
+        l_first = "N"
+        l_minimum_premium = agqclass:minimum_premium[1]
+        end
+    if l_class_minimum_premium < agqclass:wc_premium[1] and
+       agsdefault_wcp:use_highest_mp = 0 then
+        begin
+        l_class_minimum_premium = agqclass:wc_premium[1]
+        l_minimum_premium       = agqclass:minimum_premium[1]
+        end
+    else
+    if l_class_minimum_premium > agqclass:wc_premium[1] and
+       agsdefault_wcp:use_highest_mp = 1 then
+        begin
+        l_class_minimum_premium = agqclass:wc_premium[1]
+        l_minimum_premium       = agqclass:minimum_premium[1]
+        end
+    l_class_limit_1 = l_class_limit_1 + agqclass:exposure[2]
+    l_class_limit_2 = l_class_limit_2 + agqclass:exposure[3]
+    l_class_limit = l_class_limit + agqclass:exposure[1]
+--    if l_minimum_premium < agqclass:minimum_premium[1] then
+--        l_minimum_premium = agqclass:minimum_premium[1]
+    if agqclass:anniversary_rating = 1 then
+        begin
+        if agqclass:sub_code = 10 then
+            begin
+            l_class_premium_1  = agqclass:wc_premium[1]
+            l_class_pro_rata_1 = agqclass:pro_rata[1]
+            end
+        if agqclass:sub_code = 20 then
+            begin
+            l_class_premium_2  = agqclass:wc_premium[1]
+            l_class_pro_rata_2 = agqclass:pro_rata[1]
+            end
+        end
+
+    next agqclass
+    end
+
+access wcsbureau, set wcsbureau:company_id = agqworkerscomp1:company_id,
+                      wcsbureau:state = agqworkerscomp1:state,
+                      wcsbureau:line_of_business = l_line_of_business, generic
+
+while wcsbureau:company_id = agqworkerscomp1:company_id and
+      wcsbureau:state = agqworkerscomp1:state and
+      wcsbureau:line_of_business = l_line_of_business
+        begin
+        if agqworkerscomp1:eff_date >= wcsbureau:rate_date then
+            begin
+            l_constant = wcsbureau:expense_constant
+            l_terrorism_rate = wcsbureau:terrorism_rate
+            l_second_injury_fund = wcsbureau:second_injury_fund
+            l_uninsured_employers_fund = wcsbureau:uninsured_employers_fund
+            l_dtec_rate = wcsbureau:dtec_rate
+            l_statutory_charge = wcsbureau:statutory_charge
+            end
+
+        next wcsbureau
+        end
+
+l_eff_date_1 = dateadd(agqworkerscomp1:eff_date,0,1)
+if agqworkerscomp1:exp_date < l_eff_date_1 and
+   sfscompany:boiler_rating = 4 then
+    begin
+    l_days_rate = l_minimum_premium divide 365
+    l_days = agqworkerscomp1:exp_date - agqworkerscomp1:eff_date
+    l_minimum_premium = l_days * l_days_rate
+    l_days_rate = l_constant divide 365
+    l_days = agqworkerscomp1:exp_date - agqworkerscomp1:eff_date
+    l_constant = l_days * l_days_rate
+    end
+
+if sfsline:lob_code one of "CPORTFOLIO" then
+    begin
+    access agqmastsupp, set agqmastsupp:app_no = g_app_no,
+                            agqmastsupp:line_of_business = l_line_of_business, generic
+
+    l_irpm_2 = agqmastsupp:irpm
+    end
+else
+    begin
+    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+    l_irpm_2 = agqmaster:irpm
+    end
+
+access wcsstat, set wcsstat:company_id = agqworkerscomp1:company_id,
+                    wcsstat:state = agqworkerscomp1:state,
+                    wcsstat:line_of_business = l_line_of_business, generic
+
+l_sub    = 0
+l_debit  = "N"
+l_credit = "N"
+while wcsstat:company_id = agqworkerscomp1:company_id and
+      wcsstat:state = agqworkerscomp1:state and
+      wcsstat:line_of_business = l_line_of_business
+        begin
+        if (agqworkerscomp1:eff_date >= wcsstat:rate_date and
+           (agqworkerscomp1:eff_date <= wcsstat:rate_date_exp or
+           wcsstat:rate_date_Exp = 0)) then
+            begin
+            l_sub = l_sub + 1
+            l_class_code[l_sub]  = wcsstat:class_code
+            l_description[l_sub] = wcsstat:description
+            if wcsstat:code = "19DEBIT" then
+                begin
+                if l_irpm_2 <> 0 and
+                   l_irpm_2 > 0 then
+                    begin
+                    l_debit  = "Y"
+                    l_credit = "N"
+                    end
+                end
+            else
+            if wcsstat:code = "19CREDIT" then
+                begin
+                if l_irpm_2 <> 0 and
+                   l_irpm_2 < 0 then
+                    begin
+                    l_credit = "Y"
+                    l_debit  = "N"
+                    end
+                end
+            else
+                begin
+                l_debit  = "N"
+                l_credit = "N"
+                end
+
+            if wcsstat:code = "10CLASS" then
+                l_premium[l_sub] = l_class_premium
+
+            if wcsstat:code = "11INCRLMT" then
+                begin
+                l_premium[l_sub] = (l_class_premium * (l_liab_rate divide 100))
+                l_increase = l_premium[l_sub]
+                end
+
+            if wcsstat:code = "12ADJMINII" then
+                begin
+                l_minimum = 0
+                l_liab_total = (l_class_premium * (l_liab_rate divide 100))
+                if l_liab_total < l_liab_minimum then
+                    begin
+                    l_premium[l_sub] = l_liab_minimum - l_liab_total
+--                    if l_premium[l_sub] <> l_liab_minimum then
+                    l_minimum = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "13SUBJPREM" then
+                begin
+                l_premium[l_sub] = l_class_premium + l_liab_total +
+                                   l_minimum
+                l_subject_premium = l_premium[l_sub]
+                end
+
+            if wcsstat:code = "14MODPREM" then
+                begin
+                if agqworkerscomp1:exp_mod_factor[1] <> 0 then
+                    begin
+                    l_exp_mod_1 = agqworkerscomp1:exp_mod_factor[1]
+                    i_eff_date = dateadd(agqworkerscomp1:exp_mod_exp_date[1],0,-1)
+                    i_exp_date = agqworkerscomp1:exp_mod_exp_date[1]
+                    i_trans_eff = agqworkerscomp1:exp_mod_eff_date[1]
+                    do pro_rata
+                    if i_pro_rata <> 0 then
+                        begin
+                        l_pro_rata_premium = l_subject_premium * i_pro_rata
+                        end
+                    else
+                        begin
+                        l_pro_rata_premium = l_subject_premium
+                        end
+                    l_pro_rata_premium_2 = l_pro_rata_premium * l_exp_mod_1
+                    l_pro_rata_premium_3 = l_pro_rata_premium_2 - l_pro_rata_premium
+                    l_premium[l_sub] = l_pro_rata_premium_3
+                    l_factor[l_sub] = l_exp_mod_1
+                    l_modified_premium_1 = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "15MODPREM" then
+                begin
+                if agqworkerscomp1:exp_mod_factor[2] <> 0 then
+                    begin
+                    l_exp_mod_2 = agqworkerscomp1:exp_mod_factor[2]
+                    l_pro_rata_premium   = l_subject_premium - l_pro_rata_premium
+                    l_pro_rata_premium_2 = l_pro_rata_premium * l_exp_mod_2
+                    l_pro_rata_premium_3 = l_pro_rata_premium_2 - l_pro_rata_premium
+                    l_premium[l_sub] = l_pro_rata_premium_3
+                    l_factor[l_sub] = l_exp_mod_2
+                    l_modified_premium_2 = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "16ADJMIN" and
+               sfscompany:boiler_rating <> 4 then
+                begin
+                l_minimum_total = l_class_premium + l_liab_total +
+                                  l_minimum + l_constant
+                if l_minimum_total < l_minimum_premium then
+                    begin
+                    l_premium[l_sub] = l_minimum_premium - l_minimum_total
+                    l_adj_minimum = l_premium[l_sub]
+                    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+                    change agqmaster
+                        begin
+                        agqmaster:irpm = 0
+                        end
+                    l_irpm_2 = 0
+                    l_credit = "N"
+                    l_debit  = "N"
+                    end
+                end
+            else
+            if wcsstat:code = "16ADJMIN" and
+               sfscompany:boiler_rating = 4 then
+                begin
+                if l_exp_mod_1 = 0 then
+                    l_exp_mod_1 = 1.00
+                if l_exp_mod_2 = 0 then
+                    l_exp_mod_2 = 1.00
+                l_minimum_total = ((l_class_premium + l_liab_total +
+                                  l_minimum) * l_exp_mod_1 *
+                                  l_exp_mod_2)
+                l_minimum_premium_1 = ((l_minimum_premium +
+                                      l_liab_minimum) -
+                                      l_constant)
+                if l_minimum_total < l_minimum_premium_1 then
+                    begin
+                    l_premium[l_sub] = l_minimum_premium_1 - l_minimum_total
+                    l_adj_minimum = l_premium[l_sub]
+                    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+                    change agqmaster
+                        begin
+                        agqmaster:irpm = 0
+                        end
+                    l_irpm_2 = 0
+                    l_credit = "N"
+                    l_debit  = "N"
+                    end
+                end
+
+            if wcsstat:code = "17NJCCPAP" then
+                begin
+                if agqworkerscomp1:njccpap_percent <> 0 then
+                    begin
+                    l_premium[l_sub] = (l_subject_premium *
+                                       (agqworkerscomp1:njccpap_percent
+                                        divide 100))
+                    l_premium[l_sub] = l_premium[l_sub] * -1
+                    l_njccpap = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "18MANAGED" then
+                begin
+                if agqworkerscomp1:managed_care_credit <> 0 then
+                    begin
+                    l_premium[l_sub] = (l_subject_premium *
+                                       (agqworkerscomp1:managed_care_credit
+                                        divide 100))
+                    l_premium[l_sub] = l_premium[l_sub] * -1
+                    l_managed_care_premium = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "19DEBIT" and
+               l_debit      = "Y" and
+               l_credit     = "N" then
+                begin
+                if l_irpm_2 <> 0 and
+                   l_irpm_2 > 0 then
+                    begin
+                    l_irpm = (1 + (l_irpm_2 * 0.01))
+                    if l_irpm = 0 then
+                        l_irpm = 1
+                    l_premium[l_sub] = (((l_subject_premium +
+                                       l_modified_premium_1 +
+                                       l_modified_premium_2) *
+                                       l_irpm) -
+                                       (l_subject_premium +
+                                       l_modified_premium_1 +
+                                       l_modified_premium_2))
+                    l_premium[l_sub] = l_premium[l_sub]
+                    l_debit_irpm     = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "19CREDIT" and
+               l_credit     = "Y" and
+               l_debit      = "N"then
+                begin
+                if l_irpm_2 <> 0 and
+                   l_irpm_2 < 0 then
+                    begin
+                    l_irpm = (1 + (l_irpm_2 * 0.01))
+                    if l_irpm = 0 then
+                        l_irpm = 1
+                    l_irpm_sub = l_sub
+                    l_premium[l_sub] = ((l_subject_premium +
+                                       l_modified_premium_1 +
+                                       l_modified_premium_2) -
+                                       ((l_subject_premium +
+                                       l_modified_premium_1 +
+                                       l_modified_premium_2) *
+                                       l_irpm))
+                    l_premium[l_sub] = l_premium[l_sub] * -1
+                    l_credit_irpm    = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "19STAND" then
+                begin
+                if l_modified_premium_1 <> 0 then
+                    l_premium[l_sub] = l_adj_minimum + l_modified_premium_1 +
+                                       l_subject_premium +
+                                       l_modified_premium_2 +
+                                       l_njccpap + l_managed_care_premium +
+                                       l_debit_irpm + l_credit_irpm
+                else
+                    l_premium[l_sub] = l_adj_minimum + l_subject_premium +
+                                       l_njccpap + l_managed_care_premium +
+                                       l_debit_irpm + l_credit_irpm
+                l_standard_premium = l_premium[l_sub]
+                end
+
+            l_schedule = agsdefault_wcp:premium_discount_schedule
+            access wcspremdisc, set wcspremdisc:company_id = agqworkerscomp1:company_id,
+                                    wcspremdisc:state = agqworkerscomp1:state,
+                                    wcspremdisc:line_of_business = l_line_of_business,
+                                    wcspremdisc:schedule = l_schedule, generic
+
+            l_premium_discount = 0
+            while wcspremdisc:company_id = agqworkerscomp1:company_id and
+                  wcspremdisc:state = agqworkerscomp1:state and
+                  wcspremdisc:line_of_business = l_line_of_business and
+                  wcspremdisc:schedule = l_schedule
+                    begin
+                    if (agqworkerscomp1:eff_date >= wcspremdisc:rate_date and
+                       (agqworkerscomp1:eff_date <= wcspremdisc:rate_date_exp or
+                       wcspremdisc:rate_date_exp = 0)) then
+                        begin
+                        if l_standard_premium => wcspremdisc:premium_1 and
+                           l_standard_premium <= wcspremdisc:premium_2 then
+                            l_premium_discount = wcspremdisc:premium_discount
+                        end
+
+                    next wcspremdisc
+                    end
+
+            if wcsstat:code = "20PREMDISC" then
+                begin
+--                l_premium[l_sub] = (l_standard_premium *
+                l_premium[l_sub] = (l_standard_premium *
+                                   (l_premium_discount divide 100))
+                l_premium[l_sub] = l_premium[l_sub] * -1
+                l_prem_disc = l_premium[l_sub]
+                l_factor[l_sub] = l_premium_discount
+                if l_premium_discount <> 0 then
+                    begin
+                    Access wcstrigger, Set wcstrigger:COMPANY_ID = agqworkerscomp1:COMPANY_ID,
+                                           wcstrigger:STATE = agqworkerscomp1:STATE,
+                                           wcstrigger:LINE_OF_BUSINESS = l_line_of_business, Generic
+
+                    while wcstrigger:COMPANY_ID = agqworkerscomp1:COMPANY_ID and
+                          wcstrigger:STATE = agqworkerscomp1:STATE and
+                          wcstrigger:LINE_OF_BUSINESS = l_line_of_business
+                            begin
+                            If agqworkerscomp1:EFF_DATE >= wcstrigger:EFF_DATE Then
+                                Begin
+                                L_CODE_1 = wcstrigger:code[1]
+                                l_code_2 = wcstrigger:code[2]
+                                End
+
+                            Next wcstrigger
+                            End
+
+                    If L_CODE_1 <> "" Then
+                        Begin
+                        -- schedule Y premium discount
+                        L_CODE = L_CODE_1
+                        do delete_agqend
+                        Do ACCESS_agqEND
+                        If L_ADD_ENDORSEMENT = "Y" And
+                           l_schedule = "Y" Then
+                            Do ADD_agqEND
+                        If L_ADD_ENDORSEMENT = "N" And
+                           l_schedule <> "Y" Then
+                            Do DELETE_agqEND
+                        End
+
+                    If L_CODE_2 <> "" Then
+                        Begin
+                        -- schedule X premium discount
+                        L_CODE = L_CODE_2
+                        do delete_agqend
+                        Do ACCESS_agqEND
+                        If L_ADD_ENDORSEMENT = "Y" And
+                           l_schedule = "X" Then
+                            Do ADD_agqEND
+                        If L_ADD_ENDORSEMENT = "N" And
+                           l_schedule <> "X" Then
+                            Do DELETE_agqEND
+                        End
+                    End
+                else
+                if l_premium_discount = 0 then
+                    begin
+                    Access wcstrigger, Set wcstrigger:COMPANY_ID = agqworkerscomp1:COMPANY_ID,
+                                           wcstrigger:STATE = agqworkerscomp1:STATE,
+                                           wcstrigger:LINE_OF_BUSINESS = l_line_of_business, Generic
+
+                    while wcstrigger:COMPANY_ID = agqworkerscomp1:COMPANY_ID and
+                          wcstrigger:STATE = agqworkerscomp1:STATE and
+                          wcstrigger:LINE_OF_BUSINESS = l_line_of_business
+                            begin
+                            If agqworkerscomp1:EFF_DATE >= wcstrigger:EFF_DATE Then
+                                Begin
+                                L_CODE_1 = wcstrigger:code[1]
+                                l_code_2 = wcstrigger:code[2]
+                                End
+
+                            Next wcstrigger
+                            End
+
+                    If L_CODE_1 <> "" Then
+                        Begin
+                        -- schedule Y premium discount
+                        L_CODE = L_CODE_1
+                        Do ACCESS_agqEND
+                        If L_ADD_ENDORSEMENT = "N" Then
+                            Do DELETE_agqEND
+                        End
+
+                    If L_CODE_2 <> "" Then
+                        Begin
+                        -- schedule X premium discount
+                        L_CODE = L_CODE_2
+                        Do ACCESS_agqEND
+                        If L_ADD_ENDORSEMENT = "N" Then
+                            Do DELETE_agqEND
+                        End
+                    End
+                end
+
+            if wcsstat:code = "21CONSTANT" then
+                begin
+                l_premium[l_sub] = l_constant
+                end
+
+            if wcsstat:code one of "22TERROR" then
+                begin
+                l_premium[l_sub] = ((l_class_limit divide 100) *
+                                   l_terrorism_rate)
+                l_factor[l_sub] = l_terrorism_rate
+                l_terrorism_premium = l_premium[l_sub]
+                end
+
+            if wcsstat:code one of "22TERROR1" then
+                begin
+                l_premium[l_sub] = ((l_class_limit divide 100) *
+                                   l_dtec_rate)
+                l_factor[l_sub] = l_dtec_rate
+                l_terrorism_premium_1 = l_premium[l_sub]
+                end
+
+            if wcsstat:code = "23ESTPREM" then
+                begin
+                l_premium[l_sub] = l_standard_premium + l_prem_disc +
+                                   l_constant + l_terrorism_premium +
+                                   l_terrorism_premium_1
+                l_estimated_premium = l_premium[l_sub]
+                end
+
+            if wcsstat:code = "24STAT" then
+                begin
+                l_premium[l_sub] = l_estimated_premium *
+                                   l_statutory_charge
+                l_factor[l_sub] = l_statutory_charge
+                l_statutory_premium = l_premium[l_sub]
+                end
+
+            if wcsstat:code = "24SECOND" then
+                begin
+                l_premium[l_sub] = (((l_subject_premium +
+                                   l_modified_premium_1 +
+                                   l_modified_premium_2) *
+                                   l_second_injury_fund)
+                                   divide 100)
+                l_factor[l_sub] = l_second_injury_fund
+                l_second_fund = l_premium[l_sub]
+                end
+
+            if wcsstat:code = "25UNINSURE" then
+                begin
+                l_premium[l_sub] = (((l_subject_premium +
+                                   l_modified_premium_1 +
+                                   l_modified_premium_2) *
+                                   l_uninsured_employers_fund)
+                                   divide 100)
+                l_factor[l_sub] = l_uninsured_employers_fund
+                l_uninsured_premium = l_premium[l_sub]
+                end
+
+            if wcsstat:code one of "26COST", "27COST" then
+                begin
+                l_premium[l_sub] = l_estimated_premium + l_second_fund +
+                                   l_uninsured_premium + l_statutory_premium
+                if l_premium[l_sub] < l_minimum_premium then
+                     begin
+                     l_continue_1 = dialog("IRPM","warning.bmp","IRPM credit does not apply the premium is below the minimum premium","OK")
+                     l_irpm = 0
+                     l_credit_irpm = 0
+                     l_premium[l_irpm_sub] = 0
+                     access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+                     change agqmaster
+                        begin
+                        agqmaster:irpm = 0
+                        end
+
+                     function = "redisplay"
+                     end
+                l_cost = l_premium[l_sub]
+                l_total = l_premium[l_sub]
+                l_total = l_total + l_end_premium + l_misc_premium
+                end
+
+            if wcsstat:code = "27MINPREM" then
+                begin
+                l_premium[l_sub] = l_minimum_premium
+                end
+
+            if wcsstat:code = "28DEPOSIT" then
+                begin
+--                l_premium[l_sub] = arschksu:check_amount
+                end
+
+            access agqworkerscomp1_alias, set agqworkerscomp1_alias:app_no = agqworkerscomp1:app_no,
+                                         agqworkerscomp1_alias:prem_no = agqworkerscomp1:prem_no,
+                                         agqworkerscomp1_alias:build_no = agqworkerscomp1:build_no, generic
+
+            if agqworkerscomp1_alias:app_no = agqworkerscomp1:app_no and
+               agqworkerscomp1_alias:prem_no = agqworkerscomp1:prem_no and
+               agqworkerscomp1_alias:build_no = agqworkerscomp1:build_no then
+                begin
+                change agqworkerscomp1_alias
+                    begin
+                    agqworkerscomp1_alias:factor[l_sub] = l_factor[l_sub]
+                    agqworkerscomp1_alias:premium_1[l_sub] = l_premium[l_sub]
+                    agqworkerscomp1_alias:code[l_sub] = wcsstat:code
+                    end
+                end
+
+            end
+
+        next wcsstat
+        end
+
+end
+
+procedure access_wcsstat_pa
+begin
+access agqworkerscomp1_alias, set agqworkerscomp1_alias:app_no = agqworkerscomp1:app_no,
+                             agqworkerscomp1_alias:prem_no  = agqworkerscomp1:prem_no,
+                             agqworkerscomp1_alias:build_no = agqworkerscomp1:build_no, generic
+
+l_sub = 0
+if agqworkerscomp1_alias:app_no = agqworkerscomp1:app_no and
+   agqworkerscomp1_alias:prem_no  = agqworkerscomp1:prem_no and
+   agqworkerscomp1_alias:build_no = agqworkerscomp1:build_no then
+    begin
+    while l_sub < 31
+        begin
+        l_sub = l_sub + 1
+        change agqworkerscomp1_alias
+            begin
+            agqworkerscomp1_alias:factor[l_sub]    = 0
+            agqworkerscomp1_alias:premium_1[l_sub] = 0
+            agqworkerscomp1_alias:code[l_sub]      = ""
+            end
+        end
+    end
+
+access agqclass, set agqclass:app_no = agqworkerscomp1:app_no, generic
+
+l_class_premium = 0
+l_first = "Y"
+while agqclass:app_no = agqworkerscomp1:app_no
+    begin
+    l_class_premium = agqclass:wc_premium[1] + l_class_premium
+    if l_exposure < agqclass:exposure[1] then
+        begin
+        l_exposure = agqclass:exposure[1]
+        l_hazard_group = agqclass:hazard_group
+        end
+    if l_first = "Y" then
+        begin
+        l_first = "N"
+        l_minimum_premium = agqclass:minimum_premium[1]
+        end
+    if l_class_minimum_premium < agqclass:wc_premium[1] and
+       agsdefault_wcp:use_highest_mp = 0 then
+        begin
+        l_class_minimum_premium = agqclass:wc_premium[1]
+        l_minimum_premium       = agqclass:minimum_premium[1]
+        end
+    else
+    if l_minimum_premium < agqclass:minimum_premium[1] and
+       agsdefault_wcp:use_highest_mp = 1 then
+        begin
+        l_class_minimum_premium = agqclass:wc_premium[1]
+        l_minimum_premium       = agqclass:minimum_premium[1]
+        end
+    l_class_limit_1 = l_class_limit_1 + agqclass:exposure[2]
+    l_class_limit_2 = l_class_limit_2 + agqclass:exposure[3]
+    l_class_limit = l_class_limit + agqclass:exposure[1]
+--    if l_minimum_premium < agqclass:minimum_premium[1] then
+--        l_minimum_premium = agqclass:minimum_premium[1]
+    if agqclass:anniversary_rating = 1 then
+        begin
+        if agqclass:sub_code = 10 then
+            begin
+            l_class_premium_1  = l_class_premium_1 + agqclass:wc_premium[1]
+            l_class_pro_rata_1 = agqclass:pro_rata[1]
+            end
+        if agqclass:sub_code one of 20, 9 then
+            begin
+            l_class_premium_2  = l_class_premium_2 + agqclass:wc_premium[1]
+            l_class_pro_rata_2 = agqclass:pro_rata[1]
+            end
+        end
+
+    next agqclass
+    end
+
+access wcsbureau, set wcsbureau:company_id = agqworkerscomp1:company_id,
+                      wcsbureau:state = agqworkerscomp1:state,
+                      wcsbureau:line_of_business = l_line_of_business, generic
+
+while wcsbureau:company_id = agqworkerscomp1:company_id and
+      wcsbureau:state = agqworkerscomp1:state and
+      wcsbureau:line_of_business = l_line_of_business
+        begin
+        if agqworkerscomp1:eff_date >= wcsbureau:rate_date then
+            begin
+            l_constant = wcsbureau:expense_constant
+            l_terrorism_rate = wcsbureau:terrorism_rate
+            l_second_injury_fund = wcsbureau:second_injury_fund
+            l_uninsured_employers_fund = wcsbureau:uninsured_employers_fund
+            l_dtec_rate = wcsbureau:dtec_rate
+            l_statutory_charge = wcsbureau:statutory_charge
+            l_safety_factor = wcsbureau:safety_credit
+            end
+
+        next wcsbureau
+        end
+
+access wcsdeductible, set wcsdeductible:company_id = agqworkerscomp1:company_id,
+                          wcsdeductible:state = agqworkerscomp1:state,
+                          wcsdeductible:line_of_business = l_line_of_business,
+                          wcsdeductible:deductible = agqworkerscomp1:deductible, generic
+
+while wcsdeductible:company_id = agqworkerscomp1:company_id and
+      wcsdeductible:state = agqworkerscomp1:state and
+      wcsdeductible:line_of_business = l_line_of_business and
+      wcsdeductible:deductible = agqworkerscomp1:deductible
+        begin
+        if (agqworkerscomp1:eff_date >= wcsdeductible:eff_date and
+           (agqworkerscomp1:eff_date < wcsdeductible:exp_date or
+           wcsdeductible:exp_date = 0)) then
+            begin
+            switch(l_hazard_group)
+              case 1 : l_deductible_factor = wcsdeductible:factor_1
+              case 2 : l_deductible_factor = wcsdeductible:factor_2
+              case 3 : l_deductible_factor = wcsdeductible:factor_3
+              case 4 : l_deductible_factor = wcsdeductible:factor_4
+              end
+            end
+
+        next wcsdeductible
+        end
+
+if sfsline:lob_code one of "CPORTFOLIO" then
+    begin
+    access agqmastsupp, set agqmastsupp:app_no = g_app_no,
+                            agqmastsupp:line_of_business = l_line_of_business, generic
+
+    l_irpm = agqmastsupp:irpm
+    end
+else
+    begin
+    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+    l_irpm = agqmaster:irpm
+    end
+
+access wcsstat, set wcsstat:company_id = agqworkerscomp1:company_id,
+                    wcsstat:state = agqworkerscomp1:state,
+                    wcsstat:line_of_business = l_line_of_business, generic
+
+l_sub       = 1
+l_debit     = "N"
+l_credit    = "N"
+l_mr_debit  = "N"
+l_mr_credit = "N"
+while wcsstat:company_id = agqworkerscomp1:company_id and
+      wcsstat:state = agqworkerscomp1:state and
+      wcsstat:line_of_business = l_line_of_business
+        begin
+        if (agqworkerscomp1:eff_date >= wcsstat:rate_date and
+           (agqworkerscomp1:eff_date <= wcsstat:rate_date_exp or
+           wcsstat:rate_date_Exp = 0)) then
+            begin
+            if wcsstat:code = "21MERIT" then
+                begin
+                if l_irpm <> 0 and
+                   l_irpm > 1.00 then
+                    begin
+                    l_mr_debit  = "Y"
+                    l_mr_credit = "N"
+                    end
+                else
+                if l_irpm <> 0 and
+                   l_irpm < 1.00 then
+                    begin
+                    l_mr_credit = "Y"
+                    l_mr_debit  = "N"
+                    end
+                else
+                    begin
+                    l_mr_debit   = "N"
+                    l_mr_credit  = "N"
+                    end
+                end
+
+            if wcsstat:code = "17IRPM" then
+                begin
+                if agqworkerscomp1:merit_rating not one of 0, 1.00 and
+                   agqworkerscomp1:merit_rating > 0 then
+                    begin
+                    l_debit  = "Y"
+                    l_credit = "N"
+                    end
+                else
+                if agqworkerscomp1:merit_rating not one of 0, 1.00 and
+                   agqworkerscomp1:merit_rating < 0 then
+                    begin
+                    l_credit = "Y"
+                    l_debit  = "N"
+                    end
+                else
+                if agqworkerscomp1:merit_rating = 1.00 then
+                    begin
+                    l_debit  = "N"
+                    l_credit = "N"
+                    l_none   = "N"
+                    end
+                else
+                if agqworkerscomp1:merit_Rating = 0 then
+                    begin
+                    l_debit  = "N"
+                    l_credit = "N"
+                    l_none   = "Y"
+                    end
+
+                -- new logic for 2nd merit rate
+                if agqworkerscomp1:merit_rating_1 not one of 0, 1.00 and
+                   agqworkerscomp1:merit_rating_1 > 0 then
+                    begin
+                    l_debit_1  = "Y"
+                    l_credit_1 = "N"
+                    end
+                else
+                if agqworkerscomp1:merit_rating_1 not one of 0, 1.00 and
+                   agqworkerscomp1:merit_rating_1 < 0 then
+                    begin
+                    l_credit_1 = "Y"
+                    l_debit_1  = "N"
+                    end
+                else
+                if agqworkerscomp1:merit_rating_1 = 1.00 then
+                    begin
+                    l_debit_1  = "N"
+                    l_credit_1 = "N"
+                    l_none_1   = "N"
+                    end
+                else
+                if agqworkerscomp1:merit_Rating_1 = 0 then
+                    begin
+                    l_debit_1  = "N"
+                    l_credit_1 = "N"
+                    l_none_1   = "Y"
+                    end
+                end
+
+            l_class_code[l_sub] = wcsstat:class_code
+            if wcsstat:code = "10CLASS" then
+                begin
+                l_premium[l_sub] = l_class_premium
+                end
+
+            if wcsstat:code = "11INCRLMT" then
+                begin
+                l_premium[l_sub] = (l_class_premium * (l_liab_rate divide 100))
+                l_increase = l_premium[l_sub]
+                l_liab_total = (l_class_premium * (l_liab_rate divide 100))
+                l_factor1[l_sub] = l_liab_rate divide 100
+                end
+
+/*            if wcsstat:code = "12ADJMINII" then
+                begin
+                l_sub = l_sub + 1
+                l_class_code[l_sub]  = wcsstat:class_code
+                l_description[l_sub] = wcsstat:description
+                l_minimum = 0
+                l_liab_total = (l_class_premium * (l_liab_rate divide 100))
+                if l_liab_total < l_liab_minimum then
+                    begin
+                    l_premium[l_sub] = l_liab_minimum - l_liab_total
+--                    if l_premium[l_sub] <> l_liab_minimum then
+                    l_minimum = l_premium[l_sub]
+                    end
+                end*/
+
+            if wcsstat:code = "12DEDUCT" then
+                begin
+                if l_deductible_factor not one of 1.00, 0 then
+                    begin
+                    l_premium[l_sub]     = l_class_premium * l_deductible_factor
+                    l_premium[l_sub]     = l_premium[l_sub] * -1
+                    l_deductible_premium = l_premium[l_sub]
+                    l_factor1[l_sub]     = l_deductible_factor
+                    end
+                end
+
+            if wcsstat:code = "13SUBJPREM" then
+                begin
+                l_premium[l_sub] = l_class_premium + l_liab_total +
+                                   l_minimum + l_deductible_premium
+                l_subject_premium = l_premium[l_sub]
+                l_subject_premium_1 = l_liab_total +
+                                      l_minimum +
+                                      l_deductible_premium
+                end
+
+            if wcsstat:code = "14MODPREM" then
+                begin
+                if agqworkerscomp1:exp_mod_factor[1] <> 0 then
+                    begin
+                    l_exp_mod_1 = agqworkerscomp1:exp_mod_factor[1]
+                    i_eff_date = dateadd(agqworkerscomp1:exp_mod_exp_date[1],0,-1)
+                    if day(i_eff_date) = 29 then
+                        i_str_eff_date = str(month(i_eff_date),2) + "28" + str(year(i_eff_date),4)
+                    i_eff_date = date(i_str_eff_date)
+                    i_exp_date = agqworkerscomp1:exp_mod_exp_date[1]
+                    i_trans_eff = agqworkerscomp1:exp_mod_eff_date[1]
+                    if l_class_premium_2 = 0 then
+                        begin
+                        do pro_rata
+                        if i_pro_rata <> 0 then
+                            begin
+                            l_pro_rata_premium = l_subject_premium * i_pro_rata
+                            end
+                        else
+                            begin
+                            l_pro_rata_premium = l_subject_premium
+                            end
+                        end
+                    else
+                        begin
+                        l_class_premium_3 = l_subject_premium_1 *
+                                            l_class_pro_rata_1
+                        l_class_premium_4 = l_subject_premium_1 *
+                                            l_class_pro_rata_2
+                        l_class_premium_5 = l_class_premium_3 +
+                                            l_class_premium_4
+                        if l_class_premium_5 <> l_subject_premium_1 then
+                            begin
+                            l_class_diff = l_class_premium_5 - l_subject_premium_1
+                            l_class_premium_3 = l_class_premium_3 + l_class_diff
+                            end
+
+                        l_pro_rata_premium = l_class_premium_2 + l_class_premium_4
+                        end
+                    l_pro_rata_premium_2 = l_pro_rata_premium * l_exp_mod_1
+                    l_pro_rata_premium_3 = l_pro_rata_premium_2 - l_pro_rata_premium
+                    l_premium[l_sub] = l_pro_rata_premium_3
+                    l_factor1[l_sub] = l_exp_mod_1
+                    l_modified_premium_1 = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "15MODPREM" then
+                begin
+                if agqworkerscomp1:exp_mod_factor[2] <> 0 then
+                    begin
+                    l_exp_mod_2 = agqworkerscomp1:exp_mod_factor[2]
+                    if l_class_premium_1 = 0 then
+                        l_pro_rata_premium = l_subject_premium - l_pro_rata_premium
+                    else
+                        begin
+                        l_class_premium_3 = l_subject_premium_1 *
+                                            l_class_pro_rata_1
+                        l_class_premium_4 = l_subject_premium_1 *
+                                            l_class_pro_rata_2
+                        l_class_premium_5 = l_class_premium_3 +
+                                            l_class_premium_4
+                        if l_class_premium_5 <> l_subject_premium_1 then
+                            begin
+                            l_class_diff = l_class_premium_5 - l_subject_premium_1
+                            l_class_premium_3 = l_class_premium_3 + l_class_diff
+                            end
+
+                        l_pro_rata_premium = l_class_premium_1 + l_class_premium_3
+                        end
+                    l_pro_rata_premium_2 = l_pro_rata_premium * l_exp_mod_2
+                    l_pro_rata_premium_3 = l_pro_rata_premium_2 - l_pro_rata_premium
+                    l_premium[l_sub] = l_pro_rata_premium_3
+                    l_factor1[l_sub] = l_exp_mod_2
+                    l_modified_premium_2 = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code one of "17IRPM" then
+                begin
+                if agqworkerscomp1:merit_rating_1 = 0 and
+                   agqworkerscomp1:anniversary_exp_date = 0 then
+                    begin
+                    if l_debit   = "Y" and
+                       l_credit  = "N" then
+                        begin
+                        if agqworkerscomp1:merit_rating <> 0 and
+                           agqworkerscomp1:merit_rating > 0 then
+                            begin
+                            l_irpm_1 = (1 + (agqworkerscomp1:merit_rating * 0.01))
+                            if l_irpm_1 = 0 then
+                                l_irpm_1 = 1
+                            l_class_code[l_sub] = wcsstat:class_code
+                            l_premium[l_sub] = (((l_subject_premium +
+                                               l_modified_premium_1 +
+                                               l_modified_premium_2) *
+                                               l_irpm_1) -
+                                               (l_subject_premium +
+                                               l_modified_premium_1 +
+                                               l_modified_premium_2))
+                            l_premium[l_sub] = l_premium[l_sub]
+                            l_debit_irpm     = l_premium[l_sub]
+/*                            if l_premium[l_sub] = 0 then
+                                begin
+                                l_debit_irpm = 1.00
+                                l_premium[l_sub] = 1.00
+                                end*/
+                            end
+                        end
+                    else
+                    if l_credit  = "Y" and
+                       l_debit   = "N"then
+                        begin
+                        if agqworkerscomp1:merit_rating <> 0 and
+                           agqworkerscomp1:merit_rating < 0 then
+                            begin
+                            l_class_code[l_sub] = wcsstat:class_code_credit
+                            l_irpm_1 = (1 + (agqworkerscomp1:merit_rating * 0.01))
+                            if l_irpm_1 = 0 then
+                                l_irpm_1 = 1
+                            l_premium[l_sub] = ((l_subject_premium +
+                                               l_modified_premium_1 +
+                                               l_modified_premium_2) -
+                                               ((l_subject_premium +
+                                               l_modified_premium_1 +
+                                               l_modified_premium_2) *
+                                               l_irpm_1))
+                            l_premium[l_sub] = l_premium[l_sub] * -1
+                            l_credit_irpm    = l_premium[l_sub]
+/*                            if l_premium[l_sub] = 0 then
+                                begin
+                                l_credit_irpm = -1.00
+                                l_premium[l_sub] = -1.00
+                                end*/
+                            end
+                        end
+                    else
+                    if l_credit  = "N" or
+                       l_debit   = "N" or
+                       l_none    = "N" then
+                        begin
+                        if agqworkerscomp1:merit_rating = 1.00 then
+                            begin
+                            l_class_code[l_sub] = wcsstat:class_code_none
+                            l_premium[l_sub]     = 0
+                            end
+                        end
+                    end
+                else
+                -- new logic
+                if ((agqworkerscomp1:merit_rating_1 one of 0 and
+                   agqworkerscomp1:anniversary_exp_date <> 0) or
+                   agqworkerscomp1:merit_rating_1 not one of 0) then
+                    begin
+                    if l_debit   = "Y" and
+                       l_credit  = "N" then
+                        begin
+                        if agqworkerscomp1:merit_rating <> 0 and
+                           agqworkerscomp1:merit_rating > 0 then
+                            begin
+                            l_irpm_1 = (1 + (agqworkerscomp1:merit_rating * 0.01))
+                            if l_irpm_1 = 0 then
+                                l_irpm_1 = 1
+                            l_class_code[l_sub] = wcsstat:class_code
+                            l_class_premium_3 = l_subject_premium_1 *
+                                                l_class_pro_rata_1
+                            l_class_premium_4 = l_subject_premium_1 *
+                                                l_class_pro_rata_2
+                            l_class_premium_5 = l_class_premium_3 +
+                                                l_class_premium_4
+                            if l_class_premium_5 <> l_subject_premium_1 then
+                                begin
+                                l_class_diff = l_class_premium_5 - l_subject_premium_1
+                                l_class_premium_3 = l_class_premium_3 + l_class_diff
+                                end
+
+                            l_premium[l_sub] = (((l_class_premium_2 +
+                                               l_class_premium_4 +
+                                               l_modified_premium_1) *
+                                               l_irpm_1) -
+                                               (l_class_premium_2 +
+                                               l_class_premium_4 +
+                                               l_modified_premium_1))
+                            l_premium[l_sub] = l_premium[l_sub]
+                            l_debit_irpm     = l_premium[l_sub]
+/*                            if l_premium[l_sub] = 0 then
+                                begin
+                                l_debit_irpm = 1.00
+                                l_premium[l_sub] = 1.00
+                                end*/
+                            end
+                        end
+                    else
+                    if l_credit  = "Y" and
+                       l_debit   = "N"then
+                        begin
+                        if agqworkerscomp1:merit_rating <> 0 and
+                           agqworkerscomp1:merit_rating < 0 then
+                            begin
+                            l_class_code[l_sub] = wcsstat:class_code_credit
+                            l_irpm_1 = (1 + (agqworkerscomp1:merit_rating * 0.01))
+                            if l_irpm_1 = 0 then
+                                l_irpm_1 = 1
+                            l_class_premium_3 = l_subject_premium_1 *
+                                                l_class_pro_rata_1
+                            l_class_premium_4 = l_subject_premium_1 *
+                                                l_class_pro_rata_2
+                            l_class_premium_5 = l_class_premium_3 +
+                                                l_class_premium_4
+                            if l_class_premium_5 <> l_subject_premium_1 then
+                                begin
+                                l_class_diff = l_class_premium_5 - l_subject_premium_1
+                                l_class_premium_3 = l_class_premium_3 + l_class_diff
+                                end
+
+                            l_premium[l_sub] = ((l_class_premium_2 +
+                                               l_class_premium_4 +
+                                               l_modified_premium_1) -
+                                               ((l_class_premium_2 +
+                                               l_class_premium_4 +
+                                               l_modified_premium_1) *
+                                               l_irpm_1))
+                            l_premium[l_sub] = l_premium[l_sub] * -1
+                            l_credit_irpm    = l_premium[l_sub]
+/*                            if l_premium[l_sub] = 0 then
+                                begin
+                                l_credit_irpm = -1.00
+                                l_premium[l_sub] = -1.00
+                                end*/
+                            end
+                        end
+                    else
+                    if l_credit  = "N" or
+                       l_debit   = "N" or
+                       l_none    = "N" then
+                        begin
+                        l_class_code[l_sub] = wcsstat:class_code_none
+                        l_premium[l_sub]     = 0
+                        end
+                    end
+
+                -- new logic for merit rating 2
+                if l_debit_1   = "Y" and
+                   l_credit_1  = "N" then
+                    begin
+                    if agqworkerscomp1:merit_rating_1 <> 0 and
+                       agqworkerscomp1:merit_rating_1 > 0 then
+                        begin
+                        l_irpm_2 = (1 + (agqworkerscomp1:merit_rating_1 * 0.01))
+                        if l_irpm_2 = 0 then
+                            l_irpm_2 = 1
+                        l_merit_rating_class_code = wcsstat:class_code
+                        l_class_premium_3 = l_subject_premium_1 *
+                                            l_class_pro_rata_1
+                        l_class_premium_4 = l_subject_premium_1 *
+                                            l_class_pro_rata_2
+                        l_class_premium_5 = l_class_premium_3 +
+                                            l_class_premium_4
+                        if l_class_premium_5 <> l_subject_premium_1 then
+                            begin
+                            l_class_diff = l_class_premium_5 - l_subject_premium_1
+                            l_class_premium_3 = l_class_premium_3 + l_class_diff
+                            end
+
+                        l_merit_rating_premium = (((l_class_premium_1 +
+                                                 l_class_premium_3 +
+                                                 l_modified_premium_2) *
+                                                 l_irpm_2) -
+                                                 (l_class_premium_1 +
+                                                 l_class_premium_3 +
+                                                 l_modified_premium_2))
+                        l_merit_rating_premium = l_merit_rating_premium
+                        l_premium[l_sub] = l_premium[l_sub] + l_merit_rating_premium
+                        l_debit_irpm_1    = l_merit_rating_premium
+/*                        if l_merit_rating_premium = 0 then
+                            begin
+                            l_debit_irpm_1 = 1.00
+                            l_merit_rating_premium = 1.00
+                            end*/
+                        if agqworkerscomp1:merit_rating = 0 then
+                            l_class_code[l_sub] = wcsstat:class_code
+                        end
+                    end
+                else
+                if l_credit_1  = "Y" and
+                   l_debit_1   = "N"then
+                    begin
+                    if agqworkerscomp1:merit_rating_1 <> 0 and
+                       agqworkerscomp1:merit_rating_1 < 0 then
+                        begin
+                        l_merit_rating_class_code = wcsstat:class_code_credit
+                        l_irpm_2 = (1 + (agqworkerscomp1:merit_rating_1 * 0.01))
+                        if l_irpm_2 = 0 then
+                            l_irpm_2 = 1
+                        l_class_premium_3 = l_subject_premium_1 *
+                                            l_class_pro_rata_1
+                        l_class_premium_4 = l_subject_premium_1 *
+                                            l_class_pro_rata_2
+                        l_class_premium_5 = l_class_premium_3 +
+                                            l_class_premium_4
+                        if l_class_premium_5 <> l_subject_premium_1 then
+                            begin
+                            l_class_diff = l_class_premium_5 - l_subject_premium_1
+                            l_class_premium_3 = l_class_premium_3 + l_class_diff
+                            end
+
+                        l_merit_rating_premium = ((l_class_premium_1 +
+                                                 l_class_premium_3 +
+                                                 l_modified_premium_2) -
+                                                 ((l_class_premium_1 +
+                                                 l_class_premium_3 +
+                                                 l_modified_premium_2) *
+                                                 l_irpm_2))
+                        l_merit_rating_premium = l_merit_rating_premium * -1
+                        l_premium[l_sub] = l_premium[l_sub] + l_merit_rating_premium
+                        l_credit_irpm_1    = l_merit_rating_premium
+/*                        if l_merit_rating_premium = 0 then
+                            begin
+                            l_credit_irpm_1        = -1.00
+                            l_merit_rating_premium = -1.00
+                            end                           */
+
+                        if agqworkerscomp1:merit_rating one of 0, 1.00 then
+                            l_class_code[l_sub] = wcsstat:class_code_credit
+                        end
+                    end
+                else
+                if l_credit_1  = "N" or
+                   l_debit_1   = "N" or
+                   l_none_1    = "N" then
+                    begin
+                    if agqworkerscomp1:merit_rating_1 = 1.00 then
+                        begin
+                        l_merit_rating_class_code    = wcsstat:class_code_none
+                        l_merit_rating_premium = 0
+                        if agqworkerscomp1:merit_rating = 0 then
+                            l_class_code[l_sub] = wcsstat:class_code_none
+                        end
+                    end
+                end
+
+            if wcsstat:code = "19PCCPAP" then
+                begin
+                if agqworkerscomp1:njccpap_percent <> 0 then
+                    begin
+                    l_premium[l_sub] = ((l_subject_premium +
+                                       l_debit_irpm +
+                                       l_credit_irpm) *
+                                       (agqworkerscomp1:njccpap_percent
+                                        divide 100))
+                    l_premium[l_sub] = l_premium[l_sub] * -1
+                    l_njccpap = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "18SAFETY" then
+                begin
+                if agqworkerscomp1:safety_credit = 1 then
+                    begin
+                    l_premium[l_sub] = ((l_subject_premium +
+                                       l_njccpap +
+                                       l_debit_irpm +
+                                       l_credit_irpm +
+                                       l_debit_irpm_1 +
+                                       l_credit_irpm_1) *
+                                       l_safety_factor)
+                    l_premium[l_sub] = l_premium[l_sub] * -1
+                    l_safety_premium = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "19STAND" then
+                begin
+                if l_modified_premium_1 <> 0 then
+                    l_premium[l_sub] = l_adj_minimum + l_modified_premium_1 +
+                                       l_subject_premium +
+                                       l_modified_premium_2 +
+                                       l_njccpap + l_managed_care +
+                                       l_debit_irpm + l_credit_irpm +
+                                       l_debit_irpm_1 + l_credit_irpm_1
+                else
+                    l_premium[l_sub] = l_adj_minimum + l_subject_premium +
+                                       l_njccpap + l_managed_care +
+                                       l_debit_irpm + l_credit_irpm +
+                                       l_debit_irpm_1 + l_credit_irpm_1
+                l_standard_premium = l_premium[l_sub]
+                end
+
+            l_schedule = agsdefault_wcp:premium_discount_schedule
+            access wcspremdisc, set wcspremdisc:company_id = agqworkerscomp1:company_id,
+                                    wcspremdisc:state = agqworkerscomp1:state,
+                                    wcspremdisc:line_of_business = l_line_of_business,
+                                    wcspremdisc:schedule = l_schedule, generic
+
+            l_premium_discount = 0
+            while wcspremdisc:company_id = agqworkerscomp1:company_id and
+                  wcspremdisc:state = agqworkerscomp1:state and
+                  wcspremdisc:line_of_business = l_line_of_business and
+                  wcspremdisc:schedule = l_schedule
+                    begin
+                    if (agqworkerscomp1:eff_date >= wcspremdisc:rate_date and
+                       (agqworkerscomp1:eff_date <= wcspremdisc:rate_date_exp or
+                       wcspremdisc:rate_date_exp = 0)) then
+                        begin
+                        if l_standard_premium => wcspremdisc:premium_1 and
+                           l_standard_premium <= wcspremdisc:premium_2 then
+                            l_premium_discount = wcspremdisc:premium_discount
+                        end
+
+                    next wcspremdisc
+                    end
+
+            access wcspremdisc1, set wcspremdisc1:company_id = agqworkerscomp1:company_id,
+                                     wcspremdisc1:state = agqworkerscomp1:state,
+                                     wcspremdisc1:line_of_business = l_line_of_business, generic
+
+            l_premium_discount_1 = 0
+            while wcspremdisc1:company_id = agqworkerscomp1:company_id and
+                  wcspremdisc1:state = agqworkerscomp1:state and
+                  wcspremdisc1:line_of_business = l_line_of_business
+                    begin
+                    if (agqworkerscomp1:eff_date >= wcspremdisc1:rate_date and
+                       (agqworkerscomp1:eff_date <= wcspremdisc1:rate_date_exp or
+                       wcspremdisc1:rate_date_exp = 0)) then
+                        begin
+                        if l_standard_premium => wcspremdisc1:premium_1 and
+                           l_standard_premium <= wcspremdisc1:premium_2 then
+                            l_premium_discount_1 = wcspremdisc1:premium_discount
+                        end
+
+                    next wcspremdisc1
+                    end
+
+            if wcsstat:code = "20PREMDISC" then
+                begin
+                l_premium[l_sub] = ((l_standard_premium - 5000) *
+                                   (l_premium_discount_1 divide 100))
+                l_premium[l_sub] = l_premium[l_sub] * -1
+                l_prem_disc = l_premium[l_sub]
+--                l_factor1[l_sub] = l_premium_discount
+                if l_premium_discount <> 0 then
+                    begin
+                    Access wcstrigger, Set wcstrigger:COMPANY_ID = agqworkerscomp1:COMPANY_ID,
+                                           wcstrigger:STATE = agqworkerscomp1:STATE,
+                                           wcstrigger:LINE_OF_BUSINESS = l_line_of_business, Generic
+
+                    while wcstrigger:COMPANY_ID = agqworkerscomp1:COMPANY_ID and
+                          wcstrigger:STATE = agqworkerscomp1:STATE and
+                          wcstrigger:LINE_OF_BUSINESS = l_line_of_business
+                            begin
+                            If agqworkerscomp1:EFF_DATE >= wcstrigger:EFF_DATE Then
+                                Begin
+                                L_CODE_1 = wcstrigger:code[1]
+                                l_code_2 = wcstrigger:code[2]
+                                End
+
+                            Next wcstrigger
+                            End
+
+                    If L_CODE_1 <> "" Then
+                        Begin
+                        -- schedule Y premium discount
+                        L_CODE = L_CODE_1
+                        do delete_agqend
+                        Do ACCESS_agqEND
+                        If L_ADD_ENDORSEMENT = "Y" And
+                           l_schedule = "Y" Then
+                            Do ADD_agqEND
+                        If L_ADD_ENDORSEMENT = "N" And
+                           l_schedule <> "Y" Then
+                            Do DELETE_agqEND
+                        End
+
+                    If L_CODE_2 <> "" Then
+                        Begin
+                        -- schedule X premium discount
+                        L_CODE = L_CODE_2
+                        do delete_agqend
+                        Do ACCESS_agqEND
+                        If L_ADD_ENDORSEMENT = "Y" And
+                           l_schedule = "X" Then
+                            Do ADD_agqEND
+                        If L_ADD_ENDORSEMENT = "N" And
+                           l_schedule <> "X" Then
+                            Do DELETE_agqEND
+                        End
+                    End
+                else
+                if l_premium_discount = 0 then
+                    begin
+                    Access wcstrigger, Set wcstrigger:COMPANY_ID = agqworkerscomp1:COMPANY_ID,
+                                           wcstrigger:STATE = agqworkerscomp1:STATE,
+                                           wcstrigger:LINE_OF_BUSINESS = l_line_of_business, Generic
+
+                    while wcstrigger:COMPANY_ID = agqworkerscomp1:COMPANY_ID and
+                          wcstrigger:STATE = agqworkerscomp1:STATE and
+                          wcstrigger:LINE_OF_BUSINESS = l_line_of_business
+                            begin
+                            If agqworkerscomp1:EFF_DATE >= wcstrigger:EFF_DATE Then
+                                Begin
+                                L_CODE_1 = wcstrigger:code[1]
+                                l_code_2 = wcstrigger:code[2]
+                                End
+
+                            Next wcstrigger
+                            End
+
+                    If L_CODE_1 <> "" Then
+                        Begin
+                        -- schedule Y premium discount
+                        L_CODE = L_CODE_1
+                        Do ACCESS_agqEND
+                        If L_ADD_ENDORSEMENT = "N" Then
+                            Do DELETE_agqEND
+                        End
+
+                    If L_CODE_2 <> "" Then
+                        Begin
+                        -- schedule X premium discount
+                        L_CODE = L_CODE_2
+                        Do ACCESS_agqEND
+                        If L_ADD_ENDORSEMENT = "N" Then
+                            Do DELETE_agqEND
+                        End
+                    End
+                end
+
+            if wcsstat:code one of "21MERIT" then
+                begin
+                if l_mr_debit   = "Y" and
+                   l_mr_credit  = "N" then
+                    begin
+                    if l_irpm <> 0 and
+                       l_irpm > 0 then
+                        begin
+                        l_irpm = (1 + (l_irpm * 0.01))
+                        if l_irpm = 0 then
+                            l_irpm = 1
+                        l_class_code[l_sub] = wcsstat:class_code
+                        l_premium[l_sub] = (((l_standard_premium +
+                                           l_prem_disc) *
+                                           l_irpm) -
+                                           (l_standard_premium +
+                                           l_prem_disc))
+                        l_premium[l_sub] = l_premium[l_sub]
+                        l_debit_mr      = l_premium[l_sub]
+                        if l_premium[l_sub] = 0 then
+                            begin
+                            l_debit_mr = 1.00
+                            l_premium[l_sub] = 1.00
+                            end
+                        end
+                    end
+                else
+                if l_mr_credit  = "Y" and
+                   l_mr_debit   = "N"then
+                    begin
+                    if l_irpm <> 0 and
+                       l_irpm < 0 then
+                        begin
+                        l_class_code[l_sub] = wcsstat:class_code_credit
+                        l_irpm = (1 + (l_irpm * 0.01))
+                        if l_irpm = 0 then
+                            l_irpm = 1
+                        l_premium[l_sub] = ((l_standard_premium +
+                                           l_prem_disc) -
+                                           ((l_standard_premium +
+                                           l_prem_disc) *
+                                           l_irpm))
+                        l_premium[l_sub] = l_premium[l_sub] * -1
+                        l_credit_mr      = l_premium[l_sub]
+                        if l_premium[l_sub] = 0 then
+                            begin
+                            l_credit_mr = -1.00
+                            l_premium[l_sub] = -1.00
+                            end
+                        end
+                    end
+                else
+                    begin
+                    l_class_code[l_sub] = 0
+                    l_premium[l_sub]    = 0
+                    end
+                end
+
+            if wcsstat:code = "22CONSTANT" then
+                begin
+                l_premium[l_sub] = l_constant
+                end
+
+            if wcsstat:code one of "22TERROR" then
+                begin
+                l_premium[l_sub] = ((l_class_limit divide 100) *
+                                   l_terrorism_rate)
+                l_factor1[l_sub] = l_terrorism_rate
+                l_terrorism_premium = l_premium[l_sub]
+                if l_premium[l_sub] = 0 then
+                    begin
+                    l_terrorism_premium = 1.00
+                    l_premium[l_sub] = 1.00
+                    end
+                end
+
+            if wcsstat:code one of "22TERROR1" then
+                begin
+                l_premium[l_sub] = ((l_class_limit divide 100) *
+                                   l_dtec_rate)
+                l_factor1[l_sub] = l_dtec_rate
+                l_terrorism_premium_1 = l_premium[l_sub]
+                if l_premium[l_sub] = 0 then
+                    begin
+                    l_terrorism_premium_1 = 1.00
+                    l_premium[l_sub] = 1.00
+                    end
+                end
+
+            if wcsstat:code = "23ADJMIN" then
+                begin
+                l_minimum_total = l_standard_premium + l_prem_disc +
+                                  l_constant + l_terrorism_premium +
+                                  l_terrorism_premium_1 + l_adj_minimum +
+                                  l_debit_mr + l_credit_mr + l_safety_premium
+                if l_minimum_total < l_minimum_premium then
+                    begin
+                    l_premium[l_sub] = l_minimum_premium - l_minimum_total
+                    l_adj_minimum = l_premium[l_sub]
+                    end
+                end
+
+            if wcsstat:code = "23ESTPREM" then
+                begin
+                l_premium[l_sub] = l_standard_premium + l_prem_disc +
+                                   l_constant + l_terrorism_premium +
+                                   l_terrorism_premium_1 + l_adj_minimum +
+                                   l_debit_mr + l_credit_mr + l_safety_premium
+                l_stat_premium = l_standard_premium + l_prem_disc +
+                                 l_constant + l_terrorism_premium +
+                                 l_terrorism_premium_1 + l_adj_minimum +
+                                 l_debit_mr + l_credit_mr -- -
+--                                 l_deductible_premium
+                l_estimated_premium = l_premium[l_sub]
+                end
+
+            if wcsstat:code = "24STAT" then
+                begin
+                l_premium[l_sub] = --l_estimated_premium
+                                   l_stat_premium *
+                                   l_statutory_charge
+                l_factor1[l_sub] = l_statutory_charge
+                l_statutory_premium = l_premium[l_sub]
+                end
+
+            if wcsstat:code one of "27COST" then
+                begin
+                l_premium[l_sub] = l_estimated_premium + l_second_fund +
+                                   l_uninsured_premium + l_statutory_premium
+                l_cost = l_premium[l_sub]
+                l_total = l_premium[l_sub]
+                l_total = l_total + l_end_premium + l_misc_premium
+                end
+
+            if wcsstat:code = "27MINPREM" then
+                begin
+                l_premium[l_sub] = l_minimum_premium
+                end
+
+            if wcsstat:code = "28DEPOSIT" then
+                begin
+--                l_premium[l_sub] = arschksu:check_amount
+                end
+
+--            if l_premium[l_sub] <> 0 or
+--               wcsstat:ok_to_display = 1 then
+--                begin
+--                if wcsstat:class_code <> 0 then
+--                    l_class_code[l_sub]  = wcsstat:class_code
+                l_description[l_sub] = wcsstat:description
+                access agqworkerscomp1_alias, set agqworkerscomp1_alias:app_no = agqworkerscomp1:app_no,
+                                             agqworkerscomp1_alias:prem_no = agqworkerscomp1:prem_no,
+                                             agqworkerscomp1_alias:build_no = agqworkerscomp1:build_no, generic
+
+                if agqworkerscomp1_alias:app_no = agqworkerscomp1:app_no and
+                   agqworkerscomp1_alias:prem_no = agqworkerscomp1:prem_no and
+                   agqworkerscomp1_alias:build_no = agqworkerscomp1:build_no then
+                    begin
+                    change agqworkerscomp1_alias
+                        begin
+                        agqworkerscomp1_alias:factor1[l_sub] = l_factor1[l_sub]
+                        agqworkerscomp1_alias:premium_1[l_sub] = l_premium[l_sub]
+                        agqworkerscomp1_alias:code[l_sub] = wcsstat:code
+                        agqworkerscomp1_alias:merit_rating_premium = l_merit_rating_premium
+                        if l_merit_rating_premium < 0 and
+                           wcsstat:code one of "17IRPM" then
+                            agqworkerscomp1_alias:merit_rating_class_code = wcsstat:class_code_credit
+                        else
+                        if l_merit_rating_premium = 0 and
+                           wcsstat:code one of "17IRPM" then
+                            agqworkerscomp1_alias:merit_rating_class_code = wcsstat:class_code_none
+                        else
+                        if wcsstat:code one of "17IRPM" then
+                            agqworkerscomp1_alias:merit_rating_class_code = wcsstat:class_code
+                        if wcsstat:code one of "17IRPM" then
+                            agqworkerscomp1_alias:merit_rating_code = wcsstat:code
+                        end
+                    end
+                l_sub = l_sub + 1
+--                end
+
+            end
+
+        next wcsstat
+        end
+
+end
+
+Procedure PRO_RATA
+Begin
+i_TOTAL_DAYS = i_EFF_DATE - i_exp_date
+i_CX_DAYS = i_EFF_DATE - i_TRANS_EFF
+
+Include "prorata.pro"
+
+/* end of pro_rata */
+End
+
+procedure get_rate
+begin
+access wcsempliab, set wcsempliab:company_id = agqworkerscomp1:company_id,
+                       wcsempliab:state = agqworkerscomp1:state,
+                       wcsempliab:line_of_business = l_line_of_business,
+                       wcsempliab:accident_limit = agqworkerscomp1:accident_limit,
+                       wcsempliab:disease_limit = agqworkerscomp1:disease_limit, generic
+
+while wcsempliab:company_id = agqworkerscomp1:company_id and
+      wcsempliab:state = agqworkerscomp1:state and
+      wcsempliab:line_of_business = l_line_of_business and
+      wcsempliab:accident_limit = agqworkerscomp1:accident_limit and
+      wcsempliab:disease_limit = agqworkerscomp1:disease_limit
+        begin
+        if l_eff_date >= wcsempliab:rate_date then
+            begin
+            if l_anniversary = 1 then
+                begin
+                l_liab_rate_old = wcsempliab:rate
+                l_liab_minimum_old = wcsempliab:minimum_charge
+                end
+            else
+                begin
+                l_liab_rate = wcsempliab:rate
+                l_liab_minimum = wcsempliab:minimum_charge
+                end
+            l_liab_class_code = wcsempliab:class_code
+            end
+
+        next wcsempliab
+        end
+
+end
+
+procedure get_rate_1
+begin
+access wcsempliab1, set wcsempliab1:company_id = agqworkerscomp1:company_id,
+                        wcsempliab1:state = agqworkerscomp1:state,
+                        wcsempliab1:line_of_business = l_line_of_business,
+                        wcsempliab1:accident_limit = agqworkerscomp1:accident_limit,
+                        wcsempliab1:disease_limit = agqworkerscomp1:disease_limit,
+                        wcsempliab1:bodily_injury_limit = agqworkerscomp1:disease_each_employee, generic
+
+while wcsempliab1:company_id = agqworkerscomp1:company_id and
+      wcsempliab1:state = agqworkerscomp1:state and
+      wcsempliab1:line_of_business = l_line_of_business and
+      wcsempliab1:accident_limit = agqworkerscomp1:accident_limit and
+      wcsempliab1:disease_limit = agqworkerscomp1:disease_limit and
+      wcsempliab1:bodily_injury_limit = agqworkerscomp1:disease_each_employee
+        begin
+        if l_eff_date >= wcsempliab1:rate_date then
+            begin
+            if l_anniversary = 1 then
+                begin
+                l_liab_rate_old = wcsempliab1:rate
+                l_liab_minimum_old = wcsempliab1:minimum_charge
+                end
+            else
+                begin
+                l_liab_rate = wcsempliab1:rate
+                l_liab_minimum = wcsempliab1:minimum_charge
+                end
+            l_liab_class_code = wcsempliab1:class_code
+            end
+
+        next wcsempliab1
+        end
+
+end
+
+procedure loc_total
+begin
+Access agqEND, Set agqEND:app_no = agqworkerscomp1:app_no, generic
+
+Repeat Begin
+    Exit If agqEND:app_no <> agqworkerscomp1:app_no
+
+    Do RATE_ENDORSEMENTS
+
+    if l_update_sfpend_premium <> 0 then
+        begin
+        Change agqEND
+            Begin
+            agqEND:PREMIUM = L_UPDATE_SFPEND_PREMIUM
+            End
+        L_END_PREMIUM = L_END_PREMIUM + L_UPDATE_SFPEND_PREMIUM
+        end
+
+Next agqEND
+End
+
+Access agqMISC, Set agqMISC:app_no = G_app_no, Generic
+
+L_MISC_PREMIUM = 0
+If L_MISC <> "Y" Then
+    Begin
+    Repeat Begin
+        Exit If agqMISC:app_no <> G_app_no
+
+        if ((agqmisc:lob_end_code one of "Z" and
+           sfsline:lob_code one of "CPORTFOLIO") or
+           sfsline:lob_code not one of "CPORTFOLIO") then
+            begin
+            L_MISC_PREMIUM = L_MISC_PREMIUM + agqMISC:PREMIUM
+            L_MISC = "Y"
+            end
+
+    Next agqMISC
+    End
+    End
+
+/* end of loc total */
+End
+
+Procedure FINAL_TOTAL
+Begin
+L_EFF_DATE_1 = Dateadd(agqworkerscomp1:EFF_DATE,0,1)
+If agqworkerscomp1:EXP_DATE < L_EFF_DATE_1 and
+   sfscompany:boiler_rating <> 4 Then
+    Begin
+    L_DAYS_RATE = L_TOTAL Divide 365
+    L_DAYS = agqworkerscomp1:EXP_DATE - agqworkerscomp1:EFF_DATE
+    L_PRO_RATA_PREMIUM = L_DAYS * L_DAYS_RATE
+    L_TOTAL = L_PRO_RATA_PREMIUM
+    End
+
+If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+    Begin
+    L_FINAL_TOTAL = L_TOTAL + L_INSTALLMENT
+    End
+Else
+    Begin
+    L_FINAL_TOTAL = L_TOTAL
+    End
+
+If L_final_TOTAL < L_MINIMUM Then
+    Begin
+    L_final_total = L_MINIMUM
+    End
+
+L_COMPANY_ID = agqworkerscomp1:COMPANY_ID
+if sfsline:lob_code one of "CPORTFOLIO" then
+    begin
+    access agqamt, set agqamt:app_no = g_app_no, exact
+
+    if agqamt:app_no = g_app_no then
+        change agqamt
+            begin
+            agqamt:lob_totals[3]     = l_final_total
+            agqamt:lob_surcharge[3]  = 0
+            agqamt:lob_terrorism[3]  = 0
+            agqamt:line_of_business[3]  = 9
+            end
+    else
+        add agqamt
+            begin
+            agqamt:app_no          = g_app_no
+            agqamt:lob_totals[3]     = l_final_total
+            agqamt:lob_surcharge[3]  = 0
+            agqamt:lob_terrorism[3]  = 0
+            agqamt:line_of_business[3]  = 9
+            end
+
+    Access agqmastsupp, Set agqmastsupp:app_no = G_app_no,
+                            agqmastsupp:line_of_business = l_line_of_business, generic
+
+    If agqmastsupp:app_no = G_app_no and
+       agqmastsupp:line_of_business = l_line_of_business Then
+        begin
+        access sfsagtcomm, set sfsagtcomm:company_id       = agqworkerscomp1:company_id,
+                               sfsagtcomm:agent_no         = agqworkerscomp1:agent_no,
+                               sfsagtcomm:line_of_business = l_line_of_business, generic
+
+        while sfsagtcomm:company_id       = agqworkerscomp1:company_id and
+              sfsagtcomm:agent_no         = agqworkerscomp1:agent_no and
+              sfsagtcomm:line_of_business = l_line_of_business
+                begin
+                if agqworkerscomp1:eff_date >= sfsagtcomm:eff_date then
+                    begin
+                    l_premium_amount = sfsagtcomm:premium_amount
+                    end
+
+                next sfsagtcomm
+                end
+
+        Change agqmastsupp
+            Begin
+            -- need these totals for inquiry purposes
+            agqmastsupp:TOTAL[17] = L_TOTAL
+            agqmastsupp:TOTAL[18] = L_FINAL_TOTAL
+
+            If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+                Begin
+                agqmastsupp:TOTAL[20] = L_FINAL_TOTAL +
+                                      L_INSTALLMENT
+                agqmastsupp:AMT_DUE_TOTAL[20] = L_FINAL_TOTAL +
+                                              L_INSTALLMENT
+                End
+            Else
+                Begin
+                agqmastsupp:TOTAL[20] = L_FINAL_TOTAL
+                agqmastsupp:AMT_DUE_TOTAL[20] = L_FINAL_TOTAL
+                End
+
+            If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+                Begin
+                agqmastsupp:TOTAL[1] = L_FINAL_TOTAL - L_INSTALLMENT
+                End
+            Else
+                Begin
+                agqmastsupp:TOTAL[1] = L_FINAL_TOTAL
+                End
+            agqmastsupp:total[2] = l_final_total - l_terrorism_premium -
+                                   l_second_fund - l_uninsured_premium -
+                                   l_statutory_premium
+            agqmastsupp:total[3] = l_terrorism_premium
+            agqmastsupp:total[4] = l_second_fund + l_statutory_premium
+            agqmastsupp:total[5] = l_uninsured_premium
+            agqmastsupp:total[6] = l_prem_disc
+            if (l_total - agqmastsupp:total[4]) => l_premium_amount and
+               l_premium_amount <> 0 then
+                begin
+                agqmastsupp:total[7] = l_premium_amount - 1
+                agqmastsupp:total[8] = ((l_total - agqmastsupp:total[4]) -
+                                       agqmastsupp:total[7])
+                end
+            agqmastsupp:RAW_PREMIUM_AMT_DUE = L_TOTAL
+            end
+        End
+    else
+        begin
+        access sfsagtcomm, set sfsagtcomm:company_id       = agqworkerscomp1:company_id,
+                               sfsagtcomm:agent_no         = agqworkerscomp1:agent_no,
+                               sfsagtcomm:line_of_business = l_line_of_business, generic
+
+        while sfsagtcomm:company_id       = agqworkerscomp1:company_id and
+              sfsagtcomm:agent_no         = agqworkerscomp1:agent_no and
+              sfsagtcomm:line_of_business = l_line_of_business
+                begin
+                if agqworkerscomp1:eff_date >= sfsagtcomm:eff_date then
+                    begin
+                    l_premium_amount = sfsagtcomm:premium_amount
+                    end
+
+                next sfsagtcomm
+                end
+
+        add agqmastsupp
+            Begin
+            -- need these totals for inquiry purposes
+            agqmastsupp:app_no  = g_app_no
+            agqmastsupp:line_of_business = l_line_of_business
+            agqmastsupp:TOTAL[17] = L_TOTAL
+            agqmastsupp:TOTAL[18] = L_FINAL_TOTAL
+
+            If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+                Begin
+                agqmastsupp:TOTAL[20] = L_FINAL_TOTAL +
+                                      L_INSTALLMENT
+                agqmastsupp:AMT_DUE_TOTAL[20] = L_FINAL_TOTAL +
+                                              L_INSTALLMENT
+                End
+            Else
+                Begin
+                agqmastsupp:TOTAL[20] = L_FINAL_TOTAL
+                agqmastsupp:AMT_DUE_TOTAL[20] = L_FINAL_TOTAL
+                End
+
+            If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+                Begin
+                agqmastsupp:TOTAL[1] = L_FINAL_TOTAL - L_INSTALLMENT
+                End
+            Else
+                Begin
+                agqmastsupp:TOTAL[1] = L_FINAL_TOTAL
+                End
+            agqmastsupp:total[2] = l_final_total - l_terrorism_premium -
+                                   l_second_fund - l_uninsured_premium -
+                                   l_statutory_premium
+            agqmastsupp:total[3] = l_terrorism_premium
+            agqmastsupp:total[4] = l_second_fund + l_statutory_premium
+            agqmastsupp:total[5] = l_uninsured_premium
+            agqmastsupp:total[6] = l_prem_disc
+            if (l_total - agqmastsupp:total[4]) => l_premium_amount and
+               l_premium_amount <> 0 then
+                begin
+                agqmastsupp:total[7] = l_premium_amount - 1
+                agqmastsupp:total[8] = ((l_total - agqmastsupp:total[4]) -
+                                       agqmastsupp:total[7])
+                end
+            agqmastsupp:RAW_PREMIUM_AMT_DUE = L_TOTAL
+            end
+        end
+    end
+else
+    begin
+    Access agqMASTER, Set agqMASTER:app_no = agqworkerscomp1:app_no, Exact
+
+    access sfsagtcomm, set sfsagtcomm:company_id       = agqworkerscomp1:company_id,
+                           sfsagtcomm:agent_no         = agqworkerscomp1:agent_no,
+                           sfsagtcomm:line_of_business = agqworkerscomp1:line_of_business, generic
+
+    while sfsagtcomm:company_id       = agqworkerscomp1:company_id and
+          sfsagtcomm:agent_no         = agqworkerscomp1:agent_no and
+          sfsagtcomm:line_of_business = agqworkerscomp1:line_of_business
+            begin
+            if agqworkerscomp1:eff_date >= sfsagtcomm:eff_date then
+                begin
+                l_premium_amount = sfsagtcomm:premium_amount
+                end
+
+            next sfsagtcomm
+            end
+
+    If agqMASTER:app_no = agqworkerscomp1:app_no Then
+        begin
+        Change agqMASTER
+            Begin
+            -- need these totals for inquiry purposes
+            agqMASTER:TOTAL[17] = L_TOTAL
+            agqMASTER:TOTAL[18] = L_FINAL_TOTAL
+
+            If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+                Begin
+                agqMASTER:TOTAL[20] = L_FINAL_TOTAL +
+                                      L_INSTALLMENT
+                agqMASTER:AMT_DUE_TOTAL[20] = L_FINAL_TOTAL +
+                                              L_INSTALLMENT
+                End
+            Else
+                Begin
+                agqMASTER:TOTAL[20] = L_FINAL_TOTAL
+                agqMASTER:AMT_DUE_TOTAL[20] = L_FINAL_TOTAL
+                End
+
+            If SFSCOMPANY:INCLUDE_INSTALLMENT_RATING = "Y" Then
+                Begin
+                agqMASTER:TOTAL[1] = L_FINAL_TOTAL - L_INSTALLMENT
+                End
+            Else
+                Begin
+                agqMASTER:TOTAL[1] = L_FINAL_TOTAL
+                End
+            agqmaster:total[2] = l_final_total - l_terrorism_premium -
+                                 l_second_fund - l_uninsured_premium -
+                                 l_statutory_premium
+            agqmaster:total[3] = l_terrorism_premium
+            agqmaster:total[4] = l_second_fund + l_statutory_premium
+            agqmaster:total[5] = l_uninsured_premium
+            agqmaster:total[6] = l_prem_disc
+            if (l_total - agqmaster:total[4]) => l_premium_amount and
+               l_premium_amount <> 0 then
+                begin
+                agqmaster:total[7] = l_premium_amount - 1
+                agqmaster:total[8] = ((l_total - agqmaster:total[4]) -
+                                     agqmaster:total[7])
+                end
+            agqMASTER:INSTALLMENT_CHARGE = L_INSTALLMENT
+            agqMASTER:RAW_PREMIUM_AMT_DUE = L_TOTAL
+            end
+        End
+    end
+
+End
+
+Procedure RATE_ENDORSEMENTS
+Begin
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqworkerscomp1:COMPANY_ID,
+                      SFSOPTEND:STATE = agqworkerscomp1:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = l_line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqworkerscomp1:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqworkerscomp1:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> l_line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If agqworkerscomp1:EFF_DATE >= SFSOPTEND:EFF_DATE Then
+        Begin
+        L_END_FACTOR = SFSOPTEND:PREMIUM_1[1]
+        L_END_LIMIT = SFSOPTEND:LIMIT[1]
+        L_END_PREMIUM1 = SFSOPTEND:PREMIUM_1[1]
+        end
+
+    Next SFSOPTEND
+    End
+
+
+End
+
+Procedure ACCESS_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = agqworkerscomp1:app_no ,
+                   agqEND:PREM_NO = agqworkerscomp1:PREM_NO,
+                   agqEND:BUILD_NO = agqworkerscomp1:BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqEND:app_no <> agqworkerscomp1:app_no Or
+            agqEND:PREM_NO <> agqworkerscomp1:PREM_NO Or
+            agqEND:BUILD_NO <> agqworkerscomp1:BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqEND
+    End
+
+End
+
+Procedure ADD_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = agqworkerscomp1:app_no ,
+                   agqEND:PREM_NO = agqworkerscomp1:PREM_NO,
+                   agqEND:BUILD_NO = agqworkerscomp1:BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqEND:app_no <> agqworkerscomp1:app_no Or
+            agqEND:PREM_NO <> agqworkerscomp1:PREM_NO Or
+            agqEND:BUILD_NO <> agqworkerscomp1:BUILD_NO
+
+    L_SUB_CODE = agqEND:SUB_CODE
+
+    Next agqEND
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqworkerscomp1:COMPANY_ID,
+                      SFSOPTEND:STATE = agqworkerscomp1:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = l_line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqworkerscomp1:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqworkerscomp1:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> l_line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If agqworkerscomp1:EFF_DATE >= SFSOPTEND:EFF_DATE Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION_1 = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqEND
+    Begin
+    agqEND:app_no             =       agqworkerscomp1:app_no
+    agqEND:PREM_NO              =       agqworkerscomp1:PREM_NO
+    agqEND:BUILD_NO             =       agqworkerscomp1:BUILD_NO
+    agqEND:SUB_CODE             =       L_SUB_CODE
+    agqEND:CODE                 =       L_CODE
+    agqEND:FORM_EDITION         =       L_FORM_EDITION
+    agqEND:DESCRIPTION          =       L_DESCRIPTION_1
+    agqEND:PREMIUM              =       0
+    agqend:lob_end_code         =       "W"
+    End
+
+End
+
+Procedure DELETE_agqEND
+Begin
+Access agqEND, Set agqEND:app_no = agqworkerscomp1:app_no ,
+                   agqEND:PREM_NO = agqworkerscomp1:PREM_NO,
+                   agqEND:BUILD_NO = agqworkerscomp1:BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqEND:app_no <> agqworkerscomp1:app_no Or
+            agqEND:PREM_NO <> agqworkerscomp1:PREM_NO Or
+            agqEND:BUILD_NO <> agqworkerscomp1:BUILD_NO
+
+    If agqEND:CODE = L_CODE Then
+        Delete agqEND
+
+    Next agqEND
+    End
+
+End
+
+End

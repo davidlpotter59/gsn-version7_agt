@@ -1,0 +1,502 @@
+%%                                     
+Screen
+        Name = "agtmt601j";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--   Windowtitle="%a     %s Policy Information - Ver. 7.22   %m";
+        Domain="agqdriver" ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     g_vehicle_no[4],
+                                     G_LINE_OF_BUSINESS[4],
+                                     G_STATE[2],
+                                     g_sub_code[4] ,
+                                     g_enhancement[1];
+
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_prior_same[1],
+                                    l_waive_personal_injury_protection[1],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_no_locations[2]=0,
+                                    l_first_vehicle_no[4]=0,
+                                    l_last_vehicle_no[4]=0,
+                                    l_liability_code[2] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_system_id[15],
+                     l_username[15],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     l_heading[60],
+                     L_COMPANY_ID[10] ,
+                     l_exists[1],
+                     l_description[55] ,
+                     l_first_location[1]="Y" ,
+                     l_first_str_location[8]="",
+                     l_last_str_location[8]="",
+                     l_str_location[8]="";
+
+        Access agqdriver,
+           Set agqdriver:app_NO     = G_app_NO , generic ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        change/autoupdate tagged change_fn ;
+        "redisplay" display/noreturn "agtmt601j" ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+access agqgeneral, set agqgeneral:app_no = g_app_no, generic
+
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = username, generic
+
+l_username  = username
+l_system_id = "cap"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+switch(g_line_of_business)
+  case 5  : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop.gif")
+              end
+  case 50 : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"title_bop_cs_enhance.gif")
+              default : setproperty(t_line_of_business,iconname,"title_bop_cs.gif")
+              end
+  default : switch(g_enhancement)
+              case 1  : setproperty(t_line_of_business_1,iconname,"")
+              default : setproperty(t_line_of_business,iconname,"")
+              end
+  end
+
+if g_enhancement = 1 then
+    hide(t_line_of_business)
+else
+    hide(t_line_of_business_1)
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+if agqdriver:app_no <> g_app_no then
+    function = "ADD"
+Access Validation
+If agqdriver:app_NO <> G_app_NO then
+    Error 1000 ;
+
+access agqdriver_alias, set agqdriver_alias:app_no     = agqdriver:app_no, generic
+
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_vehicle_no  = 0
+l_last_vehicle_no   = 0
+while agqdriver_alias:app_no     = agqdriver:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqdriver_alias:sub_code)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqdriver_alias:sub_code)
+    l_no_locations  = l_no_locations + 1
+
+    next agqdriver_alias
+    end
+
+l_str_location = str(agqdriver:sub_code)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent         = false
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+            guidetext at 1,25 to 2,100 tagged t_line_of_business_1
+                Properties
+                   {
+                   iconname = "title_bop.gif"
+                   }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,60     tagged display_information_box
+                properties
+                  {
+                    text = "Exclude Personal Injury Protection Waiver"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     g_app_no/displayonly ;
+
+}
+
+Panel at 6,1 to 6,100 tagged button_panel
+      Properties
+         {
+           layouttype = screen
+--           layoutconstraints = "Center"
+         }
+    {
+      Components
+        Button at 1,5
+          properties
+            {
+              Iconname = "btn_add.bmp"
+            }
+          Events  {
+                    Action = add_fn
+                  }
+
+        Button at 1,35
+          properties
+            {
+              Iconname = "btn_edit_entries.bmp"
+            }
+          Events  {
+                    Action = change_fn
+                  }
+
+        Button at 1,65   tagged accept_fn
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+    }
+
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt601j.sd"
+                      fontsize = 9
+                    }
+      }
+
+   panel at 7,1 to 7,100 tagged line_panel_1
+     {
+       Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+
+Panel at 9,1 to 12, 100
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+  Driver Name: __________________________________________________
+       Waiver:~~_
+
+%%
+
+components
+
+Fields
+101     begin
+        if function one of "ADD" Then
+            begin
+            enable(accept_fn)
+            disable(close_fn)
+            agqdriver:app_no = g_app_no
+            do subcode
+            agqdriver:sub_code = l_sub_code
+            end
+        end
+        agqdriver:name  ;
+201     begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        if agqmaster:form_of_business one of "I" then
+            l_waive_personal_injury_protection = agqdriver:waive_personal_injury_protection[1]
+        else
+            l_waive_personal_injury_protection = agqdriver:waive_personal_injury_protection[2]
+        end
+
+        l_waive_personal_injury_protection/checkbox/values="0,1"/default
+        if agqmaster:form_of_business one of "I" then
+            agqdriver:waive_personal_injury_protection[1] = l_waive_personal_injury_protection
+        else
+            agqdriver:waive_personal_injury_protection[2] = l_waive_personal_injury_protection;
+
+}
+
+
+-- draw a line
+panel at 22,1 to 22,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 23,1 to 23,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5    tagged delete_fn
+        Properties {
+                Iconname = "btn_delete.bmp"
+                }
+        Events  {
+                Action = delete_fn
+                }
+
+        Button at 1,33   tagged previous_fn
+        Properties {
+                Iconname = "btn_previous.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+
+        Button at 1, 48 tagged next_fn
+        Properties {
+                Iconname = "btn_next.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+        Button at 1,75   tagged close_fn
+        Properties {
+                Iconname = "btn_close.bmp"
+                }
+        Events  {
+                Action = back_fn
+                }
+
+}
+
+-- draw a line
+panel at 24,1 to 24,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    disable(accept_fn)
+    enable(close_fn)
+    end
+
+if abort = "YES" then
+    begin
+    disable(accept_fn)
+    enable(close_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort    = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(close_fn)
+    function = "redisplay"
+    end
+
+procedure definition
+
+Procedure SUBCODE
+Begin
+Access agqdriver_ALIAS, Set agqdriver_ALIAS:app_no = g_app_no, generic
+
+L_SUB_CODE = 0
+while agqdriver_ALIAS:app_no = g_app_no
+    begin
+    L_SUB_CODE = agqdriver_ALIAS:SUB_CODE
+
+    Next agqdriver_ALIAS
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+End
+
+End

@@ -1,0 +1,133 @@
+%%
+Program
+        Name = "agqcv100w" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+         Global Unsigned Ascii Number G_OLD_QUOTE[8] ,
+                                      G_QUOTE_NO[8] ,
+                                      g_app_no[11];
+
+         String L_PROCEDURE[20] ,
+                L_QUOTE_NO[8] ,
+                l_app_no[11],
+                l_code[7],
+                l_enter,
+                L_NEW_QUOTE_NO[8] ;
+
+        unsigned ascii number l_prem_no[4],
+                              l_build_no[4],
+                              l_sub_code[4] ;
+
+Initialisation
+g_app_no   = val(commandline[1,11])
+g_quote_no = val(COMMANDLINE[12,19])
+
+Access agqname, set agqname:app_no = g_app_no, generic
+
+Access agqworkerscomp1, Set agqworkerscomp1:APP_NO = G_APP_NO, Approximate
+
+Repeat Begin
+    Exit If agqworkerscomp1:APP_NO <> G_APP_NO
+
+    Add wcqgeneral
+        Begin
+        wcqgeneral:quote_no               = g_quote_no
+        wcqgeneral:prem_no                = agqworkerscomp1:prem_no
+        wcqgeneral:build_no               = agqworkerscomp1:build_no
+        wcqgeneral:RECORD_RDF             = agqworkerscomp1:RECORD_RDF/raw
+        End
+
+    Next agqworkerscomp1
+    End
+
+L_PROCEDURE = "agqclass FILE UPDATE"
+
+Access agqclass, Set agqclass:app_no = g_app_no, Approximate
+
+Repeat Begin
+    Exit If agqclass:app_no <> g_app_no
+
+    Add wcqclass
+        Begin
+        wcqclass:quote_no               = G_quote_no
+        wcqclass:prem_no                = agqclass:prem_no
+        wcqclass:build_no               = agqclass:build_no
+        wcqclass:class_code             = agqclass:class_code
+        wcqclass:sub_class              = agqclass:sub_class
+        wcqclass:sub_code               = agqclass:sub_code
+        wcqclass:RECORD_RDF             = agqclass:RECORD_RDF/raw
+        End
+
+    Next agqclass
+    End
+
+L_PROCEDURE = "wcqworkplaces FILE UPDATE"
+
+Access agqworkplaces, Set agqworkplaces:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqworkplaces:app_no <> G_app_no
+
+    Add wcqworkplaces
+        Begin
+        wcqworkplaces:quote_no               = G_quote_no
+        wcqworkplaces:prem_no                = agqworkplaces:prem_no
+        wcqworkplaces:build_no               = agqworkplaces:build_no
+        wcqworkplaces:sub_code               = agqworkplaces:sub_code
+        wcqworkplaces:RECORD_RDF             = agqworkplaces:RECORD_RDF/raw
+        End
+
+    Next agqworkplaces
+    End
+
+L_PROCEDURE = "wcqendorse FILE UPDATE"
+
+Access agqendorse4, Set agqendorse4:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqendorse4:app_no <> G_app_no
+
+    Add wcqendorse
+        Begin
+        wcqendorse:quote_no               = G_quote_no
+        wcqendorse:prem_no                = agqendorse4:prem_no
+        wcqendorse:build_no               = agqendorse4:build_no
+        wcqendorse:code                   = agqendorse4:code/raw
+        wcqendorse:sub_code               = agqendorse4:sub_code
+        wcqendorse:RECORD_RDF             = agqendorse4:RECORD_RDF/raw
+        End
+
+    Next agqendorse4
+    End
+
+L_PROCEDURE = "wcqcontact FILE UPDATE"
+
+Access agqcontact, Set agqcontact:app_no = G_app_no, Approximate
+
+Repeat Begin
+    Exit If agqcontact:app_no <> G_app_no
+
+    Add wcqcontact
+        Begin
+        wcqcontact:quote_no               = G_quote_no
+        wcqcontact:prem_no                = agqcontact:prem_no
+        wcqcontact:build_no               = agqcontact:build_no
+        wcqcontact:RECORD_RDF             = agqcontact:RECORD_RDF/raw
+        End
+
+    Next agqcontact
+    End
+
+Update
+
+Errors
+Writefile("agqcv100w.err","<NL>")
+Writefile("agqcv100w.err","%S",L_PROCEDURE)
+Writefile("agqcv100w.err","<NL>")
+Writefile("agqcv100w.err","%N%S agqcv100w errors ",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv100w.err","<NL>")
+Writefile("agqcv100w.err","<NL>")
+
+End

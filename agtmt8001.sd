@@ -1,0 +1,2430 @@
+%%                      
+Screen
+        Name = "agtmt8001";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        highlightfield="Yes";
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Windowtitle="%a     %s Rating Information - Ver. 7.00     %m";
+        Domain="agqgeneral1" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_APP_NO[11] ;
+        Global Unsigned Ascii Number G_LINE_OF_BUSINESS[4] ;
+        Global Unsigned Ascii Number G_OPT[2] ;
+        global unsigned ascii number g_add_prem_no[1] ;
+        global unsigned ascii number g_add_build_no[1] ;
+        global unsigned ascii number g_add_new_quote[1] ;
+        global unsigned ascii number g_prem_no[4] ;
+        global unsigned ascii number g_build_no[4];
+        global unsigned ascii number g_from_search_screen[1] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_state[2] ;
+        global unsigned ascii number g_rate_type[2] ;
+        global unsigned ascii number g_add_rate_type[1] ;
+
+        global string g_company_id[10] ,
+                      g_initial_screen[50] ,
+                      g_zipcode_change[1] ;
+
+        local date l_eff_date[8] ;
+
+        Local Unsigned Ascii Number l_prem_no[4],
+                                    l_build_no[4],
+                                    l_abort_program[1],
+                                    l_count[3]=0,
+                                    l_package_mod[5]=0/dec=3,
+                                    l_possible_class_code[2],
+                                    l_possible_community[2],
+                                    l_symbol_no[2] ,
+                                    l_form[1] ,
+                                    l_building_form[1],
+                                    l_property_form[1],
+                                    l_symbol_number[2],
+                                    l_state[2],
+                                    l_length[50],
+                                    l_class_code[5],
+                                    l_construction[1],
+                                    l_csexec_number[12],
+                                    l_percent[4],
+                                    l_reinforced[1],
+                                    l_prior_class_code[5],
+                                    l_steel[1],
+                                    l_active_help_was_set[1],
+                                    l_lob[4],
+                                    l_high[1],
+                                    l_line_of_business[4] ,
+                                    l_sub_code[4]=0,
+                                    l_group_i[6]=0/dec=4,
+                                    l_territory_factor[6]=0/dec=4,
+                                    l_protection_factor[5]=0/dec=3,
+                                    l_coinsurance_factor[5]=0/dec=3,
+                                    l_deductible_factor[6]=0/dec=4,
+                                    l_inflation_factor[4]=0/dec=2,
+                                    l_loss_cost[6]=0/dec=4 ,
+                                    l_last_prem_no[4],
+                                    l_last_build_no[4],
+                                    l_first_prem_no[4],
+                                    l_first_build_no[4],
+                                    l_no_locations[2]=0 ;
+
+        local string l_first_str_location[8],
+                     l_last_str_location[8],
+                     l_str_location[12],
+                     l_first_location[1]="Y",
+                     l_second_time[1],
+                     l_second_time_1[1],
+                     l_system_id[15],
+                     L_FORM_EDITION[18],
+                     L_DESCRIPTION[55],
+                     l_enter,
+                     l_code[7],
+                     L_ADD_ENDORSEMENT[1]="Y",
+                     l_continue_2[3]="",
+                     l_symbol[2],
+                     l_username[15] ,
+                     L_COMPANY_ID[10] ,
+                     l_desc[50] ,
+                     l_coverage[1] ,
+                     l_bceg_type[1] ,
+                     l_screen_1[10],
+                     l_screen[9],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_code_8[7],
+                     l_community[30] ,
+                     l_different_forms[1]="N",
+                     l_boiler[1]="N" ;
+
+        Access agqgeneral1,
+           Set agqgeneral1:app_no = G_app_no, generic
+
+--        Include "stdkeys7.inc"
+        !F2 = set_active_help_flag/activehelp/field;
+        !Escape=Cancel/error;
+        !Escape=Abort/field/prompt;
+        !Escape=Closewindow/help;
+        !Escape="Exit"/function;
+
+        !F1=Help;                               !Sf1=Help;
+
+--        !F2=Activehelp/field/icon="ActHlp"
+
+        !F3=Backfield/prompt/icon="|<-";
+        !F3=Backtab/fields/icon="ABORT";
+        !F3=Backtab/passivehelp;                !Sf3=Backfield/field/help;
+        !F3=Pageup/activehelp;
+        !F3="Prev"/function;                    !Sf3="Prev"/function;
+
+
+        !F4=Forwardtab/fields/icon="OK"/edit ;
+        !F4=Forwardtab/passivehelp;             !Sf4=Forwardfield/field/help;
+        !F4=Pagedown/activehelp;
+        !F4="Next"/function;                    !Sf4="Next"/function;
+
+        !F5="Search"/function;                  !Sf5="Find"/function;
+        !F5=Zoom/help;
+
+--        !F6="Add"/function;                     !Sf6="Append"/function;
+
+--        !F7="Change"/function;                  !Sf7="Delete"/function;
+
+--        !F2="Delete"/function;
+
+        !F9=Abort/error;
+        !F9=Refresh/field/function/prompt;
+        !F9=Closewindow/help/icon="Close";
+        !F1="Print"/function/icon="Print";
+
+        !F10=Abort/field/prompt;
+        !F10=Cancel/error/icon="Done";
+        !F10="Exit"/function;                   !Sf10="Stop"/function;
+
+        !C2=Backfield/prompt;
+        !C2=Backtab/field;
+        !C2=Backtab/passivehelp;                !Sc2=Backfield/field/help;
+        !C2=Pageup/activehelp;
+        !C2="Prev"/function;                    !Sc2="Prev"/function;
+
+        !C4=Forwardtab/field;
+        !C4=Forwardtab/passivehelp;             !Sc4=Forwardfield/field/help;
+        !C4=Pagedown/activehelp;
+        !C4="Next"/function;                    !Sc4="Next"/function;
+
+
+
+Style Definition
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt8001" ;
+
+        "add" sequence "new"      tagged add_fn ;
+        "new" add/hidden ;
+
+        "change" sequence "chg"   tagged change_fn ;
+        "chg" change/hidden ;
+
+        "back" display/noreturn "agtmt8000" tagged back_fn;
+
+        "func1" display "agtmt8001b" tagged optional_info_fn ;
+        "func2" display "agtmt8001c" tagged irpm_fn ;
+        "func3" display "agtmt8001d" tagged business_income_fn ;
+
+        reaccess ;
+
+        include "stdfunc7b.inc"
+
+EVENT DEFINITION
+        default eventhandler {
+                             "REMOVE_SCREEN" { function = "exit" abort () }
+                             "reload" { function = "reaccess" abort () }
+                             "display_message" { warning "" + event.value }
+                             "current_line_of_business" {
+                                                          g_line_of_business = val(event.value)
+                                                        }
+                             }
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+disable(accept_fn)
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+g_initial_screen = ""
+l_username = username
+l_company_id = sfsdefault:company_id
+
+l_username = username
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = sfsemail:agent_no, generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(lebins_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "LEBINS" then
+    begin
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+if sfsemail:agent_no <> 0 then
+    begin
+    hide(agent_fn)
+    hide(irpm_fn)
+    end
+
+l_state = sfsagent:state
+if l_state = 0 then
+    l_state = sfsdefault:state
+Access SFSLINE_ALIAS, Set SFSLINE_alias:COMPANY_ID       = l_company_id,
+                          SFSLINE_alias:LINE_OF_BUSINESS = g_line_of_business,
+                          SFSLINE_alias:LOB_SUBLINE      = "00", Generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = l_company_id,
+                    SFSLINE:LINE_OF_BUSINESS = g_line_of_business,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access agqname, set agqname:app_no = g_app_no,generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(add_fn)
+    disable(change_fn)
+    disable(delete_fn)
+    disable(accept_fn)
+    end
+
+if agqgeneral1:app_no = 0 then
+    begin
+    disable(previous_fn)
+    disable(next_fn)
+    end
+
+access validation
+if agqgeneral1:app_no <> g_app_no then
+    error ""
+
+access agqgeneral1_alias, set agqgeneral1_alias:app_no = agqgeneral1:app_no, generic
+
+l_no_locations   = 0
+l_first_location = "Y"
+l_first_prem_no  = 0
+l_first_build_no = 0
+l_last_prem_no   = 0
+l_last_build_no  = 0
+while agqgeneral1_alias:app_no = agqgeneral1:app_no
+    begin
+    if l_first_location = "Y" then
+        begin
+        l_first_str_location  = str(agqgeneral1_alias:prem_no) +
+                               str(agqgeneral1_alias:build_no) +
+                               str(agqgeneral1_alias:rate_type)
+        l_first_location = "N"
+        end
+    l_last_str_location  = str(agqgeneral1_alias:prem_no) +
+                           str(agqgeneral1_alias:build_no) +
+                           str(agqgeneral1_alias:rate_type)
+    l_no_locations  = l_no_locations + 1
+
+    next agqgeneral1_alias
+    end
+
+l_str_location = str(agqgeneral1:prem_no) +
+                 str(agqgeneral1:build_no) +
+                 str(agqgeneral1:rate_type)
+
+if l_no_locations one of 0, 1 then
+    begin
+    disable(next_fn)
+    disable(previous_fn)
+    end
+else
+if l_str_location = l_first_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(previous_fn)
+    enable(next_fn)
+    end
+else
+if l_str_location <> l_first_str_location and
+   l_str_location <> l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    enable(next_fn)
+    enable(previous_fn)
+    end
+else
+if l_str_location = l_last_str_location and
+   l_no_locations > 1 then
+    begin
+    disable(next_fn)
+    enable(previous_fn)
+    end
+
+screen at 1,1 to 30,100
+Properties
+        {
+          Layouttype = screen
+          transparent = False
+          fontstyle = BOLD
+          backgroundcolor = "#ADD8E6"
+          scrollbarpolicy = always
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+        }
+
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Property Information..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100
+Properties {
+           LayoutType = screen
+           }
+{
+%%
+App No: ___________
+
+%%
+
+fields
+101     begin
+        g_add_prem_no   = 0
+        g_add_build_no  = 0
+        g_add_rate_type = 0
+        g_prem_no       = 0
+        g_build_no      = 0
+        if function one of "ADD", "NEW" then
+            begin
+            access agqgeneral1_alias, set agqgeneral1_alias:app_no = g_app_no, generic
+
+            if agqgeneral1_alias:app_no = g_app_no then
+                begin
+                g_prem_no = agqgeneral1_alias:prem_no
+                g_build_no = agqgeneral1_alias:build_no
+                l_screen_1 = "agtmt8001a"
+                display modal screen l_screen_1
+                with initial function "CHANGE|BACK"
+
+                if g_add_prem_no   = 0 and
+                   g_add_build_no  = 0 and
+                   g_add_rate_type = 0 then
+                    begin
+                    function = "redisplay"
+                    abort()
+                    end
+
+                if g_add_prem_no = 1 then
+                    begin
+                    l_prem_no = 0
+                    access agqgeneral1_alias, set agqgeneral1_alias:app_no = g_app_no, generic
+
+                    while agqgeneral1_alias:app_no = g_app_no
+                        begin
+                        l_prem_no  = agqgeneral1_alias:prem_no
+
+                        next agqgeneral1_alias
+                        end
+
+                    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+                    access agqgeneral1_alias, set agqgeneral1_alias:app_no = g_app_no, generic
+
+                    agqgeneral1:app_no            = g_app_no
+                    agqgeneral1:prem_no           = l_prem_no + 1
+                    agqgeneral1:build_no          = 1
+                    end
+                else
+                if g_add_build_no = 1 then
+                    begin
+                    access agqgeneral1_alias, set agqgeneral1_alias:app_no = g_app_no, generic
+
+                    l_build_no = 0
+                    while agqgeneral1_alias:app_no = g_app_no
+                        begin
+                        if agqgeneral1_alias:prem_no = g_prem_no then
+                            l_build_no  = agqgeneral1_alias:build_no
+
+                        next agqgeneral1_alias
+                        end
+
+                    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+                    access agqgeneral1_alias, set agqgeneral1_alias:app_no = g_app_no, generic
+
+                    agqgeneral1:app_no           = g_app_no
+                    agqgeneral1:prem_no          = g_prem_no
+                    agqgeneral1:build_no         = l_build_no + 1
+                    end
+                else
+                if g_add_rate_type = 1 then
+                    begin
+                    access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+                    access agqgeneral1_alias, set agqgeneral1_alias:app_no = g_app_no, generic
+
+                    agqgeneral1:app_no           = g_app_no
+                    agqgeneral1:prem_no          = g_prem_no
+                    agqgeneral1:build_no         = g_build_no
+                    end
+                end
+            else
+                begin
+                agqgeneral1:app_no           = g_app_no
+                agqgeneral1:prem_no          = 1
+                agqgeneral1:build_no         = 1
+                end
+
+            g_prem_no                   = agqgeneral1:prem_no
+            g_build_no                  = agqgeneral1:build_no
+            end
+        end
+        agqgeneral1:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        Button at 1.5,1   tagged add_fn
+            Properties {
+                       Iconname = "btn_add_location.bmp"
+                       tooltip = "Add Location, Building or Coverage"
+                       }
+            Events     {
+                       Action = add_fn
+                       }
+
+        Button at 1.5,38    tagged change_fn
+            Properties {
+                       Iconname = "btn_edit_location.bmp"
+                       }
+            Events     {
+                       Action = change_fn
+                       }
+
+        Button at 1.5, 70 tagged delete_fn
+            Properties {
+                       Iconname = "btn_delete_location.bmp"
+                       }
+            Events     {
+                       Action = delete_fn
+                       }
+    }
+
+Panel at 5,94 to 6,96 tagged button_panel
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        Button to 1,1
+            properties {
+                       Iconname = "btn_print_screen.bmp"
+                       }
+            events     {
+                       action {
+                              function = "print"
+                              abort()
+                              }
+                       }
+    }
+
+Panel at 6.45,92
+    Properties {
+               layouttype = column
+               }
+    {
+    Components
+        guidetext to 1,1
+            properties {
+                       text = "agtmt8001.sd"
+                       fontsize = 9
+                       }
+    }
+
+Panel at 7,1 to 9,100 Tagged location
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        guidetext at 1.5,24 to 2.5,36
+            properties {
+                       text = "Location No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+
+        guidetext at 1.5,44 to 2.5,56
+            properties {
+                       text = "Building No:"
+                       fontsize = 12
+                       fontname = "arial"
+                       }
+    }
+
+Panel at 7.5,33 to 9,60 Tagged rating_pl
+{
+%%
+____                ____
+
+%%
+
+components
+
+fields
+101   agqgeneral1:prem_no/displayonly ;
+102   agqgeneral1:build_no/displayonly ;
+
+}
+
+Panel at 8,70 to 8,100
+    Properties {
+               layouttype = row
+               }
+    {
+    Components
+        Button at 1,55 tagged accept_fn
+            properties {
+                       Iconname = "btn_accept_edits.bmp"
+                       }
+            Events     {
+                       mouseclicked = accept
+                       }
+
+    }
+
+Panel at 9,90 to 10,91 tagged irpm_fn
+    Properties
+        {
+        layouttype = column
+        }
+    {
+    Components
+        Button at 1,1
+            Properties {
+                Iconname = "btn_irpm.bmp"
+                }
+            Events  {
+                Action = irpm_fn
+                }
+    }
+
+Panel at 10,1 to 25,100
+    Properties {
+               LayoutType = screen
+               }
+    {
+    Components
+        guidetext at 1,1 to 1,22
+            properties {
+                       text = "Business Description:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 4,1 to 4,22
+            properties {
+                       text = "County:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 5,1 to 5,22
+            properties {
+                       text = "Community:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 6,1 to 6,22
+            properties {
+                       text = "Coverage:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 7,1 to 7,22
+            properties {
+                       text = "Class Description:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 8,1 to 8,22
+            properties {
+                       text = "Construction:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 8,35 to 8,45
+            properties {
+                       text = "Reinforced:"
+                       fontsize = 12
+--                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 8,51 to 8,65
+            properties {
+                       text = "Light Steel:"
+                       fontsize = 12
+--                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 8,80 to 8,90
+            properties {
+                       text = "High Rise:"
+                       fontsize = 12
+--                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 9,1 to 9,22
+            properties {
+                       text = "Protection:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 10,1 to 10,22
+            properties {
+                       text = "Deductible:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 11,1 to 11,22
+            properties {
+                       text = "Sprinklered:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 12,1 to 12,22
+            properties {
+                       text = "Exclude VMM:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 13,1 to 13,22
+            properties {
+                       text = "Exclude Theft:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 14,1 to 14,22 tagged agent_fn
+            properties {
+                       text = "Crime Limit:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 16,1 to 16,22
+            properties {
+                       text = "Limit:"
+                       fontsize = 12
+                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+        guidetext at 16,51 to 16,60 tagged agent_fn
+            properties {
+                       text = "New Rate:"
+                       fontsize = 12
+--                       contentalignment = right
+                       fontname = "arial"
+                       }
+
+    }
+
+Panel at 10,24 to 25, 100
+{
+%%
+__________________________________________________
+__________________________________________________
+
+___    ______________________________
+______________________________
+__     ____________________   Form: _  __________         Type:  __
+__________________________________________________  Class Code: _____
+_                  ~~_            ~~_                          ~~_
+__                     Coinsurance: ___
+_____              Inflation Guard: __
+~~_              Replacement Cost:~~_      Equipment Breakdown:~~_
+~~_        Exclude Windstorm/Hail:~~_             Agreed Value:~~_
+~~_     Exclude Sprinkler Leakage:~~_
+________               Rate Group:  __
+
+__________                          ______
+
+%%
+
+components
+
+fields
+101     begin
+        if function one of "ADD","NEW","CHG","CHANGE" then
+            {
+            enable(accept_fn)
+            disable(back_fn)
+            }
+        else
+            {
+            disable(accept_fn)
+            enable(back_fn)
+            }
+
+        access agqtotals1, set agqtotals1:app_no = g_app_no, generic
+
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            begin
+            agqgeneral1:remove_terrorism_form = agqtotals1:exclude_terrorism
+            end
+
+        Access agqgeneral1_ALIAS, Set agqgeneral1_ALIAS:app_no = agqgeneral1:app_no, Generic
+
+        Access agqgeneral1_ALT, Set agqgeneral1_ALT:app_no   = agqgeneral1:app_no,
+                                    agqgeneral1_alt:prem_no  = agqgeneral1:prem_no,
+                                    agqgeneral1_alt:build_no = agqgeneral1:build_no, Generic
+
+        access agqtotals1, set agqtotals1:app_no = g_app_no, generic
+
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            agqgeneral1:COMPANY_ID              = sfsdefault:COMPANY_ID
+            agqgeneral1:rating_line_of_business = 0008
+            agqgeneral1:line_of_business        = agqtotals1:line_of_business
+            agqgeneral1:state                   = sfsdefault:state
+            agqgeneral1:company_deviation[1]    = 1.00
+            if agqgeneral1_alt:prem_no  = agqgeneral1:prem_no and
+               agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                begin
+                if agqgeneral1_alt:business_desc[1] <> "" then
+                    agqgeneral1:business_desc[1] = agqgeneral1_alt:business_desc[1]
+                if agqgeneral1_alt:business_desc[2] <> "" then
+                    agqgeneral1:business_desc[2] = agqgeneral1_alt:business_desc[2]
+                end
+            else
+                begin
+                if agqgeneral1_alias:business_desc[1] <> "" then
+                    agqgeneral1:business_desc[1] = agqgeneral1_alias:business_desc[1]
+                if agqgeneral1_alias:business_desc[2] <> "" then
+                    agqgeneral1:business_desc[2] = agqgeneral1_alias:business_desc[2]
+                end
+            End
+        End
+        agqgeneral1:BUSINESS_DESC[1]/uppercase/default/tabstop mandatory;
+201     agqgeneral1:BUSINESS_DESC[2]/uppercase/default/tabstop ;
+
+401     Begin
+        l_active_help_was_set = 0
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:county = agqgeneral1_alt:county
+                else
+                    agqgeneral1:COUNTY = agqgeneral1_ALIAS:COUNTY
+                end
+            Else
+                agqgeneral1:COUNTY = CPSDEFAULT:COUNTY
+            End
+        End
+        agqgeneral1:COUNTY/default/tabstop    mandatory
+        Include "countyhlp.inc"
+402     begin
+        access sfsterritory, set sfsterritory:company_id       = agqgeneral1:company_id,
+                                 sfsterritory:state            = agqgeneral1:state,
+                                 sfsterritory:line_of_business = agqgeneral1:rating_line_of_business,
+                                 sfsterritory:county           = agqgeneral1:county, generic
+
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:community = agqgeneral1_alt:community
+                else
+                    agqgeneral1:community = agqgeneral1_alias:community
+                end
+            End
+
+        agqgeneral1:territory = sfsterritory:territory_group[1]
+        end
+        SFSSTATE_ALIAS:DESCRIPTION ;
+501     begin
+        l_community = agqgeneral1:community
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:community = agqgeneral1_alt:community
+                else
+                    agqgeneral1:community = agqgeneral1_ALIAS:community
+                end
+            End
+        end
+        agqgeneral1:community/uppercase/default/tabstop mandatory
+        l_length = len(trun(agqgeneral1:community))
+        Access sfsisoprotect_alt, Set sfsisoprotect_alt:COMPANY_ID = agqgeneral1:COMPANY_ID,
+                                      sfsisoprotect_alt:STATE      = agqgeneral1:state,
+                                      sfsisoprotect_alt:county     = agqgeneral1:county, generic
+
+        l_possible_community = 0
+        while sfsisoprotect_alt:COMPANY_ID       = agqgeneral1:COMPANY_ID and
+              sfsisoprotect_alt:STATE            = agqgeneral1:state and
+              sfsisoprotect_alt:county           = agqgeneral1:county
+                begin
+                if sfsisoprotect_alt:community[1,l_length] = agqgeneral1:community[1,l_length] then
+                    l_possible_community = l_possible_community + 1
+
+                next sfsisoprotect_alt
+                end
+
+        if l_community <> agqgeneral1:community and
+           l_active_help_was_set = 0 then
+            begin
+            if l_possible_community = 1 or
+               l_second_time_1 = "Y" then
+                begin
+                Access sfsisoprotect_alt, Set sfsisoprotect_alt:COMPANY_ID = agqgeneral1:COMPANY_ID,
+                                              sfsisoprotect_alt:STATE      = agqgeneral1:state,
+                                              sfsisoprotect_alt:county     = agqgeneral1:county,
+                                              sfsisoprotect_alt:community  = agqgeneral1:community, approximate
+
+                agqgeneral1:community = sfsisoprotect_alt:community
+                end
+            else
+                begin
+                Access sfsisoprotect_alias, Set sfsisoprotect_alias:COMPANY_ID = agqgeneral1:COMPANY_ID,
+                                                sfsisoprotect_alias:STATE      = agqgeneral1:state,
+                                                sfsisoprotect_alias:county     = agqgeneral1:county,
+                                                sfsisoprotect_alias:community  = agqgeneral1:community, approximate
+
+                l_second_time_1        = "Y"
+                activehelp()
+                agqgeneral1:community = sfsisoprotect_alias:community
+                end
+            end
+
+
+        if function one of "ADD", "NEW" or
+           l_community <> agqgeneral1:community then
+            begin
+            agqgeneral1:bceg       = sfsisoprotect_alias:coml_bcegs
+--            if sfsisoprotect_alias:protection_1 <> 0 and
+--               sfsisoprotect_alias:protection_2 = 0 then
+--            agqgeneral1:protection = sfsisoprotect_alias:protection_1
+            end
+
+        activehelp sfsisoprotect_alias:community ;
+501     agqgeneral1:community/displayonly ;
+
+601     Begin
+        l_active_help_was_set = 0
+        If FUNCTION one of "ADD", "NEW" Then
+            begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no and
+                   agqgeneral1:rate_type = 0 then
+                    agqgeneral1:rate_type = agqgeneral1_alt:rate_type
+                else
+                if agqgeneral1:rate_type = 0 then
+                    agqgeneral1:rate_type = agqgeneral1_ALIAS:rate_type
+                end
+            Else
+            if agqgeneral1:rate_type = 0 then
+                agqgeneral1:RATE_TYPE = CPSDEFAULT:RATE_TYPE
+            end
+        End
+        agqgeneral1:RATE_TYPE/default/tabstop
+        If agqgeneral1:RATE_TYPE <> CPSRATETYPE:RATE_TYPE or
+           agqgeneral1:rate_type = 0 Then
+            Error 1202
+
+        Activehelp CPSRATETYPE_ALIAS:RATE_TYPE,
+                   CPSRATETYPE_ALIAS:DESCRIPTION   ;
+602     CPSRATETYPE:DESCRIPTION;
+603     Begin
+        L_FORM = agqgeneral1:FORM
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = G_app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    begin
+                    agqgeneral1:form = agqgeneral1_alt:form
+                    end
+                else
+                    begin
+                    agqgeneral1:FORM = agqgeneral1_ALIAS:FORM
+                    end
+                end
+            Else
+                begin
+                agqgeneral1:FORM = CPSDEFAULT:FORM
+                end
+            End
+        End
+        agqgeneral1:FORM/default/tabstop
+        If agqgeneral1:FORM <> SFSFORM:POLICY_FORM or
+           agqgeneral1:form = 0 Then
+            Error 1205
+
+        Activehelp SFSFORM_ALIAS:POLICY_FORM ,
+                   SFSFORM_ALIAS:DESCRIPTION ;
+604     SFSFORM:DESCRIPTION ;
+605     Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:type = agqgeneral1_alt:type
+                else
+                    agqgeneral1:type = agqgeneral1_ALIAS:type
+                end
+            Else
+                agqgeneral1:type = CPSDEFAULT:type
+            End
+        End
+        agqgeneral1:type/default/uppercase/tabstop mandatory
+        if agqgeneral1:type <> cpstype:type or
+           agqgeneral1:type = "" then
+            error "Invalid Type Entered"
+
+        activehelp cpstype_alias:type,
+                   cpstype_alias:description ;
+
+701     begin
+        l_second_time = "N"
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            enable(accept_fn)
+        l_eff_date = agqname:eff_date
+        L_CLASS_CODE = agqgeneral1:CLASS_CODE
+        Access cpsclass, Set cpsclass:COMPANY_ID       = agqgeneral1:COMPANY_ID,
+                             cpsclass:STATE            = agqgeneral1:state,
+                             cpsclass:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business,
+                             cpsclass:group_no         = agqgeneral1:group_no,
+                             cpsclass:sub_group        = agqgeneral1:sub_group,
+                             cpsclass:CLASS_CODE       = agqgeneral1:CLASS_CODE,
+                             cpsclass:sub_code         = agqgeneral1:sub_code, Generic
+
+        While cpsclass:COMPANY_ID       = agqgeneral1:COMPANY_ID And
+              cpsclass:STATE            = agqgeneral1:state And
+              cpsclass:LINE_OF_BUSINESS = agqgeneral1:RATING_LINE_OF_BUSINESS And
+              cpsclass:group_no         = agqgeneral1:group_no and
+              cpsclass:sub_group        = agqgeneral1:sub_group and
+              cpsclass:CLASS_CODE       = agqgeneral1:CLASS_CODE And
+              cpsclass:sub_code         = agqgeneral1:sub_code
+                Begin
+                If agqname:EFF_DATE >= cpsclass:eff_date Then
+                    begin
+                    L_DESC = cpsclass:alpha_look
+                    end
+
+                Next cpsclass
+                End
+        End
+        L_DESC/displayonly/uppercase ;
+701     Begin
+        l_second_time = "N"
+        l_prior_class_code = agqgeneral1:class_code
+        Access cpsclass_ALIAS, Set cpsclass_ALIAS:COMPANY_ID       = agqgeneral1:COMPANY_ID,
+                                   cpsclass_ALIAS:STATE            = agqgeneral1:state,
+                                   cpsclass_ALIAS:LINE_OF_BUSINESS = agqgeneral1:rating_LINE_OF_BUSINESS,
+                                   cpsclass_ALIAS:alpha_look       = L_DESC, Approximate
+
+        if function one of "ADD", "NEW" then
+            begin
+            if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+               agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                begin
+                agqgeneral1:description     = agqgeneral1_alt:description
+                agqgeneral1:class_code      = agqgeneral1_alt:class_code
+                agqgeneral1:SUB_code        = agqgeneral1_alt:SUB_code
+                agqgeneral1:group_no        = agqgeneral1_alt:group_no
+                agqgeneral1:sub_group       = agqgeneral1_alt:sub_group
+                agqgeneral1:rate_group      = agqgeneral1_alt:rate_group
+                if cpsclass_alt:rate_group = 0 then
+                    agqgeneral1:rate_group  = agqgeneral1_alt:rate_group
+                agqgeneral1:crime_limit     = agqgeneral1_alt:crime_limit
+                agqgeneral1:CMP_SYMBOL      = agqgeneral1_alt:CMP_SYMBOL
+                agqgeneral1:perpetual_rated = agqgeneral1_alt:perpetual_rated
+                l_desc                      = agqgeneral1_alt:description
+                end
+            else
+            if agqgeneral1_alias:prem_no <> 0 and
+               agqgeneral1_alias:build_no <> 0 then
+                begin
+                agqgeneral1:description     = agqgeneral1_alias:description
+                agqgeneral1:class_code      = agqgeneral1_alias:class_code
+                agqgeneral1:SUB_code        = agqgeneral1_alias:SUB_code
+                agqgeneral1:group_no        = agqgeneral1_alias:group_no
+                agqgeneral1:sub_group       = agqgeneral1_alias:sub_group
+                agqgeneral1:rate_group      = agqgeneral1_alias:rate_group
+                if cpsclass_alt:rate_group = 0 then
+                    agqgeneral1:rate_group  = agqgeneral1_alias:rate_group
+                agqgeneral1:crime_limit     = agqgeneral1_alias:crime_limit
+                agqgeneral1:CMP_SYMBOL      = agqgeneral1_alias:CMP_SYMBOL
+                agqgeneral1:perpetual_rated = agqgeneral1_alias:perpetual_rated
+                l_desc                      = agqgeneral1_ALIAS:description
+                end
+            end
+        End
+        L_DESC/uppercase/tabstop/default
+        l_length = len(trun(l_desc))
+        Access cpsclass_alt, Set cpsclass_alt:COMPANY_ID       = agqgeneral1:COMPANY_ID,
+                                 cpsclass_alt:STATE            = agqgeneral1:state,
+                                 cpsclass_alt:LINE_OF_BUSINESS = agqgeneral1:rating_LINE_OF_BUSINESS,
+                                 cpsclass_alt:alpha_look       = L_DESC, Approximate
+
+        l_possible_class_code = 0
+        while cpsclass_alt:COMPANY_ID       = agqgeneral1:COMPANY_ID and
+              cpsclass_alt:STATE            = agqgeneral1:state and
+              cpsclass_alt:LINE_OF_BUSINESS = agqgeneral1:rating_LINE_OF_BUSINESS
+                begin
+                if cpsclass_alt:alpha_look[1,l_length] = l_desc[1,l_length] and
+                   l_desc <> "" then
+                    l_possible_class_code = l_possible_class_code + 1
+
+                next cpsclass_alt
+                end
+
+        if l_desc <> agqgeneral1:description and
+           l_desc <> "" and
+           l_active_help_was_set = 0 then
+            begin
+            if l_possible_class_code not one of 1 and
+               l_second_time = "N" then
+                begin
+                l_second_time        = "Y"
+                activehelp()
+                end
+            end
+
+        if ((cpsclass_alias:property_only = 1 and
+           l_desc <> "" and
+           agqgeneral1:class_code = 0) or
+           (cpsclass_alias:property_only = 1 and
+           ((l_desc <> agqgeneral1:description and
+           l_desc <> "") or
+           (agqgeneral1:class_code <> cpsclass_alias:class_code and
+           agqgeneral1:class_code <> 0 and
+           l_desc <> "") or
+           (agqgeneral1:sub_code <> cpsclass_alias:sub_code and
+           agqgeneral1:sub_code <> 0 and
+           l_desc <> "")))) then
+            begin
+            l_desc                      = cpsclass_alias:alpha_look
+            agqgeneral1:class_code      = cpsclass_alias:class_code
+            agqgeneral1:sub_code        = cpsclass_alias:sub_code
+            agqgeneral1:description     = cpsclass_alias:alpha_look
+            agqgeneral1:group_no        = cpsclass_alias:group_no
+            agqgeneral1:sub_group       = cpsclass_alias:sub_group
+            agqgeneral1:rate_group      = cpsclass_alias:rate_group
+            if cpsclass_alias:rate_group = 0 then
+                agqgeneral1:rate_group  = cpsclass_alias:crime_rate_group
+            agqgeneral1:crime_limit     = cpsclass_alias:crime_class_limit
+            agqgeneral1:CMP_SYMBOL      = cpsclass_alias:CMP_SYMBOL
+            agqgeneral1:perpetual_rated = cpsclass_alias:prepetual_rated
+            end
+
+        if agqgeneral1:class_code = 0 and
+           l_desc <> "" then
+            error "Invalid Description Entered"
+
+        if l_desc <> "" and
+           agqgeneral1:class_code <> l_prior_class_code and
+           agqgeneral1:perpetual_rated = 0 and
+           l_length <> 0 then
+            begin
+            access cpsgroupi, set cpsgroupi:company_id       = agqgeneral1:company_id,
+                                  cpsgroupi:state            = agqgeneral1:state,
+                                  cpsgroupi:line_of_business = agqgeneral1:rating_line_of_business,
+                                  cpsgroupi:class_code       = agqgeneral1:class_code, generic
+
+            if cpsgroupi:company_id       <> agqgeneral1:company_id or
+               cpsgroupi:state            <> agqgeneral1:state or
+               cpsgroupi:line_of_business <> agqgeneral1:rating_line_of_business or
+               cpsgroupi:class_code       <> agqgeneral1:class_code then
+                begin
+                l_active_help_was_set = 0
+                l_second_time = "N"
+                warning "Please refer to underwriting to complete this quote"
+                end
+            end
+
+        if l_desc <> "" and
+           agqgeneral1:class_code <> l_prior_class_code and
+           agqgeneral1:perpetual_rated = 1 and
+           l_length <> 0 then
+            begin
+            l_active_help_was_set = 0
+            l_second_time = "N"
+            warning "Please refer to underwriting to complete this quote"
+            end
+
+        access cpsgroupi, set cpsgroupi:company_id       = agqgeneral1:company_id,
+                              cpsgroupi:state            = agqgeneral1:state,
+                              cpsgroupi:line_of_business = agqgeneral1:rating_line_of_business,
+                              cpsgroupi:class_code       = agqgeneral1:class_code, generic
+
+        Activehelp if (l_eff_date >= cpsclass_alias:eff_date and
+                      (l_eff_date <= cpsclass_alias:exp_date or
+                      cpsclass_alias:exp_date = 0) and
+                      cpsclass_alias:class_code <> 0 and
+                      cpsclass_alias:property_only = 1) then
+                        cpsclass_ALIAS:description
+                   else
+                       null/width=100,
+                   if (l_eff_date >= cpsclass_alias:eff_date and
+                      (l_eff_date <= cpsclass_alias:exp_date or
+                      cpsclass_alias:exp_date = 0) and
+                      cpsclass_alias:class_code <> 0 and
+                      cpsclass_alias:property_only = 1) then
+                       cpsclass_ALIAS:CLASS_CODE
+                   else
+                       null ;
+
+702     agqgeneral1:CLASS_CODE/displayonly
+        hide if l_desc = "" ;
+701     l_desc/displayonly ;
+702     begin
+        l_eff_date = agqname:eff_date
+        Access cpsclass_alt, Set cpsclass_alt:COMPANY_ID       = agqgeneral1:COMPANY_ID,
+                                 cpsclass_alt:STATE            = agqgeneral1:state,
+                                 cpsclass_alt:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business,
+                                 cpsclass_alt:group_no         = agqgeneral1:group_no,
+                                 cpsclass_alt:sub_group        = agqgeneral1:sub_group,
+                                 cpsclass_alt:class_code       = agqgeneral1:class_code, approximate
+        end
+        agqgeneral1:class_code/tabstop
+        hide if l_desc <> ""
+        if agqgeneral1:class_code = 0 then
+            error "You must enter a valid class code"
+
+        agqgeneral1:sub_code  = cpsclass_alt:sub_code
+        agqgeneral1:group_no  = cpsclass_alt:group_no
+        agqgeneral1:sub_group = cpsclass_alt:sub_group
+        Access cpsclass, Set cpsclass:COMPANY_ID       = agqgeneral1:COMPANY_ID,
+                             cpsclass:STATE            = agqgeneral1:state,
+                             cpsclass:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business,
+                             cpsclass:group_no         = agqgeneral1:group_no,
+                             cpsclass:sub_group        = agqgeneral1:sub_group,
+                             cpsclass:cLASS_CODE       = agqgeneral1:CLASS_CODE,
+                             cpsclass:sub_code         = agqgeneral1:sub_code, Generic
+
+        while cpsclass:COMPANY_ID       = agqgeneral1:COMPANY_ID and
+              cpsclass:STATE            = agqgeneral1:state and
+              cpsclass:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business and
+              cpsclass:group_no         = agqgeneral1:group_no and
+              cpsclass:sub_group        = agqgeneral1:sub_group and
+              cpsclass:CLASS_CODE       = agqgeneral1:CLASS_CODE and
+              cpsclass:sub_code         = agqgeneral1:sub_code
+            begin
+            If (l_EFF_DATE >= cpsclass:eff_date and
+               (l_eff_date <= cpsclass:exp_date or
+               cpsclass:exp_date = 0)) Then
+                begin
+                if cpsclass:property_only = 1 then
+                    begin
+                    agqgeneral1:sub_code        = cpsclass:sub_code
+                    agqgeneral1:rate_group      = cpsclass:rate_group
+                    if cpsclass_alt:rate_group = 0 then
+                        agqgeneral1:rate_group  = cpsclass:crime_rate_group
+                    agqgeneral1:crime_limit     = cpsclass:crime_class_limit
+                    agqgeneral1:CMP_SYMBOL      = cpsclass:CMP_SYMBOL
+                    agqgeneral1:perpetual_rated = cpsclass:prepetual_rated
+                    l_desc                      = cpsclass:alpha_look
+                    end
+                end
+
+             next cpsclass
+             end
+
+        if l_desc = "" and
+           agqgeneral1:class_code <> 0 then
+            begin
+            error "Invalid Class Code Entered"
+            end
+
+        if agqgeneral1:class_code <> 0 and
+           agqgeneral1:class_code <> l_prior_class_code and
+           agqgeneral1:perpetual_rated = 0 then
+            begin
+            access cpsgroupi, set cpsgroupi:company_id       = agqgeneral1:company_id,
+                                  cpsgroupi:state            = agqgeneral1:state,
+                                  cpsgroupi:line_of_business = agqgeneral1:rating_line_of_business,
+                                  cpsgroupi:class_code       = agqgeneral1:class_code, generic
+
+            if cpsgroupi:company_id       <> agqgeneral1:company_id or
+               cpsgroupi:state            <> agqgeneral1:state or
+               cpsgroupi:line_of_business <> agqgeneral1:rating_line_of_business or
+               cpsgroupi:class_code       <> agqgeneral1:class_code then
+                begin
+                l_active_help_was_set = 0
+                l_second_time = "N"
+                warning "Please refer to underwriting to complete this quote"
+                end
+            end
+
+        if agqgeneral1:class_code <> 0 and
+           agqgeneral1:class_code <> l_prior_class_code and
+           agqgeneral1:perpetual_rated = 1 then
+            begin
+            l_active_help_was_set = 0
+            l_second_time = "N"
+            warning "Please refer to underwriting to complete this quote"
+            end
+
+        activehelp if (l_eff_date >= cpsclass_alt:eff_date and
+                      (l_eff_date <= cpsclass_alt:exp_date or
+                      cpsclass_alt:exp_date = 0) and
+                      cpsclass_alt:class_code <> 0 and
+                      cpsclass_alt:property_only = 1) then
+                       cpsclass_alt:class_code
+                   else
+                       null,
+                   if (l_eff_date >= cpsclass_alt:eff_date and
+                      (l_eff_date <= cpsclass_alt:exp_date or
+                      cpsclass_alt:exp_date = 0) and
+                      cpsclass_alt:class_code <> 0 and
+                      cpsclass_alt:property_only = 1 ) then
+                       cpsclass_alt:description
+                   else
+                       null/width=100 ;
+701     L_DESC/displayonly/uppercase  ;
+
+801     Begin
+        l_construction = agqgeneral1:construction
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    begin
+                    agqgeneral1:CONSTRUCTION = agqgeneral1_alt:CONSTRUCTION
+                    agqgeneral1:reinforced   = agqgeneral1_alt:reinforced
+                    agqgeneral1:steel        = agqgeneral1_alt:steel
+                    agqgeneral1:high         = agqgeneral1_alt:high
+                    end
+                else
+                    begin
+                    agqgeneral1:CONSTRUCTION = agqgeneral1_ALIAS:CONSTRUCTION
+                    agqgeneral1:reinforced   = agqgeneral1_alias:reinforced
+                    agqgeneral1:steel        = agqgeneral1_alias:steel
+                    agqgeneral1:high         = agqgeneral1_alias:high
+                    end
+                end
+            Else
+                agqgeneral1:CONSTRUCTION = CPSDEFAULT:CONSTRUCTION
+            End
+        End
+        agqgeneral1:CONSTRUCTION/default/tabstop
+        If agqgeneral1:CONSTRUCTION <> SFSCONSTRUCTION:CONSTRUCTION or
+           agqgeneral1:construction = 0 Then
+            Error 1203
+
+        agqgeneral1:CONSTRUCTION_CODE = SFSCONSTRUCTION:CODE
+
+        Activehelp SFSCONSTRUCTION_ALIAS:CONSTRUCTION,
+                   SFSCONSTRUCTION_ALIAS:DESCRIPTION ;
+801     begin
+--        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+--            begin
+            do access_cpsconstruction
+--            end
+        end
+        agqgeneral1:construction/displayonly ;
+802     agqgeneral1:reinforced/checkbox/values="0,1"/default
+        hide if l_reinforced = 0
+        hide if sfsemail:agent_no <> 0 ;
+803     agqgeneral1:steel/checkbox/values="0,1"/default
+        hide if l_steel = 0
+        hide if sfsemail:agent_no <> 0 ;
+804     agqgeneral1:high/checkbox/values="0,1"/default
+        hide if l_high = 0
+        hide if sfsemail:agent_no <> 0 ;
+
+901     begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:protection = agqgeneral1_ALT:protection
+                else
+                    agqgeneral1:protection = agqgeneral1_ALIAS:protection
+                end
+            End
+        end
+        agqgeneral1:PROTECTION/default/tabstop   mandatory
+        if agqgeneral1:protection <> sfsprotection:protection or
+           agqgeneral1:protection = 0 then
+            error "Invalid Protection Code"
+
+        Activehelp sfsprotection_alias:protection ;
+902     Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:COINSURANCE = agqgeneral1_ALT:COINSURANCE
+                else
+                    agqgeneral1:COINSURANCE = agqgeneral1_ALIAS:COINSURANCE
+                end
+            Else
+                agqgeneral1:COINSURANCE = CPSDEFAULT:COINSURANCE
+            End
+        End
+        agqgeneral1:COINSURANCE/default/tabstop
+        Hide If agqgeneral1:BUILDERS_RISK = 1
+        Access CPSCOINSURANCE, Set CPSCOINSURANCE:COMPANY_ID = agqgeneral1:COMPANY_ID,
+                                   CPSCOINSURANCE:STATE = agqgeneral1:STATE,
+                                   CPSCOINSURANCE:LINE_OF_BUSINESS = agqgeneral1:rating_LINE_OF_BUSINESS,
+                                   CPSCOINSURANCE:OPTION = agqgeneral1:FORM,
+                                   CPSCOINSURANCE:COINSURANCE = agqgeneral1:COINSURANCE, Generic
+
+        If agqgeneral1:COINSURANCE <> CPSCOINSURANCE:COINSURANCE Then
+            Error 1208
+
+        Activehelp CPSCOINSURANCE_ALIAS:COINSURANCE ;
+1001    Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:DEDUCTIBLE = agqgeneral1_ALT:DEDUCTIBLE
+                else
+                    agqgeneral1:DEDUCTIBLE = agqgeneral1_ALIAS:DEDUCTIBLE
+                end
+            Else
+                agqgeneral1:DEDUCTIBLE = CPSDEFAULT:DEDUCTIBLE
+            End
+        End
+        agqgeneral1:DEDUCTIBLE/default/tabstop
+        Access SFSDEDUCTIBLE, Set SFSDEDUCTIBLE:COMPANY_ID = agqgeneral1:COMPANY_ID,
+                                  SFSDEDUCTIBLE:STATE = agqgeneral1:STATE,
+                                  SFSDEDUCTIBLE:LINE_OF_BUSINESS = agqgeneral1:rating_LINE_OF_BUSINESS,
+                                  SFSDEDUCTIBLE:DEDUCTIBLE = agqgeneral1:DEDUCTIBLE, Generic
+
+        If agqgeneral1:DEDUCTIBLE <> SFSDEDUCTIBLE:DEDUCTIBLE or
+           agqgeneral1:deductible = 0 Then
+            Error 1207
+
+        Activehelp if sfsdeductible_alias:show_in_activehelp = 1 then
+                       SFSDEDUCTIBLE_ALIAS:DEDUCTIBLE
+                   else
+                       null       ;
+1002    Begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            begin
+            if agqgeneral1:construction one of 5, 6 then
+                agqgeneral1:symbol = "AB"
+            else
+                agqgeneral1:symbol = "B"
+            end
+
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+--            do get_symbol
+--            agqgeneral1:symbol        = l_symbol
+--            agqgeneral1:symbol_number = l_symbol_no
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:inflation_guard = agqgeneral1_alt:inflation_guard
+                else
+                    agqgeneral1:inflation_guard = agqgeneral1_ALIAS:inflation_guard
+                end
+            Else
+                begin
+                access sfsinflation, set sfsinflation:company_id       = agqgeneral1:company_id,
+                                         sfsinflation:state            = agqgeneral1:state,
+                                         sfsinflation:line_of_business = agqgeneral1:rating_line_of_business, generic
+
+                l_percent = 0
+                while sfsinflation:company_id       = agqgeneral1:company_id and
+                      sfsinflation:state            = agqgeneral1:state and
+                      sfsinflation:line_of_business = agqgeneral1:rating_line_of_business
+                    begin
+                    if agqname:eff_date >= sfsinflation:eff_date then
+                        begin
+                        if sfsinflation:make_default = 1 then
+                            l_percent = sfsinflation:percent
+                        end
+
+                    next sfsinflation
+                    end
+
+                if l_percent <> 0 then
+                    agqgeneral1:inflation_guard = l_percent
+                else
+                    agqgeneral1:inflation_guard = CPSDEFAULT:inflation_guard
+                end
+            End
+        End
+        agqgeneral1:inflation_guard/default/tabstop ;
+
+1101    Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = G_app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:sprinklered = agqgeneral1_alt:sprinklered
+                else
+                    agqgeneral1:SPRINKLERED = agqgeneral1_ALIAS:SPRINKLERED
+                end
+            End
+        End
+        agqgeneral1:SPRINKLERED/checkbox/values="0,1"/default/tabstop ;
+1102    Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:replacement_cost = agqgeneral1_alt:replacement_cost
+                else
+                    agqgeneral1:replacement_cost = agqgeneral1_ALIAS:replacement_cost
+                end
+            Else
+                agqgeneral1:replacement_cost = CPSDEFAULT:replacement_cost
+            End
+        End
+        agqgeneral1:REPLACEMENT_COST/checkbox/values="0,1"/default/tabstop ;
+1103    begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:boilers = agqgeneral1_alt:boilers
+                else
+                    agqgeneral1:boilers = agqgeneral1_ALIAS:boilers
+                end
+            Else
+                agqgeneral1:boilers = CPSDEFAULT:boilers
+            End
+        End
+        agqgeneral1:boilers/checkbox/values="0,1"/default/tabstop ;
+
+1201    begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = G_app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:vmm_exclusion = agqgeneral1_alt:vmm_exclusion
+                else
+                    agqgeneral1:vmm_exclusion = agqgeneral1_ALIAS:vmm_exclusion
+                end
+            End
+        End
+        agqgeneral1:vmm_exclusion/checkbox/values="0,1"/default/tabstop ;
+1202    begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = G_app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:exclusions = agqgeneral1_alt:exclusions
+                else
+                    agqgeneral1:exclusions = agqgeneral1_ALIAS:exclusions
+                end
+            End
+        End
+        agqgeneral1:exclusions/checkbox/values="0,1"/default/tabstop ;
+1203    Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:agreed_value = agqgeneral1_alt:agreed_value
+                else
+                    agqgeneral1:agreed_value = agqgeneral1_ALIAS:agreed_value
+                end
+            Else
+                agqgeneral1:agreed_value = CPSDEFAULT:agreed_value
+            End
+        End
+        agqgeneral1:agreed_value/checkbox/values="0,1"/default/tabstop ;
+
+1301    Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = agqgeneral1:app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:theft = agqgeneral1_alt:theft
+                else
+                    agqgeneral1:theft = agqgeneral1_ALIAS:theft
+                end
+            Else
+                agqgeneral1:theft = CPSDEFAULT:exclude_theft
+            End
+        End
+        agqgeneral1:theft/checkbox/values="0,1"/default/tabstop ;
+1302    Begin
+        If FUNCTION one of "ADD", "NEW" Then
+            Begin
+            If agqgeneral1_ALIAS:app_no = G_app_no Then
+                begin
+                if agqgeneral1_alt:prem_no = agqgeneral1:prem_no and
+                   agqgeneral1_alt:build_no = agqgeneral1:build_no then
+                    agqgeneral1:sprinkler_leakage = agqgeneral1_alt:sprinkler_leakage
+                else
+                    agqgeneral1:SPRINKLER_leakage = agqgeneral1_ALIAS:SPRINKLER_leakage
+                end
+            End
+        End
+        agqgeneral1:SPRINKLER_leakage/checkbox/values="0,1"/default/tabstop ;
+1401    agqgeneral1:crime_limit/default/tabstop tagged agent_fn;
+1402    agqgeneral1:rate_group/default/tabstop ;
+
+
+1601    begin
+        if function one of "ADD", "NEW", "CHANGE", "CHG" then
+            begin
+            if agqname:package = 1 then
+                begin
+                do get_package_mod
+                agqgeneral1:package_mod[1] = l_package_mod
+                end
+            else
+                agqgeneral1:package_mod[1] = 1.00
+            end
+        end
+        agqgeneral1:limit[1]/tabstop
+        if agqgeneral1:limit[1] = 0 then
+            error "You must enter a limit" ;
+1602    agqgeneral1:new_rate[1]/tabstop tagged agent_fn
+        hide if sfsemail:agent_no <> 0 ;
+--        hide if cpsgroupi:class_code = agqgeneral1:class_code
+--        hide if agqgeneral1:perpetual_rated = 0 and
+--                cpsgroupi:class_code = agqgeneral1:class_code ;
+1602    /*begin
+        if cpsgroupi:class_code = agqgeneral1:class_code and
+           agqgeneral1:perpetual_rated = 0 then
+            agqgeneral1:new_rate[1] = 0
+        end*/
+        agqgeneral1:new_rate[1]/displayonly tagged agent_fn;
+
+
+}
+
+-- draw a line
+panel at 26,1 to 26,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,120
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+Panel at 27,5 to 27,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,10    tagged optional_info
+        Properties {
+                Iconname = "btn_opt_endt.bmp"
+                }
+        Events  {
+                Action = optional_info_fn
+                }
+
+        Button at 1,55    tagged business_income
+        Properties {
+                Iconname = "btn_view_business_income.bmp"
+                }
+        Events  {
+                Action = business_income_fn
+                }
+        }
+
+}
+
+-- draw a line
+panel at 28,1 to 28,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,120
+            Properties {
+                       Linestyle = embossed
+                       Linewidth = 5
+                       foregroundcolor = "black"
+                       }
+    }
+
+Panel at 29,1 to 29,100 Tagged icon_line2_tg
+Properties {
+           LayoutType = screen
+           }
+{
+Components
+    Button at 1,5   tagged back_fn
+        Properties {
+                   Iconname = "btn_premium_summary.bmp"
+                   }
+        Events     {
+                   Action {
+                          function = "back"
+                          abort()
+                          }
+                    }
+
+    Button at 1,36    tagged previous_fn
+        Properties {
+                   Iconname = "btn_prev_loc.bmp"
+                   }
+        Events     {
+                   Action = previous_fn
+                   }
+
+    Button at 1, 51 tagged next_fn
+        Properties {
+                   Iconname = "btn_next_loc.bmp"
+                   }
+        Events     {
+                   Action = next_fn
+                   }
+
+
+}
+
+Update
+if UPDATEOK = "NO" then
+    begin
+    disable(accept_fn)
+    enable(back_fn)
+    end
+
+If UPDATEOK = "YES" And
+   Abort = "NO" Then
+    Begin
+    disable(accept_fn)
+    enable(back_fn)
+    if function one of "DELETE" then
+        begin
+        access agqgeneral1_alias, set agqgeneral1_alias:app_no = g_app_no, generic
+
+        access agqend, set agqend:app_no = g_app_no, generic
+
+        while agqend:app_no = g_app_no
+            begin
+            if agqend:lob_end_code one of "P", "B" then
+                begin
+                if agqgeneral1_alias:app_no <> g_app_no then
+                    delete agqend
+                else
+                if agqend:prem_no = agqgeneral1:prem_no and
+                   agqend:build_no = agqgeneral1:build_no then
+                    delete agqend
+                end
+
+            next agqend
+            end
+
+        access agqbusiness, set agqbusiness:app_no   = g_app_no,
+                                agqbusiness:prem_no  = agqgeneral1:prem_no,
+                                agqbusiness:build_no = agqgeneral1:build_no, generic
+
+        while agqbusiness:app_no   = g_app_no and
+              agqbusiness:prem_no  = agqgeneral1:prem_no and
+              agqbusiness:build_no = agqgeneral1:build_no
+            begin
+            delete agqbusiness
+
+            next agqbusiness
+            end
+        end
+
+    if function one of "ADD", "NEW", "CHANGE", "CHG" then
+        begin
+        Access cpsratetype, Set cpsratetype:COMPANY_ID       = agqgeneral1:COMPANY_ID,
+                                cpsratetype:STATE            = agqgeneral1:STATE,
+                                cpsratetype:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business, generic
+
+        l_code = ""
+        While cpsratetype:COMPANY_ID       = agqgeneral1:COMPANY_ID And
+              cpsratetype:STATE            = agqgeneral1:STATE And
+              cpsratetype:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business
+                Begin
+                l_code = cpsratetype:code
+                Do ACCESS_agqend_1
+                If L_ADD_ENDORSEMENT = "Y" and
+                   cpsratetype:rate_type one of agqgeneral1:rate_type then
+                    Do ADD_agqend_1
+
+                Next cpsratetype
+                End
+
+        Access sfsform, Set sfsform:COMPANY_ID       = agqgeneral1:COMPANY_ID,
+                            sfsform:STATE            = agqgeneral1:STATE,
+                            sfsform:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business, generic
+
+        l_code = ""
+        While sfsform:COMPANY_ID       = agqgeneral1:COMPANY_ID And
+              sfsform:STATE            = agqgeneral1:STATE And
+              sfsform:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business
+                Begin
+                l_code = sfsform:code
+                Do ACCESS_agqend_1
+                If L_ADD_ENDORSEMENT = "Y" and
+                   sfsform:policy_form one of agqgeneral1:form then
+                    Do ADD_agqend_1
+                if l_add_endorsement = "N" and
+                   sfsform:policy_form not one of agqgeneral1:form then
+                    do delete_agqend_1
+
+                Next sfsform
+                End
+
+        Access cpstrigger, Set cpstrigger:COMPANY_ID       = agqgeneral1:COMPANY_ID,
+                               cpstrigger:STATE            = agqgeneral1:STATE,
+                               cpstrigger:LINE_OF_BUSINESS = agqgeneral1:rating_LINE_OF_BUSINESS, Generic
+
+        While cpstrigger:COMPANY_ID       = agqgeneral1:COMPANY_ID And
+              cpstrigger:STATE            = agqgeneral1:STATE And
+              cpstrigger:LINE_OF_BUSINESS = agqgeneral1:rating_LINE_OF_BUSINESS
+                Begin
+                If agqname:EFF_DATE >= cpstrigger:EFF_DATE Then
+                    Begin
+                    l_code_1 = cpstrigger:code[1]
+                    l_code_2 = cpstrigger:code[2]
+                    l_code_3 = cpstrigger:code[3]
+                    l_code_4 = cpstrigger:code[4]
+                    l_code_5 = cpstrigger:code[5]
+                    l_code_6 = cpstrigger:code[6]
+                    l_code_7 = cpstrigger:code[7]
+                    l_code_8 = cpstrigger:code[8]
+                    End
+
+                Next cpstrigger
+                End
+
+        If L_CODE_1 <> "" Then
+            Begin
+            l_boiler = "N"
+            L_CODE = L_CODE_1
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqgeneral1:exclusions = 1 Then
+                Do ADD_agqend
+            If L_ADD_ENDORSEMENT = "N" And
+               agqgeneral1:exclusions = 0 Then
+                Do DELETE_agqend
+            End
+
+        If L_CODE_2 <> "" Then
+            Begin
+            l_boiler = "N"
+            L_CODE = L_CODE_2
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqgeneral1:vmm_exclusion = 1 Then
+                Do ADD_agqend
+            If L_ADD_ENDORSEMENT = "N" And
+               agqgeneral1:vmm_exclusion = 0 Then
+                Do DELETE_agqend
+            End
+
+        If L_CODE_3 <> "" Then
+            Begin
+            l_boiler = "N"
+            L_CODE = L_CODE_3
+            Do ACCESS_agqend
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqgeneral1:sprinkler_leakage = 1 Then
+                Do ADD_agqend
+            If L_ADD_ENDORSEMENT = "N" And
+               agqgeneral1:sprinkler_leakage = 0 Then
+                Do DELETE_agqend
+            End
+
+        If L_CODE_4 <> "" Then
+            Begin
+            l_boiler = "N"
+            L_CODE = L_CODE_4
+            Do ACCESS_agqend_1
+            If L_ADD_ENDORSEMENT = "Y" Then
+                Do ADD_agqend_1
+            If L_ADD_ENDORSEMENT = "N" And
+               agqname:bill_plan not one of "DB" Then
+                Do DELETE_agqend_1
+            End
+
+        access agqgeneral1_alias, set agqgeneral1_alias:app_no = g_app_no, generic
+
+        l_form          = agqgeneral1_alias:form
+        while agqgeneral1_alias:app_no = g_app_no
+                begin
+                if l_form <> agqgeneral1_alias:form then
+                    l_different_forms = "Y"
+
+                next agqgeneral1_alias
+                end
+
+        If L_CODE_5 <> "" Then
+            Begin
+            L_CODE = L_CODE_5
+            l_boiler = "Y"
+            Do ACCESS_agqend_1
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqgeneral1:form = 1 and
+               agqgeneral1:boilers = 1 Then
+                Do ADD_agqend_1
+            If ((L_ADD_ENDORSEMENT = "N" And
+               agqgeneral1:form not one of 1) or
+               (l_add_endorsement = "N" and
+               agqgeneral1:boilers = 0)) Then
+                Do DELETE_agqend_1
+            End
+
+        If L_CODE_6 <> "" Then
+            Begin
+            L_CODE = L_CODE_6
+            l_boiler = "Y"
+            Do ACCESS_agqend_1
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqgeneral1:form = 2 and
+               agqgeneral1:boilers = 1 Then
+                begin
+                Do ADD_agqend_1
+                end
+            If ((L_ADD_ENDORSEMENT = "N" And
+               agqgeneral1:form <> 2) or
+               (l_add_endorsement = "N" and
+               agqgeneral1:boilers = 0)) then
+                begin
+                Do DELETE_agqend_1
+                end
+            End
+
+        If L_CODE_7 <> "" Then
+            Begin
+            L_CODE = L_CODE_7
+            l_boiler = "Y"
+            Do ACCESS_agqend_1
+            If L_ADD_ENDORSEMENT = "Y" And
+               agqgeneral1:form = 3 and
+               agqgeneral1:boilers = 1 Then
+                Do ADD_agqend_1
+            If ((L_ADD_ENDORSEMENT = "N" And
+               agqgeneral1:form <> 3) or
+               (l_add_Endorsement = "N" and
+               agqgeneral1:boilers = 0)) then
+                Do DELETE_agqend_1
+            End
+
+        l_lob = agqamt:line_of_business[2]
+        access sfsline_alias, set sfsline_alias:company_id = agqgeneral1:company_id,
+                                  sfsline_alias:line_of_business = l_lob,
+                                  sfsline_alias:lob_subline = "00", generic
+
+        If L_CODE_8 <> "" Then
+            Begin
+            l_boiler = "N"
+            L_CODE = L_CODE_8
+            Do ACCESS_agqend_1
+            If (L_ADD_ENDORSEMENT = "Y" And
+               (sfsline:lob_code one of "PROPERTY" or
+               (sfsline:lob_code one of "CPORTFOLIO" and
+               sfsline_alias:lob_code one of "PROPERTY"))) Then
+                Do ADD_agqend_1
+            If L_ADD_ENDORSEMENT = "N" And
+               sfsline:lob_code not one of "PROPERTY" and
+               sfsline_alias:lob_code not one of "PROPERTY" Then
+                Do DELETE_agqend_1
+            End
+
+        end
+
+    function = "redisplay"
+    End
+
+screen exit
+g_prem_no   = agqgeneral1:prem_no
+g_build_no  = agqgeneral1:build_no
+g_rate_type = agqgeneral1:rate_type
+
+Procedure Definition
+
+procedure set_active_help_flag
+begin
+  l_active_help_was_set = 1
+  activehelp()
+END
+
+procedure get_package_mod
+begin
+access cpsisopackage, set cpsisopackage:company_id       = agqgeneral1:company_id,
+                          cpsisopackage:state            = agqgeneral1:state,
+                          cpsisopackage:line_of_business = agqgeneral1:rating_line_of_business,
+                          cpsisopackage:type             = agqgeneral1:type, generic
+
+l_package_mod = 0
+while cpsisopackage:company_id       = agqgeneral1:company_id and
+      cpsisopackage:state            = agqgeneral1:state and
+      cpsisopackage:line_of_business = agqgeneral1:rating_line_of_business and
+      cpsisopackage:type             = agqgeneral1:type
+        begin
+        if (agqname:eff_date >= cpsisopackage:eff_date and
+           (agqname:eff_date <= cpsisopackage:exp_date or
+           cpsisopackage:exp_date = 0)) then
+            begin
+            l_package_mod = cpsisopackage:package_mod[2]
+
+            end
+
+        next cpsisopackage
+        end
+
+if l_package_mod = 0 then
+    l_package_mod = 1.00
+end
+
+procedure access_cpsconstruction
+begin
+access cpsconstruction, set cpsconstruction:company_id       = agqgeneral1:company_id,
+                            cpsconstruction:state            = agqgeneral1:state,
+                            cpsconstruction:line_of_business = agqgeneral1:rating_line_of_business,
+                            cpsconstruction:construction     = agqgeneral1:construction, generic
+
+l_reinforced = 0
+l_steel      = 0
+l_high       = 0
+while cpsconstruction:company_id       = agqgeneral1:company_id and
+      cpsconstruction:state            = agqgeneral1:state and
+      cpsconstruction:line_of_business = agqgeneral1:rating_line_of_business and
+      cpsconstruction:construction     = agqgeneral1:construction
+        begin
+        if (agqname:eff_date >= cpsconstruction:eff_date and
+           (agqname:exp_date <= cpsconstruction:exp_date or
+           cpsconstruction:exp_date = 0)) then
+            begin
+            l_reinforced = cpsconstruction:reinforced
+            l_steel      = cpsconstruction:light_steel
+            l_high       = cpsconstruction:high
+            end
+
+        next cpsconstruction
+        end
+
+end
+
+procedure get_symbol
+begin
+if agqgeneral1:perpetual_rated = 0 then
+    begin
+    access cpsconstruction, set cpsconstruction:company_id       = agqgeneral1:company_id,
+                                cpsconstruction:state            = agqgeneral1:state,
+                                cpsconstruction:line_of_business = agqgeneral1:rating_line_of_business,
+                                cpsconstruction:construction     = agqgeneral1:construction, generic
+
+    while cpsconstruction:company_id       = agqgeneral1:company_id and
+          cpsconstruction:state            = agqgeneral1:state and
+          cpsconstruction:line_of_business = agqgeneral1:rating_line_of_business and
+          cpsconstruction:construction     = agqgeneral1:construction
+            begin
+            if (agqname:eff_date >= cpsconstruction:eff_date and
+               (agqname:exp_date <= cpsconstruction:exp_date or
+               cpsconstruction:exp_date = 0)) then
+                begin
+                if cpsconstruction:light_steel = 1 and
+                   cpsconstruction:reinforced  = 1 and
+                   cpsconstruction:high        = 1 then
+                    begin
+                    switch(agqgeneral1:reinforced)
+                      case 1  : switch(agqgeneral1:steel)
+                                  case 1  : switch(agqgeneral1:high)
+                                              case 1  : l_symbol = cpsconstruction:symbol[4]
+                                              default : l_symbol = cpsconstruction:symbol[3]
+                                              end
+                                  default : switch(agqgeneral1:high)
+                                              case 1  : l_symbol = cpsconstruction:symbol[8]
+                                              default : l_symbol = cpsconstruction:symbol[7]
+                                              end
+                                  end
+                      default : switch(agqgeneral1:steel)
+                                  case 1  : switch(agqgeneral1:high)
+                                              case 1  : l_symbol = cpsconstruction:symbol[2]
+                                              default : l_symbol = cpsconstruction:symbol[1]
+                                              end
+                                  default : switch(agqgeneral1:high)
+                                              case 1  : l_symbol = cpsconstruction:symbol[6]
+                                              default : l_symbol = cpsconstruction:symbol[5]
+                                              end
+                                  end
+                      end
+                    if agqgeneral1:steel      = 0 and
+                       agqgeneral1:high       = 0 and
+                       agqgeneral1:reinforced = 0 then
+                        l_symbol = cpsconstruction:symbol[1]
+                    end
+                else
+                if cpsconstruction:reinforced  = 1 and
+                   cpsconstruction:light_steel = 0 and
+                   cpsconstruction:high        = 1 then
+                    begin
+                    switch(agqgeneral1:reinforced)
+                      case 1  : switch(agqgeneral1:high)
+                                  case 1  : l_symbol = cpsconstruction:symbol[4]
+                                  default : l_symbol = cpsconstruction:symbol[3]
+                                  end
+                      default : switch(agqgeneral1:high)
+                                  case 1  : l_symbol = cpsconstruction:symbol[2]
+                                  default : l_symbol = cpsconstruction:symbol[1]
+                                  end
+                      end
+                    if agqgeneral1:reinforced = 0 and
+                       agqgeneral1:high = 0 then
+                        l_symbol = cpsconstruction:symbol[1]
+                    end
+                else
+                if cpsconstruction:reinforced  = 0 and
+                   cpsconstruction:light_steel = 1 and
+                   cpsconstruction:high        = 1 then
+                    begin
+                    switch(agqgeneral1:steel)
+                      case 1  : switch(agqgeneral1:high)
+                                  case 1  : l_symbol = cpsconstruction:symbol[2]
+                                  default : l_symbol = cpsconstruction:symbol[1]
+                                  end
+                      default : switch(agqgeneral1:high)
+                                  case 1  : l_symbol = cpsconstruction:symbol[4]
+                                  default : l_symbol = cpsconstruction:symbol[3]
+                                  end
+                      end
+                    if agqgeneral1:steel = 0 and
+                       agqgeneral1:high = 0 then
+                        l_symbol = cpsconstruction:symbol[1]
+                    end
+                else
+                    begin
+                    l_symbol = cpsconstruction:symbol[1]
+                    end
+
+                end
+
+            next cpsconstruction
+            end
+
+    end
+else
+if agqgeneral1:perpetual_rated = 1 then
+    begin
+    access cpsperpetual, set cpsperpetual:company_id       = agqgeneral1:company_id,
+                             cpsperpetual:state            = agqgeneral1:state,
+                             cpsperpetual:line_of_business = agqgeneral1:rating_line_of_business,
+                             cpsperpetual:class_code       = agqgeneral1:class_code,
+                             cpsperpetual:sub_code         = agqgeneral1:sub_code, generic
+
+    while cpsperpetual:company_id       = agqgeneral1:company_id and
+          cpsperpetual:state            = agqgeneral1:state and
+          cpsperpetual:line_of_business = agqgeneral1:rating_line_of_business and
+          cpsperpetual:class_code       = agqgeneral1:class_code and
+          cpsperpetual:sub_code         = agqgeneral1:sub_code
+            begin
+            if agqname:eff_date >= cpsperpetual:eff_date then
+                begin
+                l_symbol    = cpsperpetual:group_ii_symbol
+                l_symbol_no = cpsperpetual:group_ii_no
+                end
+
+            next cpsperpetual
+            end
+    end
+
+end
+
+Procedure ACCESS_agqend
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> G_PREM_NO Or
+            agqend:BUILD_NO <> G_BUILD_NO
+
+    If agqend:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend
+    End
+
+End
+
+Procedure ADD_agqend
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = G_PREM_NO,
+                   agqend:BUILD_NO = G_BUILD_NO, Generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> G_PREM_NO Or
+            agqend:BUILD_NO <> g_BUILD_NO
+
+    L_SUB_CODE = agqend:SUB_CODE
+
+    Next agqend
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+Access agqgeneral1_ALIAS, Set agqgeneral1_ALIAS:app_no = G_app_no,
+                              agqgeneral1_ALIAS:PREM_NO = g_PREM_NO,
+                              agqgeneral1_ALIAS:BUILD_NO = g_BUILD_NO, Generic
+
+L_STATE = agqgeneral1_ALIAS:STATE
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqgeneral1:COMPANY_ID,
+                      SFSOPTEND:STATE = agqgeneral1:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+l_form_edition = ""
+l_description = ""
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqgeneral1:COMPANY_ID Or
+            SFSOPTEND:STATE <> agqgeneral1:STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqgeneral1:rating_line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If agqname:eff_date >= SFSOPTEND:EFF_DATE Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+if l_form_edition <> "" then
+begin
+Add agqend
+    Begin
+    agqend:app_no               =       G_app_no
+    agqend:PREM_NO              =       g_PREM_NO
+    agqend:BUILD_NO             =       g_BUILD_NO
+    agqend:SUB_CODE             =       L_SUB_CODE
+    agqend:CODE                 =       L_CODE
+    agqend:FORM_EDITION         =       L_FORM_EDITION
+    agqend:DESCRIPTION          =       L_DESCRIPTION
+    agqend:LOB_END_CODE         =       "P"
+    agqend:PREMIUM              =       0
+    agqend:LOB_END_CODE         =       "P"
+    if l_boiler = "Y" then
+        agqend:boiler_form      =       1
+    else
+        agqend:boiler_form      =       0
+    End
+end
+
+End
+
+Procedure DELETE_agqend
+Begin
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = g_PREM_NO,
+                   agqend:BUILD_NO = g_BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> g_PREM_NO Or
+            agqend:BUILD_NO <> g_BUILD_NO
+
+    If agqend:CODE = L_CODE Then
+        Delete agqend
+
+    Next agqend
+    End
+
+End
+
+Procedure ACCESS_agqend_1
+Begin
+l_prem_no = 0000
+l_build_no = 0000
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = L_PREM_NO,
+                   agqend:BUILD_NO = L_BUILD_NO, Generic
+
+L_ADD_ENDORSEMENT = "Y"
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> L_PREM_NO Or
+            agqend:BUILD_NO <> L_BUILD_NO
+
+    If agqend:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+
+    Next agqend
+    End
+
+End
+
+Procedure ADD_agqend_1
+Begin
+l_prem_no = 0
+l_build_no = 0
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:prem_no = l_prem_no,
+                   agqend:build_no = l_build_no, generic
+
+L_SUB_CODE = 0
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no or
+            agqend:prem_no <> l_prem_no or
+            agqend:build_no <> l_build_no
+
+    L_SUB_CODE = agqend:SUB_CODE
+
+    Next agqend
+    End
+
+L_SUB_CODE = L_SUB_CODE + 10
+
+L_STATE = agqgeneral1:STATE
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID = agqgeneral1:COMPANY_ID,
+                      SFSOPTEND:STATE = L_STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral1:rating_line_of_business,
+                      SFSOPTEND:CODE = L_CODE, Generic
+
+Repeat Begin
+    Exit If SFSOPTEND:COMPANY_ID <> agqgeneral1:COMPANY_ID Or
+            SFSOPTEND:STATE <> L_STATE Or
+            SFSOPTEND:LINE_OF_BUSINESS <> agqgeneral1:rating_line_of_business Or
+            SFSOPTEND:CODE <> L_CODE
+
+    If agqname:eff_date >= SFSOPTEND:EFF_DATE Then
+        Begin
+        L_FORM_EDITION = SFSOPTEND:FORM_EDITION
+        L_DESCRIPTION = SFSOPTEND:DESCRIPTION
+        End
+
+    Next SFSOPTEND
+    End
+
+Add agqend
+    Begin
+    agqend:app_no             =       G_app_no
+    agqend:PREM_NO              =       0000
+    agqend:BUILD_NO             =       0000
+    agqend:SUB_CODE             =       L_SUB_CODE
+    agqend:CODE                 =       L_CODE
+    agqend:FORM_EDITION         =       L_FORM_EDITION
+    agqend:LOB_END_CODE         =       "P"
+    agqend:DESCRIPTION          =       L_DESCRIPTION
+    agqend:PREMIUM              =       0
+    agqend:policy_wide_form     =       1
+    agqend:terrorism_form       =       0
+    agqend:manual_premium       =       0
+    if l_boiler = "Y" then
+        agqend:boiler_form      =       1
+    else
+        agqend:boiler_form      =       0
+    End
+
+End
+
+Procedure DELETE_agqend_1
+Begin
+l_prem_no = 0
+l_build_no = 0
+Access agqend, Set agqend:app_no = G_app_no ,
+                   agqend:PREM_NO = L_PREM_NO,
+                   agqend:BUILD_NO = L_BUILD_NO, Generic
+
+Repeat Begin
+    Exit If agqend:app_no <> G_app_no Or
+            agqend:PREM_NO <> L_PREM_NO Or
+            agqend:BUILD_NO <> L_BUILD_NO
+
+    If agqend:CODE = L_CODE Then
+        Delete agqend
+
+    Next agqend
+    End
+
+End
+
+End

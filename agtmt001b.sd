@@ -1,0 +1,622 @@
+%%
+Screen
+        Name         = "agtmt001b" ;
+        Type         = "Detail" ;
+        domain       = "Dummy";
+        ScreenSize   = "100x30"
+--        resizeable   = true
+        padcharacter = space;
+        Statusbar    = False
+        iconline     = 0
+--        Resizable    = True
+
+        global unsigned ascii number g_enhancement[1] ,
+                                     g_form[1] ,
+                                     g_line_of_business[4] ,
+                                     g_app_no[11] ;
+
+        global wdate g_eff_date ;
+
+        local string l_company_id[10],
+                     l_username[15],
+                     l_screen_to_call[20],
+                     l_search_screen_to_call[20];
+
+        local wdate l_eff_date ;
+
+        local unsigned ascii number l_line_of_business[4],
+                                    l_state[2],
+                                    l_agent_no[4];
+
+
+Functions
+
+        "func1" display l_screen_to_call ;
+        "lib" screenlib l_screen_to_call ;
+
+        include "stdfunc7.inc"
+
+toolbar definition
+
+screen entry
+g_app_no = 0
+access sfsdefault, set sfsdefault:SFS_CODE = "SFS", generic
+
+l_username   = username
+l_company_id = sfsdefault:company_id
+l_state = sfsdefault:state
+
+access sfsemail, set sfsemail:company_id = l_company_id,
+                     sfsemail:user_id    = l_username, generic
+
+if sfsemail:agent_no = 0 then
+    {
+    l_agent_no = 9999
+    }
+else
+    {
+    l_agent_no = sfsemail:agent_no
+    }
+
+access sfsagent, set sfsagent:company_id = l_company_id,
+                     sfsagent:agent_no   = l_agent_no, exact
+
+if sfsemail:agent_no <> 0 and
+   sfsagent:state <> 0 then
+    l_state = sfsagent:state
+
+l_line_of_business = 9999
+access agqsetupmainscreen,
+   set agqsetupmainscreen:company_id       = l_company_id,
+       agqsetupmainscreen:state            = l_state,
+       agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+if l_company_id one of "FLEMINGTON" then
+    begin
+    hide(farmers_fn)
+    hide(farmers_nj_fn)
+    hide(farmers_md_fn)
+    end
+else
+if l_company_id one of "FARMERS" then
+    begin
+    hide(ficof_fn)
+    if l_state = 19 then
+        hide(farmers_nj_fn)
+    else
+        hide(farmers_md_fn)
+    end
+
+if l_company_id one of "FARMERS" and
+   agqsetupmainscreen:screen_to_call_2 <> "" and
+   agqsetupmainscreen:new_rating_eff_date <> 0 and
+   l_state = 29 then
+    begin
+    if g_eff_date >= agqsetupmainscreen:new_rating_eff_date then
+        begin
+        l_eff_date = agqsetupmainscreen:new_rating_eff_date
+        hide(farmers_nj_fn)
+        end
+    end
+
+screen at 1,1 to 30,100  tagged main_screen
+    Properties
+        {
+        Layouttype = screen
+        layoutconstraints = stretch
+        bordercolor = "black"
+        borderwidth=2
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        scrollbarpolicy = asneeded
+        }
+    {
+
+    panel/hidden
+        {
+        Fields
+            function at 1,1 ;
+
+        }
+
+    panel at 1,1 to 2,100   tagged heading_line
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+
+    }
+
+    Panel at 1,1 to 2,100 tagged ficof_fn
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+
+        }
+
+    Panel at 1,1 to 2,100 tagged farmers_fn
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+
+        }
+
+    panel at 3,1 to 4,100
+        Properties
+            {
+            LayoutType = screen
+            backgroundcolor = "Grey"
+            transparent = False
+            }
+        {
+        components
+            guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                    {
+                    text = "Personal Lines..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    fontname = "arial"
+                    transparent = False
+                    backgroundcolor = "Grey"
+                    }
+
+        }
+
+    Panel at 6,40 to 7,58 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_back_to_main_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "back"
+                        abort()
+                        }
+                    }
+        }
+
+    panel at 8,1 to 8,100 tagged line_panel_1
+        {
+        Components
+            line at 1,1 to 1,100
+                Properties
+                    {
+                    Linestyle = embossed
+                    Linewidth = 5
+                    Transparent = False
+                    Backgroundcolor = "black"
+                    foregroundcolor = "black"
+                    }
+        }
+
+    Panel at 10,1 to 12,25 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_ho_std_mho3.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 34
+                        else
+                            g_line_of_business = 4
+                        l_line_of_business = 9996
+                        g_form = 3
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        if l_state = 29 and
+                           l_company_id = "FARMERS" then
+                            begin
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call_2
+                            function = "func1"
+                            end
+                        else
+                            begin
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                            function = "func1"
+                            end
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 10,35 to 12,60 tagged button_panel
+        Properties
+            {
+            layouttype = column
+           }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_pers_property_mho4.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 34
+                        else
+                            g_line_of_business = 4
+                        l_line_of_business = 9996
+                        g_form = 4
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        if l_state = 29 and
+                           l_company_id = "FARMERS" then
+                            begin
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call_2
+                            function = "func1"
+                            end
+                        else
+                            begin
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                            function = "func1"
+                            end
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 10,68 to 12,95 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_condo_unit_owners_mho6.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 34
+                        else
+                            g_line_of_business = 4
+                        l_line_of_business = 9996
+                        g_form = 6
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        if l_state = 29 and
+                           l_company_id = "FARMERS" then
+                            begin
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call_2
+                            function = "func1"
+                            end
+                        else
+                            begin
+                            l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                            function = "func1"
+                            end
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 15,35 to 17,60 tagged ficof_fn
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_ho_pref_mho5.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        g_line_of_business = 14
+                        l_line_of_business = 9996
+                        g_form = 5
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 15,15 to 17,40 tagged farmers_nj_fn
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_ho_pref_mho3.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        g_line_of_business = 14
+                        l_line_of_business = 9996
+                        g_form = 3
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+--                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        l_screen_to_call = "agtmt1000g"
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 15,35 to 17,60 tagged farmers_md_fn
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_ho_pref_mho3.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        g_line_of_business = 44
+                        l_line_of_business = 9996
+                        g_form = 3
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = "agtmt1000g" --agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 15,50 to 17,75 tagged farmers_nj_fn
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_ho_prem_mho3.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        g_line_of_business = 24
+                        l_line_of_business = 9996
+                        g_form = 3
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = "agtmt1000g" --agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 20, 1 to 22,25 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_cd_basic_mdw1.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 31
+                        else
+                            g_line_of_business = 1
+                        l_line_of_business = 9996
+                        g_form = 1
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 20,35 to 22,60 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_cd_broad_mdw2.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 31
+                        else
+                            g_line_of_business = 1
+                        l_line_of_business = 9996
+                        g_form = 2
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 20,68 to 22,95 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_cd_special_mdw3.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 31
+                        else
+                            g_line_of_business = 1
+                        l_line_of_business = 9996
+                        g_form = 3
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+    Panel at 23,35 to 25,60 tagged ficof_fn
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_cd_condo_unit_owner_mdw6.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        if l_state = 19 then
+                            g_line_of_business = 31
+                        else
+                            g_line_of_business = 1
+                        l_line_of_business = 9996
+                        g_form = 6
+                        access agqsetupmainscreen,
+                           set agqsetupmainscreen:company_id       = l_company_id,
+                               agqsetupmainscreen:state            = l_state,
+                               agqsetupmainscreen:line_of_business = l_line_of_business, exact
+
+                        l_screen_to_call = agqsetupmainscreen:screen_to_call[1]
+                        function = "func1"
+                        abort()
+                        }
+                    }
+        }
+
+}
+
+
+End

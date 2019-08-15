@@ -1,0 +1,1158 @@
+%%
+Screen
+        Name = "agtmt602" ;
+        Type = "Multiline" ;
+        Repeat LINE_ITEMS, 40 times down ;
+        Padcharacter = Space ;
+        Highlight = Underscore ;
+        Screensize = "dynamic" ;
+--        Windowtitle = "%a    %s Location Totals - Ver. 7.00     %m" ;
+        Domain = "agqvehicle" ;
+        showunusedrecords=false
+        autoscroll=true
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_NO[11] ;
+        Global Unsigned Ascii Number G_vehicle_no[4] ;
+        Global Unsigned Ascii Number G_line_of_business[4] ;
+
+        global string g_inquiry[1] ;
+
+        local tag l_tag[8] ;
+
+        local string l_user_id[15],
+                     l_company_id[10] ,
+                     l_vehicle_desc[30],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150] ,
+                     l_csexec_application[25] ,
+                     l_app[3] ,
+                     l_screen[8],
+                     l_continue_2[3],
+                     l_private_passenger[1]="N",
+                     l_dec[15] ,
+                     l_form_file_name[20],
+                     l_commandline[19],
+                     l_code[7],
+                     l_lob_code[10] ;
+
+        local unsigned ascii number l_no_vehicles[4] ,
+                                    l_total[9] ,
+                                    l_no_trucks[2],
+                                    l_percentage_pp[4]=0/dec=2,
+                                    l_no_pp[2],
+                                    l_class_code[5],
+                                    l_csexec_number[12] ,
+                                    i_csexec_number[12] ;
+
+        Include "print.var"
+
+        Include "virtualdecs.var"
+
+        Access agqvehicle, Set agqvehicle:app_NO = G_app_NO, approximate ;
+
+        scrollmessage = "" ;
+
+        Include "stdkeys7.inc"
+
+Style definition
+
+                include "styles.inc"
+                Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+                repeated displayonly field style {backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+
+        "redisplay" display/noreturn "agtmt602" ;
+
+        "displayit"  sequence "goto" tagged rating_info_fn ;
+        "goto" continue begin
+                        l_screen = "agtmt601"
+                        function = "vehicle"
+                        end ;
+
+        "vehicle" display/noreturn l_screen ;
+
+        "func4" display/noreturn "agtmt601b" tagged policy_info_fn ;
+        "func6" display/noreturn "agtmt601e" tagged no_fault_fn ;
+        "func7" display/noreturn "agtmt603" tagged submit_fn ;
+        "func8" display/noreturn "agtmt602a" tagged discounts_fn ;
+        "func9" sequence "lob" tagged change_lob_fn ;
+        "lob" continue begin
+                       do change_lob
+                       function = "redisplay"
+                       end ;
+
+        "func1" sequence "worksheet"  tagged worksheet_fn ;
+        "worksheet" continue begin
+                             do create_macro
+                             end  ;
+
+        "func2" sequence "quoteletter"  tagged quote_letter_fn ;
+        "quoteletter" continue begin
+                               do print_quote_letter
+                               end ;
+
+        "back" display/noreturn "agtmt001"  tagged back_fn;
+        "select" continue/position {
+                                   g_vehicle_no = agqvehicle:vehicle_no
+                                   function = "popup"
+                                   abort()
+                                   } ;
+        "popup" display "agtmt601a" ;
+
+        Include "stdfunc7.inc"
+
+        reaccess ;
+
+EVENT DEFINITION
+        default eventhandler {
+                                "REMOVE_SCREEN"  { function = "exit" abort () }
+--                                "set_info_box" { setproperty(display_information_box, text, event.value) }
+                             }
+
+        eventHandler {
+                  mousedoubleclicked {
+                                       function = "select" abort()}
+                                     } tagged t_listbox_field_event
+
+
+Toolbar Definition
+-- needs to be blank
+
+Screen Entry
+access agqname, set agqname:app_no = g_app_no, generic
+
+l_user_id = username
+access sfsemail, set sfsemail:company_id = agqvehicle:company_id,
+                     sfsemail:user_id    = l_user_id, generic
+
+if agqname:quote_no <> 0 then
+    disable(submit_fn)
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID = agqvehicle:company_id,
+                    SFSLINE:LINE_OF_BUSINESS = agqvehicle:line_of_business,
+                    SFSLINE:LOB_SUBLINE = "00",Generic
+
+switch(g_line_of_business)
+  case 15 : setproperty(t_line_of_business,iconname,"title_com_auto_std.bmp")
+  case 16 : setproperty(t_line_of_business,iconname,"title_com_auto_pref.bmp")
+  default : setproperty(t_line_of_business,iconname,"")
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+access agqvehicle_alias, set agqvehicle_alias:app_no = g_app_no, generic
+
+l_no_trucks   = 0
+l_no_vehicles = 0
+l_no_pp       = 0
+while agqvehicle_alias:app_no = g_app_no
+    begin
+    if agqvehicle_alias:type = 1 and
+       agqvehicle_alias:CLASS_CODE not one of 681, 682, 683, 684, 691, 692, 693, 694 Then
+        l_no_trucks = l_no_trucks + 1
+
+    if agqvehicle_alias:type = 2 then
+        l_no_pp = l_no_pp + 1
+
+    l_no_vehicles = l_no_vehicles + 1
+
+    next agqvehicle_alias
+    end
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqvehicle:company_id = "GGUND" and
+   sfsemail:agent_no <> 0 and
+   agqname:quote_no = 0 then
+    hide(quote_letter_fn)
+
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+/*if l_company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "020webhelp_agtmt602_scr_proposal_summary.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end*/
+
+if sfsemail:agent_no <> 0 then
+    hide(discounts_fn)
+
+Access Validation
+If agqvehicle:app_NO <> G_app_NO Then
+    Error 1000 ;
+
+screen at 1,1 to 30,100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,35 to 2,100 tagged t_line_of_business
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Proposal Summary..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+        event
+                {
+                mouseclicked = ""
+                }
+
+}
+
+Panel at 3.45,75 to 4.45, 100 Tagged quote_no
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101    agqvehicle:APP_NO/displayonly ;
+
+}
+
+Panel at 5,1 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+--          backgroundcolor = "#ADD8E6"
+        }
+{
+Components
+
+        Button at 1.5,5   tagged add_fn
+        Properties {
+                Iconname = "btn_view_print_worksheet.bmp"
+                }
+        Events  {
+                Action = worksheet_fn
+                }
+
+        Button at 1.5,65 tagged quote_letter_fn
+        Properties {
+                Iconname = "btn_view_print_proposal.bmp"
+                }
+        Events  {
+                Action = quote_letter_fn
+                }
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt602.sd"
+                      fontsize = 9
+                    }
+      }
+
+-- draw a line
+panel at 7,1 to 7,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+
+Panel at 7.5,15 to 9.5,76
+        Properties {
+                LayoutType = screen
+                backgroundcolor = "Grey"
+                transparent = False
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,23
+             properties
+               {
+                 text = ""
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,15 to 8,75
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,23
+             properties
+               {
+                 text = "Combined Single limit:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,33 to 8,55 Tagged rating_pl
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+_____________
+%%
+
+components
+
+fields
+101     agqmaster:liability ;
+
+}
+
+Panel at 8,55 to 8,70
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,2 to 1,17
+             properties
+               {
+                 text = "Total No. of Vehicles:"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+Panel at 8,72 to 8,100 Tagged rating_pl
+Properties
+        {
+--        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+___
+%%
+
+components
+
+fields
+101     begin
+        access agqvehicle_alias, set agqvehicle_alias:app_no = g_app_no, generic
+
+        l_no_vehicles = 0
+        while agqvehicle_alias:app_no = g_app_no
+            begin
+            l_no_vehicles = l_no_vehicles + 1
+
+            next agqvehicle_alias
+            end
+        if sfscompany:debug_mode = 0 then
+            proc("cli csbatch agtup602 %s",str(g_app_no,11))/noconsole
+        else
+            proc("cli csbatch agtup602 %s",str(g_app_no,11))
+
+        access agqdev, set agqdev:app_no = g_app_no, generic
+
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+        end
+        l_no_vehicles/displayonly ;
+
+}
+
+Panel at 8,75 to 9,100
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+--          backgroundcolor = "#ADD8E6"
+        }
+{
+Components
+
+        Button at 1.5,10
+        Properties {
+                Iconname = "btn_deviations.bmp"
+                }
+        Events  {
+                Action = discounts_fn
+                }
+
+}
+
+Panel at 10,30 to 11,65
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,50
+             properties
+               {
+                 text = "    [To access Vehicle-Specific Coverages"
+                 fontsize = 12
+                 fontname = "arial"
+                 fontstyle = bold
+               }
+           guidetext at 2,1 to 2,19
+             properties
+               {
+                 text = "double-click on the"
+                 fontsize = 12
+                 fontname = "arial"
+                 fontstyle = BOLD
+               }
+           guidetext at 2,15 to 2,38
+             properties
+               {
+                 text = "Vehicle Description"
+                 fontsize = 12
+                 fontname = "arial"
+                 underlined = True
+                 fontstyle = BOLD
+               }
+           guidetext at 2,28 to 2,45
+             properties
+               {
+                 text = "   below]"
+                 fontsize = 12
+                 fontname = "arial"
+                 fontstyle = BOLD
+               }
+        }
+
+Panel at 13,1 to 14,95
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,22 to 1,30
+             properties
+               {
+                 text = "Vehicle"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 1,60 to 1,80
+             properties
+               {
+                 text = " Vehicle"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 2,22 to 2,30
+             properties
+               {
+                 text = "    No"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 2,35 to 2,55
+             properties
+               {
+                 text = "Vehicle Description"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+           guidetext at 2,60 to 2,80
+             properties
+               {
+                 text = "Premium"
+                 fontsize = 12
+                 fontname = "arial"
+               }
+        }
+
+scrollpanel at 15,22 to 17,73
+properties
+        {
+        scrollbarpolicy = asneeded
+        }
+{
+
+Panel
+properties
+        {
+--        scrollbarpolicy = asneeded
+        }
+{
+%%
+____ ______________________________ ___________
+%%
+
+components
+
+fields
+0101    agqvehicle:vehicle_no/displayonly  tagged LINE_ITEMS;
+0102    begin
+        if agqvehicle:type = 2 then
+            begin
+            l_vehicle_desc = str(agqvehicle:year) + " - " +
+                             trun(agqvehicle:make) + " - " +
+                             trun(uppercase(castype:description))
+            end
+        else
+            begin
+            l_vehicle_desc = str(agqvehicle:year) + " - " +
+                             trun(agqvehicle:make) + " - " +
+                             trun(uppercase(cassize:description))
+            end
+        end
+        l_vehicle_desc/displayonly/event=t_listbox_field_event  tagged LINE_ITEMS ;
+0103    begin
+        access agqvehicle_alias, set agqvehicle_alias:app_no     = g_app_no,
+                                     agqvehicle_alias:vehicle_no = agqvehicle:vehicle_no, generic
+
+        end
+        agqvehicle_alias:vehicle_totals[19] + agqvehicle_alias:vehicle_totals[14]/displayonly/mask="Z,ZZZ,ZZZ" tagged LINE_ITEMS;
+
+}
+
+}
+
+/*-- draw a line
+panel at 16,1 to 16,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }*/
+
+Panel at 19,1 to 20,120 Tagged totals
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        foregroundcolor    = "blue"
+        }
+event
+        {
+        mouseclicked = ""
+        }
+{
+%%
+                             Policy Premium:             ___________
+%%
+
+components
+
+fields
+101     begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        l_total = agqmaster:total[19] +
+                  agqmaster:surcharge
+        l_tag = tag("totals_fn")
+        setproperty(l_tag,foregroundcolor,"blue")
+        end
+        l_total/displayonly/mask="ZZZ,ZZZ,ZZZ" tagged totals_fn;
+
+}
+
+Panel at 21,1 to 21,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,20 to 1,100
+             properties
+               {
+                 text = "(Includes Surcharge - Additional credits may be available - contact your UW)"
+                 fontsize = 14
+                 fontname = "arial"
+                 foregroundcolor    = "blue"
+               }
+        }
+
+Panel at 24,10 to 24,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged rating_info
+            Properties
+                {
+                Iconname = "btn_rating_infomation.bmp"
+                }
+            Events
+                {
+                Action
+                        {
+                           function = "displayit"
+                           abort()
+                        }
+
+                }
+        }
+
+/*Panel at 23.5,55 to 24,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1    tagged policy_info
+        Properties {
+                Iconname = "btn_no_fault_pip.bmp"
+                }
+        Events  {
+                Action = no_fault_fn
+                }
+
+} */
+
+Panel at 24,55 to 24,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1     tagged supplemental_info
+        Properties {
+                Iconname = "btn_policy_options_liability.bmp"
+                }
+        Events  {
+                Action = policy_info_fn
+                }
+
+}
+
+
+panel at 25,1 to 25,100 tagged line_panel_1
+    {
+    Components
+        line at 1,1 to 1,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+
+Panel at 26,10 to 26,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+
+}
+
+Panel at 26,75 to 26,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,1   tagged submit_info
+        Properties {
+  --              Text = "Submit to Underwriting"
+                Iconname = "btn_app_entry.bmp"
+                }
+        Events  {
+                Action = submit_fn
+                }
+
+}
+
+/*panel at 27,1 to 33,100 tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+--          Transparent = False
+          backgroundcolor = "white"
+        }
+{
+      Components
+         browser at 1,1 to 7,100  tagged helper_tg
+             properties {
+                          url = ""
+                        }
+} */
+
+
+}
+
+procedure definition
+
+procedure change_lob
+begin
+access agqvehicle_alias, set agqvehicle_alias:app_no = g_app_no, generic
+
+while agqvehicle_alias:app_no = g_app_no
+    begin
+    change agqvehicle_alias
+        begin
+        if agqvehicle_alias:line_of_business one of 15 then
+            begin
+            g_line_of_business = 16
+            agqvehicle_alias:line_of_business = 16
+            end
+        else
+        if agqvehicle_alias:line_of_business one of 16 then
+            begin
+            g_line_of_business = 15
+            agqvehicle_alias:line_of_business = 15
+            end
+        end
+
+    next agqvehicle_alias
+    end
+
+access agqname, set agqname:app_no = agqvehicle:app_no, generic
+
+if agqname:app_no = agqvehicle:app_no then
+    begin
+    change agqname
+        begin
+        agqname:line_of_business  = g_line_of_business
+        end
+    end
+
+if sfscompany:debug_mode = 0 then
+    proc("cli csbatch agtup602 %s",str(g_app_no,11))/noconsole
+else
+    proc("cli csbatch agtup602 %s",str(g_app_no,11))
+end
+
+/*procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+setproperty(helper_tg,url,trun(l_web_site_address))
+
+END*/
+
+procedure print_quote_letter
+begin
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+If agqvehicle:state = 37 then
+  {
+    proc("cli csbatch agqmso003c %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso003c.cq %s<nl>",l_dec)/noconsole
+  }
+else
+  {
+    proc("cli csbatch agqmso003 %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso003.cq %s<nl>",l_dec)/noconsole
+  }
+
+access agqend1, set agqend1:app_no = g_app_no, generic
+
+while agqend1:app_no = g_app_no
+    begin
+    if agqend1:vehicle_no = 0 then
+        access agqvehicle_alias, set agqvehicle_alias:app_no   = g_app_no, generic
+    else
+        access agqvehicle_alias, set agqvehicle_alias:app_no     = g_app_no,
+                                     agqvehicle_alias:vehicle_no = agqend1:vehicle_no, generic
+
+    l_code = agqend1:code
+    l_class_code = 99999
+    access sfspolicywideoptend, set sfspolicywideoptend:company_id       = agqvehicle_alias:company_id,
+                                    sfspolicywideoptend:state            = agqvehicle_alias:state,
+                                    sfspolicywideoptend:line_of_business = agqvehicle_alias:line_of_business,
+                                    sfspolicywideoptend:class_code       = l_class_code,
+                                    sfspolicywideoptend:code             = l_code, generic
+
+    l_form_file_name = ""
+    while sfspolicywideoptend:company_id       = agqvehicle_alias:company_id and
+          sfspolicywideoptend:state            = agqvehicle_alias:state and
+          sfspolicywideoptend:line_of_business = agqvehicle_alias:line_of_business and
+          sfspolicywideoptend:class_code       = l_class_code and
+          sfspolicywideoptend:code             = l_code
+        begin
+        if (agqvehicle:eff_date >= sfspolicywideoptend:eff_date and
+           (agqvehicle:eff_date <= sfspolicywideoptend:exp_date or
+           sfspolicywideoptend:exp_date = 0)) then
+            begin
+            l_form_file_name = sfspolicywideoptend:form_file_name
+            end
+
+        next sfspolicywideoptend
+        end
+
+    l_commandline = str(agqvehicle_alias:app_no,11) + str(agqvehicle_alias:vehicle_no,4)
+    if l_form_file_name <> "" then
+        begin
+        if sfscompany:debug_mode = 0 then
+            begin
+            proc("cli csbatch %s %s",trun(l_form_file_name),l_commandline)/noconsole
+            Proc("cli joinit %s.cq %s<nl>",trun(l_form_file_name),l_dec)/noconsole
+            end
+        else
+            begin
+            proc("cli csbatch %s %s",trun(l_form_file_name),l_commandline)
+            Proc("cli joinit %s.cq %s<nl>",trun(l_form_file_name),l_dec)
+            end
+        end
+
+    next agqend1
+    end
+
+access agqapplication,
+   set agqapplication:app_no = g_app_no, generic
+
+if agqapplication:app_no = g_app_no then
+  begin
+    proc("cli csbatch agqmso003a %s",str(g_app_no,11))/noconsole
+    Proc("cli joinit agqmso003a.cq %s<nl>",l_dec)/noconsole
+  end
+
+proc("cli csbatch agqdrivers %s",str(g_app_no,11))/noconsole
+Proc("cli joinit agqdrivers.cq %s<nl>",l_dec)/noconsole
+
+access agqvehicle_alias,
+   set agqvehicle_alias:app_no = g_app_no, generic
+
+l_private_passenger = "N"
+while agqvehicle_alias:app_no = g_app_no
+    begin
+    if agqvehicle_alias:type = 2 then
+        l_private_passenger = "Y"
+
+    next agqvehicle_alias
+    end
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+    Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+    Proc("chmod 777 %s ",L_DEC_PDF)
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+end
+
+procedure create_macro_batch
+begin
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+l_app           = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC           = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF       = L_APP+Str(I_CSEXEC_NUMBER)+".pdf"
+
+proc("cli csbatch agqpr600 %s",str(g_app_no,11))/noconsole
+Proc("cli joinit agqpr600.cq %s",l_dec)/noconsole
+
+L_USERNAME = Trun(USERNAME)
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)/noconsole
+    Proc("chmod 777 %s ",L_DEC_PDF)/noconsole
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("pcl2pdf -letter -csize -ra %s %s ",L_DEC, L_DEC_PDF)
+    Proc("chmod 777 %s ",L_DEC_PDF)
+    Proc("mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client
+end
+
+Procedure CREATE_MACRO
+Begin
+Do REFRESH_WORK_FILES
+L_CSEXEC_APPLICATION = "PRINT"/raw
+
+Access SFSCSEXEC, Set SFSCSEXEC:APPLICATION = L_CSEXEC_APPLICATION , Exact
+
+If SFSCSEXEC:APPLICATION_NUMBER = 0 Then
+    Begin
+    L_CSEXEC_NUMBER = 99999
+    End
+Else
+    Begin
+    L_CSEXEC_NUMBER = SFSCSEXEC:APPLICATION_NUMBER + 1
+
+    Change SFSCSEXEC
+        Begin
+        SFSCSEXEC:APPLICATION_NUMBER = L_CSEXEC_NUMBER
+        End
+    End
+
+L_USERNAME = USERNAME
+I_REPORTA = "agqpr600"
+I_REPORT = "agqpr600.cq"
+I_REPORT_CQE = "agqpr600.cqe"
+I_APP = "agq"
+l_app = "agq"
+I_CSEXEC_NUMBER = L_CSEXEC_NUMBER
+L_DEC = L_APP+Str(I_CSEXEC_NUMBER)+".cq"
+L_DEC_PDF = L_APP+Str(I_CSEXEC_NUMBER)+".txt"
+I_PARAMETER = I_APP+Str(I_CSEXEC_NUMBER)+".par"
+I_MACROA = I_APP+Str(I_CSEXEC_NUMBER)
+I_MACRO = I_APP+Str(I_CSEXEC_NUMBER)+".mf"
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+if agqprint1:app_no <> g_app_no then
+    begin
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+else
+    begin
+    delete agqprint1
+    Add agqprint1
+        Begin
+        agqprint1:app_no = g_app_no
+        end
+    End
+
+Deletefile(I_MACRO)
+Writefile(I_MACRO,"clear list<nl>")
+Writefile(I_MACRO,"clear find<nl>")
+Writefile(I_MACRO,"clear sum<nl>")
+Writefile(I_MACRO,"run agqpr600<nl>")
+Writefile(I_MACRO,"cli rm agqpr600.cq<nl>")
+Writefile(I_MACRO,"rsave agqpr600<nl>")
+Writefile(I_MACRO,"cli joinit agqpr600.cq %s<nl>",L_DEC)
+Closefile(I_MACRO)
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Proc("cli cq %s",I_MACRO)/noconsole
+Else
+    Proc("cli cq %s",I_MACRO)
+
+L_USERNAME = Trun(USERNAME)
+
+Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+    Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+    End
+
+L_UNIX_PATH   = SFSPROFILE:UNIX_PATH/raw
+L_UNIX_SERVER = SFSPROFILE:UNIX_SERVER/raw
+L_CLIENT_PATH = SFSPROFILE:CLIENT_PATH/raw
+
+If SFSCOMPANY:DEBUG_MODE = 0 Then
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)/noconsole
+    Proc("cli chmod 777 %s ",L_DEC_PDF)/noconsole
+--    Proc("cli joinit agqmso003b.pdf %s<nl>",l_dec_pdf)/noconsole
+    Proc("cli rm %s",L_DEC)/noconsole
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))/noconsole
+    End
+Else
+    Begin
+    Proc("cli mv %s %s",L_DEC,L_DEC_PDF)
+    Proc("cli chmod 777 %s ",L_DEC_PDF)
+--    Proc("cli joinit agqmso003b.pdf %s<nl>",l_dec_pdf)/noconsole
+    Proc("cli rm %s",L_DEC)
+    Proc("cli mv %s %s %s", L_DEC_PDF," ",Trun(L_UNIX_PATH))
+    End
+
+Proc("%s %s%s",L_CLIENT_PATH,Trun(L_UNIX_SERVER),Trun(L_DEC_PDF))/client/noconsole
+
+access agqprint1, set agqprint1:app_no = g_app_no, generic
+
+delete agqprint1
+
+Do REFRESH_WORK_FILES
+End
+
+Procedure REFRESH_WORK_FILES
+Begin
+Proc ("cli agqprint1.mk")/noconsole
+End
+
+
+end

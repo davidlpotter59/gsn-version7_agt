@@ -1,0 +1,4064 @@
+%%                 
+Screen
+        Name = "agtmt100f";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+        Domain="agqgeneral" ;
+        iconline = 0 ;
+
+
+        Global Unsigned Ascii Number G_app_NO[11] ,
+                                     G_LINE_OF_BUSINESS[4],
+                                     g_prem_no[4],
+                                     g_build_no[4],
+                                     G_STATE[2],
+                                     g_enhancement[1] ,
+                                     g_form[1] ;
+
+        array[40] of string l_view_desc[67];
+        array[40] of string l_policywide_code[7] ;
+        array[40] of string l_popup_screen[15] ;
+        array[40] of unsigned ascii number l_location_specific[1] ;
+        array[40] of unsigned ascii number l_value[1];
+        array[40] of unsigned ascii number l_prior_value[1];
+        array[40] of unsigned ascii number l_refer_to_co[1];
+        array[40] of unsigned ascii number l_hide_from_agent[1];
+        array[40] of tag l_the_tag[15] ;
+
+        Global String G_COMPANY_ID[10] ,
+                      g_inquiry[1] ,
+                      g_code[7] ;
+
+        local unsigned ascii number l_sub_code[4],
+                                    l_form[2],
+                                    l_no_locations[2],
+                                    l_first_prem_no[4],
+                                    l_last_prem_no[4],
+                                    l_first_build_no[4],
+                                    l_last_build_no[4],
+                                    l_popup_complete[1],
+                                    l_loop[2],
+                                    l_remove_form[1],
+                                    L_STATE[2],
+                                    l_agent_no[4],
+                                    l_count[4],
+                                    l_prem_no[4],
+                                    l_build_no[4],
+                                    l_class_code[5],
+                                    l_liability_code[2] ,
+                                    l_sub[2],
+                                    l_tag_position[2] ,
+                                    l_replacement_cost[1],
+                                    l_mpl47_exist[1],
+                                    l_mpl49_exist[1],
+                                    l_inland_marine[1],
+                                    l_limit[8],
+                                    l_increase_cov_c[8]=0/dec=4 ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_last_str_location[8],
+                     l_first_str_location[8],
+                     l_str_location[8],
+                     l_first_location[1]="Y",
+                     l_system_id[15],
+                     l_attorney[1],
+                     l_tag[15],
+                     l_sal61_exists[1]="N",
+                     l_sal62_exists[1]="N",
+                     l_username[15],
+                     l_enter[1],
+                     l_message[200],
+                     l_continue_1[2],
+                     l_screen[8],
+                     l_add_endorsement[1],
+                     l_Form_edition[18],
+                     L_COMPANY_ID[10] ,
+                     l_description[55] ;
+
+        access agqgeneral, set agqgeneral:app_no = g_app_no, generic ;
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+
+Functions
+         reaccess;
+         "redisplay" display/noreturn "agtmt100f" ;
+        "change" sequence "chg|redisplay"   tagged change_fn ;
+        "chg" change/hidden ;
+        "calc" display "agtmt200" tagged calc_fn ;
+--        "func1" continue begin
+--                         function = "func2"
+--                         end;
+        "func1" display l_screen ;
+
+        Include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+screen entry
+disable(accept_fn)
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+access sfsline, set sfsline:company_id = agqname:company_id,
+                    sfsline:line_of_business = agqname:line_of_business,
+                    sfsline:lob_subline = "00", generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+l_username  = username
+l_system_id = "bop"
+access sfssecurity_rating,
+   set sfssecurity_rating:company_id = agqgeneral:company_id,
+       sfssecurity_rating:user_id    = l_username,
+       sfssecurity_rating:system_id  = l_system_id, generic
+
+access sfsemail, set sfsemail:company_id = agqgeneral:company_id,
+                     sfsemail:user_id    = l_username, generic
+
+switch(agqgeneral:line_of_business)
+  case 1, 31  : switch(g_form)
+                  case 1  : setproperty(t_mdw1,iconname,"title_cd_basic_mdw1.bmp")
+                  case 2  : setproperty(t_mdw2,iconname,"title_cd_broad_mdw2.bmp")
+                  case 3  : setproperty(t_mdw3,iconname,"title_cd_special_mdw3.bmp")
+                  case 6  : setproperty(t_mdw6,iconname,"title_cd_condo_mdw6.bmp")
+                  default : begin
+                            setproperty(t_mdw1,iconname,"")
+                            setproperty(t_mdw2,iconname,"")
+                            setproperty(t_mdw3,iconname,"")
+                            setproperty(t_mdw6,iconname,"")
+                            end
+                  end
+  case 4, 34  : switch(g_form)
+                  case 3  : setproperty(t_mho3,iconname,"title_ho_std_mho3.bmp")
+                  case 4  : setproperty(t_mho4,iconname,"title_rent_pers_prop_mho4.bmp")
+                  case 6  : setproperty(t_mho6,iconname,"title_ho_condo_mho6.bmp")
+                  default : begin
+                            setproperty(t_mho3,iconname,"")
+                            setproperty(t_mho4,iconname,"")
+                            setproperty(t_mho6,iconname,"")
+                            end
+                  end
+  case 14, 44 : switch(g_form)
+                  case 3  : setproperty(t_pref_mho3,iconname,"title_ho_preferred_mho3.bmp")
+                  case 5  : setproperty(t_pref_mho5,iconname,"title_ho_preferred_mho5.bmp")
+                  default : begin
+                            setproperty(t_pref_mho3,iconname,"")
+                            setproperty(t_pref_mho5,iconname,"")
+                            end
+                  end
+  case 24, 54 : switch(g_form)
+                  case 3  : setproperty(t_prem_mho3,iconname,"title_ho_premier_mho3.bmp")
+                  default : setproperty(t_prem_mho3,iconname,"")
+                  end
+  end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    begin
+    hide(ggund_fn)
+    hide(farmers_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id one of "FARMERS" then
+    begin
+    hide(ggund_fn)
+    hide(ficof_fn)
+    hide(lebins_fn)
+    end
+else
+if sfsdefault:company_id = "LEBINS" then
+    begin
+    hide(ggund_fn)
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+else
+if sfsdefault:company_id = "GGUND" then
+    begin
+    hide(lebins_fn)
+    hide(ficof_fn)
+    hide(farmers_fn)
+    end
+
+Access Validation
+If agqgeneral:app_NO <> G_app_NO Then
+    Error 1000
+
+screen at 1,1 to 30,100
+
+Properties
+  {
+    Layouttype = screen
+    transparent = False
+    backgroundcolor = "#ADD8E6"
+  }
+
+{
+   Panel/hidden
+      {
+        Fields
+        Function at 1,1 ;
+      }
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+            guidetext at 1,80 to 2,100 tagged lebins_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1,80 to 2,100 tagged ggund_fn
+                properties
+                    {
+                    iconname = ""
+                    }
+            guidetext at 1.30,32 tagged t_mdw1
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw2
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mdw6
+                Properties
+                   {
+                   iconname = ""
+                   }
+
+            guidetext at 1.30,35 tagged t_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,28 tagged t_mho4
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_mho6
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_pref_mho5
+                Properties
+                   {
+                   iconname = ""
+                   }
+            guidetext at 1.30,32 tagged t_prem_mho3
+                Properties
+                   {
+                   iconname = ""
+                   }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,40     tagged display_information_box
+                properties
+                  {
+                    text = "Optional Endorsements..."
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.45,75 to 4.45, 100 Tagged quote_no
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     G_APP_NO/displayonly ;
+
+}
+
+Panel at 6,1 to 7,100 Tagged location
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,12
+             properties
+               {
+                 text = "Location No:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 6,13 to 7,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+____
+%%
+
+components
+
+fields
+101     agqgeneral:prem_no/displayonly ;
+
+}
+
+Panel at 6,1 to 7,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,15 to 1,27
+             properties
+               {
+                 text = "Building No:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+        }
+
+Panel at 6,28 to 7,100 Tagged rating_pl
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+____
+
+%%
+
+components
+
+fields
+101     agqgeneral:build_no/displayonly ;
+101     begin
+            l_prem_no  = agqgeneral:prem_no
+            l_build_no = agqgeneral:build_no
+            do read_forms
+        end
+        agqgeneral:build_no/displayonly ;
+
+}
+
+Panel at 6,35 to 6,100 tagged button_panel
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35
+          properties
+              {
+              Iconname = "btn_edit_entries.bmp"
+              }
+          Events
+              {
+              Action = change_fn
+              }
+
+    }
+
+Panel at 6,60 to 6,75
+    Properties
+         {
+         layouttype = row
+         }
+    {
+    Components
+        Button at 1,35  tagged accept_fn
+          properties
+              {
+              Iconname = "btn_accept_edits.bmp"
+              }
+          Events
+              {
+              mouseclicked=accept
+              }
+
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,91
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt100f.sd"
+                      fontsize = 9
+                    }
+      }
+
+panel at 7,1 to 7,100 tagged line_panel_1
+     {
+     Components line at 1,1 to 1,100
+       Properties
+           {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+           }
+     }
+
+Panel at 8,1 to 27,40
+           Properties {
+                        LayoutType = screen
+                        backgroundcolor = "Grey"
+                      }
+                   {
+                     Components
+                        guidetext at 1,1 to 1,37 tagged t_view1
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(1)
+                                             }
+                                }
+
+                        guidetext at 2,1 to 2,37 tagged t_view2
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(2)
+                                             }
+                                }
+
+                        guidetext at 3,1 to 3,37 tagged t_view3
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(3)
+                                             }
+                                }
+
+                        guidetext at 4,1 to 4,37 tagged t_view4
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(4)
+                                             }
+                                }
+
+                        guidetext at 5,1 to 5,37 tagged t_view5
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(5)
+                                             }
+                                }
+
+                        guidetext at 6,1 to 6,37 tagged t_view6
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(6)
+                                             }
+                                }
+
+                        guidetext at 7,1 to 7,37 tagged t_view7
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(7)
+                                             }
+                                }
+
+                        guidetext at 8,1 to 8,37 tagged t_view8
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(8)
+                                             }
+                                }
+
+                        guidetext at 9,1 to 9,37 tagged t_view9
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(9)
+                                             }
+                                }
+
+                        guidetext at 10,1 to 10,37 tagged t_view10
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(10)
+                                             }
+                                }
+
+                        guidetext at 11,1 to 11,37 tagged t_view11
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(11)
+                                             }
+                                }
+
+                        guidetext at 12,1 to 12,37 tagged t_view12
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(12)
+                                             }
+                                }
+
+                        guidetext at 13,1 to 13,37 tagged t_view13
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(13)
+                                             }
+                                }
+
+                        guidetext at 14,1 to 14,37 tagged t_view14
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(14)
+                                             }
+                                }
+
+                        guidetext at 15,1 to 15,37 tagged t_view15
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(15)
+                                             }
+                                }
+
+                        guidetext at 16,1 to 16,37 tagged t_view16
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(16)
+                                             }
+                                }
+
+                        guidetext at 17,1 to 17,37 tagged t_view17
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(17)
+                                             }
+                                }
+
+                        guidetext at 18,1 to 18,37 tagged t_view18
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(18)
+                                             }
+                                }
+                        guidetext at 19,1 to 19,37 tagged t_view19
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(19)
+                                             }
+                                }
+
+
+                        guidetext at 20,1 to 20,37 tagged t_view20
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(20)
+                                             }
+                                }
+                        }
+
+                            --second column if list start here
+Panel at 8,45 to 27,100
+           Properties {
+                        LayoutType = screen
+                        backgroundcolor = "Grey"
+                      }
+                   {
+                     Components
+                        guidetext at 1,1 to 1,40 tagged t_view21
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(21)
+                                             }
+                                }
+
+                        guidetext at 2,1 to 2,40 tagged t_view22
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(22)
+                                             }
+                                }
+
+                        guidetext at 3,1 to 3,40 tagged t_view23
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(23)
+                                             }
+                                }
+
+                        guidetext at 4,1 to 4,40 tagged t_view24
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(24)
+                                             }
+                                }
+
+                        guidetext at 5,1 to 5,40 tagged t_view25
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(25)
+                                             }
+                                }
+
+                        guidetext at 6,1 to 6,40 tagged t_view26
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(26)
+                                             }
+                                }
+
+                        guidetext at 7,1 to 7,40 tagged t_view27
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(27)
+                                             }
+                                }
+
+                        guidetext at 8,1 to 8,40 tagged t_view28
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(28)
+                                             }
+                                }
+
+                        guidetext at 9,1 to 9,40 tagged t_view29
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(29)
+                                             }
+                                }
+
+                        guidetext at 10,1 to 10,40 tagged t_view30
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(30)
+                                             }
+                                }
+
+                        guidetext at 11,1 to 11,40 tagged t_view31
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(31)
+                                             }
+                                }
+
+                        guidetext at 12,1 to 12,40 tagged t_view32
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(32)
+                                             }
+                                }
+
+                        guidetext at 13,1 to 13,40 tagged t_view33
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(33)
+                                             }
+                                }
+
+                        guidetext at 14,1 to 14,40 tagged t_view34
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(34)
+                                             }
+                                }
+
+                        guidetext at 15,1 to 15,40 tagged t_view35
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(35)
+                                             }
+                                }
+                        guidetext at 16,1 to 16,40 tagged t_view36
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(36)
+                                             }
+                                }
+                        guidetext at 17,1 to 17,40 tagged t_view37
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(37)
+                                             }
+                                }
+
+                        guidetext at 18,1 to 18,40 tagged t_view38
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(38)
+                                             }
+                                }
+                        guidetext at 19,1 to 19,40 tagged t_view39
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(39)
+                                             }
+                                }
+                        guidetext at 20,1 to 20,40 tagged t_view40
+                             properties
+                               {
+                                 text = ""
+                                 fontsize = 12
+                                 fontstyle = BOLD
+                                 fontname = "arial"
+                                 contentalignment = right
+                               }
+                             events
+                                {
+                                mouseclicked {
+                                             do display_popup(40)
+                                             }
+                                }
+
+                   }
+
+
+
+Panel at 8,40 to 28, 43
+{
+%%
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+
+%%
+
+components
+
+Fields
+
+101     begin
+        if function one of "ADD", "NEW", "CHG", "CHANGE" then
+            begin
+            enable(accept_fn)
+            disable(calc_fn)
+            end
+        else
+            begin
+            disable(accept_fn)
+            enable(calc_fn)
+            end
+
+            l_sub = 1
+            l_code = l_policywide_code[1]
+            if l_value[1] = 1 then
+                begin
+                do check_popup
+                l_sub = 1
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[1] = l_value[1]
+        end
+        l_value[1]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox1
+        if l_hide_from_agent[1] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[1] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 1
+        if l_prior_value[1] <> l_value[1] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[1] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end ;
+201     begin
+            l_sub = 2
+            l_code = l_policywide_code[2]
+            if l_value[2] = 1 then
+                begin
+                do check_popup
+                l_sub = 2
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[2] = l_value[2]
+        end
+        l_value[2]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox2
+        if l_hide_from_agent[2] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[2] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 2
+        if l_prior_value[2] <> l_value[2] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[2] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end ;
+301     begin
+            l_sub = 3
+            l_code = l_policywide_code[3]
+            if l_value[3] = 1 then
+                begin
+                do check_popup
+                l_sub = 3
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[3] = l_value[3]
+        end
+        l_value[3]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox3
+        if l_hide_from_agent[3] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[3] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 3
+        if l_prior_value[3] <> l_value[3] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[3] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+401     begin
+            l_sub = 4
+            l_code = l_policywide_code[4]
+            if l_value[4] = 1 then
+                begin
+                do check_popup
+                l_sub = 4
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[4] = l_value[4]
+        end
+        l_value[4]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox4
+        if l_hide_from_agent[4] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[4] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 4
+        if l_prior_value[4] <> l_value[4] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[4] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end ;
+501     begin
+            l_sub = 5
+            l_code = l_policywide_code[5]
+            if l_value[5] = 1 then
+                begin
+                do check_popup
+                l_sub = 5
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[5] = l_value[5]
+        end
+        l_value[5]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox5
+        if l_hide_from_agent[5] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[5] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 5
+        if l_prior_value[5] <> l_value[5] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[5] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end ;
+601     begin
+            l_sub = 6
+            l_code = l_policywide_code[6]
+            if l_value[6] = 1 then
+                begin
+                do check_popup
+                l_sub = 6
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[6] = l_value[6]
+        end
+        l_value[6]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox6
+        if l_hide_from_agent[6] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[6] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 6
+        if l_prior_value[6] <> l_value[6] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[6] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+701     begin
+            l_sub = 7
+            l_code = l_policywide_code[7]
+            if l_value[7] = 1 then
+                begin
+                do check_popup
+                l_sub = 7
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[7] = l_value[7]
+        end
+        l_value[7]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox7
+        if l_hide_from_agent[7] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[7] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 7
+        if l_prior_value[7] <> l_value[7] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[7] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+801     begin
+            l_sub = 8
+            l_code = l_policywide_code[8]
+            if l_value[8] = 1 then
+                begin
+                do check_popup
+                l_sub = 8
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[8] = l_value[8]
+        end
+        l_value[8]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox8
+        if l_hide_from_agent[8] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[8] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 8
+        if l_prior_value[8] <> l_value[8] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[8] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+901     begin
+            l_sub = 9
+            l_code = l_policywide_code[9]
+            if l_value[9] = 1 then
+                begin
+                do check_popup
+                l_sub = 9
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[9] = l_value[9]
+        end
+        l_value[9]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox9
+        if l_hide_from_agent[9] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[9] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 9
+        if l_prior_value[9] <> l_value[9] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[9] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1001    begin
+            l_sub = 10
+            l_code = l_policywide_code[10]
+            if l_value[10] = 1 then
+                begin
+                do check_popup
+                l_sub = 10
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[10] = l_value[10]
+        end
+        l_value[10]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox10
+        if l_hide_from_agent[10] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[10] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 10
+        if l_prior_value[10] <> l_value[10] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[10] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1101    begin
+            l_sub = 11
+            l_code = l_policywide_code[11]
+            if l_value[11] = 1 then
+                begin
+                do check_popup
+                l_sub = 11
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[11] = l_value[11]
+        end
+        l_value[11]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox11
+        if l_hide_from_agent[11] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[11] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 11
+        if l_prior_value[11] <> l_value[11] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[11] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end ;
+1201    begin
+            l_sub = 12
+            l_code = l_policywide_code[12]
+            if l_value[12] = 1 then
+                begin
+                do check_popup
+                l_sub = 12
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[12] = l_value[12]
+        end
+        l_value[12]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox12
+        if l_hide_from_agent[12] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[12] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 12
+        if l_prior_value[12] <> l_value[12] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[12] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1301    begin
+            l_sub = 13
+            l_code = l_policywide_code[13]
+            if l_value[13] = 1 then
+                begin
+                do check_popup
+                l_sub = 13
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[13] = l_value[13]
+        end
+        l_value[13]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox13
+        if l_hide_from_agent[13] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[13] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 13
+        if l_prior_value[13] <> l_value[13] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[13] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1401    begin
+            l_sub = 14
+            l_code = l_policywide_code[14]
+            if l_value[14] = 1 then
+                begin
+                do check_popup
+                l_sub = 14
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[14] = l_value[14]
+        end
+        l_value[14]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox14
+        if l_hide_from_agent[14] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[14] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 14
+        if l_prior_value[14] <> l_value[14] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[14] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1501    begin
+            l_sub = 15
+            l_code = l_policywide_code[15]
+            if l_value[15] = 1 then
+                begin
+                do check_popup
+                l_sub = 15
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[15] = l_value[15]
+        end
+        l_value[15]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox15
+        if l_hide_from_agent[15] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[15] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 15
+        if l_prior_value[15] <> l_value[15] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[15] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1601    begin
+            l_sub = 16
+            l_code = l_policywide_code[16]
+            if l_value[16] = 1 then
+                begin
+                do check_popup
+                l_sub = 16
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[16] = l_value[16]
+        end
+        l_value[16]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox16
+        if l_hide_from_agent[16] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[16] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 16
+        if l_prior_value[16] <> l_value[16] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[16] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1701    begin
+            l_sub = 17
+            l_code = l_policywide_code[17]
+            if l_value[17] = 1 then
+                begin
+                do check_popup
+                l_sub = 17
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[17] = l_value[17]
+        end
+        l_value[17]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox17
+        if l_hide_from_agent[17] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[17] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 17
+        if l_prior_value[17] <> l_value[17] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[17] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1801    begin
+            l_sub = 18
+            l_code = l_policywide_code[18]
+            if l_value[18] = 1 then
+                begin
+                do check_popup
+                l_sub = 18
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[18] = l_value[18]
+        end
+        l_value[18]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox18
+        if l_hide_from_agent[18] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[18] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 18
+        if l_prior_value[18] <> l_value[18] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[18] = 1then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1901    begin
+            l_sub = 19
+            l_code = l_policywide_code[19]
+            if l_value[19] = 1 then
+                begin
+                do check_popup
+                l_sub = 19
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[19] = l_value[19]
+        end
+        l_value[19]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox19
+        if l_hide_from_agent[19] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[19] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 19
+        if l_prior_value[19] <> l_value[19] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[19] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+2001    begin
+            l_sub = 20
+            l_code = l_policywide_code[20]
+            if l_value[20] = 1 then
+                begin
+                do check_popup
+                l_sub = 20
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[20] = l_value[20]
+        end
+        l_value[20]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox20
+        if l_hide_from_agent[20] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[20] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 20
+        if l_prior_value[20] <> l_value[20] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[20] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+
+}
+
+Panel at 8,90 to 28, 100
+{
+%%
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+~~__
+
+%%
+
+components
+
+Fields
+101     begin
+            l_sub = 21
+            l_code = l_policywide_code[21]
+            if l_value[21] = 1 then
+                begin
+                do check_popup
+                l_sub = 21
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[21] = l_value[21]
+        end
+        l_value[21]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox21
+        if l_hide_from_agent[21] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[21] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 21
+        if l_prior_value[21] <> l_value[21] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[21] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+201     begin
+            l_sub = 22
+            l_code = l_policywide_code[22]
+            if l_value[22] = 1 then
+                begin
+                do check_popup
+                l_sub = 22
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[22] = l_value[22]
+        end
+        l_value[22]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox22
+        if l_hide_from_agent[22] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[22] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 22
+        if l_prior_value[22] <> l_value[22] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[22] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+301     begin
+            l_sub = 23
+            l_code = l_policywide_code[23]
+            if l_value[23] = 1 then
+                begin
+                do check_popup
+                l_sub = 23
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[23] = l_value[23]
+        end
+        l_value[23]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox23
+        if l_hide_from_agent[23] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[23] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 23
+        if l_prior_value[23] <> l_value[23] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[23] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+401     begin
+            l_sub = 24
+            l_code = l_policywide_code[24]
+            if l_value[24] = 1 then
+                begin
+                do check_popup
+                l_sub = 24
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[24] = l_value[24]
+        end
+        l_value[24]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox24
+        if l_hide_from_agent[24] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[24] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 24
+        if l_prior_value[24] <> l_value[24] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[24] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+501     begin
+            l_sub = 25
+            l_code = l_policywide_code[25]
+            if l_value[25] = 1 then
+                begin
+                do check_popup
+                l_sub = 25
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[25] = l_value[25]
+        end
+        l_value[25]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox25
+        if l_hide_from_agent[25] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[25] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 25
+        if l_prior_value[25] <> l_value[25] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[25] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end ;
+601     begin
+            l_sub = 26
+            l_code = l_policywide_code[26]
+            if l_value[26] = 1 then
+                begin
+                do check_popup
+                l_sub = 26
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[26] = l_value[26]
+        end
+        l_value[26]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox26
+        if l_hide_from_agent[26] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[26] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 26
+        if l_prior_value[26] <> l_value[26] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[26] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+701     begin
+            l_sub = 27
+            l_code = l_policywide_code[27]
+            if l_value[27] = 1 then
+                begin
+                do check_popup
+                l_sub = 27
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[27] = l_value[27]
+        end
+        l_value[27]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox27
+        if l_hide_from_agent[27] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[27] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 27
+        if l_prior_value[27] <> l_value[27] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[27] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+801     begin
+            l_sub = 28
+            l_code = l_policywide_code[28]
+            if l_value[28] = 1 then
+                begin
+                do check_popup
+                l_sub = 28
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[28] = l_value[28]
+        end
+        l_value[28]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox28
+        if l_hide_from_agent[28] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[28] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 28
+        if l_prior_value[28] <> l_value[28] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[28] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+901     begin
+            l_sub = 29
+            l_code = l_policywide_code[29]
+            if l_value[29] = 1 then
+                begin
+                do check_popup
+                l_sub = 29
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[29] = l_value[29]
+        end
+        l_value[29]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox29
+        if l_hide_from_agent[29] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[29] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 29
+        if l_prior_value[29] <> l_value[29] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[29] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1001    begin
+            l_sub = 30
+            l_code = l_policywide_code[30]
+            if l_value[30] = 1 then
+                begin
+                do check_popup
+                l_sub = 30
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[30] = l_value[30]
+        end
+        l_value[30]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox30
+        if l_hide_from_agent[30] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[30] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 30
+        if l_prior_value[30] <> l_value[30] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[30] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1101    begin
+            l_sub = 31
+            l_code = l_policywide_code[31]
+            if l_value[31] = 1 then
+                begin
+                do check_popup
+                l_sub = 31
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[31] = l_value[31]
+        end
+        l_value[31]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox31
+        if l_hide_from_agent[31] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[31] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 31
+        if l_prior_value[31] <> l_value[31] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[31] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1201    begin
+            l_sub = 32
+            l_code = l_policywide_code[32]
+            if l_value[32] = 1 then
+                begin
+                do check_popup
+                l_sub = 32
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[32] = l_value[32]
+        end
+        l_value[32]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox32
+        if l_hide_from_agent[32] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[32] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 32
+        if l_prior_value[32] <> l_value[32] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[32] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1301    begin
+            l_sub = 33
+            l_code = l_policywide_code[33]
+            if l_value[33] = 1 then
+                begin
+                do check_popup
+                l_sub = 33
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[33] = l_value[33]
+        end
+        l_value[33]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox33
+        if l_hide_from_agent[33] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[33] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 33
+        if l_prior_value[33] <> l_value[33] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[33] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1401    begin
+            l_sub = 34
+            l_code = l_policywide_code[34]
+            if l_value[34] = 1 then
+                begin
+                do check_popup
+                l_sub = 34
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[34] = l_value[34]
+        end
+        l_value[34]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox34
+        if l_hide_from_agent[34] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[34] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 34
+        if l_prior_value[34] <> l_value[34] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[34] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1501    begin
+            l_sub = 35
+            l_code = l_policywide_code[35]
+            if l_value[35] = 1 then
+                begin
+                do check_popup
+                l_sub = 35
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[35] = l_value[35]
+        end
+        l_value[35]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox35
+        if l_hide_from_agent[35] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[35] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 35
+        if l_prior_value[35] <> l_value[35] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[35] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1601    begin
+            l_sub = 36
+            l_code = l_policywide_code[36]
+            if l_value[36] = 1 then
+                begin
+                do check_popup
+                l_sub = 36
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[36] = l_value[36]
+        end
+        l_value[36]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox36
+        if l_hide_from_agent[36] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[36] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 36
+        if l_prior_value[36] <> l_value[36] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[36] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1701    begin
+            l_sub = 37
+            l_code = l_policywide_code[37]
+            if l_value[37] = 1 then
+                begin
+                do check_popup
+                l_sub = 37
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[37] = l_value[37]
+        end
+        l_value[37]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox37
+        if l_hide_from_agent[37] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[37] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 37
+        if l_prior_value[37] <> l_value[37] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[37] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1801    begin
+            l_sub = 38
+            l_code = l_policywide_code[38]
+            if l_value[38] = 1 and
+               l_code <> "SIR007" then
+                begin
+                do check_popup
+                l_sub = 38
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+            if l_value[38] = 1 and
+               l_code = "SIR007" then
+                do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[38] = l_value[38]
+        end
+        l_value[38]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox38
+        if l_hide_from_agent[38] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[38] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 38
+        if l_prior_value[38] <> l_value[38] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[38] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+1901    begin
+            l_sub = 39
+            l_code = l_policywide_code[39]
+            if l_value[39] = 1 then
+                begin
+                do check_popup
+                l_sub = 39
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[39] = l_value[39]
+        end
+        l_value[39]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox39
+        if l_hide_from_agent[39] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[39] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 39
+        if l_prior_value[39] <> l_value[39] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[39] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+2001    begin
+            l_sub = 40
+            l_code = l_policywide_code[40]
+            if l_value[40] = 1 then
+                begin
+                do check_popup
+                l_sub = 40
+                if l_popup_complete = 1 then
+                    do display_blue(l_the_tag[l_sub],"blue",l_value[l_sub],l_popup_screen[l_sub])
+                else
+                    do display_red(l_the_tag[l_sub],"red",l_value[l_sub],l_popup_screen[l_sub])
+                end
+            else
+                do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+            l_prior_value[40] = l_value[40]
+        end
+        l_value[40]/checkbox/values="0,1"/default/tabstop   tagged t_remove_checkbox40
+        if l_hide_from_agent[40] = 1 and
+           sfsemail:agent_no <> 0 and
+           l_value[40] = 1 then
+            error "Refer to Underwriter"
+        l_sub = 40
+        if l_prior_value[40] <> l_value[40] then
+            begin
+            if l_refer_to_co[l_sub] = 1 and
+               l_value[40] = 1 then
+                warning "Refer to Company"
+            do update_endorsements(l_sub)
+            end;
+
+}
+
+-- draw a line
+panel at 28,1 to 28,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 29,1 to 29,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+        Button at 1,5   tagged calc_fn
+        Properties {
+                Iconname = "btn_prev_loc.bmp"
+                }
+        Events  {
+                Action = previous_fn
+                }
+        Button at 1,30   tagged calc_fn
+        Properties {
+                Iconname = "btn_next_loc.bmp"
+                }
+        Events  {
+                Action = next_fn
+                }
+        Button at 1,75   tagged calc_fn
+        Properties {
+                Iconname = "btn_view_summary_totals.bmp"
+                }
+        Events  {
+                Action = calc_fn
+                }
+
+}
+
+-- draw a line
+panel at 30,1 to 30,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+
+}
+
+update
+if updateok = "NO" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+if abort = "YES" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    disable(accept_fn)
+    enable(calc_fn)
+    end
+
+Procedure Definition
+
+procedure add_endorsements
+begin
+l_code = l_policywide_code[l_sub]
+if l_code = "BU0140" then
+    begin
+    l_prem_no = 0
+    l_build_no = 0
+    end
+else
+if l_code one of "SIR007", "BU0504", "BU0291", "BU0282" and
+   agqgeneral:company_id = "GGUND" then
+    begin
+    l_prem_no = 0
+    l_build_no = 0
+    end
+else
+    begin
+    l_prem_no = agqgeneral:prem_no
+    l_build_no = agqgeneral:build_no
+    end
+do access_agqend
+if l_add_endorsement = "Y" and
+   l_code not one of "BU0601A", "MIM010A"then
+    do add_agqend
+
+if l_code = "BU1511" then
+    begin
+    l_code = "BU1510"
+    do access_agqend
+    if l_add_endorsement = "Y" then
+        do add_agqend
+    end
+
+if l_code = "BU1526" then
+    begin
+    l_code = "BU1525"
+    do access_agqend
+    if l_add_endorsement = "Y" then
+        do add_agqend
+    end
+
+if l_code = "MCL426" then
+    begin
+    l_code = "MCL425"
+    do access_agqend
+    if l_add_endorsement = "Y" then
+        do add_agqend
+    end
+
+if l_code = "MGK011" then
+    begin
+    l_code = "MGK010"
+    do access_agqend
+    if l_add_endorsement = "Y" then
+        do add_agqend
+    end
+
+if l_code = "BU0140" then
+    begin
+    if sfsline:lob_code <> "CPORTFOLIO" then
+        begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        if agqmaster:app_no = g_app_no then
+            begin
+            change agqmaster
+                begin
+                agqmaster:extend_hired_nonowned = "Y"
+                end
+            end
+        end
+    else
+        begin
+        access agqmastsupp, set agqmastsupp:app_no = agqgeneral:app_no,
+                                agqmastsupp:line_of_business = agqgeneral:line_of_business, generic
+
+        if agqmastsupp:app_no = agqgeneral:app_no and
+           agqmastsupp:line_of_business = agqgeneral:line_of_business then
+            begin
+            change agqmastsupp
+                begin
+                agqmastsupp:extend_hired_nonowned = "Y"
+                end
+            end
+        end
+    end
+end
+
+procedure delete_endorsements
+begin
+l_code = l_policywide_code[l_sub]
+if l_code = "BU0140" then
+    begin
+    l_prem_no = 0
+    l_build_no = 0
+    end
+else
+if l_code one of "SIR007", "BU0504", "BU0291", "BU0282" and
+   agqgeneral:company_id = "GGUND" then
+    begin
+    l_prem_no = 0
+    l_build_no = 0
+    end
+else
+    begin
+    l_prem_no = agqgeneral:prem_no
+    l_build_no = agqgeneral:build_no
+    end
+
+do access_agqend
+if l_add_endorsement = "N" and
+   l_code not one of "BU0601A", "MIM010A" then
+    begin
+    do delete_agqend
+    do delete_popup_files
+    end
+
+if l_code = "BU0140" then
+    begin
+    if sfsline:lob_code <> "CPORTFOLIO" then
+        begin
+        access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+        if agqmaster:app_no = g_app_no then
+            begin
+            change agqmaster
+                begin
+                agqmaster:extend_hired_nonowned = "N"
+                end
+            end
+        end
+    else
+        begin
+        access agqmastsupp, set agqmastsupp:app_no = agqgeneral:app_no,
+                                agqmastsupp:line_of_business = agqgeneral:line_of_business, generic
+
+        if agqmastsupp:app_no = agqgeneral:app_no and
+           agqmastsupp:line_of_business = agqgeneral:line_of_business then
+            begin
+            change agqmastsupp
+                begin
+                agqmastsupp:extend_hired_nonowned = "N"
+                end
+            end
+        end
+    end
+
+if l_code = "BU1511" then
+    begin
+    l_code = "BU1510"
+    do access_agqend
+    if l_add_endorsement = "N" then
+        do delete_agqend
+    end
+
+if l_code = "BU1526" then
+    begin
+    l_code = "BU1525"
+    do access_agqend
+    if l_add_endorsement = "N" then
+        do delete_agqend
+    end
+
+if l_code = "MCL426" then
+    begin
+    l_code = "MCL425"
+    do access_agqend
+    if l_add_endorsement = "N" then
+        do delete_agqend
+    end
+
+if l_code = "MGK011" then
+    begin
+    l_code = "MGK010"
+    do access_agqend
+    if l_add_endorsement = "N" then
+        do delete_agqend
+    end
+
+end
+
+procedure delete_popup_files
+begin
+l_code = l_policywide_code[l_sub]
+access agqendorse, set agqendorse:app_no   = g_app_no,
+                       agqendorse:prem_no  = l_prem_no,
+                       agqendorse:build_no = l_build_no,
+                       agqendorse:code     = l_code,  generic
+
+while agqendorse:app_no   = g_app_no and
+      agqendorse:prem_no  = l_prem_no and
+      agqendorse:build_no = l_build_no and
+      agqendorse:code     = l_code
+        begin
+        delete agqendorse
+
+        next agqendorse
+        end
+
+if l_code = "MGK011" then
+    begin
+    access agqgaragekeepers, set agqgaragekeepers:app_no   = g_app_no,
+                                 agqgaragekeepers:prem_no  = l_prem_no,
+                                 agqgaragekeepers:build_no = l_build_no, generic
+
+    while agqgaragekeepers:app_no   = g_app_no and
+          agqgaragekeepers:prem_no  = l_prem_no and
+          agqgaragekeepers:build_no = l_build_no
+        begin
+        delete agqgaragekeepers
+
+        next agqgaragekeepers
+        end
+    end
+
+if l_code one of "BU0282", "BU2582" then
+    begin
+    access agqdishonesty, set agqdishonesty:app_no   = g_app_no,
+                              agqdishonesty:prem_no  = l_prem_no,
+                              agqdishonesty:build_no = l_build_no, generic
+
+    while agqdishonesty:app_no   = g_app_no and
+          agqdishonesty:prem_no  = l_prem_no and
+          agqdishonesty:build_no = l_build_no
+        begin
+        delete agqdishonesty
+
+        next agqdishonesty
+        end
+    end
+
+if l_code one of "BU0250" then
+    begin
+    access agqlosspayee, set agqlosspayee:app_no   = g_app_no,
+                              agqlosspayee:prem_no  = l_prem_no,
+                              agqlosspayee:build_no = l_build_no, generic
+
+    while agqlosspayee:app_no   = g_app_no and
+          agqlosspayee:prem_no  = l_prem_no and
+          agqlosspayee:build_no = l_build_no
+        begin
+        delete agqlosspayee
+
+        next agqlosspayee
+        end
+    end
+
+if l_code one of "BU0195" then
+    begin
+    access agqfuneral, set agqfuneral:app_no   = g_app_no,
+                           agqfuneral:prem_no  = l_prem_no,
+                           agqfuneral:build_no = l_build_no, generic
+
+    while agqfuneral:app_no   = g_app_no and
+          agqfuneral:prem_no  = l_prem_no and
+          agqfuneral:build_no = l_build_no
+        begin
+        delete agqfuneral
+
+        next agqfuneral
+        end
+    end
+
+if l_code one of "BU0193" then
+    begin
+    access agqbshop, set agqbshop:app_no   = g_app_no,
+                         agqbshop:prem_no  = l_prem_no,
+                         agqbshop:build_no = l_build_no, generic
+
+    while agqbshop:app_no   = g_app_no and
+          agqbshop:prem_no  = l_prem_no and
+          agqbshop:build_no = l_build_no
+        begin
+        delete agqbshop
+
+        next agqbshop
+        end
+    end
+
+if l_code one of "BU0370" then
+    begin
+    access agqcomputer, set agqcomputer:app_no   = g_app_no,
+                            agqcomputer:prem_no  = l_prem_no,
+                            agqcomputer:build_no = l_build_no, generic
+
+    while agqcomputer:app_no   = g_app_no and
+          agqcomputer:prem_no  = l_prem_no and
+          agqcomputer:build_no = l_build_no
+        begin
+        delete agqcomputer
+
+        next agqcomputer
+        end
+    access agqcompdesc, set agqcompdesc:app_no   = g_app_no,
+                            agqcompdesc:prem_no  = l_prem_no,
+                            agqcompdesc:build_no = l_build_no, generic
+
+    while agqcompdesc:app_no   = g_app_no and
+          agqcompdesc:prem_no  = l_prem_no and
+          agqcompdesc:build_no = l_build_no
+        begin
+        delete agqcompdesc
+
+        next agqcompdesc
+        end
+    end
+
+if l_code one of "BU0375" then
+    begin
+    access agqglass, set agqglass:app_no   = g_app_no,
+                         agqglass:prem_no  = l_prem_no,
+                         agqglass:build_no = l_build_no, generic
+
+    while agqglass:app_no   = g_app_no and
+          agqglass:prem_no  = l_prem_no and
+          agqglass:build_no = l_build_no
+        begin
+        delete agqglass
+
+        next agqglass
+        end
+    end
+
+if l_code one of "BU0507" then
+    begin
+    access agqoperations, set agqoperations:app_no   = g_app_no,
+                              agqoperations:prem_no  = l_prem_no,
+                              agqoperations:build_no = l_build_no, generic
+
+    while agqoperations:app_no   = g_app_no and
+          agqoperations:prem_no  = l_prem_no and
+          agqoperations:build_no = l_build_no
+        begin
+        delete agqoperations
+
+        next agqoperations
+        end
+    end
+
+if l_code one of "BU0601", "BU0607", "BU0616", "BU0609", "BU0309" then
+    begin
+    access agqaddin, set agqaddin:app_no   = g_app_no,
+                         agqaddin:prem_no  = l_prem_no,
+                         agqaddin:build_no = l_build_no,
+                         agqaddin:code     = l_code, generic
+
+    while agqaddin:app_no   = g_app_no and
+          agqaddin:prem_no  = l_prem_no and
+          agqaddin:build_no = l_build_no and
+          agqaddin:code     = l_code
+        begin
+        delete agqaddin
+
+        next agqaddin
+        end
+    end
+
+end
+
+procedure check_popup
+begin
+l_popup_complete = 0
+l_code = l_policywide_code[l_sub]
+if l_location_specific[l_sub] = 0 then
+    begin
+    l_prem_no  = 0
+    l_build_no = 0
+    g_prem_no  = 0
+    g_build_no = 0
+    end
+else
+    begin
+    l_prem_no  = agqgeneral:prem_no
+    l_build_no = agqgeneral:build_no
+    g_prem_no  = agqgeneral:prem_no
+    g_build_no = agqgeneral:build_no
+    end
+
+if l_code one of "SIR007", "SIR003", "BU0291" then
+    l_popup_complete = 1
+
+if l_code = "FOS174" then
+    begin
+    access agqepl, set agqepl:app_no = g_app_no, generic
+
+    if agqepl:app_no = g_app_no then
+        l_popup_complete = 1
+    end
+
+if l_code = "BU0196" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:no_units <> 0 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code = "BU0142" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:percent[1] <> 0 or
+           agqendorse:percent[2] <> 0 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0261", "BU0527" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:limit[1] <> 0 and
+           agqendorse:premium <> 0 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0184", "BU0197", "BU0272", "MCL426", "BU2510", "BU2597" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:limit[1] <> 0 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code = "MIM010A" then
+    l_popup_complete = 1
+
+if l_code one of "BU0601A" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no, generic
+
+    while agqendorse:app_no   = g_app_no and
+          agqendorse:prem_no  = l_prem_no and
+          agqendorse:build_no = l_build_no
+        begin
+        if agqendorse:code one of "BU0315" then
+            l_popup_complete = 1
+
+        next agqendorse
+        end
+
+    access agqaddin, set agqaddin:app_no = g_app_no,
+                         agqaddin:prem_no = l_prem_no,
+                         agqaddin:build_no = l_build_no, generic
+
+    while agqaddin:app_no = g_app_no and
+          agqaddin:prem_no = l_prem_no and
+          agqaddin:build_no = l_build_no
+        begin
+        if agqaddin:code one of "BU0601", "BU0603", "BU0604", "BU0605", "BU0606",
+                                "BU0607", "BU0608", "BU0610", "BU0616", "BU0315" then
+            begin
+            if agqaddin:name[1] <> "" and
+               agqaddin:address[1] <> "" and
+               agqaddin:city <> "" and
+               agqaddin:str_state <> "" and
+               agqaddin:zipcode <> 0 then
+                l_popup_complete = 1
+            else
+                l_popup_complete = 0
+            end
+        if agqaddin:code one of "BU0609", "BU0309" then
+            begin
+            if agqaddin:name[1] <> "" then
+                l_popup_complete = 1
+            else
+                l_popup_complete = 0
+            end
+
+        if agqaddin:code one of "BU0300", "BU0301", "BU0304", "BU0321", "BU0327" then
+            l_popup_complete = 1
+
+        next agqaddin
+        end
+    end
+
+if l_code one of "BU0120", "BU0505", "BU0506", "BU0520" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:address  <> "" and
+           agqendorse:city <> "" and
+           agqendorse:str_state <> "" and
+           agqendorse:zipcode <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU0520", "BU0231" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:description[1] <> "" then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU0260", "MCP140", "MCL883", "MCP141", "BU0261" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:limit[1] <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU0380" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:construction <> 0 and
+           agqendorse:rate_class <> 0 then
+--           agqendorse:deductible[1] <> 0 then
+--           agqendorse:premium <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU0283" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:limit[1] <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "MCL602" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:premium <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU1526" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:limit[1] <> 0 and
+           agqendorse:limit[2] <> 0 and
+           agqendorse:no_employees <> 0 and
+           agqendorse:deductible[1] <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU0250" then
+    begin
+    access agqlosspayee, set agqlosspayee:app_no   = g_app_no,
+                             agqlosspayee:prem_no  = l_prem_no,
+                             agqlosspayee:build_no = l_build_no, generic
+
+    if agqlosspayee:app_no   = g_app_no and
+       agqlosspayee:prem_no  = l_prem_no and
+       agqlosspayee:build_no = l_build_no then
+        begin
+        if agqlosspayee:name[1] <> "" and
+           agqlosspayee:address[1] <> "" and
+           agqlosspayee:city[1] <> "" and
+           agqlosspayee:str_state[1] <> "" and
+           agqlosspayee:str_zipcode[1] <> "" then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU1009" then
+    begin
+    access agqsafeguard, set agqsafeguard:app_no   = g_app_no,
+                             agqsafeguard:prem_no  = l_prem_no,
+                             agqsafeguard:build_no = l_build_no, generic
+
+    if agqsafeguard:app_no   = g_app_no and
+       agqsafeguard:prem_no  = l_prem_no and
+       agqsafeguard:build_no = l_build_no then
+        begin
+        if agqsafeguard:description[1] <> "" and
+           agqsafeguard:cause_loss <> "" then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU1511", "MGK011" then
+    begin
+    access agqgaragekeepers, set agqgaragekeepers:app_no   = g_app_no,
+                                 agqgaragekeepers:prem_no  = l_prem_no,
+                                 agqgaragekeepers:build_no = l_build_no, generic
+
+    if agqgaragekeepers:app_no   = g_app_no and
+       agqgaragekeepers:prem_no  = l_prem_no and
+       agqgaragekeepers:build_no = l_build_no then
+        begin
+        if agqgaragekeepers:limit <> 0 and
+           agqgaragekeepers:form <> 0 and
+           agqgaragekeepers:comp_deductible <> 0 and
+           agqgaragekeepers:coll_deductible <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU0281" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:eff_date <> 0 and
+           agqendorse:exp_date <> 0 and
+           agqendorse:limit[1] <> 0 then
+            begin
+            l_popup_complete = 1
+            end
+        end
+    end
+
+if l_code one of "BU0265" then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    if agqendorse:app_no   = g_app_no and
+       agqendorse:prem_no  = l_prem_no and
+       agqendorse:build_no = l_build_no and
+       agqendorse:code     = l_code then
+        begin
+        if agqendorse:eff_date <> 0 and
+           agqendorse:exp_date <> 0 and
+           agqendorse:description[1] <> "" then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0282", "BU2582" then
+    begin
+    access agqdishonesty, set agqdishonesty:app_no   = g_app_no,
+                              agqdishonesty:prem_no  = l_prem_no,
+                              agqdishonesty:build_no = l_build_no, generic
+
+    if agqdishonesty:app_no   = g_app_no and
+       agqdishonesty:prem_no  = l_prem_no and
+       agqdishonesty:build_no = l_build_no then
+        begin
+        if agqdishonesty:limit <> 0 and
+           agqdishonesty:deductible <> 0 and
+           agqdishonesty:no_employees <> 0 and
+           g_enhancement = 0 then
+            l_popup_complete = 1
+        else
+        if agqdishonesty:limit <> 0 and
+           g_enhancement = 1 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0195" then
+    begin
+    access agqfuneral, set agqfuneral:app_no   = g_app_no,
+                           agqfuneral:prem_no  = l_prem_no,
+                           agqfuneral:build_no = l_build_no, generic
+
+    if agqfuneral:app_no   = g_app_no and
+       agqfuneral:prem_no  = l_prem_no and
+       agqfuneral:build_no = l_build_no then
+        begin
+        if agqfuneral:bodies[1] <> 0 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0193" then
+    begin
+    access agqbshop, set agqbshop:app_no   = g_app_no,
+                         agqbshop:prem_no  = l_prem_no,
+                         agqbshop:build_no = l_build_no, generic
+
+    if agqbshop:app_no   = g_app_no and
+       agqbshop:prem_no  = l_prem_no and
+       agqbshop:build_no = l_build_no then
+        begin
+        if agqbshop:barber_full_time <> 0 or
+           agqbshop:beauty_full_time <> 0 or
+           agqbshop:beauty_part_time <> 0 or
+           agqbshop:manicurists <> 0 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0370" then
+    begin
+    access agqcomputer, set agqcomputer:app_no   = g_app_no,
+                            agqcomputer:prem_no  = l_prem_no,
+                            agqcomputer:build_no = l_build_no, generic
+
+    if agqcomputer:app_no   = g_app_no and
+       agqcomputer:prem_no  = l_prem_no and
+       agqcomputer:build_no = l_build_no then
+        begin
+        if agqcomputer:limit[1] <> 0 or
+           agqcomputer:limit[2] <> 0 or
+           agqcomputer:limit[3] <> 0 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0375" then
+    begin
+    access agqglass, set agqglass:app_no   = g_app_no,
+                         agqglass:prem_no  = l_prem_no,
+                         agqglass:build_no = l_build_no, generic
+
+    if agqglass:app_no   = g_app_no and
+       agqglass:prem_no  = l_prem_no and
+       agqglass:build_no = l_build_no then
+        begin
+        if agqglass:limit <> 0 and
+           agqglass:deductible <> 0 and
+           g_enhancement = 0 then
+            l_popup_complete = 1
+        if agqglass:limit <> 0 and
+           g_enhancement = 1 then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0507" then
+    begin
+    access agqoperations, set agqoperations:app_no   = g_app_no,
+                              agqoperations:prem_no  = l_prem_no,
+                              agqoperations:build_no = l_build_no, generic
+
+    if agqoperations:app_no   = g_app_no and
+       agqoperations:prem_no  = l_prem_no and
+       agqoperations:build_no = l_build_no then
+        begin
+        if agqoperations:exclude_products <> "" or
+           agqoperations:exclude_adj_injury <> "" or
+           agqoperations:exclude_other[1] <> "" then
+            l_popup_complete = 1
+        end
+    end
+
+if l_code one of "BU0601", "BU0607", "BU0616"  then
+    begin
+    access agqaddin, set agqaddin:app_no   = g_app_no,
+                         agqaddin:prem_no  = l_prem_no,
+                         agqaddin:build_no = l_build_no,
+                         agqaddin:code     = l_code,  generic
+
+    while agqaddin:app_no   = g_app_no and
+          agqaddin:prem_no  = l_prem_no and
+          agqaddin:build_no = l_build_no and
+          agqaddin:code     = l_code
+        begin
+        if agqaddin:name[1] <> "" and
+           agqaddin:address[1] <> "" and
+           agqaddin:city <> "" and
+           agqaddin:str_state <> "" and
+           agqaddin:zipcode <> 0 then
+            l_popup_complete = 1
+        else
+            l_popup_complete = 0
+
+        next agqaddin
+        end
+    end
+
+if l_code one of "BU0609", "BU0309"  then
+    begin
+    access agqaddin, set agqaddin:app_no   = g_app_no,
+                         agqaddin:prem_no  = l_prem_no,
+                         agqaddin:build_no = l_build_no,
+                         agqaddin:code     = l_code,  generic
+
+    while agqaddin:app_no   = g_app_no and
+          agqaddin:prem_no  = l_prem_no and
+          agqaddin:build_no = l_build_no and
+          agqaddin:code     = l_code
+        begin
+        if agqaddin:name[1] <> "" then
+            l_popup_complete = 1
+        else
+            l_popup_complete = 0
+
+        next agqaddin
+        end
+    end
+
+if l_code one of "BU0315"  then
+    begin
+    access agqendorse, set agqendorse:app_no   = g_app_no,
+                           agqendorse:prem_no  = l_prem_no,
+                           agqendorse:build_no = l_build_no,
+                           agqendorse:code     = l_code,  generic
+
+    while agqendorse:app_no   = g_app_no and
+          agqendorse:prem_no  = l_prem_no and
+          agqendorse:build_no = l_build_no and
+          agqendorse:code     = l_code
+        begin
+        if agqendorse:description[1] <> "" then
+            l_popup_complete = 1
+        else
+            l_popup_complete = 0
+
+        next agqendorse
+        end
+    end
+end
+
+procedure update_endorsements(number l_sub)
+begin
+if l_value[l_sub] = 1 then
+    begin
+    if l_location_specific[l_sub] = 0 then
+        begin
+        l_prem_no  = 0
+        l_build_no = 0
+        g_prem_no  = 0
+        g_build_no = 0
+        end
+    else
+        begin
+        l_prem_no  = agqgeneral:prem_no
+        l_build_no = agqgeneral:build_no
+        g_prem_no  = agqgeneral:prem_no
+        g_build_no = agqgeneral:build_no
+        end
+    l_code = l_policywide_code[l_sub]
+    if l_code = "BU0140" then
+        begin
+        l_prem_no = 0
+        l_build_no = 0
+        end
+
+        if l_code one of "BU0142" and
+           agqgeneral:building_limit = 0 then
+            begin
+            error "Can not add this form without building coverage"
+            l_value[l_sub] = 0
+            abort()
+            end
+    if l_code one of "SIR007", "BU0504", "BU0291", "BU0282" and
+       agqgeneral:company_id = "GGUND" then
+        begin
+        l_prem_no = 0
+        l_build_no = 0
+        end
+    g_code = l_policywide_code[l_sub]
+    do add_endorsements
+    if l_popup_screen[l_sub] <> "" then
+        begin
+        if l_location_specific[l_sub] = 0 then
+            begin
+            l_prem_no  = 0
+            l_build_no = 0
+            g_prem_no  = 0
+            g_build_no = 0
+            end
+        else
+            begin
+            l_prem_no  = agqgeneral:prem_no
+            l_build_no = agqgeneral:build_no
+            g_prem_no  = agqgeneral:prem_no
+            g_build_no = agqgeneral:build_no
+            end
+        if l_code = "BU0140" then
+            begin
+            l_prem_no = 0
+            l_build_no = 0
+            end
+        if l_code one of "SIR007", "BU0504", "BU0291", "BU0282" and
+           agqgeneral:company_id = "GGUND" then
+            begin
+            l_prem_no = 0
+            l_build_no = 0
+            end
+
+        l_screen = trun(l_popup_screen[l_sub])
+        display modal screen l_screen
+--        function = "func1"
+--        abort()
+        end
+--    else
+--        begin
+--        abort()
+--        end
+    end
+
+if l_value[l_sub] = 0 then
+    begin
+    do remove_blue(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+    do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+    if l_location_specific[l_sub] = 0 then
+        begin
+        l_prem_no  = 0
+        l_build_no = 0
+        end
+    else
+        begin
+        l_prem_no  = agqgeneral:prem_no
+        l_build_no = agqgeneral:build_no
+        end
+    l_code = l_policywide_code[l_sub]
+    if l_code = "BU0140" then
+        begin
+        l_prem_no = 0
+        l_build_no = 0
+        end
+    if l_code one of "SIR007", "BU0504", "BU0291", "BU0282" and
+       agqgeneral:company_id = "GGUND" then
+        begin
+        l_prem_no = 0
+        l_build_no = 0
+        end
+    do delete_endorsements
+--    abort()
+    end
+
+end
+
+procedure check_for_Red
+begin
+l_sub = 1
+while l_sub < 30
+    begin
+    if l_value[l_sub] = 1 then
+        begin
+        l_code = l_policywide_code[l_sub]
+        if l_location_specific[l_sub] = 0 then
+            begin
+            l_prem_no  = 0
+            l_build_no = 0
+            g_prem_no  = 0
+            g_build_no = 0
+            end
+        else
+            begin
+            l_prem_no  = agqgeneral:prem_no
+            l_build_no = agqgeneral:build_no
+            g_prem_no  = agqgeneral:prem_no
+            g_build_no = agqgeneral:build_no
+            end
+        do check_popup
+        if l_popup_complete = 1 then
+            do remove_red(l_the_tag[l_sub],"black",l_value[l_sub],l_popup_screen[l_sub])
+        end
+
+    l_sub = l_sub + 1
+    end
+
+end
+
+
+procedure display_blue(tag l_tag, string l_color, number l_position, string l_display_screen)
+begin
+if l_position = 1 and
+   l_display_screen <> "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure display_red(tag l_tag, string l_color, number l_position, string l_display_screen)
+begin
+if l_position = 1 and
+   l_display_screen <> "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure remove_blue(tag l_tag, string l_color, number l_position, string l_display_screen)
+begin
+if l_position = 0 or
+   l_display_screen = "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure remove_red(tag l_tag, string l_color, number l_position, string l_display_screen)
+begin
+if l_position = 0 or
+   l_display_screen = "" then
+    begin
+    setproperty(l_tag,foregroundcolor,l_color)
+    end
+end
+
+procedure display_popup(number l_sub)
+begin
+if l_value[l_sub] = 1 then
+    begin
+    if l_location_specific[l_sub] = 0 then
+        begin
+        g_prem_no  = 0
+        g_build_no = 0
+        end
+    else
+        begin
+        g_prem_no  = agqgeneral:prem_no
+        g_build_no = agqgeneral:build_no
+        end
+    g_code     = l_policywide_code[l_sub]
+    if l_popup_screen[l_sub] <> "" then
+        begin
+        l_screen = trun(l_popup_screen[l_sub])
+        display modal screen l_screen
+--        function = "func1"
+--        abort()
+        end
+--    else
+--        begin
+--        abort()
+--        end
+    end
+
+end
+
+procedure read_forms
+BEGIN
+access agqgeneral, set agqgeneral:app_no   = g_app_no,
+                       agqgeneral:prem_no  = l_prem_no,
+                       agqgeneral:build_no = l_build_no, generic
+
+access sfspolicywideoptend, set sfspolicywideoptend:company_id       = agqgeneral:company_id,
+                                sfspolicywideoptend:state            = agqgeneral:state,
+                                sfspolicywideoptend:line_of_business = agqgeneral:line_of_business,
+                                sfspolicywideoptend:class_code       = agqgeneral:class_code, generic
+
+l_tag_position = 0
+while sfspolicywideoptend:company_id       = agqgeneral:company_id and
+      sfspolicywideoptend:state            = agqgeneral:state and
+      sfspolicywideoptend:line_of_business = agqgeneral:line_of_business and
+      sfspolicywideoptend:class_code       = agqgeneral:class_code
+    {
+    if (agqgeneral:eff_date >= sfspolicywideoptend:eff_date and
+       (agqgeneral:eff_date <= sfspolicywideoptend:exp_date or
+       sfspolicywideoptend:exp_date = 0)) then
+        {
+        if agqgeneral:bop_type one of 4, 5 then
+            begin
+            if sfspolicywideoptend:code not one of "BU0284", "BU0283", "BU0285", "BU0290" then
+                begin
+                l_tag_position = l_tag_position + 1 --val(sfspolicywideoptend:tag_name[7,8])
+                l_policywide_code[l_tag_position] = sfspolicywideoptend:code
+                l_value[l_tag_position] = 0
+                if sfspolicywideoptend:code one of "BU0140" then
+                    begin
+                    l_prem_no  = 0
+                    l_build_no = 0
+                    end
+                else
+                if sfspolicywideoptend:code one of "SIR007", "BU0504", "BU0291" , "BU0282" and
+                   agqgeneral:company_id = "GGUND" then
+                    begin
+                    l_prem_no = 0
+                    l_build_no = 0
+                    end
+                else
+                    begin
+                    l_prem_no  = agqgeneral:prem_no
+                    l_build_no = agqgeneral:build_no
+                    end
+                do read_agqend
+                l_view_desc[l_tag_position] = trun(sfspolicywideoptend:POLICY_WIDE_FORM_DESC)
+                                              + sfspolicywideoptend:form_print
+                l_popup_screen[l_tag_position] = sfspolicywideoptend:popup_screen
+                l_the_tag[l_tag_position] = tag("t_view" + trun(str(l_tag_position)))
+                l_location_specific[l_tag_position] = sfspolicywideoptend:location_specific
+                l_refer_to_co[l_tag_position] = sfspolicywideoptend:refer_to_company
+                l_hide_from_agent[l_tag_position] = sfspolicywideoptend:hide_from_agent
+                do printguidetext(l_the_tag[l_tag_position],trun(l_view_desc[l_tag_position]))
+                end
+            end
+        else
+        if agqgeneral:bop_type one of 6, 8 then
+            begin
+            if sfspolicywideoptend:code not one of "BU0286", "BU0287", "BU0288" then
+                begin
+                l_tag_position = l_tag_position + 1 --val(sfspolicywideoptend:tag_name[7,8])
+                l_policywide_code[l_tag_position] = sfspolicywideoptend:code
+                l_value[l_tag_position] = 0
+                if sfspolicywideoptend:code one of "BU0140"  then
+                    begin
+                    l_prem_no  = 0
+                    l_build_no = 0
+                    end
+                else
+                if sfspolicywideoptend:code one of "SIR007", "BU0504", "BU0291", "BU0282" and
+                   agqgeneral:company_id = "GGUND" then
+                    begin
+                    l_prem_no = 0
+                    l_build_no = 0
+                    end
+                else
+                    begin
+                    l_prem_no  = agqgeneral:prem_no
+                    l_build_no = agqgeneral:build_no
+                    end
+                do read_agqend
+                l_view_desc[l_tag_position] = trun(sfspolicywideoptend:POLICY_WIDE_FORM_DESC)
+                                              + sfspolicywideoptend:form_print
+                l_popup_screen[l_tag_position] = sfspolicywideoptend:popup_screen
+                l_the_tag[l_tag_position] = tag("t_view" + trun(str(l_tag_position)))
+                l_location_specific[l_tag_position] = sfspolicywideoptend:location_specific
+                l_hide_from_agent[l_tag_position] = sfspolicywideoptend:hide_from_agent
+                l_refer_to_co[l_tag_position] = sfspolicywideoptend:refer_to_company
+                do printguidetext(l_the_tag[l_tag_position],trun(l_view_desc[l_tag_position]))
+                end
+            end
+        else
+            begin
+            l_tag_position = l_tag_position + 1 --val(sfspolicywideoptend:tag_name[7,8])
+            l_policywide_code[l_tag_position] = sfspolicywideoptend:code
+            l_value[l_tag_position] = 0
+            if sfspolicywideoptend:code one of "BU0140" then
+                begin
+                l_prem_no  = 0
+                l_build_no = 0
+                end
+            else
+            if sfspolicywideoptend:code one of "SIR007", "BU0504", "BU0291", "BU0282"and
+               agqgeneral:company_id = "GGUND" then
+                begin
+                l_prem_no = 0
+                l_build_no = 0
+                end
+            else
+                begin
+                l_prem_no  = agqgeneral:prem_no
+                l_build_no = agqgeneral:build_no
+                end
+            do read_agqend
+            l_view_desc[l_tag_position] = trun(sfspolicywideoptend:POLICY_WIDE_FORM_DESC)
+                                          + sfspolicywideoptend:form_print
+            l_popup_screen[l_tag_position] = sfspolicywideoptend:popup_screen
+            l_the_tag[l_tag_position] = tag("t_view" + trun(str(l_tag_position)))
+            l_location_specific[l_tag_position] = sfspolicywideoptend:location_specific
+            l_hide_from_agent[l_tag_position] = sfspolicywideoptend:hide_from_agent
+            l_refer_to_co[l_tag_position] = sfspolicywideoptend:refer_to_company
+            do printguidetext(l_the_tag[l_tag_position],trun(l_view_desc[l_tag_position]))
+            end
+        }
+
+    next sfspolicywideoptend
+    }
+
+l_class_code = 99997
+access sfspolicywideoptend, set sfspolicywideoptend:company_id       = agqgeneral:company_id,
+                                sfspolicywideoptend:state            = agqgeneral:state,
+                                sfspolicywideoptend:line_of_business = agqgeneral:line_of_business,
+                                sfspolicywideoptend:class_code       = l_class_code, generic
+
+while sfspolicywideoptend:company_id       = agqgeneral:company_id and
+      sfspolicywideoptend:state            = agqgeneral:state and
+      sfspolicywideoptend:line_of_business = agqgeneral:line_of_business and
+      sfspolicywideoptend:class_code       = l_class_code
+    {
+    if (agqgeneral:eff_date >= sfspolicywideoptend:eff_date and
+       (agqgeneral:eff_date <= sfspolicywideoptend:exp_date or
+       sfspolicywideoptend:exp_date = 0)) then
+        {
+        l_tag_position = l_tag_position + 1
+        l_policywide_code[l_tag_position] = sfspolicywideoptend:code
+        l_value[l_tag_position] = 0
+        if sfspolicywideoptend:code one of "FOS174" then
+            begin
+            do read_agqgeneral
+            access agqmaster, set agqmaster:app_no = g_app_no, generic
+
+            if agqmaster:exclude_epl <> 1 and
+               l_attorney = "N" then
+                begin
+                l_prem_no  = 0
+                l_build_no = 0
+                do read_agqend
+                l_view_desc[l_tag_position] = trun(sfspolicywideoptend:POLICY_WIDE_FORM_DESC)
+                                              + sfspolicywideoptend:form_print
+                l_popup_screen[l_tag_position] = sfspolicywideoptend:popup_screen
+                l_the_tag[l_tag_position] = tag("t_view" + trun(str(l_tag_position)))
+--                l_the_tag[l_tag_position] = tag(trun(sfspolicywideoptend:tag_name))
+                l_location_specific[l_tag_position] = sfspolicywideoptend:location_specific
+                l_refer_to_co[l_tag_position] = sfspolicywideoptend:refer_to_company
+                do printguidetext(l_the_tag[l_tag_position],trun(l_view_desc[l_tag_position]))
+                end
+            end
+        }
+
+    next sfspolicywideoptend
+    }
+
+l_loop = 1
+while l_loop <= 40
+    {
+    if l_view_desc[l_loop] = "" then
+        {
+        switch(l_loop)
+          case 1  : hide(t_remove_checkbox1)
+          case 2  : hide(t_remove_checkbox2)
+          case 3  : hide(t_remove_checkbox3)
+          case 4  : hide(t_remove_checkbox4)
+          case 5  : hide(t_remove_checkbox5)
+          case 6  : hide(t_remove_checkbox6)
+          case 7  : hide(t_remove_checkbox7)
+          case 8  : hide(t_remove_checkbox8)
+          case 9  : hide(t_remove_checkbox9)
+          case 10 : hide(t_remove_checkbox10)
+          case 11 : hide(t_remove_checkbox11)
+          case 12 : hide(t_remove_checkbox12)
+          case 13 : hide(t_remove_checkbox13)
+          case 14 : hide(t_remove_checkbox14)
+          case 15 : hide(t_remove_checkbox15)
+          case 16 : hide(t_remove_checkbox16)
+          case 17 : hide(t_remove_checkbox17)
+          case 18 : hide(t_remove_checkbox18)
+          case 19 : hide(t_remove_checkbox19)
+          case 20 : hide(t_remove_checkbox20)
+          case 21 : hide(t_remove_checkbox21)
+          case 22 : hide(t_remove_checkbox22)
+          case 23 : hide(t_remove_checkbox23)
+          case 24 : hide(t_remove_checkbox24)
+          case 25 : hide(t_remove_checkbox25)
+          case 26 : hide(t_remove_checkbox26)
+          case 27 : hide(t_remove_checkbox27)
+          case 28 : hide(t_remove_checkbox28)
+          case 29 : hide(t_remove_checkbox29)
+          case 30 : hide(t_remove_checkbox30)
+          case 31 : hide(t_remove_checkbox31)
+          case 32 : hide(t_remove_checkbox32)
+          case 33 : hide(t_remove_checkbox33)
+          case 34 : hide(t_remove_checkbox34)
+          case 35 : hide(t_remove_checkbox35)
+          case 36 : hide(t_remove_checkbox36)
+          case 37 : hide(t_remove_checkbox37)
+          case 38 : hide(t_remove_checkbox38)
+          case 39 : hide(t_remove_checkbox39)
+          case 40 : hide(t_remove_checkbox40)
+          end
+        }
+
+    l_loop = l_loop + 1
+    }
+
+END
+
+procedure read_agqgeneral
+begin
+access agqgeneral_alias, set agqgeneral_alias:app_no = g_app_no, generic
+
+l_attorney = "N"
+while agqgeneral_alias:app_no = g_app_no
+    begin
+    if agqgeneral_alias:class_code one of 51 and
+       agqgeneral_alias:sub_code = 20 then
+        l_attorney = "Y"
+
+    next agqgeneral_alias
+    end
+
+end
+
+procedure printguidetext(tag current_tag, string display_string)
+BEGIN
+    Setproperty(current_tag, text, display_string)
+--    Setproperty(current_tag, underlined, True)
+END
+
+procedure read_agqend
+begin
+access agqend, set agqend:app_no   = g_app_no,
+                   agqend:prem_no  = l_prem_no,
+                   agqend:build_no = l_build_no, generic
+
+while agqend:app_no   = g_app_no and
+      agqend:prem_no  = l_prem_no and
+      agqend:build_no = l_build_no
+    begin
+    if l_policywide_code[l_tag_position] one of "BU0601A" then
+        begin
+        if agqend:code one of "BU0601", "BU0602", "BU0603", "BU0604", "BU0605",
+                              "BU0606", "BU0607", "BU0608", "BU0609", "BU0610",
+                              "BU0616", "BU0300", "BU0301", "BU0304", "BU0321",
+                              "BU0327", "BU0315", "BU0309" then
+            l_value[l_tag_position] = 1
+        end
+    else
+    if l_policywide_code[l_tag_position] one of "MIM010A" then
+        begin
+        if agqend:code one of "MIM010", "MIM011", "MIM013", "MIM101", "MIM102",
+                              "MIM103", "MIM111", "MIM112", "MIM113", "MIM114",
+                              "MIM115" then
+            l_value[l_tag_position] = 1
+        end
+    else
+    if l_policywide_code[l_tag_position] one of "FOS174" then
+        l_value[l_tag_position] = 1
+    else
+    if agqend:code = l_policywide_code[l_tag_position] then
+        begin
+        l_value[l_tag_position] = 1
+        end
+
+    next agqend
+    end
+
+end
+
+/*procedure update_exclusion
+begin
+access agqgeneral, set agqgeneral:app_no = g_APP_NO, generic
+
+l_remove_form = 0
+while agqgeneral:app_no = g_APP_NO
+        begin
+        if agqgeneral:remove_terrorism_Form = 1 then
+            l_remove_form = 1
+
+        next agqgeneral
+        end
+
+end */
+
+Procedure ACCESS_agqend
+Begin
+Access agqend, Set agqend:app_no   = g_APP_NO ,
+                   agqend:PREM_NO  = l_prem_no,
+                   agqend:BUILD_NO = l_build_no, Generic
+
+L_ADD_ENDORSEMENT  = "Y"
+l_replacement_cost = 0
+l_mpl47_exist      = 0
+l_mpl49_exist      = 0
+l_inland_marine    = 0
+l_sal61_exists     = "N"
+l_sal62_exists     = "N"
+while agqend:app_no   = g_APP_NO and
+      agqend:PREM_NO  = l_prem_no and
+      agqend:BUILD_NO = l_build_no
+    begin
+    If agqend:CODE = L_CODE Then
+        L_ADD_ENDORSEMENT = "N"
+    if agqend:code = "SAL62" then
+        l_sal62_exists = "Y"
+    if agqend:code = "SAL61" then
+        l_sal61_exists = "Y"
+    if agqend:code one of "MPL47" then
+        begin
+        l_replacement_cost = 1
+        l_mpl47_exist      = 1
+        end
+    if agqend:code one of "MPL49" then
+        begin
+        l_replacement_cost = 1
+        l_mpl49_exist      = 1
+        end
+    if agqend:code one of "MPL15", "MPL16", "MPL17" then
+        begin
+        l_inland_marine = 1
+        end
+
+
+    Next agqend
+    End
+
+End
+
+Procedure ADD_agqend
+Begin
+Access agqend, Set agqend:app_no   = g_APP_NO ,
+                   agqend:PREM_NO  = l_prem_no,
+                   agqend:BUILD_NO = l_build_no, Generic
+
+L_SUB_CODE = 0
+while agqend:app_no   = g_APP_NO and
+      agqend:PREM_NO  = l_prem_no and
+      agqend:BUILD_NO = l_build_no
+        begin
+        L_SUB_CODE = agqend:SUB_CODE
+
+        Next agqend
+        End
+
+L_SUB_CODE = L_SUB_CODE + 10
+do access_sfsoptend
+if l_form_edition <> "" then
+    begin
+    if l_code one of "BU0140" then
+        begin
+        l_prem_no = 0
+        l_build_no = 0
+        end
+    else
+    if l_code one of "SIR007", "BU0504", "BU0291", "BU0282" and
+       agqgeneral:company_id = "GGUND" then
+        begin
+        l_prem_no = 0
+        l_build_no = 0
+        end
+
+    Add agqend
+        Begin
+        agqend:app_no               =       g_APP_NO
+        agqend:PREM_NO              =       l_prem_no
+        agqend:BUILD_NO             =       l_build_no
+        agqend:SUB_CODE             =       L_SUB_CODE
+        agqend:CODE                 =       L_CODE
+        agqend:FORM_EDITION         =       L_FORM_EDITION
+        agqend:DESCRIPTION          =       L_DESCRIPTION
+        agqend:PREMIUM              =       0
+        agqend:lob_end_code         =       "X"
+        end
+    End
+
+End
+
+procedure access_sfsoptend
+begin
+Access SFSOPTEND, Set SFSOPTEND:COMPANY_ID       = agqgeneral:COMPANY_ID,
+                      SFSOPTEND:STATE            = agqgeneral:STATE,
+                      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS,
+                      SFSOPTEND:CODE             = L_CODE, Generic
+
+while SFSOPTEND:COMPANY_ID       = agqgeneral:COMPANY_ID and
+      SFSOPTEND:STATE            = agqgeneral:STATE and
+      SFSOPTEND:LINE_OF_BUSINESS = agqgeneral:LINE_OF_BUSINESS and
+      SFSOPTEND:CODE             = L_CODE
+        begin
+        If (agqgeneral:EFF_DATE >= SFSOPTEND:EFF_DATE and
+           (agqgeneral:eff_date <= sfsoptend:exp_date or
+           sfsoptend:exp_date = 0)) Then
+            Begin
+            L_FORM_EDITION   = SFSOPTEND:FORM_EDITION
+            L_DESCRIPTION    = SFSOPTEND:DESCRIPTION
+            l_increase_cov_c = sfsoptend:premium_1[5]
+            End
+
+        Next SFSOPTEND
+        End
+end
+
+Procedure DELETE_agqend
+Begin
+Access agqend, Set agqend:app_no   = g_APP_NO ,
+                   agqend:PREM_NO  = l_prem_no,
+                   agqend:BUILD_NO = l_build_no, Generic
+
+while agqend:app_no   = g_APP_NO and
+      agqend:PREM_NO  = l_prem_no and
+      agqend:BUILD_NO = l_build_no
+        begin
+        If agqend:CODE = L_CODE Then
+            Delete agqend
+
+        Next agqend
+        End
+
+End
+
+End

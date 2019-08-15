@@ -1,0 +1,222 @@
+%%
+/*
+Date Written: November 14, 2011
+
+Name: agqfosis0311.sd
+
+Copyright (c) 2000, SCIPS.com Inc.
+
+Modify
+Date                   By                  Comment
+--------------------------------------------------------------
+11/14/2011            JLB            Insurance Scoring Notice for salem
+===========================
+*/
+
+Program
+  Name = "agqfosis0311";
+  Type = "File";
+  Domain = "flat";
+  Padcharacter = Space;
+
+ String L_FILE_NAME[15] = "agqfosis0311.cq";
+
+ Unsigned Ascii Number  l_page_counter;
+ string l_agqfosis0311_exists[1]="N";
+ String L_COMPANY_ID[10];
+ Number L_BREAK = 40;     --number of characters printed before break
+ Number L_BREAK_POINT;    --where the break occurs and newline is inserted
+ Number L_LOOP;
+ Number L_PAGE_NUMBER = 0;
+ Number L_ITEM_NO = 1;
+ String L_SFPLOCATION_ZIP,
+        l_risk_scoring_code;
+
+ Unsigned Ascii Number l_form[2],
+                       l_max_lines = 60,
+                       l_app_no,
+                       l_code,
+                       l_credit_score;
+
+ Unsigned Ascii Number L_YEAR[4];
+ Unsigned Ascii number L_LINE_OF_BUSINESS[4];
+ Unsigned ascii number l_found[1];
+ Unsigned Ascii Number L_ITEM_COUNTER;
+ Unsigned Ascii Number L_LINE_COUNTER=0;
+ Unsigned Ascii Number L_STATE[2]=0;
+ wdate L_EFF_DATE;
+
+   Include "csfonts.inc"
+   Include "swsut100.var"
+   Include "swsut200.var"
+ --Include "swsut300.var"
+   Include "center2.var"
+   Include "line_spacing.var"
+
+Initialization
+  Deletefile (L_FILE_NAME);
+ L_app_no = val(COMMANDLINE[1,11])
+
+--Update
+
+Access agqcreditscore,
+   Set agqcreditscore:app_no     = l_app_no, Generic
+
+Access agqend,
+   Set agqend:app_no    = l_app_no, generic
+
+Access agqname,
+   Set agqname:app_no    = l_app_no, generic
+
+Access plqpersonal,
+   Set plqpersonal:quote_no    = l_app_no,generic
+
+   l_agqfosis0311_exists = "N"
+    while agqend:app_no    = l_app_no
+         begin
+           if agqend:code = "agqfosis0311" then
+              l_agqfosis0311_exists = "Y"
+           next agqend
+         end
+
+   Include "swsut100.inc"
+--   I_CODE = "IS0311"
+   Include "swsut200.inc"
+
+    L_STATE            = plqpersonal:STATE
+    L_COMPANY_ID       = agqname:COMPANY_ID
+    L_LINE_OF_BUSINESS = agqname:line_of_business
+
+    Writefile(L_FILE_NAME,"%s","<033>&a200h520V")
+    L_STRING = "FARMERS MUTUAL FIRE INSURANCE COMPANY OF SALEM COUNTY "
+    L_FONT = L_ARIAL_bold_12
+    L_PITCH_HALF = 6
+    L_PITCH_FULL = 12
+    L_VERTICAL_POS = "+0"
+    L_HORIZONTAL_POS = "2800"
+    Include "center3.pro"
+    l_line_counter = l_line_counter + 1
+
+    Writefile(L_FILE_NAME,"%s","<033>&a1500h+130V")
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","DISCLOSURE NOTICE")
+    Writefile(L_FILE_NAME,"%s","<033>&a+30h-40V")
+    Writefile(L_FILE_NAME,"%s","<033>*c75h10v0P")
+    Writefile(L_FILE_NAME,"%s","<033>&a+105h+40V")
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    Writefile(L_FILE_NAME,"%s","USE OF CREDIT INFORMATION ")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","Farmers of Salem uses an insurance score in addition to other factors such as")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","location, construction, replacement cost, and limits of coverage to determine your")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","premium.")
+    l_line_counter = l_line_counter + 1.08
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","An insurance score is developed from a mathematical calculation that weighs")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","credit information such as payment history, the number of collections,")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","bankruptcies, outstanding debt, length of credit history and types of credit in use.")
+    l_line_counter = l_line_counter + 1.08
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","Generally speaking, the higher your score, the lower your premium. Most")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","policyholders will receive a more favorable premium because of their score. If")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","you have been charged an additional premium because of your score you will")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","receive a separate letter in accordance with the Fair Credit Reporting Act.")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","The insurance score is not the sole factor used in calculating your policy")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","premium but is used in combination with traditional factors to provide you with the")
+    l_line_counter = l_line_counter + 3.41
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","best premium for which you qualify.")
+    l_line_counter = l_line_counter + 1.08
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    Writefile(L_FILE_NAME,"%s",l_arial_bold_12)
+    Writefile(L_FILE_NAME,"%s","EXTRAORDINARY LIFE EVENT")
+    l_line_counter = l_line_counter + 2
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","New Jersey law dictates that extraordinary life events that have adversely")
+    l_line_counter = l_line_counter + 2.33
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","affected your credit may not be taken into consideration in determining your")
+    l_line_counter = l_line_counter + 1.08
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","credit score. Extraordinary life events include, but are not limited to:")
+    l_line_counter = l_line_counter + 1.08
+
+    Writefile(L_FILE_NAME,"%s","<033>&a850h+130V")
+    Writefile(L_FILE_NAME,"%s",l_bullet_6)
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","<033>&a1050h+0V")
+    Writefile(L_FILE_NAME,"%s","Catastrophic illness or injury;")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a850h+140V")
+    Writefile(L_FILE_NAME,"%s",l_bullet_6)
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","<033>&a1050h+0V")
+    Writefile(L_FILE_NAME,"%s","The death of a spouse, child or parent;")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a850h+140V")
+    Writefile(L_FILE_NAME,"%s",l_bullet_6)
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","<033>&a1050h+0V")
+    Writefile(L_FILE_NAME,"%s","Temporary loss of employment;")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a850h+140V")
+    Writefile(L_FILE_NAME,"%s",l_bullet_6)
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","<033>&a1050h+0V")
+    Writefile(L_FILE_NAME,"%s","Divorce;")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a850h+140V")
+    Writefile(L_FILE_NAME,"%s",l_bullet_6)
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","<033>&a1050h+0V")
+    Writefile(L_FILE_NAME,"%s","Identity theft;")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a850h+140V")
+    Writefile(L_FILE_NAME,"%s",l_bullet_6)
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","<033>&a1050h+0V")
+    Writefile(L_FILE_NAME,"%s","Military deployment overseas.")
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+280V")
+    Writefile(L_FILE_NAME,"%s",l_arial_12)
+    Writefile(L_FILE_NAME,"%s","If you have been affected by an extraordinary life event that has resulted in a")
+    Writefile(L_FILE_NAME,"%s","<033>&a700h+130V")
+    Writefile(L_FILE_NAME,"%s","financial hardship, please contact your agent.")
+    l_line_counter = l_line_counter + 3.41
+
+    Writefile(L_FILE_NAME,"%s","<033>&a700h7080V")
+    Writefile(L_FILE_NAME,"%s",l_arial)
+    Writefile(L_FILE_NAME,"%s","FOSInsScoreDisl032011")
+    Writefile(L_FILE_NAME,"%s","<FF>")
+update
+Screen Exit
+Writefile(L_FILE_NAME,"%s%s",L_FORMFEED ,L_RESET )
+Closefile(L_FILE_NAME)
+End

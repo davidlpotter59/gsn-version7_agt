@@ -1,0 +1,871 @@
+%%
+Screen
+        Name = "agtmt750e";
+        Type = "Detail" ;
+        Highlight=Underscore ;
+        Padcharacter=Space ;
+        Screensize="dynamic";
+--        Windowtitle="%a     %s Optional Coverages - Ver. 7.00     %m";
+        Domain="agqliablimits" ;
+        resizeable = yes ;
+        iconline = 0 ;
+
+        Global Unsigned Ascii Number G_app_no[11] ;
+        Global Unsigned Ascii Number G_PREM_NO[4] ;
+        Global Unsigned Ascii Number G_BUILD_NO[4] ;
+        Global Unsigned Ascii Number G_FORM[1] ;
+        global unsigned ascii number g_line_of_business[4] ;
+        global unsigned ascii number g_enhancement[1] ;
+        global unsigned ascii number g_dont_allow_waive_deductible[1] ;
+
+        global string g_inquiry[1] ;
+
+        local string l_code[7],
+                     l_code_1[7],
+                     l_code_2[7],
+                     l_code_3[7],
+                     l_code_4[7],
+                     l_code_5[7],
+                     l_code_6[7],
+                     l_code_7[7],
+                     l_code_8[7],
+                     l_code_9[7],
+                     l_code_10[7],
+                     l_code_11[7],
+                     l_code_12[7],
+                     l_code_13[7],
+                     l_code_14[7],
+                     l_code_15[7],
+                     l_code_16[7],
+                     l_code_17[7],
+                     l_screen[9],
+                     l_continue_2[3],
+                     l_server_name[100],
+                     l_current_web_page[50],
+                     l_web_site_address[150],
+                     l_company_id[10],
+                     l_first_str_location[8],
+                     l_desc[75],
+                     l_last_str_location[8],
+                     l_str_location[8],
+                     l_first_location[1]="Y",
+                     l_user_id[15]="",
+                     l_continue_1[3]="",
+                     l_prior_sprinklered[1]="",
+                     l_add_endorsement[1],
+                     l_form_edition[18],
+                     l_description[55] ,
+                     l_location_wording[9]="Location:",
+                     l_burglary_string[20]="",
+                     l_money_string[30]="",
+                     l_building_wording[9]="Building:" ;
+
+        local unsigned ascii number l_sub_code[4]=0 ,
+                                    l_state[2]=0 ,
+                                    l_no_locations[2]=0,
+                                    l_fire_limit[8],
+                                    l_money_limit_on[8]=0,
+                                    l_default_ar_limit[8]=0,
+                                    l_default_customer_prop_limit[8]=0,
+                                    l_class_code[5],
+                                    l_refer_to_underwriter[1],
+                                    l_independent_contractor[1],
+                                    l_default_utility_limit[8]=0,
+                                    l_default_signs_limit[8]=0,
+                                    l_default_valuable_papers_limit[8]=0,
+                                    l_first_prem_no[4]=0,
+                                    l_first_build_no[4]=0,
+                                    l_last_prem_no[4]=0,
+                                    l_last_build_no[4]=0,
+                                    l_form[1]=0,
+                                    l_money_limit_off[8]=0,
+                                    l_deductible[5]=0;
+        Include "virtualdecs.var"
+
+        Access agqliablimits, Set agqliablimits:app_no = G_app_no , generic
+
+        Include "stdkeys7.inc"
+
+Style Definition
+
+        Include "styles.inc"
+        Displayonly Field Style {
+                                  backgroundcolor="#CCCCCC"
+                                }
+
+Functions
+
+        "change" sequence "chg" tagged change_fn ;
+        "chg" change/hidden ;
+
+        "back" display/noreturn "agtmt001" tagged back_fn ;
+        "func1" sequence "nextscreen" tagged nextscreen_fn ;
+        "nextscreen" continue begin
+                              if agqcontractor:form <> 4 then
+                                  l_screen = "agtmt750h"
+                              else
+                                  l_screen = "agtmt750f"
+                              function = "popup"
+                              end;
+        "popup" display/noreturn l_screen ;
+        "previousscreen" display/noreturn "agtmt750d"  tagged previousscreen_fn ;
+
+        include "stdfunc7.inc"
+
+Menu Definition
+
+Toolbar Definition
+
+Screen Entry
+disable(accept_fn)
+access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+access agqclasscode, set agqclasscode:app_no = g_app_no, generic
+
+l_class_code = agqclasscode:class_code
+access scsclasscode, set scsclasscode:company_id = agqcontractor:company_id,
+                         scsclasscode:state = agqcontractor:state,
+                         scsclasscode:line_of_business = agqcontractor:line_of_business,
+                         scsclasscode:class_code = l_class_code, generic
+
+Access agsdefault_scp, Set agsdefault_scp:COMPANY_ID       = agqcontractor:company_id,
+                           agsdefault_scp:state            = agqcontractor:state,
+                           agsdefault_scp:agent_no         = agqcontractor:agent_no,
+                           agsdefault_scp:LINE_OF_BUSINESS = agqcontractor:line_of_business,
+                           agsdefault_scp:FORM             = agqcontractor:FORM, Generic
+
+l_user_id = username
+l_username = username
+l_company_id = sfsdefault:company_id
+
+access sfsprofile,
+   set sfsprofile:user_id  = l_username, exact
+
+If SFSPROFILE:USER_ID <> L_USERNAME Then
+  Begin
+    L_USERNAME = "default"
+    Access SFSPROFILE, Set SFSPROFILE:USER_ID = L_USERNAME, Exact
+  End
+
+if agqcontractor:company_id = "FLEMINGTON" then
+    begin
+    l_server_name = sfsprofile:UNIX_SERVER
+    l_current_web_page = "webhelp_scr_supple_coverages.htm"
+    do change_current_browser(l_server_name,l_current_web_page)
+    end
+
+access agqcontractor, set agqcontractor:app_no   = g_app_no,
+                          agqcontractor:prem_no  = g_prem_no,
+                          agqcontractor:build_no = g_build_no, generic
+
+access sfsemail, set sfsemail:company_id = agqcontractor:company_id,
+                     sfsemail:user_id = l_user_id, generic
+
+Access SFSLINE, Set SFSLINE:COMPANY_ID       = agqcontractor:COMPANY_ID,
+                    SFSLINE:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS,
+                    SFSLINE:LOB_SUBLINE      = "00", Generic
+
+access sfscompany, set sfscompany:company_id = agqcontractor:company_id, generic
+
+access agqname, set agqname:app_no = g_app_no, generic
+
+if agqname:quote_no <> 0 then
+    begin
+    disable(change_fn)
+    disable(accept_fn)
+    end
+
+access sfsdefault, set sfsdefault:sfs_code = "SFS", generic
+
+if sfsdefault:company_id one of "FLEMINGTON" then
+    hide(farmers_fn)
+else
+if sfsdefault:company_id one of "FARMERS" then
+    hide(ficof_fn)
+
+Access Validation
+If agqliablimits:app_no <> G_app_no then
+    Error 1000 ;
+
+screen at 1,1 to 30, 100
+Properties
+        {
+        Layouttype = screen
+        transparent = False
+        backgroundcolor = "#ADD8E6"
+        }
+{
+
+    Panel at 1,1 to 2,100
+        Properties
+            {
+            layouttype = screen
+            }
+        {
+        components
+            guidetext at 1,1 to 2,40
+                properties
+                    {
+                    iconname = "qp_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged ficof_fn
+                properties
+                    {
+                    iconname = "ficof_logo.gif"
+                    }
+            guidetext at 1,83 to 2,100 tagged farmers_fn
+                properties
+                    {
+                    iconname = "salem_logo.gif"
+                    }
+        }
+
+panel at 3,1 to 4,100
+Properties
+        {
+        LayoutType = screen
+        backgroundcolor = "Grey"
+        transparent = False
+        }
+{
+components
+          guidetext at 1.45,1 to 1.45,45     tagged display_information_box
+                properties
+                  {
+                    text = "Liability"
+                    fontsize = 18
+                    fontstyle = BOLD
+                    transparent = False
+                    fontname = "arial"
+                    backgroundcolor = "Grey"
+                  }
+
+}
+
+Panel at 3.50,75 to 4.50, 100 Tagged quote_no
+
+Properties
+        {
+          LayoutType = screen
+        }
+{
+%%
+App No: ___________
+
+%%
+fields
+101     begin
+        if function one of "ADD" then
+            begin
+            agqliablimits:app_no   = g_app_no
+            end
+        end
+        agqliablimits:app_no/displayonly ;
+
+}
+
+Panel at 5,5 to 6,100 Tagged icon_line2_tg
+Properties
+        {
+          LayoutType = screen
+        }
+{
+Components
+
+
+        Button at 1.5,10   tagged change_fn
+        Properties {
+                Iconname = "btn_edit_entries.bmp"
+                }
+        Events  {
+                Action = change_fn
+                }
+
+        Button at 1.5,60 tagged accept_fn
+        Properties {
+                Iconname = "btn_accept_edits.bmp"
+                }
+          Events  {
+                    mouseclicked = accept
+                  }
+    }
+
+    Panel at 5,94 to 6,96 tagged button_panel
+        Properties
+            {
+            layouttype = column
+            }
+        {
+        Components
+            Button to 1,1
+                properties
+                    {
+                    Iconname = "btn_print_screen.bmp"
+                    }
+                events
+                    {
+                    action
+                        {
+                        function = "print"
+                        abort()
+                        }
+                    }
+        }
+
+   Panel at 6.45,92
+        Properties
+            {
+            layouttype = column
+            }
+      {
+        Components
+            guidetext to 1,1
+                properties
+                    {
+                      text = "agtmt750e.sd"
+                      fontsize = 9
+                    }
+      }
+
+panel at 7,1 to 7,100 tagged line_panel_1
+     {
+     Components
+         line at 1,1 to 1,100
+       Properties
+         {
+           Linestyle = embossed
+           Linewidth = 5
+           Backgroundcolor = "black"
+         }
+     }
+
+Panel at 8,10 to 21,100
+        Properties {
+                LayoutType = screen
+        }
+        {
+         Components
+           guidetext at 1,1 to 1,30
+             properties
+               {
+                 text = "Waive Deductible:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 2,1 to 2,30
+             properties
+               {
+                 text = "Deductible:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+           guidetext at 3,1 to 3,30
+             properties
+               {
+                 text = "Increase Aggregate:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+
+           guidetext at 5,1 to 5,30
+             properties
+               {
+                 text = "Does Insured Sub-Contract Work To Others?:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 6,1 to 6,30
+             properties
+               {
+                 text = "Percentage Sub-Contracted:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+           guidetext at 8,1 to 8,30
+             properties
+               {
+                 text = "Occurrence:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+               }
+            guidetext at 9,1 to 9,30
+             properties
+               {
+                 text = "General Aggregate:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 10,1 to 10,30
+             properties
+               {
+                 text = "Aggregate/Products:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 11,1 to 11,30
+             properties
+               {
+                 text = "Medical Payments:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 12,1 to 12,30
+             properties
+               {
+                 text = "Fire Legal:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+            guidetext at 13,1 to 13,30
+             properties
+               {
+                 text = "Personal Injury:"
+                 fontsize = 12
+                 contentalignment = right
+                 fontname = "arial"
+              }
+        }
+
+Panel at 8,42 to 21,100
+Properties
+        {
+        Scrollbarpolicy    = asneeded
+        }
+{
+%%
+~~_
+_____
+~~_
+
+~~_
+~~_  _____________________________
+
+__________
+__________
+__________
+__________
+__________
+__________
+%%
+
+components
+
+Fields
+101     begin
+         if function one of "ADD","NEW","CHG","CHANGE" then
+           {
+             enable(accept_fn)
+             disable(previousscreen_fn)
+             disable(nextscreen_fn)
+             disable(back_fn)
+           }
+         else
+           {
+             disable(accept_fn)
+             enable(previousscreen_fn)
+             enable(nextscreen_fn)
+             enable(back_fn)
+           }
+        If FUNCTION = "ADD" Then
+            Begin
+            agqLIABLIMITS:STATE  = agqCONTRACTOR:STATE
+            End
+        end
+        agqLIABLIMITS:WAIVE_DEDUCTIBLE/checkbox/values="0,1"/displayonly;
+101     begin
+        If FUNCTION = "ADD" Then
+            Begin
+            agqLIABLIMITS:STATE  = agqCONTRACTOR:STATE
+            End
+        end
+        agqLIABLIMITS:WAIVE_DEDUCTIBLE/checkbox/values="0,1"/tabstop
+--        Hide If scsclasscode:dont_allow_waive_deductible = 1 or
+--                agsdefault_scp:hide_waive_deductible = 1;
+        If ((scsclasscode:dont_allow_waive_deductible = 1 and
+           agqliablimits:waive_deductible = 1) or
+           (agsdefault_scp:hide_waive_deductible = 1 and
+           agqliablimits:waive_deductible = 1)) then
+            begin
+            l_continue_1 = dialog("NOTE","warning.bmp","Deductible may not be waived for this class","OK")
+            agqliablimits:waive_deductible = 0
+            end ;
+101     agqLIABLIMITS:WAIVE_DEDUCTIBLE/checkbox/values="0,1"/displayonly ;
+
+201     Begin
+        access agqcontractor, set agqcontractor:app_no = g_app_no, generic
+
+        access sfsdeductible_alias, set sfsdeductible_alias:company_id = agqcontractor:company_id,
+                                        sfsdeductible_alias:state = agqcontractor:state,
+                                        sfsdeductible_alias:line_of_business = agqcontractor:line_of_business, generic
+
+
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqLIABLIMITS:WAIVE_DEDUCTIBLE = 1 Then
+                agqLIABLIMITS:LIAB_DEDUCTIBLE = 0
+            If agqLIABLIMITS:WAIVE_DEDUCTIBLE = 0 Then
+                agqLIABLIMITS:LIAB_DEDUCTIBLE = agsdefault_scp:DEDUCTIBLE[2]
+            End
+        End
+        agqLIABLIMITS:LIAB_DEDUCTIBLE/default/tabstop
+        access sfsdeductible_alt, set sfsdeductible_alt:company_id = agqcontractor:company_id,
+                                      sfsdeductible_alt:state = agqcontractor:state,
+                                      sfsdeductible_alt:line_of_business = agqcontractor:line_of_business,
+                                      sfsdeductible_alt:deductible = agqliablimits:liab_deductible, generic
+
+        Hide If agqLIABLIMITS:WAIVE_DEDUCTIBLE = 1 or
+                agsdefault_scp:hide_waive_deductible = 1
+
+        If ((scsclasscode:dont_allow_waive_deductible = 1 and
+           agqliablimits:liab_deductible = 0) or
+           (agsdefault_scp:hide_waive_deductible = 1 and
+           agqliablimits:liab_deductible = 0)) then
+            begin
+            l_continue_1 = dialog("NOTE","warning.bmp","Deductible may not be waived for this class","OK")
+            agqliablimits:liab_deductible = agsdefault_scp:DEDUCTIBLE[2]
+            end
+        If agqLIABLIMITS:LIAB_DEDUCTIBLE <> SFSDEDUCTIBLE_ALT:DEDUCTIBLE And
+           agqLIABLIMITS:LIAB_DEDUCTIBLE <> agsdefault_scp:DEDUCTIBLE[2] Then
+            Error "Invalid Deductible Entered"
+
+        Activehelp If SFSDEDUCTIBLE_ALIAS:LIABILITY  = 1 Then
+                       SFSDEDUCTIBLE_ALIAS:DEDUCTIBLE
+                   Else
+                       NULL/width=10/heading="Deductible" ;
+201     begin
+        If FUNCTION = "ADD" Then
+            Begin
+            If agqLIABLIMITS:WAIVE_DEDUCTIBLE = 1 Then
+                agqLIABLIMITS:LIAB_DEDUCTIBLE = 0
+            If agqLIABLIMITS:WAIVE_DEDUCTIBLE = 0 Then
+                agqLIABLIMITS:LIAB_DEDUCTIBLE = agsdefault_scp:DEDUCTIBLE[2]
+            End
+        end
+        agqliablimits:liab_deductible/displayonly ;
+301     Begin
+        if agsdefault_scp:rating_code one of 4 and Function one of "ADD" then
+            {
+            agqLIABLIMITS:INCREASED_AGGREGATE = 1
+            }
+        If agqLIABLIMITS:WAIVE_DEDUCTIBLE = 1 Then
+             agqLIABLIMITS:LIAB_DEDUCTIBLE = 0
+        End
+        agqLIABLIMITS:INCREASED_AGGREGATE/default/checkbox/values="0,1"/tabstop;
+301     Begin
+        If agqLIABLIMITS:WAIVE_DEDUCTIBLE = 1 Then
+            {
+            agqLIABLIMITS:LIAB_DEDUCTIBLE = 0
+            }
+        End
+        agqLIABLIMITS:Special_program_AGGREGATE/checkbox/values="0,1"/tabstop
+        hide if agsdefault_scp:rating_code not one of 4
+        if agqLIABLIMITS:Special_program_AGGREGATE one of 1 then
+            BEGIN
+            agqLIABLIMITS:INCREASED_AGGREGATE = 0
+            END;
+301     agqLIABLIMITS:INCREASED_AGGREGATE/checkbox/values="0,1"/displayonly;
+
+501     begin
+        access scssubpercent_alias,
+           set scssubpercent_alias:company_id       = agqcontractor:company_id,
+               scssubpercent_alias:state            = agqcontractor:state,
+               scssubpercent_alias:line_of_business = agqcontractor:line_of_business, generic
+        end
+        agqLIABLIMITS:sub_contractor/checkbox/values="0,1"/displayonly ;
+501     agqliablimits:sub_contractor/checkbox/values="0,1"/tabstop
+        hide if scssubpercent_alias:percent_code = 0
+        if agqliablimits:sub_contractor = 0 then
+            begin
+            agqliablimits:sub_contractor_percentage = 0
+            agqliablimits:independent_contractors   = 0
+            end ;
+601     begin
+        access scssubpercent_alias, set scssubpercent_alias:company_id       = agqcontractor:company_id,
+                                        scssubpercent_alias:state            = agqcontractor:state,
+                                        scssubpercent_alias:line_of_business = agqcontractor:line_of_business, generic
+        end
+        agqliablimits:sub_contractor_percentage/tabstop
+        hide if agqliablimits:sub_contractor = 0
+        access scssubpercent, set scssubpercent:company_id       = agqcontractor:company_id,
+                                  scssubpercent:state            = agqcontractor:state,
+                                  scssubpercent:line_of_business = agqcontractor:line_of_business,
+                                  scssubpercent:percent_code     = agqliablimits:sub_contractor_percentage, generic
+
+        if agqliablimits:sub_contractor_percentage <> scssubpercent:percent_code then
+            error "Invalid Percentage entered"
+
+        activehelp scssubpercent_alias:percent_code,
+                   scssubpercent_alias:description ;
+602     scssubpercent:description
+        hide if agqliablimits:sub_contractor = 0
+        do independent_contractor
+        agqliablimits:independent_contractors = l_independent_contractor
+        if l_refer_to_underwriter = 1 then
+            begin
+            l_continue_1 = dialog("REFER TO UNDERWRITER","warning.bmp","Please Refer To The Underwriter","OK")
+            end ;
+
+801     Begin
+        If FUNCTION = "ADD" Then
+            agqLIABLIMITS:OCCURRENCE = agsdefault_scp:OCCURRENCE
+        End
+        agqLIABLIMITS:OCCURRENCE/default/tabstop
+        If agqLIABLIMITS:OCCURRENCE <> SFSLIABILITY1:LIMIT Or
+           agqLIABLIMITS:OCCURRENCE = 0 Then
+            Error 1238
+
+        Activehelp SFSLIABILITY1_ALIAS:LIMIT ;
+901     Begin
+        Access agsdefault_scp,
+           Set agsdefault_scp:COMPANY_ID       = agqcontractor:COMPANY_ID,
+               agsdefault_scp:STATE            = agqcontractor:STATE,
+               agsdefault_scp:agent_no         = agqcontractor:agent_no,
+               agsdefault_scp:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS, Generic
+
+        while agsdefault_scp:COMPANY_ID = agqcontractor:COMPANY_ID and
+              agsdefault_scp:STATE = agqcontractor:STATE and
+              agsdefault_scp:agent_no = agqcontractor:agent_no and
+              agsdefault_scp:LINE_OF_BUSINESS = agqcontractor:LINE_OF_BUSINESS
+            begin
+            If agqcontractor:EFF_DATE >= agsdefault_scp:EFF_DATE Then
+                Begin
+                If FUNCTION = "ADD" Or
+                   FUNCTION = "CHANGE" or
+                   function = "CHG" Then
+                    Begin
+                    agqLIABLIMITS:PERSONAL_INJURY = agqLIABLIMITS:OCCURRENCE
+                    if agsdefault_scp:rating_code = 2 then
+                        begin
+                        agqliablimits:General_aggregate = agqliablimits:occurrence *
+                                                          agsdefault_scp:aggregate_increase
+                        agqliablimits:aggregate = agqliablimits:occurrence
+                        end
+                    else
+                    begin
+                    If agqLIABLIMITS:INCREASED_AGGREGATE = 0 Then
+                      Begin
+                        agqLIABLIMITS:GENERAL_AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                        agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                      End
+                    Else
+                      Begin
+                        agqLIABLIMITS:GENERAL_AGGREGATE = agqLIABLIMITS:OCCURRENCE *
+                                                          agsdefault_scp:AGGREGATE_INCREASE
+                        if agsdefault_scp:rating_code one of 4 then
+                          {
+                            if agqliablimits:Special_program_AGGREGATE one of 1 then
+                              {
+                                agqLIABLIMITS:General_AGGREGATE = agqLIABLIMITS:OCCURRENCE * (agsdefault_scp:AGGREGATE_INCREASE + 1)
+                                agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                              }
+                            else
+                              {
+                                agqLIABLIMITS:General_AGGREGATE = agqLIABLIMITS:OCCURRENCE * agsdefault_scp:AGGREGATE_INCREASE
+                                agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                              }
+                          }
+                      End
+                    if agqliablimits:Special_program_AGGREGATE one of 1 and agsdefault_scp:rating_code = 4 then
+                      {
+                        agqLIABLIMITS:General_AGGREGATE = agqLIABLIMITS:OCCURRENCE * (agsdefault_scp:AGGREGATE_INCREASE + 1)
+                        agqLIABLIMITS:AGGREGATE = agqLIABLIMITS:OCCURRENCE
+                      }
+                    End
+                    end
+                If FUNCTION = "ADD" Then
+                    Begin
+                    agqLIABLIMITS:MEDICAL_PAYMENTS = agsdefault_scp:MEDICAL_PAYMENTS
+                    agqLIABLIMITS:FIRE_LEGAL = agsdefault_scp:FIRE_LEGAL
+                    End
+                End
+            Next agsdefault_scp
+            End
+        End
+        agqLIABLIMITS:GENERAL_AGGREGATE/displayonly ;
+1001    begin
+        if agqcontractor:company_id = "FARMERS" then
+            agqliablimits:aggregate = agqliablimits:general_aggregate
+        end
+        agqLIABLIMITS:AGGREGATE/displayonly ;
+1101    agqLIABLIMITS:MEDICAL_PAYMENTS/displayonly/tabstop ;
+1201    agqLIABLIMITS:FIRE_LEGAL/default/tabstop
+        If agqLIABLIMITS:FIRE_LEGAL <> SCSFIRE:FIRE_LIMIT Or
+           agqLIABLIMITS:FIRE_LEGAL = 0 Then
+            Error 1238
+
+        Activehelp SCSFIRE_ALIAS:FIRE_LIMIT ;
+1301    agqLIABLIMITS:PERSONAL_INJURY/displayonly/tabstop ;
+
+}
+
+
+-- draw a line
+panel at 27,1 to 27,100 tagged line_panel_1
+    {
+    Components
+        line at 1.5,1 to 1.5,100
+            Properties
+                {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+                }
+    }
+
+Panel at 28,1 to 28,100 Tagged icon_line2_tg
+Properties
+        {
+        LayoutType = screen
+        }
+{
+Components
+
+        Button at 1,5  tagged previousscreen_fn
+        Properties {
+                Iconname = "previous_screen.bmp"
+                }
+        Events  {
+                Action {
+                       function = "previousscreen"
+                       abort()
+                       }
+                }
+
+        Button at 1,37   tagged back_fn
+        Properties {
+                Iconname = "btn_back_to_main_screen.bmp"
+                }
+        Events  {
+                Action {
+                          l_continue_2 = dialog("EXITING","warning.bmp","You are about to leave the application, Do you wish to continue","Yes","No")
+                          if l_continue_2 = "Yes" then
+                              begin
+                              function = "back"
+                              abort()
+                              end
+                       }
+                }
+
+        Button at 1,75   tagged nextscreen_fn
+            Properties
+                {
+                Iconname = "next_screen.bmp"
+                }
+            Events
+                {
+                Action
+                    {
+                    function = "nextscreen"
+                    abort()
+                    }
+                }
+}
+
+-- draw a line
+panel at 29,1 to 29,100 tagged line_panel_1
+    {
+      Components
+        line at 1,1 to 1,100
+            Properties
+              {
+                Linestyle = embossed
+                Linewidth = 5
+                Backgroundcolor = "black"
+              }
+    }
+
+}
+
+panel at 30,1 to 33,100  tagged ficof_fn
+
+Properties
+        {
+          LayoutType = screen
+          backgroundcolor = "white"
+        }
+{
+  Components
+    browser at 1,1 to 7,100  tagged helper_tg
+                          properties {
+                                       url = ""
+                                     }
+}
+
+
+update
+if updateok = "NO" then
+    begin
+    disable(accept_fn)
+    enable(previousscreen_fn)
+    enable(nextscreen_fn)
+    enable(back_fn)
+    end
+
+if abort = "YES" then
+    begin
+    disable(accept_fn)
+    enable(previousscreen_fn)
+    enable(nextscreen_fn)
+    enable(back_fn)
+    end
+
+if updateok = "YES" and
+   abort = "NO" then
+    begin
+    disable(accept_fn)
+    enable(previousscreen_fn)
+    enable(nextscreen_fn)
+    enable(back_fn)
+    end
+
+screen exit
+if function one of "EXIT", "BACK" and
+   g_inquiry not one of "Y" then
+    function = "update_totals"
+
+procedure definition
+
+procedure independent_contractor
+begin
+access scssubpercent, set scssubpercent:company_id       = agqcontractor:company_id,
+                          scssubpercent:state            = agqcontractor:state,
+                          scssubpercent:line_of_business = agqcontractor:line_of_business,
+                          scssubpercent:percent_code     = agqliablimits:sub_contractor_percentage, generic
+
+l_refer_to_underwriter   = 0
+l_independent_contractor = 0
+while scssubpercent:company_id       = agqcontractor:company_id and
+      scssubpercent:state            = agqcontractor:state and
+      scssubpercent:line_of_business = agqcontractor:line_of_Business and
+      scssubpercent:percent_code     = agqliablimits:sub_contractor_percentage
+        begin
+        if (agqcontractor:eff_date >= scssubpercent:eff_date and
+           (agqcontractor:eff_date <= scssubpercent:Exp_date or
+           scssubpercent:exp_date = 0)) then
+            begin
+            l_refer_to_underwriter = scssubpercent:refer_to_underwriter
+            l_independent_contractor = scssubpercent:independent_contractor_charge
+            end
+
+        next scssubpercent
+        end
+
+end
+
+procedure change_current_browser (string p_server_name, string p_current_web_page)
+BEGIN
+  l_web_site_address = trun(p_server_name) + trun(p_current_web_page)
+  setproperty(helper_tg,url,trun(l_web_site_address))
+END
+
+End

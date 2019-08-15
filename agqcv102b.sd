@@ -1,0 +1,348 @@
+%%
+Program
+        Name = "agqcv102b" ;
+        Type = "File" ;
+        Domain = "FLAT" ;
+        Padcharacter = Space ;
+
+         Global Unsigned Ascii Number g_app_no[11],
+                                      g_policy_no[9],
+                                      g_year[4],
+                                      g_end_sequence[4] ;
+
+         String L_PROCEDURE[20] ,
+                L_QUOTE_NO[8] ,
+                l_app_no[11],
+                l_code[7],
+                l_enter,
+                L_NEW_QUOTE_NO[8] ;
+
+        unsigned ascii number l_prem_no[4],
+                              l_build_no[4],
+                              l_sub_code[4] ;
+
+Initialisation
+g_app_no       = val(commandline[1,11])
+g_policy_no    = val(COMMANDLINE[12,20])
+g_year         = val(commandline[21,24])
+g_end_sequence = val(commandline[25,28])
+
+Access agqname, set agqname:app_no = g_app_no, generic
+
+Access agqgeneral, Set agqgeneral:app_no = g_app_no, generic
+
+while agqgeneral:app_no = g_app_no
+    begin
+    Add bopGENERAL
+        Begin
+        bopGENERAL:policy_no                = G_policy_no
+        bopgeneral:pol_year                 = g_year
+        bopgeneral:end_sequence             = g_end_sequence
+        bopGENERAL:PREM_NO                  = agqgeneral:PREM_NO
+        bopGENERAL:BUILD_NO                 = agqgeneral:BUILD_NO
+        bopGENERAL:RECORD_RDF               = agqgeneral:RECORD_RDF/raw
+        bopgeneral:credit_card_limit        = agqgeneral:credit_card_limit
+        bopgeneral:sub_code                 = agqgeneral:bpsclass_sub_code
+        if agqgeneral:water_backup_limit <> 0 then
+            bopgeneral:water_backup_limited = "Y"
+        bopgeneral:epl_percent              = agqgeneral:epl_percent
+        bopgeneral:no_employees             = agqgeneral:no_employees
+        bopgeneral:fire_limit               = agqgeneral:fire_limit
+        End
+
+    Next agqgeneral
+    End
+
+Access agqgeneral2, Set agqgeneral2:app_no = g_app_no, generic
+
+while agqgeneral2:app_no = g_app_no
+    begin
+    Add bopGENERAL1
+        Begin
+        bopGENERAL1:policy_no                = G_policy_no
+        bopgeneral1:pol_year                 = g_year
+        bopgeneral1:end_sequence             = g_end_sequence
+        bopGENERAL1:PREM_NO                  = agqgeneral2:PREM_NO
+        bopGENERAL1:BUILD_NO                 = agqgeneral2:BUILD_NO
+        bopGENERAL1:RECORD_RDF               = agqgeneral2:RECORD_RDF/raw
+        End
+
+    Next agqgeneral2
+    End
+
+Access agqgeneral, Set agqgeneral:app_no = g_app_no, generic
+
+Access agqaddin, Set agqaddin:app_no = g_app_no, generic
+
+while agqaddin:app_no = g_app_no
+    begin
+    l_prem_no  = agqaddin:prem_no
+    l_build_no = agqaddin:build_no
+    l_code     = agqaddin:code
+    do access_sfpend
+    Add bopADDIN
+        Begin
+        bopADDIN:policy_no              = G_policy_no
+        bopaddin:pol_year               = g_year
+        bopaddin:end_sequence           = g_end_sequence
+        bopADDIN:PREM_NO                = agqaddin:PREM_NO
+        bopADDIN:BUILD_NO               = agqaddin:BUILD_NO
+        bopADDIN:SUB_CODE               = L_SUB_CODE
+        bopADDIN:CODE                   = agqaddin:code/raw
+        bopaddin:name[1]                = agqaddin:name[1]/raw
+        bopaddin:name[2]                = agqaddin:name[2]/raw
+        bopaddin:name[3]                = agqaddin:name[3]/raw
+        bopaddin:address[1]             = agqaddin:address[1]/raw
+        bopaddin:address[2]             = agqaddin:address[2]/raw
+        bopaddin:address[3]             = agqaddin:address[3]/raw
+        bopaddin:city                   = agqaddin:city/raw
+        bopaddin:str_state              = agqaddin:str_state/raw
+        bopaddin:str_zipcode            = agqaddin:str_zipcode/raw
+        bopaddin:description            = agqaddin:description/raw
+        End
+
+    Next agqaddin
+    End
+
+Access agqbshop, Set agqbshop:app_no = g_app_no, generic
+
+while agqbshop:app_no = g_app_no
+    begin
+    Add bopBSHOP
+        Begin
+        bopBSHOP:policy_no              = G_policy_no
+        bopbshop:pol_year               = g_year
+        bopbshop:end_sequence           = g_end_sequence
+        bopBSHOP:PREM_NO                = agqbshop:PREM_NO
+        bopBSHOP:BUILD_NO               = agqbshop:BUILD_NO
+        bopBSHOP:RECORD_RDF             = agqbshop:RECORD_RDF/raw
+        End
+
+    Next agqbshop
+    End
+
+Access agqdishonesty, Set agqdishonesty:app_no = g_app_no, generic
+
+while agqdishonesty:app_no = g_app_no
+    begin
+    Add bopDISHONESTY
+        Begin
+        bopDISHONESTY:policy_no              = G_policy_no
+        bopdishonesty:pol_year               = g_year
+        bopdishonesty:end_sequence           = g_end_sequence
+        bopDISHONESTY:PREM_NO                = agqdishonesty:PREM_NO
+        bopDISHONESTY:BUILD_NO               = agqdishonesty:BUILD_NO
+        bopDISHONESTY:RECORD_RDF             = agqdishonesty:RECORD_RDF/raw
+        End
+
+    Next agqdishonesty
+    End
+
+Access agqcomputer, Set agqcomputer:app_no = g_app_no, generic
+
+while agqcomputer:app_no = g_app_no
+    begin
+    Add bopCOMPUTER
+        Begin
+        bopCOMPUTER:policy_no              = G_policy_no
+        bopcomputer:pol_year               = g_year
+        bopcomputer:end_sequence           = g_end_sequence
+        bopCOMPUTER:PREM_NO                = agqcomputer:PREM_NO
+        bopCOMPUTER:BUILD_NO               = agqcomputer:BUILD_NO
+        bopCOMPUTER:RECORD_RDF             = agqcomputer:RECORD_RDF/raw
+        if agqname:company_id = "FARMERS" then
+            bopcomputer:limit[1]           = agqcomputer:limit[1] + agqcomputer:limit[3]
+        else
+            bopcomputer:limit[1]           = agqcomputer:limit[1]
+        bopcomputer:limit[2]               = agqcomputer:limit[2]
+        bopcomputer:limit[3]               = agqcomputer:limit[3]
+        End
+
+    Next agqcomputer
+    End
+
+Access agqcompdesc, Set agqcompdesc:app_no = g_app_no, generic
+
+while agqcompdesc:app_no = g_app_no
+    begin
+    Add bopCOMPDESC
+        Begin
+        bopCOMPDESC:policy_no              = G_policy_no
+        bopcompdesc:pol_year               = g_year
+        bopcompdesc:end_sequence           = g_end_sequence
+        bopCOMPDESC:PREM_NO                = agqcompdesc:PREM_NO
+        bopCOMPDESC:BUILD_NO               = agqcompdesc:BUILD_NO
+        bopCOMPDESC:SUB_CODE               = agqcompdesc:SUB_CODE
+        bopCOMPDESC:RECORD_RDF             = agqcompdesc:RECORD_RDF/raw
+        End
+
+    Next agqcompdesc
+    End
+
+Access agqendorse, Set agqendorse:app_no = g_app_no, generic
+
+while agqendorse:app_no = g_app_no
+    begin
+    Add bopENDORSE
+        Begin
+        bopENDORSE:policy_no              = G_policy_no
+        bopendorse:pol_year               = g_year
+        bopendorse:end_sequence           = g_end_sequence
+        bopENDORSE:PREM_NO                = agqendorse:PREM_NO
+        bopENDORSE:BUILD_NO               = agqendorse:BUILD_NO
+        bopENDORSE:CODE                   = agqendorse:CODE
+        bopENDORSE:SUB_CODE               = agqendorse:SUB_CODE
+        bopENDORSE:RECORD_RDF             = agqendorse:RECORD_RDF/raw
+        End
+
+    Next agqendorse
+    End
+
+Access agqfuneral, Set agqfuneral:app_no = g_app_no, generic
+
+while agqfuneral:app_no = g_app_no
+    begin
+    Add bopFUNERAL
+        Begin
+        bopFUNERAL:policy_no              = G_policy_no
+        bopfuneral:pol_year               = g_year
+        bopfuneral:end_sequence           = g_end_sequence
+        bopFUNERAL:PREM_NO                = agqfuneral:PREM_NO
+        bopFUNERAL:BUILD_NO               = agqfuneral:BUILD_NO
+        bopFUNERAL:RECORD_RDF             = agqfuneral:RECORD_RDF/raw
+        End
+
+    Next agqfuneral
+    End
+
+Access agqprint, Set agqprint:app_no = g_app_no, generic
+
+while agqprint:app_no = g_app_no
+    begin
+    Add bopPRINT
+        Begin
+        bopPRINT:policy_no              = G_policy_no
+        bopprint:pol_year               = g_year
+        bopprint:end_sequence           = g_end_sequence
+        bopPRINT:PREM_NO                = agqprint:PREM_NO
+        bopPRINT:BUILD_NO               = agqprint:BUILD_NO
+        bopPRINT:RECORD_RDF             = agqprint:RECORD_RDF/raw
+        End
+
+    Next agqprint
+    End
+
+Access agqglass, Set agqglass:app_no = g_app_no, generic
+
+while agqglass:app_no = g_app_no
+    begin
+    Add bopGLASS
+        Begin
+        bopGLASS:policy_no              = G_policy_no
+        bopglass:pol_year               = g_year
+        bopglass:end_sequence           = g_end_sequence
+        bopGLASS:PREM_NO                = agqglass:PREM_NO
+        bopGLASS:BUILD_NO               = agqglass:BUILD_NO
+        bopGLASS:RECORD_RDF             = agqglass:RECORD_RDF/raw
+        End
+
+    Next agqglass
+    End
+
+Access agqumuim, Set agqumuim:app_no = g_app_no, generic
+
+while agqumuim:app_no = g_app_no
+    begin
+    Add bopUMUIM
+        Begin
+        bopUMUIM:policy_no              = G_policy_no
+        bopumuim:pol_year               = g_year
+        bopumuim:end_sequence           = g_end_sequence
+        bopUMUIM:PREM_NO                = agqumuim:PREM_NO
+        bopUMUIM:BUILD_NO               = agqumuim:BUILD_NO
+        bopUMUIM:SUB_CODE               = agqumuim:SUB_CODE
+        bopUMUIM:RECORD_RDF             = agqumuim:RECORD_RDF/raw
+        End
+
+    Next agqumuim
+    End
+
+Access agqoperations, Set agqoperations:app_no = g_app_no, generic
+
+while agqoperations:app_no = g_app_no
+    begin
+    Add bopOPERATIONS
+        Begin
+        bopOPERATIONS:policy_no              = G_policy_no
+        bopoperations:pol_year               = g_year
+        bopoperations:end_sequence           = g_end_sequence
+        bopOPERATIONS:PREM_NO                = agqoperations:PREM_NO
+        bopOPERATIONS:BUILD_NO               = agqoperations:BUILD_NO
+        bopOPERATIONS:RECORD_RDF             = agqoperations:RECORD_RDF/raw
+        End
+
+    Next agqoperations
+    End
+
+Access agqlosspayee, Set agqlosspayee:app_no = g_app_no, generic
+
+while agqlosspayee:app_no = g_app_no
+    begin
+    Add bopLOSSPAYEE
+        Begin
+        bopLOSSPAYEE:policy_no              = G_policy_no
+        boplosspayee:pol_year               = g_year
+        boplosspayee:end_sequence           = g_end_sequence
+        bopLOSSPAYEE:PREM_NO                = agqlosspayee:PREM_NO
+        bopLOSSPAYEE:BUILD_NO               = agqlosspayee:BUILD_NO
+        bopLOSSPAYEE:SUB_CODE               = agqlosspayee:SUB_CODE
+        bopLOSSPAYEE:RECORD_RDF             = agqlosspayee:RECORD_RDF/raw
+        End
+
+    Next agqlosspayee
+    End
+
+Update
+
+Errors
+Writefile("agqcv102b.err","<NL>")
+Writefile("agqcv102b.err","%S",L_PROCEDURE)
+Writefile("agqcv102b.err","<NL>")
+Writefile("agqcv102b.err","%N%S agqcv102b errors ",ERRORNUMBER, ERRORTEXT)
+Writefile("agqcv102b.err","<NL>")
+Writefile("agqcv102b.err","<NL>")
+
+procedure definition
+
+procedure access_sfpend
+begin
+access sfpend, set sfpend:policy_no    = g_policy_no,
+                   sfpend:pol_year     = g_year,
+                   sfpend:end_sequence = g_end_sequence,
+                   sfpend:prem_no      = l_prem_no,
+                   sfpend:build_no     = l_build_no, generic
+
+l_sub_code = 0
+while sfpend:policy_no    = g_policy_no and
+      sfpend:pol_year     = g_year and
+      sfpend:end_sequence = g_end_sequence and
+      sfpend:prem_no      = l_prem_no and
+      sfpend:build_no     = l_build_no
+        begin
+        if sfpend:code = l_code and
+           sfpend:updated <> 1 and
+           l_sub_code = 0 then
+            begin
+            l_sub_code = sfpend:sub_code
+            change sfpend
+                begin
+                sfpend:updated = 1
+                end
+            end
+
+        next sfpend
+        end
+
+end
+
+End
